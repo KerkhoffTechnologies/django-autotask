@@ -10,7 +10,7 @@ settings.configure(
         'djautotask',
         'easy_thumbnails',
     ),
-    DJCONNECTWISE_API_BATCH_LIMIT=25,
+    DJAUTOTASK_API_BATCH_LIMIT=25,
 )
 
 
