@@ -1,4 +1,4 @@
-# django-autotask
+
 
 Django app for working with Autotask. Defines models (tickets,
 members, companies, etc.) and callbacks.
