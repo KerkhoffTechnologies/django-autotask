@@ -7,7 +7,7 @@ import djautotask
 LONG_DESCRIPTION = open('README.md').read()
 
 setup(
-    name="django-autotask,
+    name='django-autotask',
     version=djautotask.__version__,
     description='Django app for working with Autotask. '
                 'Defines models (tickets, members, companies, etc.) '
