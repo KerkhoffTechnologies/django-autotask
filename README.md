@@ -14,7 +14,7 @@ Other versions may work; we haven't tried.
 
 From PyPI:
 
-    pip install django-connectwise
+    pip install django-
 
 From source:
 
@@ -29,7 +29,7 @@ From source:
     ```
     INSTALLED_APPS = [
         ...
-        'djconnectwise',
+        'djautotask',
         'easy_thumbnails'  # Used for managing user pictures
         ...
     ]

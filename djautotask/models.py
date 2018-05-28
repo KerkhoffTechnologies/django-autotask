@@ -2,26 +2,30 @@ import re
 import logging
 import urllib
 
-from easy_thumbnails.fields import ThumbnailerImageField
+#from easy_thumbnails.fields import ThumbnailerImageField
 from model_utils import Choices
 
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.models import TimeStampedModel
+#from django_extensions.db.models import TimeStampedModel
 
-from . import api
+#from . import api
 
 logger = logging.getLogger(__name__)
 
 
 PRIORITY_RE = re.compile('^Priority ([\d]+)')
 
+class Account(models.Model):
+    account_name = models.CharField(max_length=250)
+
+
 
 class InvalidStatusError(Exception):
     pass
 
-
+'''
 class SyncJob(models.Model):
     start_time = models.DateTimeField(null=False)
     end_time = models.DateTimeField(blank=True, null=True)
@@ -831,3 +835,4 @@ class SalesProbability(TimeStampedModel):
 
     def __str__(self):
         return 'Probability {}'.format(self.probability)
+'''
