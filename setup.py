@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 import djautotask
 
-LONG_DESCRIPTION = open('README.md').read()
+LONG_DESCRIPTION = open('README.md', encoding="utf-8").read()
 
 setup(
     name='django-autotask',
