@@ -61,4 +61,4 @@ MIT
 
 ## Copyright
 
-© 018 Kerkhoff Technologies Inc.
+©2018 Kerkhoff Technologies Inc.
