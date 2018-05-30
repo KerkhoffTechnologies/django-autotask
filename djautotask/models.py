@@ -143,8 +143,28 @@ class Ticket(models.Model):
         return '{}-{}'.format(self.id, self.summary)
 
 
-class TicketNote(models.Model):
-    pass
+class TicketNote(TimeStampedModel):
+
+    created_by = models.TextField(blank=True, null=True, max_length=250)
+    resource_id = models.IntegerField(blank=True, null=True)
+    date_created = models.DateTimeField(blank=True, null=True)
+    detail_description_flag = models.BooleanField(blank=True)
+    external_flag = models.BooleanField(blank=True)
+    internal_analysis_flag = models.BooleanField(blank=True)
+    internal_flag = models.BooleanField(blank=True)
+    resolution_flag = models.BooleanField(blank=True)
+    description = models.TextField(blank=True, null=True, max_length=2000)
+
+    ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE)
+    member = models.ForeignKey(
+        'Member', blank=True, null=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ('-date_created', 'id')
+        verbose_name_plural = 'Notes'
+
+    def __str__(self):
+        return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
 
 
 class TicketCategory(models.Model):
