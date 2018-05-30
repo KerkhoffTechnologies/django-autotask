@@ -11,14 +11,6 @@ import tempfile
 DEBUG = True
 tmp_media = tempfile.TemporaryDirectory()
 
-
-def djautotask_configuration():
-    return {
-        'callback_url': '/?id=',
-        'callback_host': 'http://localhost',
-    }
-
-
 settings.configure(
     DEBUG=True,
     ALLOWED_HOSTS=('testserver',),
@@ -32,12 +24,8 @@ settings.configure(
     ),
     AUTOTASK_SERVER_URL='https://localhost',
     AUTOTASK_CREDENTIALS={
-        'company_id': 'training',
-        'integrator_login_id': '',
-        'integrator_password': '',
-        'api_public_key': '',
-        'api_private_key': '',
-        'api_codebase': 'v4_6_release',
+        'username': '',
+        'password': '',
     },
     DATABASES={
         'default': {
@@ -50,14 +38,13 @@ settings.configure(
     MEDIA_ROOT=tmp_media.name,
     USE_TZ=True,  # Prevent 'ValueError: SQLite backend does not support
     # timezone-aware datetimes when USE_TZ is False.'
-    ROOT_URLCONF='djautotask.tests.urls',
+    # ROOT_URLCONF='djautotask.tests.urls',
     CACHES={
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
             'LOCATION': 'unique-snowflake',
         }
     },
-    DJAUTOTASK_CONF_CALLABLE=djautotask_configuration,
 )
 
 
