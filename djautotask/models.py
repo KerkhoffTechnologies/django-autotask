@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 PRIORITY_RE = re.compile('^Priority ([\d]+)')
 
+# Autotask Account is equivalent to Connectwise Company
 class Account(models.Model):
 
     name = models.CharField(blank=True, null=True, max_length=100)
@@ -33,7 +34,7 @@ class Account(models.Model):
     territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)
-
+    
     def __str__(self):
         return self.name
 
@@ -70,8 +71,8 @@ class Ticket(models.Model):
         ('ProjectTicket', "Project Ticket"),
         ('ProjectIssue', "Project Issue"),
     )
-    actual_hours = models.DecimalField
-	blank=True, null=True, decimal_places=2, max_digits=6)
+    actual_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
     agreement_id = models.IntegerField(blank=True, null=True)
     approved = models.NullBooleanField(blank=True, null=True)
     budget_hours = models.DecimalField(
@@ -104,12 +105,49 @@ class Ticket(models.Model):
     sub_type_item = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
+    
 
-class TicketCategory(models.Model):
-    pass
+    board = models.ForeignKey(
+	'AutotaskBoard', blank=True, null=True, on_delete=models.CASCADE)
+    account = models.ForeignKey(
+        'Account', blank=True, null=True, related_name='account_tickets',
+        on_delete=models.SET_NULL)
+    location = models.ForeignKey(
+        'Location', blank=True, null=True, related_name='location_tickets',
+        on_delete=models.SET_NULL)
+    # Leave out for now 
+    '''members = models.ManyToManyField(
+        'Member', through='ScheduleEntry',
+        related_name='member_tickets')
+    '''
+    owner = models.ForeignKey(
+        'Member', blank=True, null=True, on_delete=models.SET_NULL)
+    priority = models.ForeignKey(
+        'TicketPriority', blank=True, null=True, on_delete=models.SET_NULL)
+    project = models.ForeignKey(
+        'Project', blank=True, null=True, related_name='project_tickets',
+        on_delete=models.CASCADE)
+    status = models.ForeignKey(
+        'BoardStatus', blank=True, null=True, related_name='status_tickets',
+        on_delete=models.SET_NULL)
+    team = models.ForeignKey(
+        'Team', blank=True, null=True, related_name='team_tickets',
+	on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = 'Ticket'
+        verbose_name_plural = 'Tickets'
+        ordering = ('summary', )
+    
+    def __str__(self):
+        return '{}-{}'.format(self.id, self.summary)
 
 
 class TicketNote(models.Model):
+    pass
+
+
+class TicketCategory(models.Model):
     pass
 
 
@@ -117,7 +155,30 @@ class TicketSecondaryResource(models.Model):
     pass
 
 
+class TicketPriority(models.Model):
+    pass
+
 class Resource(models.Model):
+    pass
+
+
+class Location(models.Model):
+    pass
+
+
+class Member(models.Model):
+    pass
+
+
+class BoardStatus(models.Model):
+    pass
+
+
+class Team(models.Model):
+    pass
+
+
+class AutotaskBoard(models.Model):
     pass
 
 
