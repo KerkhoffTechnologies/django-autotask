@@ -34,6 +34,10 @@ From source:
 
 ## Testing
 
+```
+pip install --upgrade -r requirements_test.txt
+```
+
 Try one of:
 
     ./runtests.py
