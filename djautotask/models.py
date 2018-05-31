@@ -90,7 +90,7 @@ class Ticket(models.Model):
         related_name='assigned_resource_tickets',
         on_delete=models.SET_NULL)
     assigned_resource_role_id = models.ForeignKey(
-        'Role', blank=True, null=True, related_name='role_tickets',
+        'ResourceRole', blank=True, null=True, related_name='role_tickets',
         on_delete=models.SET_NULL)
     creator_resource_id = models.ForeignKey(
         'Resource', blank=True, null=True,
@@ -158,20 +158,55 @@ class TimeEntry(models.Model):
     role_id = models.ForeignKey(
         'Role', on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.summary_notes
+
 
 class TicketSecondaryResource(models.Model):
-    pass
+    resource_id = models.ForeignKey(
+       'Resource', null=True, on_delete=models.CASCADE)
+    role_id = models.ForeignKey(
+        'ResourceRole', null=True, on_delete=models.CASCADE)
+    ticket_id = models.ForeignKey(
+        'Ticket', null=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.resource_id
 
 
 class Resource(models.Model):
-    pass
+    active = models.BooleanField(default=False)
+    date_format = models.CharField(blank=True, null=True, max_length=20)
+    email = models.CharField(blank=True, null=True, max_length=20)
+    first_name = models.CharField(blank=True, null=True, max_length=50)
+    last_name = models.CharField(blank=True, null=True, max_length=50)
+    gender = models.CharField(blank=True, null=True, max_length=1)
+    greeting = models.IntegerField(blank=True, null=True)
+    hire_date = models.DateTimeField(blank=True, null=True)
+    number_format = models.CharField(blank=True, null=True, max_length=20)
+    office_phone = models.CharField(blank=True, null=True, max_length=20)
+    resource_type = models.CharField(blank=True, null=True, max_length=15)
+    time_format = models.CharField(blank=True, null=True, max_length=20)
+    title = models.CharField(blank=True, null=True, max_length=50)
+    user_name = models.CharField(blank=True, null=True, max_length=32)
+    user_type = models.IntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return '{} {} {}'.format(self.first_name,
+                                 self.last_name, self.user_name)
 
 
-class Team(models.Model):
-    pass
+class ResourceRole(models.Model):
+    active = models.BooleanField(default=False)
+    department_id = models.ForeignKey(
+            'Department', null=True, on_delete=models.CASCADE)
+    resource_id = models.ForeignKey(
+        'Resource', null=True, on_delete=models.CASCADE)
+    role_id = models.ForeignKey(
+        'Role', null=True, on_delete=models.CASCADE)
 
 
-class AutotaskBoard(models.Model):
+class Department(models.Model):
     pass
 
 
