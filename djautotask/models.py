@@ -136,8 +136,27 @@ class TicketNote(TimeStampedModel):
                                            str(self.last_activity_date))
 
 
-class TicketTimeEntry(models.Model):
-    pass
+class TimeEntry(models.Model):
+    create_date_time = models.DateTimeField(blank=True, null=True)
+    date_worked = models.DateTimeField(blank=True, null=True)
+    end_date_time = models.DateTimeField(blank=True, null=True)
+    hours_to_bill = models.DateTimeField(blank=True, null=True)
+    hours_worked = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    last_modified_date_time = models.DateTimeField(blank=True, null=True)
+    last_modified_user_id = models.IntegerField(blank=True, null=True)
+    non_billable = models.NullBooleanField(blank=True, null=True)
+    show_on_invoice = models.BooleanField(blank=True)
+    start_date_time = models.DateTimeField(blank=True, null=True)
+    summary_notes = models.TextField(blank=True, null=True, max_length=8000)
+    time_entry_type = models.IntegerField(blank=True, null=True)
+
+    ticket_id = models.ForeignKey(
+        'Ticket', on_delete=models.CASCADE)
+    resource_id = models.ForeignKey(
+        'Resource', on_delete=models.CASCADE)
+    role_id = models.ForeignKey(
+        'Role', on_delete=models.CASCADE)
 
 
 class TicketSecondaryResource(models.Model):
