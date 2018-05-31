@@ -2,4 +2,4 @@
 # Migrations are auto-generated (mostly); let's not worry about them.
 omit =
     *migrations*
-build
+    build

@@ -34,6 +34,10 @@ From source:
 
 ## Testing
 
+```
+pip install --upgrade -r requirements_test.txt
+```
+
 Try one of:
 
     ./runtests.py
@@ -61,4 +65,4 @@ MIT
 
 ## Copyright
 
-© 2017 Kerkhoff Technologies Inc.
+©2018 Kerkhoff Technologies Inc.

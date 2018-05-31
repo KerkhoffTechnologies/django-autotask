@@ -10,8 +10,6 @@ logger = logging.getLogger(__name__)
 
 PRIORITY_RE = re.compile('^Priority ([\d]+)')
 
-# Autotask Account is equivalent to Connectwise Company
-
 
 class Account(models.Model):
     name = models.CharField(blank=True, null=True, max_length=100)
