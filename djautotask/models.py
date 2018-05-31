@@ -1,13 +1,7 @@
 import re
 import logging
-import urllib
 
-from easy_thumbnails.fields import ThumbnailerImageField
-from model_utils import Choices
-
-from django.conf import settings
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 
 
@@ -17,8 +11,9 @@ logger = logging.getLogger(__name__)
 PRIORITY_RE = re.compile('^Priority ([\d]+)')
 
 # Autotask Account is equivalent to Connectwise Company
-class Account(models.Model):
 
+
+class Account(models.Model):
     name = models.CharField(blank=True, null=True, max_length=100)
     number = models.CharField(blank=True, null=True, max_length=50)
     account_id = models.IntegerField(blank=True, null=True)
@@ -34,38 +29,33 @@ class Account(models.Model):
     territory = models.CharField(blank=True, null=True, max_length=250)
     website = models.CharField(blank=True, null=True, max_length=250)
     market = models.CharField(blank=True, null=True, max_length=250)
-    
+
     def __str__(self):
         return self.name
 
 
 class Project(models.Model):
-    
     name = models.CharField(blank=True, null=True, max_length=200)
     last_activity_date = models.DateField(blank=True, null=True)
     actual_hours = models.DecimalField(
-	blank=True, null=True, decimal_places=2, max_digits=6) 
+        blank=True, null=True, decimal_places=2, max_digits=6)
     budget_hours = models.DecimalField(
-	blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=6)
     scheduled_hours = models.DecimalField(
-	blank=True, null=True, decimal_places=2, max_digits=6)
-    
+        blank=True, null=True, decimal_places=2, max_digits=6)
+
     account_id = models.ForeignKey(
-        'Account', 
-        blank=True, 
-        null=True, 
+        'Account',
+        blank=True,
+        null=True,
         on_delete=models.SET_NULL
     )
-
-   #status
 
     def __str__(self):
         return self.name
 
 
 class Ticket(models.Model):
-    
-
     RECORD_TYPES = (
         ('ServiceTicket', "Service Ticket"),
         ('ProjectTicket', "Project Ticket"),
@@ -105,21 +95,20 @@ class Ticket(models.Model):
     sub_type_item = models.CharField(blank=True, null=True, max_length=250)
     summary = models.CharField(blank=True, null=True, max_length=250)
     updated_by = models.CharField(blank=True, null=True, max_length=250)
-    
 
+    """
     board = models.ForeignKey(
-	'AutotaskBoard', blank=True, null=True, on_delete=models.CASCADE)
+        'AutotaskBoard', blank=True, null=True, on_delete=models.CASCADE)
     account = models.ForeignKey(
         'Account', blank=True, null=True, related_name='account_tickets',
         on_delete=models.SET_NULL)
     location = models.ForeignKey(
         'Location', blank=True, null=True, related_name='location_tickets',
         on_delete=models.SET_NULL)
-    # Leave out for now 
-    '''members = models.ManyToManyField(
+    # Leave out for now
+    members = models.ManyToManyField(
         'Member', through='ScheduleEntry',
         related_name='member_tickets')
-    '''
     owner = models.ForeignKey(
         'Member', blank=True, null=True, on_delete=models.SET_NULL)
     priority = models.ForeignKey(
@@ -132,27 +121,30 @@ class Ticket(models.Model):
         on_delete=models.SET_NULL)
     team = models.ForeignKey(
         'Team', blank=True, null=True, related_name='team_tickets',
-	on_delete=models.SET_NULL)
+        on_delete=models.SET_NULL)
+    """
 
     class Meta:
         verbose_name = 'Ticket'
         verbose_name_plural = 'Tickets'
         ordering = ('summary', )
-    
+
     def __str__(self):
         return '{}-{}'.format(self.id, self.summary)
 
 
 class TicketNote(TimeStampedModel):
-
+    pass
+    """
     created_by = models.TextField(blank=True, null=True, max_length=250)
     resource_id = models.IntegerField(blank=True, null=True)
     date_created = models.DateTimeField(blank=True, null=True)
-    detail_description_flag = models.BooleanField(blank=True)
-    external_flag = models.BooleanField(blank=True)
-    internal_analysis_flag = models.BooleanField(blank=True)
-    internal_flag = models.BooleanField(blank=True)
-    resolution_flag = models.BooleanField(blank=True)
+    #makemigrations complains about BooleanField being non nullable
+    #detail_description_flag = models.BooleanField(blank=True)
+    #external_flag = models.BooleanField(blank=True)
+    #internal_analysis_flag = models.BooleanField(blank=True)
+    #internal_flag = models.BooleanField(blank=True)
+    #resolution_flag = models.BooleanField(blank=True)
     description = models.TextField(blank=True, null=True, max_length=2000)
 
     ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE)
@@ -165,6 +157,7 @@ class TicketNote(TimeStampedModel):
 
     def __str__(self):
         return 'Ticket {} note: {}'.format(self.ticket, str(self.date_created))
+"""
 
 
 class TicketCategory(models.Model):
@@ -177,6 +170,7 @@ class TicketSecondaryResource(models.Model):
 
 class TicketPriority(models.Model):
     pass
+
 
 class Resource(models.Model):
     pass

@@ -50,7 +50,7 @@ settings.configure(
     MEDIA_ROOT=tmp_media.name,
     USE_TZ=True,  # Prevent 'ValueError: SQLite backend does not support
     # timezone-aware datetimes when USE_TZ is False.'
-    ROOT_URLCONF='djautotask.tests.urls',
+    # ROOT_URLCONF='djautotask.tests.urls',
     CACHES={
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
