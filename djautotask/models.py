@@ -7,7 +7,7 @@ class Account(models.Model):
     account_number = models.CharField(blank=True, null=True, max_length=50)
     account_type = models.IntegerField(blank=True, null=True)
     active = models.NullBooleanField(blank=True)
-    account_id = models.IntegerField(blank=True, null=True)
+    account_id = models.BigIntegerField(blank=True, null=True)
     last_activity_date = models.DateField(blank=True, null=True)
     phone_number = models.CharField(blank=True, null=True, max_length=250)
     fax_number = models.CharField(blank=True, null=True, max_length=250)
@@ -26,6 +26,7 @@ class Account(models.Model):
 
 
 class Project(models.Model):
+    project_id = models.BigIntegerField(blank=True, null=True)
     actual_billed_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     actual_hours = models.DecimalField(
@@ -56,6 +57,7 @@ class Project(models.Model):
 
 
 class Ticket(models.Model):
+    ticket_id = models.BigIntegerField(blank=True, null=True)
     creator_resource_id = models.IntegerField(blank=True, null=True)
     completed_date = models.DateTimeField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=8000)
@@ -88,6 +90,8 @@ class Ticket(models.Model):
         'Resource', blank=True, null=True,
         related_name='assigned_resource_tickets',
         on_delete=models.SET_NULL)
+    last_activity_resource_id = models.ForeignKey(
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL)
     assigned_resource_role_id = models.ForeignKey(
         'ResourceRole', blank=True, null=True, related_name='role_tickets',
         on_delete=models.SET_NULL)
@@ -116,6 +120,7 @@ class TicketCategory(models.Model):
 
 
 class TicketNote(TimeStampedModel):
+    ticket_note_id = models.BigIntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=3200)
     last_activity_date = models.DateTimeField(blank=True, null=True)
     note_type = models.IntegerField(blank=True, null=True)
@@ -136,6 +141,7 @@ class TicketNote(TimeStampedModel):
 
 
 class TimeEntry(models.Model):
+    time_entry_id = models.BigIntegerField(blank=True, null=True)
     create_date_time = models.DateTimeField(blank=True, null=True)
     date_worked = models.DateTimeField(blank=True, null=True)
     end_date_time = models.DateTimeField(blank=True, null=True)
@@ -162,6 +168,8 @@ class TimeEntry(models.Model):
 
 
 class TicketSecondaryResource(models.Model):
+    ticket_secondary_resource_id = models.BigIntegerField(
+        blank=True, null=True)
     resource_id = models.ForeignKey(
        'Resource', null=True, on_delete=models.CASCADE)
     role_id = models.ForeignKey(
@@ -174,6 +182,7 @@ class TicketSecondaryResource(models.Model):
 
 
 class Resource(models.Model):
+    resource_id = models.BigIntegerField(blank=True, null=True)
     active = models.BooleanField(default=False)
     date_format = models.CharField(blank=True, null=True, max_length=20)
     email = models.CharField(blank=True, null=True, max_length=20)
@@ -196,6 +205,7 @@ class Resource(models.Model):
 
 
 class ResourceRole(models.Model):
+    resource_role_id = models.BigIntegerField(blank=True, null=True)
     active = models.BooleanField(default=False)
     department_id = models.ForeignKey(
             'Department', null=True, on_delete=models.CASCADE)
@@ -206,6 +216,7 @@ class ResourceRole(models.Model):
 
 
 class Department(models.Model):
+    department_id = models.BigIntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=1000)
     name = models.TextField(blank=True, null=True, max_length=100)
     number = models.TextField(blank=True, null=True, max_length=50)
@@ -217,6 +228,7 @@ class Department(models.Model):
 
 
 class Role(models.Model):
+    role_id = models.BigIntegerField(blank=True, null=True)
     active = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True, max_length=200)
     hourly_factor = models.DecimalField(
