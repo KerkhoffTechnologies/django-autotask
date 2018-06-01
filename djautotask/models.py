@@ -56,7 +56,6 @@ class Project(models.Model):
 
 
 class Ticket(models.Model):
-    # Main Autotask API ticket fields
     creator_resource_id = models.IntegerField(blank=True, null=True)
     completed_date = models.DateTimeField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=8000)
@@ -207,11 +206,30 @@ class ResourceRole(models.Model):
 
 
 class Department(models.Model):
-    pass
+    description = models.TextField(blank=True, null=True, max_length=1000)
+    name = models.TextField(blank=True, null=True, max_length=100)
+    number = models.TextField(blank=True, null=True, max_length=50)
+    primary_location_id = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+
+    def __str__(self):
+        return '{} {}'.format(self.name, self.number)
 
 
 class Role(models.Model):
-    pass
+    active = models.BooleanField(default=False)
+    description = models.TextField(blank=True, null=True, max_length=200)
+    hourly_factor = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    hourly_rate = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    is_excluded_from_new_contracts = models.BooleanField(default=False)
+    name = models.TextField(blank=True, null=True, max_length=200)
+    role_type = models.IntegerField(blank=True, null=True)
+    system_role = models.BooleanField(default=False)
+
+    def __str__(self):
+        return '{} {}'.format(self.name, self.role_type)
 
 
 class Opportunity(models.Model):
