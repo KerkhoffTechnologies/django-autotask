@@ -2,7 +2,7 @@ from django.db import models
 from django_extensions.db.models import TimeStampedModel
 
 
-class Account(models.Model):
+class Account(TimeStampedModel):
     account_name = models.CharField(blank=True, null=True, max_length=100)
     account_number = models.CharField(blank=True, null=True, max_length=50)
     account_type = models.IntegerField(blank=True, null=True)
@@ -25,7 +25,7 @@ class Account(models.Model):
         return self.account_name
 
 
-class Project(models.Model):
+class Project(TimeStampedModel):
     project_id = models.BigIntegerField(blank=True, null=True)
     actual_billed_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
@@ -56,7 +56,7 @@ class Project(models.Model):
         return self.name
 
 
-class Ticket(models.Model):
+class Ticket(TimeStampedModel):
     ticket_id = models.BigIntegerField(blank=True, null=True)
     creator_resource_id = models.IntegerField(blank=True, null=True)
     completed_date = models.DateTimeField(blank=True, null=True)
@@ -140,7 +140,7 @@ class TicketNote(TimeStampedModel):
                                            str(self.last_activity_date))
 
 
-class TimeEntry(models.Model):
+class TimeEntry(TimeStampedModel):
     time_entry_id = models.BigIntegerField(blank=True, null=True)
     create_date_time = models.DateTimeField(blank=True, null=True)
     date_worked = models.DateTimeField(blank=True, null=True)
@@ -167,7 +167,7 @@ class TimeEntry(models.Model):
         return self.summary_notes
 
 
-class TicketSecondaryResource(models.Model):
+class TicketSecondaryResource(TimeStampedModel):
     ticket_secondary_resource_id = models.BigIntegerField(
         blank=True, null=True)
     resource_id = models.ForeignKey(
@@ -181,7 +181,7 @@ class TicketSecondaryResource(models.Model):
         return self.resource_id
 
 
-class Resource(models.Model):
+class Resource(TimeStampedModel):
     resource_id = models.BigIntegerField(blank=True, null=True)
     active = models.BooleanField(default=False)
     date_format = models.CharField(blank=True, null=True, max_length=20)
@@ -204,7 +204,7 @@ class Resource(models.Model):
                                  self.last_name, self.user_name)
 
 
-class ResourceRole(models.Model):
+class ResourceRole(TimeStampedModel):
     resource_role_id = models.BigIntegerField(blank=True, null=True)
     active = models.BooleanField(default=False)
     department_id = models.ForeignKey(
@@ -215,7 +215,7 @@ class ResourceRole(models.Model):
         'Role', null=True, on_delete=models.CASCADE)
 
 
-class Department(models.Model):
+class Department(TimeStampedModel):
     department_id = models.BigIntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=1000)
     name = models.TextField(blank=True, null=True, max_length=100)
@@ -227,7 +227,7 @@ class Department(models.Model):
         return '{} {}'.format(self.name, self.number)
 
 
-class Role(models.Model):
+class Role(TimeStampedModel):
     role_id = models.BigIntegerField(blank=True, null=True)
     active = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True, max_length=200)
