@@ -26,7 +26,7 @@ class Account(TimeStampedModel):
 
 
 class Project(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     actual_billed_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     actual_hours = models.DecimalField(
@@ -47,9 +47,9 @@ class Project(TimeStampedModel):
     status_detail = models.TextField(blank=True, null=True, max_length=2000)
     project_type = models.IntegerField(blank=True, null=True)
 
-    account = models.ForeignKey(
+    account_id = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL)
-    creator_resource = models.ForeignKey(
+    creator_resource_id = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
@@ -57,7 +57,7 @@ class Project(TimeStampedModel):
 
 
 class Ticket(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     creator_resource_id = models.IntegerField(blank=True, null=True)
     completed_date = models.DateTimeField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=8000)
@@ -66,6 +66,7 @@ class Ticket(TimeStampedModel):
         blank=True, null=True, decimal_places=2, max_digits=6)
     hours_to_be_scheduled = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
+    issue_type = models.IntegerField(null=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
     opportunity_id = models.IntegerField(blank=True, null=True)
     priority = models.IntegerField(blank=True, null=True)
@@ -112,7 +113,7 @@ class Ticket(TimeStampedModel):
         ordering = ('title', )
 
     def __str__(self):
-        return '{}-{}'.format(self.id, self.summary)
+        return '{}-{}'.format(self.id, self.title)
 
 
 class TicketCategory(models.Model):
@@ -120,7 +121,7 @@ class TicketCategory(models.Model):
 
 
 class TicketNote(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     description = models.TextField(blank=True, null=True, max_length=3200)
     last_activity_date = models.DateTimeField(blank=True, null=True)
     note_type = models.IntegerField(blank=True, null=True)
@@ -141,7 +142,7 @@ class TicketNote(TimeStampedModel):
 
 
 class TimeEntry(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     create_date_time = models.DateTimeField(blank=True, null=True)
     date_worked = models.DateTimeField(blank=True, null=True)
     end_date_time = models.DateTimeField(blank=True, null=True)
@@ -168,7 +169,7 @@ class TimeEntry(TimeStampedModel):
 
 
 class TicketSecondaryResource(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     resource_id = models.ForeignKey(
        'Resource', null=True, on_delete=models.CASCADE)
     role_id = models.ForeignKey(
@@ -181,7 +182,7 @@ class TicketSecondaryResource(TimeStampedModel):
 
 
 class Resource(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     active = models.BooleanField(default=False)
     date_format = models.CharField(blank=True, null=True, max_length=20)
     email = models.CharField(blank=True, null=True, max_length=20)
@@ -204,7 +205,7 @@ class Resource(TimeStampedModel):
 
 
 class ResourceRole(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     active = models.BooleanField(default=False)
     department_id = models.ForeignKey(
             'Department', null=True, on_delete=models.CASCADE)
@@ -215,7 +216,7 @@ class ResourceRole(TimeStampedModel):
 
 
 class Department(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     description = models.TextField(blank=True, null=True, max_length=1000)
     name = models.TextField(blank=True, null=True, max_length=100)
     number = models.TextField(blank=True, null=True, max_length=50)
@@ -227,7 +228,7 @@ class Department(TimeStampedModel):
 
 
 class Role(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)$
+    id = models.BigAutoField(primary_key=True)
     active = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True, max_length=200)
     hourly_factor = models.DecimalField(
