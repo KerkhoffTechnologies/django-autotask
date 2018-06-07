@@ -53,7 +53,7 @@ class Project(TimeStampedModel):
         'Resource', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return self.name
+        return self.project_name
 
 
 class Ticket(TimeStampedModel):
@@ -116,8 +116,16 @@ class Ticket(TimeStampedModel):
         return '{}-{}'.format(self.id, self.title)
 
 
-class TicketCategory(models.Model):
-    pass
+class TicketCategory(TimeStampedModel):
+    id = models.BigAutoField(primary_key=True)
+    active = models.BooleanField(default=False)
+    display_color_rgb = models.IntegerField()
+    global_default = models.BooleanField(default=False)
+    ticket_category_name = models.CharField(max_length=30)
+    nickname = models.CharField(max_length=3)
+
+    def __str__(self):
+        return self.ticket_category_name
 
 
 class TicketNote(TimeStampedModel):
@@ -137,7 +145,7 @@ class TicketNote(TimeStampedModel):
         verbose_name_plural = 'Notes'
 
     def __str__(self):
-        return 'Ticket {} note: {}'.format(self.ticket,
+        return 'Ticket {} note: {}'.format(self.ticket_id,
                                            str(self.last_activity_date))
 
 
