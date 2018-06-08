@@ -3,53 +3,37 @@ from django_extensions.db.models import TimeStampedModel
 
 
 class Account(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
-    account_name = models.CharField(blank=True, null=True, max_length=100)
+    account_name = models.CharField(null=False, max_length=100)
     account_number = models.CharField(blank=True, null=True, max_length=50)
-    account_type = models.IntegerField(blank=True, null=True)
-    active = models.NullBooleanField(blank=True)
+    active = models.BooleanField(default=False)
     last_activity_date = models.DateField(blank=True, null=True)
-    phone_number = models.CharField(blank=True, null=True, max_length=250)
-    fax_number = models.CharField(blank=True, null=True, max_length=250)
-    address_line1 = models.CharField(blank=True, null=True, max_length=250)
-    address_line2 = models.CharField(blank=True, null=True, max_length=250)
-    city = models.CharField(blank=True, null=True, max_length=250)
-    state_identifier = models.CharField(blank=True, null=True, max_length=250)
-    zip = models.CharField(blank=True, null=True, max_length=250)
-    country = models.CharField(blank=True, null=True, max_length=250)
-    territory = models.CharField(blank=True, null=True, max_length=250)
-    website = models.CharField(blank=True, null=True, max_length=250)
-    market = models.CharField(blank=True, null=True, max_length=250)
+    web_address = models.CharField(blank=True, null=True, max_length=250)
 
     def __str__(self):
         return self.account_name
 
 
 class Project(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
     actual_billed_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     actual_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     completed_date_time = models.DateField(blank=True, null=True)
     create_date_time = models.DateField(blank=True, null=True)
-    department = models.IntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=2000)
     duration = models.IntegerField(blank=True, null=True)
-    end_date_time = models.DateField(blank=True, null=True)
+    end_date_time = models.DateField(null=False)
     estimated_time = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
-    project_name = models.CharField(blank=True, null=True, max_length=100)
+    project_name = models.CharField(null=False, max_length=100)
     project_number = models.CharField(blank=True, null=True, max_length=50)
-    start_date_time = models.DateField(blank=True, null=True)
+    start_date_time = models.DateField(null=False)
+    # Uses picklist, how to implement?
     status = models.IntegerField(blank=True, null=True)
-    status_date_time = models.DateField(blank=True, null=True)
-    status_detail = models.TextField(blank=True, null=True, max_length=2000)
-    project_type = models.IntegerField(blank=True, null=True)
 
-    account_id = models.ForeignKey(
-        'Account', blank=True, null=True, on_delete=models.SET_NULL)
-    creator_resource_id = models.ForeignKey(
+    account = models.ForeignKey(
+        'Account', null=False, on_delete=models.CASCADE)
+    creator_resource = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
@@ -57,20 +41,17 @@ class Project(TimeStampedModel):
 
 
 class Ticket(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
-    creator_resource_id = models.IntegerField(blank=True, null=True)
     completed_date = models.DateTimeField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=8000)
-    due_date_time = models.DateTimeField(blank=True, null=True)
+    due_date_time = models.DateTimeField(null=False)
     estimated_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     hours_to_be_scheduled = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
-    issue_type = models.IntegerField(null=True)
+    # picklist    issue_type = models.IntegerField(null=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
     opportunity_id = models.IntegerField(blank=True, null=True)
-    priority = models.IntegerField(blank=True, null=True)
-    resolution = models.TextField(blank=True, null=True, max_length=32000)
+    # picklist    priority = models.IntegerField(blank=True, null=True)
     resolution_plan_due_date = models.DateTimeField(blank=True, null=True)
     resolution_plan_due_date_time = models.DateTimeField(blank=True, null=True)
     resolved_date_time = models.DateTimeField(blank=True, null=True)
@@ -78,34 +59,31 @@ class Ticket(TimeStampedModel):
     sla_been_met = models.NullBooleanField(blank=True, null=True)
     sla_id = models.IntegerField(blank=True, null=True)
     source = models.IntegerField(blank=True, null=True)
-    status = models.IntegerField(blank=True, null=True)
+    # picklist    status = models.IntegerField(blank=True, null=True)
+    # TicketCategory that is a field of Ticket, not the entity.
+    # They are seemingly unrelated
     ticket_category = models.IntegerField(blank=True, null=True)
     ticket_number = models.CharField(blank=True, null=True, max_length=50)
     ticket_type = models.IntegerField(blank=True, null=True)
     title = models.CharField(blank=True, null=True, max_length=255)
 
-    account_id = models.ForeignKey(
-        'Account', blank=True, null=True, related_name='account_tickets',
+    account = models.ForeignKey(
+        'Account', null=True, related_name='account_tickets',
         on_delete=models.SET_NULL)
-    assigned_resource_id = models.ForeignKey(
+    assigned_resource = models.ForeignKey(
         'Resource', blank=True, null=True,
         related_name='assigned_resource_tickets',
         on_delete=models.SET_NULL)
-    last_activity_resource_id = models.ForeignKey(
+    last_activity_resource = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.SET_NULL)
-    assigned_resource_role_id = models.ForeignKey(
-        'ResourceRole', blank=True, null=True, related_name='role_tickets',
-        on_delete=models.SET_NULL)
-    creator_resource_id = models.ForeignKey(
+    creator_resource = models.ForeignKey(
         'Resource', blank=True, null=True,
         related_name='creator_resource_tickets',
         on_delete=models.SET_NULL)
-    project_id = models.ForeignKey(
+    project = models.ForeignKey(
         'Project', blank=True, null=True,
         related_name='project_tickets',
-        on_delete=models.CASCADE)
-    # Might need to include, board, priority, status and
-    # team as in django-connectwise
+        on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = 'Ticket'
@@ -117,7 +95,6 @@ class Ticket(TimeStampedModel):
 
 
 class TicketCategory(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
     active = models.BooleanField(default=False)
     display_color_rgb = models.IntegerField()
     global_default = models.BooleanField(default=False)
@@ -129,127 +106,79 @@ class TicketCategory(TimeStampedModel):
 
 
 class TicketNote(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
-    description = models.TextField(blank=True, null=True, max_length=3200)
+    description = models.TextField(null=False, max_length=3200)
     last_activity_date = models.DateTimeField(blank=True, null=True)
-    note_type = models.IntegerField(blank=True, null=True)
-    publish = models.IntegerField(blank=True, null=True)
-    title = models.CharField(blank=True, null=True, max_length=250)
+    # picklist    note_type = models.IntegerField(null=False)
+    # picklist    publish = models.IntegerField(null=False)
+    title = models.CharField(null=False, max_length=250)
 
-    creator_resource_id = models.ForeignKey(
+    creator_resource = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.SET_NULL)
-    ticket_id = models.ForeignKey(
-        'Ticket', on_delete=models.CASCADE)
+    ticket = models.ForeignKey(
+        'Ticket', null=False, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name_plural = 'Notes'
 
     def __str__(self):
-        return 'Ticket {} note: {}'.format(self.ticket_id,
-                                           str(self.last_activity_date))
+        return '{} {}'.format(self.title,
+                              str(self.last_activity_date))
 
 
 class TimeEntry(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
     create_date_time = models.DateTimeField(blank=True, null=True)
-    date_worked = models.DateTimeField(blank=True, null=True)
+    date_worked = models.DateTimeField(null=False)
     end_date_time = models.DateTimeField(blank=True, null=True)
-    hours_to_bill = models.DateTimeField(blank=True, null=True)
+    hours_to_bill = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
     hours_worked = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=6)
     last_modified_date_time = models.DateTimeField(blank=True, null=True)
     last_modified_user_id = models.IntegerField(blank=True, null=True)
-    non_billable = models.NullBooleanField(blank=True, null=True)
-    show_on_invoice = models.BooleanField(blank=True)
+    non_billable = models.BooleanField(default=False)
     start_date_time = models.DateTimeField(blank=True, null=True)
     summary_notes = models.TextField(blank=True, null=True, max_length=8000)
-    time_entry_type = models.IntegerField(blank=True, null=True)
+    # picklist time_entry_type = models.IntegerField(blank=True, null=False)
 
-    ticket_id = models.ForeignKey(
-        'Ticket', on_delete=models.CASCADE)
-    resource_id = models.ForeignKey(
-        'Resource', on_delete=models.CASCADE)
-    role_id = models.ForeignKey(
-        'Role', on_delete=models.CASCADE)
+    ticket = models.ForeignKey(
+        'Ticket', null=False, on_delete=models.CASCADE)
+    resource = models.ForeignKey(
+        'Resource', null=False, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.summary_notes
 
 
+# Field on ticket should be through secondary resource. many to many
 class TicketSecondaryResource(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
-    resource_id = models.ForeignKey(
+    resource = models.ForeignKey(
        'Resource', null=True, on_delete=models.CASCADE)
-    role_id = models.ForeignKey(
-        'ResourceRole', null=True, on_delete=models.CASCADE)
-    ticket_id = models.ForeignKey(
+    ticket = models.ForeignKey(
         'Ticket', null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.resource_id
+        return self.resource
 
 
 class Resource(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
-    active = models.BooleanField(default=False)
-    date_format = models.CharField(blank=True, null=True, max_length=20)
-    email = models.CharField(blank=True, null=True, max_length=20)
-    first_name = models.CharField(blank=True, null=True, max_length=50)
-    last_name = models.CharField(blank=True, null=True, max_length=50)
-    gender = models.CharField(blank=True, null=True, max_length=1)
-    greeting = models.IntegerField(blank=True, null=True)
-    hire_date = models.DateTimeField(blank=True, null=True)
-    number_format = models.CharField(blank=True, null=True, max_length=20)
-    office_phone = models.CharField(blank=True, null=True, max_length=20)
-    resource_type = models.CharField(blank=True, null=True, max_length=15)
-    time_format = models.CharField(blank=True, null=True, max_length=20)
+    active = models.BooleanField(null=False, default=False)
+    email = models.CharField(null=False, max_length=50)
+    first_name = models.CharField(null=False, max_length=50)
+    last_name = models.CharField(null=False, max_length=50)
     title = models.CharField(blank=True, null=True, max_length=50)
-    user_name = models.CharField(blank=True, null=True, max_length=32)
-    user_type = models.IntegerField(blank=True, null=True)
+    user_name = models.CharField(null=False, max_length=32)
 
     def __str__(self):
-        return '{} {} {}'.format(self.first_name,
-                                 self.last_name, self.user_name)
-
-
-class ResourceRole(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
-    active = models.BooleanField(default=False)
-    department_id = models.ForeignKey(
-            'Department', null=True, on_delete=models.CASCADE)
-    resource_id = models.ForeignKey(
-        'Resource', null=True, on_delete=models.CASCADE)
-    role_id = models.ForeignKey(
-        'Role', null=True, on_delete=models.CASCADE)
+        return '{} {} {}'.format(self.user_name)
 
 
 class Department(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
     description = models.TextField(blank=True, null=True, max_length=1000)
-    name = models.TextField(blank=True, null=True, max_length=100)
-    number = models.TextField(blank=True, null=True, max_length=50)
-    primary_location_id = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+    name = models.TextField(null=False, max_length=100)
+    number = models.CharField(blank=True, null=True, max_length=50)
 
     def __str__(self):
         return '{} {}'.format(self.name, self.number)
-
-
-class Role(TimeStampedModel):
-    id = models.BigAutoField(primary_key=True)
-    active = models.BooleanField(default=False)
-    description = models.TextField(blank=True, null=True, max_length=200)
-    hourly_factor = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
-    hourly_rate = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
-    is_excluded_from_new_contracts = models.BooleanField(default=False)
-    name = models.TextField(blank=True, null=True, max_length=200)
-    role_type = models.IntegerField(blank=True, null=True)
-    system_role = models.BooleanField(default=False)
-
-    def __str__(self):
-        return '{} {}'.format(self.name, self.role_type)
 
 
 class Opportunity(models.Model):
