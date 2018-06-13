@@ -61,7 +61,7 @@ class Ticket(TimeStampedModel):
     account = models.ForeignKey(
         'Account', null=False, related_name='account_tickets',
         on_delete=models.CASCADE)
-    # Listed as Primary Resource in AT
+    # Listed as Primary Resource in Autotask dashboard
     assigned_resource = models.ForeignKey(
         'Resource', blank=True, null=True,
         related_name='assigned_resource_tickets',
@@ -80,9 +80,9 @@ class Ticket(TimeStampedModel):
         related_name='project_tickets',
         on_delete=models.SET_NULL)
     issue_type = models.ForeignKey(
-        'IssueType', blank=True, null=True, on_delete=models.SET_NULL)
+        'TicketIssueType', blank=True, null=True, on_delete=models.SET_NULL)
     priority = models.ForeignKey(
-        'Priority', blank=True, null=True, on_delete=models.SET_NULL)
+        'TicketPriority', blank=True, null=True, on_delete=models.SET_NULL)
     service_level_agreement = models.ForeignKey(
         'ServiceLevelAgreement', blank=True, null=True,
         on_delete=models.SET_NULL)
@@ -105,7 +105,6 @@ class Ticket(TimeStampedModel):
 
 class TicketCategory(TimeStampedModel):
     active = models.BooleanField(default=False)
-    # picklist display_color_rgb = models.IntegerField() do we need this?
     global_default = models.BooleanField(default=False)
     ticket_category_name = models.CharField(max_length=30)
     nickname = models.CharField(max_length=3)
@@ -193,36 +192,76 @@ class Opportunity(models.Model):
     pass
 
 
-# The following models are picklists in Autotask
+# The following models are picklists in Autotask API.
+# Implemented as models because they are customizable from AT dashboard
+# and we want to allow for those customizations.
 class TicketStatus(TimeStampedModel):
-    value = models.PositiveSmallIntegerField()
     label = models.CharField(max_length=100)
+    sort_order = models.PositiveSmallIntegerField()
     is_active = models.BooleanField(default=False)
 
+    def __str__(self):
+        return '{}-{}'.format(self.label)
 
-class Priority(TimeStampedModel):
-    pass
 
+class TicketPriority(TimeStampedModel):
+    label = models.CharField(max_length=100)
+    sort_order = models.PositiveSmallIntegerField()
+    is_active = models.BooleanField(default=False)
 
-class ProjectStatus(TimeStampedModel):
-    pass
+    def __str__(self):
+        return '{}-{}'.format(self.label)
 
 
 class TicketType(TimeStampedModel):
-    pass
+    label = models.CharField(max_length=100)
+    sort_order = models.PositiveSmallIntegerField()
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return '{}-{}'.format(self.label)
 
 
-class IssueType(TimeStampedModel):
-    pass
+class ProjectStatus(TimeStampedModel):
+    label = models.CharField(max_length=100)
+    sort_order = models.PositiveSmallIntegerField()
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return '{}-{}'.format(self.label)
 
 
-class Source(TimeStampedModel):
-    pass
+class TicketIssueType(TimeStampedModel):
+    label = models.CharField(max_length=100)
+    sort_order = models.PositiveSmallIntegerField()
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return '{}-{}'.format(self.label)
+
+
+class TicketSource(TimeStampedModel):
+    label = models.CharField(max_length=100)
+    sort_order = models.PositiveSmallIntegerField()
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return '{}-{}'.format(self.label)
 
 
 class ServiceLevelAgreement(TimeStampedModel):
-    pass
+    label = models.CharField(max_length=100)
+    sort_order = models.PositiveSmallIntegerField()
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return '{}-{}'.format(self.label)
 
 
 class TimeEntryType(TimeStampedModel):
-    pass
+    label = models.CharField(max_length=100)
+    sort_order = models.PositiveSmallIntegerField()
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return '{}-{}'.format(self.label)
