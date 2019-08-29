@@ -1,5 +1,5 @@
 from django.test import TestCase
 
 
-class TestTicket(TestCase):
+class TestTicketSynchronizer(TestCase):
     pass
