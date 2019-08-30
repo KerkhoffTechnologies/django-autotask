@@ -67,11 +67,25 @@ class Synchronizer:
     def __init__(self, full=False, *args, **kwargs):
         self.full = full
 
-        self.at_api_object = connect(
-            username=settings.AUTOTASK_USERNAME,
-            password=settings.AUTOTASK_PASSWORD,
-            integrationcode=settings.AUTOTASK_INTEGRATION_CODE
+        self.at_api_object = self.init_api_connection()
+
+    def init_api_connection(self):
+        return connect(
+            username=settings.AUTOTASK_CREDENTIALS['username'],
+            password=settings.AUTOTASK_CREDENTIALS['password'],
+            integrationcode=settings.AUTOTASK_CREDENTIALS['integration_code'],
         )
+
+    def _instance_ids(self, filter_params=None):
+        if not filter_params:
+            ids = self.model_class.objects.all().values_list(
+                self.lookup_key, flat=True
+            )
+        else:
+            ids = self.model_class.objects.filter(filter_params).values_list(
+                self.lookup_key, flat=True
+            )
+        return set(ids)
 
     def get(self, query_object, results):
         """
@@ -97,6 +111,8 @@ class Synchronizer:
                 results.updated_count += 1
         except InvalidObjectException as e:
             logger.warning('{}'.format(e))
+
+        results.synced_ids.add(record['id'])
 
         return results
 
@@ -131,6 +147,26 @@ class Synchronizer:
 
         return instance, created
 
+    def prune_stale_records(self, initial_ids, synced_ids):
+        """
+        Delete records that existed when sync started but were
+        not seen as we iterated through all records from the API.
+        """
+        stale_ids = initial_ids - synced_ids
+        deleted_count = 0
+        if stale_ids:
+            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
+            deleted_count = delete_qset.count()
+
+            logger.info(
+                'Removing {} stale records for model: {}'.format(
+                    len(stale_ids), self.model_class,
+                )
+            )
+            delete_qset.delete()
+
+        return deleted_count
+
     @log_sync_job
     def sync(self):
         sync_job_qset = models.SyncJob.objects.filter(
@@ -141,7 +177,7 @@ class Synchronizer:
 
         if sync_job_qset.exists() and not self.full:
             last_sync_job_time = sync_job_qset.last().start_time
-            query.WHERE('LastActivityDate',
+            query.WHERE(self.last_updated_field,
                         query.GreaterThanorEquals, last_sync_job_time)
 
         else:
@@ -149,7 +185,15 @@ class Synchronizer:
 
         query_object = self.at_api_object.query(query)
 
+        # Set of IDs of all records prior
+        # to sync, to find stale records for deletion.
+        initial_ids = self._instance_ids()
         results = self.get(query_object, results)
+
+        if self.full:
+            results.deleted_count = self.prune_stale_records(
+                initial_ids, results.synced_ids
+            )
 
         return \
             results.created_count, results.updated_count, results.deleted_count
@@ -157,13 +201,15 @@ class Synchronizer:
 
 class TicketSynchronizer(Synchronizer):
     model_class = models.Ticket
+    last_updated_field = 'LastActivityDate'
 
     def _assign_field_data(self, instance, object_data):
 
         instance.id = object_data['id']
         instance.title = object_data['Title']
 
-        instance.completed_date = object_data.get('CompleteDate')
+        instance.ticket_number = object_data.get('TicketNumber')
+        instance.completed_date = object_data.get('CompletedDate')
         instance.create_date = object_data.get('CreateDate')
         instance.description = object_data.get('Description')
         instance.due_date_time = object_data.get('DueDateTime')

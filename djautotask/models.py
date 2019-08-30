@@ -19,6 +19,7 @@ class SyncJob(models.Model):
 
 
 class Ticket(TimeStampedModel):
+    ticket_number = models.CharField(blank=True, null=True, max_length=50)
     completed_date = models.DateTimeField(blank=True, null=True)
     create_date = models.DateTimeField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=8000)

@@ -8,7 +8,6 @@ settings.configure(
     DEBUG=True,
     INSTALLED_APPS=(
         'djautotask',
-        'easy_thumbnails',
     ),
     DJAUTOTASK_API_BATCH_LIMIT=25,
 )
