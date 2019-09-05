@@ -1,7 +1,7 @@
 import logging
 
 from suds.client import Client
-from atws import connect, Query, helpers
+from atws import connect, Query, helpers, picklist
 
 from django.conf import settings
 from django.db import transaction, IntegrityError
@@ -75,6 +75,32 @@ class Synchronizer:
             password=settings.AUTOTASK_CREDENTIALS['password'],
             integrationcode=settings.AUTOTASK_CREDENTIALS['integration_code'],
         )
+
+    def set_relations(self, instance, object_data):
+        for object_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                object_data,
+                object_field,
+                model_class,
+                field_name
+            )
+
+    def _assign_relation(self, instance, object_data,
+                         object_field, model_class, field_name):
+
+        relation_id = object_data.get(object_field)
+
+        try:
+            related_instance = model_class.objects.get(pk=relation_id)
+            setattr(instance, field_name, related_instance)
+        except model_class.DoesNotExist:
+            logger.warning(
+                'Failed to find {} {} for {} {}.'.format(
+                    object_field, relation_id, type(instance), instance.id
+                )
+            )
 
     def _instance_ids(self, filter_params=None):
         if not filter_params:
@@ -200,9 +226,57 @@ class Synchronizer:
             results.created_count, results.updated_count, results.deleted_count
 
 
+class PicklistSynchronizer(Synchronizer):
+    lookup_key = 'Value'
+
+    def sync(self):
+        """
+        Fetch picklist for a field from the API and persist in the database.
+        """
+        results = SyncResults()
+        picklist_objects = None
+
+        field_info = \
+            helpers.get_field_info(self.at_api_object, self.entity_type)
+
+        try:
+            field_picklist = \
+                picklist.get_field_picklist(self.picklist_field, field_info)
+            picklist_objects = field_picklist.PicklistValues[0]
+
+        except KeyError as e:
+            logger.warning(
+                'Failed to find {} picklist field. {}'.format(
+                    self.picklist_field, e
+                )
+            )
+
+        if picklist_objects:
+            for record in picklist_objects:
+                self.persist_record(record, results)
+
+        return \
+            results.created_count, results.updated_count, results.deleted_count
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.value = object_data.get('Value')
+        instance.label = object_data.get('Label')
+        instance.is_default = object_data.get('IsDefaultValue')
+        instance.sort_order = object_data.get('SortOrder')
+        instance.is_active = object_data.get('IsActive')
+        instance.is_system = object_data.get('IsSystem')
+
+        return instance
+
+
 class TicketSynchronizer(Synchronizer):
     model_class = models.Ticket
     last_updated_field = 'LastActivityDate'
+
+    related_meta = {
+        'Status': (models.TicketStatus, 'status')
+    }
 
     def _assign_field_data(self, instance, object_data):
 
@@ -217,43 +291,7 @@ class TicketSynchronizer(Synchronizer):
         instance.estimated_hours = object_data.get('EstimatedHours')
         instance.last_activity_date = object_data.get('LastActivityDate')
 
-        return instance
-
-
-class PicklistSynchronizer(Synchronizer):
-    lookup_key = 'Value'
-
-    def sync(self):
-        field_info = \
-            helpers.get_field_info(self.at_api_object, self.entity_type)
-
-        picklists = self.get_picklists(field_info)
-        results = SyncResults()
-
-        for record in picklists[self.picklist_field][0]:
-            self.persist_record(record, results)
-
-        return \
-            results.created_count, results.updated_count, results.deleted_count
-
-    def get_picklists(self, field_info):
-        picklists = {}
-
-        for field in field_info.Field:
-            if helpers.has_picklist_values(field):
-                picklists[field.Name] = field.PicklistValues
-
-        return picklists
-
-    def _assign_field_data(self, instance, object_data):
-
-        instance.value = object_data.get('Value')
-        instance.label = object_data.get('Label')
-        instance.is_default = object_data.get('IsDefaultValue')
-        instance.sort_order = object_data.get('SortOrder')
-        instance.is_active = object_data.get('IsActive')
-        instance.is_system = object_data.get('IsSystem')
-
+        self.set_relations(instance, object_data)
         return instance
 
 

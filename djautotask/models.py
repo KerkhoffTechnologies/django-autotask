@@ -29,6 +29,10 @@ class Ticket(TimeStampedModel):
     last_activity_date = models.DateTimeField(blank=True, null=True)
     title = models.CharField(blank=True, null=True, max_length=255)
 
+    status = models.ForeignKey(
+        'TicketStatus', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
     class Meta:
         verbose_name = 'Ticket'
 
