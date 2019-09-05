@@ -20,6 +20,8 @@ class Command(BaseCommand):
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
+            ('ticket_status',
+             sync.TicketStatusSynchronizer, _('Ticket Status')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:

@@ -1,7 +1,7 @@
 import logging
 
 from suds.client import Client
-from atws import connect, Query
+from atws import connect, Query, helpers
 
 from django.conf import settings
 from django.db import transaction, IntegrityError
@@ -95,6 +95,7 @@ class Synchronizer:
         logger.info(
             'Fetching {} records'.format(self.model_class)
         )
+        # Iterate over suds objects returned from the API.
         for record in query_object:
             self.persist_record(record, results)
 
@@ -112,7 +113,7 @@ class Synchronizer:
         except InvalidObjectException as e:
             logger.warning('{}'.format(e))
 
-        results.synced_ids.add(record['id'])
+        results.synced_ids.add(record[self.lookup_key])
 
         return results
 
@@ -215,5 +216,31 @@ class TicketSynchronizer(Synchronizer):
         instance.due_date_time = object_data.get('DueDateTime')
         instance.estimated_hours = object_data.get('EstimatedHours')
         instance.last_activity_date = object_data.get('LastActivityDate')
+
+        return instance
+
+
+class TicketStatusSynchronizer(Synchronizer):
+    model_class = models.TicketStatus
+    lookup_key = 'Value'
+
+    def sync(self):
+        tickets_info = helpers.get_field_info(self.at_api_object, 'Ticket')
+        status_picklist = []
+
+        for field in tickets_info.Field:
+            if field.Name == 'Status':
+                status_picklist = field.PicklistValues
+                break
+
+        results = SyncResults()
+        for record in status_picklist[0]:
+            self.persist_record(record, results)
+
+    def _assign_field_data(self, instance, object_data):
+        import pdb; pdb.set_trace()
+        instance.value = object_data.get('Value')
+        instance.label = object_data.get('Label')
+        instance.is_default = object_data.get('IsDefaultValue')
 
         return instance
