@@ -220,27 +220,44 @@ class TicketSynchronizer(Synchronizer):
         return instance
 
 
-class TicketStatusSynchronizer(Synchronizer):
-    model_class = models.TicketStatus
+class PicklistSynchronizer(Synchronizer):
     lookup_key = 'Value'
 
     def sync(self):
-        tickets_info = helpers.get_field_info(self.at_api_object, 'Ticket')
-        status_picklist = []
+        field_info = \
+            helpers.get_field_info(self.at_api_object, self.entity_type)
 
-        for field in tickets_info.Field:
-            if field.Name == 'Status':
-                status_picklist = field.PicklistValues
-                break
-
+        picklists = self.get_picklists(field_info)
         results = SyncResults()
-        for record in status_picklist[0]:
+
+        for record in picklists[self.picklist_field][0]:
             self.persist_record(record, results)
 
+        return \
+            results.created_count, results.updated_count, results.deleted_count
+
+    def get_picklists(self, field_info):
+        picklists = {}
+
+        for field in field_info.Field:
+            if helpers.has_picklist_values(field):
+                picklists[field.Name] = field.PicklistValues
+
+        return picklists
+
     def _assign_field_data(self, instance, object_data):
-        import pdb; pdb.set_trace()
+
         instance.value = object_data.get('Value')
         instance.label = object_data.get('Label')
         instance.is_default = object_data.get('IsDefaultValue')
+        instance.sort_order = object_data.get('SortOrder')
+        instance.is_active = object_data.get('IsActive')
+        instance.is_system = object_data.get('IsSystem')
 
         return instance
+
+
+class TicketStatusSynchronizer(PicklistSynchronizer):
+    model_class = models.TicketStatus
+    entity_type = 'Ticket'
+    picklist_field = 'Status'

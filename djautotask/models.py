@@ -55,3 +55,6 @@ class TicketStatus(Picklist):
     class Meta:
         verbose_name = 'Ticket status'
         verbose_name_plural = 'Ticket statuses'
+
+    def __str__(self):
+        return '{}-{}'.format(self.id, self.label)
