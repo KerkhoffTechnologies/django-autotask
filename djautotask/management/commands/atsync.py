@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from atws.wrapper import AutotaskAPIException
+from xml.sax._exceptions import SAXParseException
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import ugettext_lazy as _
@@ -86,8 +87,16 @@ class Command(BaseCommand):
                                    full_option=full_option)
 
             except AutotaskAPIException as e:
-                msg = 'Failed to sync {}: {}'.format(obj_name, e)
-                self.stderr.write(msg)
+                msg = 'Failed to sync {}. Autotask API returned an error: ' \
+                      '{}.'.format(obj_name, ' '.join(e.response.errors))
+
+                error_messages += '{}\n'.format(msg)
+                failed_classes += 1
+
+            except SAXParseException as e:
+                msg = 'Failed to connect to Autotask API. ' \
+                      'The error was: {}'.format(e)
+
                 error_messages += '{}\n'.format(msg)
                 failed_classes += 1
 

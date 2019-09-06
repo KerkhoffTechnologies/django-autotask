@@ -18,7 +18,7 @@ def init_api_connection(return_value):
     return create_mock_call(method_name, return_value)
 
 
-def atws_wrapper_query(return_value):
+def service_ticket_api_call(return_value):
     method_name = 'atws.wrapper.Wrapper.query'
 
     return create_mock_call(method_name, return_value)

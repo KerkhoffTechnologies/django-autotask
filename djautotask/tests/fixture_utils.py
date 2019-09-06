@@ -4,28 +4,39 @@ import urllib
 import os
 
 
-def generate_ticket_object():
+def mock_query_generator(suds_objects):
+    """
+    A generator to return suds objects to mock the same behaviour as the
+    ATWS Wrapper query method.
+    """
+    for obj in suds_objects:
+        yield obj
 
+
+def set_attributes(suds_object, fixture_object):
+    """
+    Set attributes on suds object from the given fixture.
+    """
+    for key, value in fixture_object.items():
+        setattr(suds_object, key, value)
+
+    return suds_object
+
+
+def generate_objects(object_type, fixture_objects):
+    """
+    Generate multiple objects based on the given fixtures.
+    """
     path = os.path.abspath("djautotask/tests/atws.wsdl")
     url = urllib.parse.urljoin('file:', urllib.request.pathname2url(path))
     client = Client(url)
+    object_list = []
 
-    # Create suds test ticket object
-    ticket_object = client.factory.create('Ticket')
-    ticket_object.id = 7703
-    ticket_object.Title = 'Customer defect with provisioning'
-    ticket_object.CompletedDate = '2019-08-29 19:01:41.573000+01:00'
-    ticket_object.CreateDate = '2012-06-18 13:38:30.940000+01:00'
-    ticket_object.Description = \
-        'Review with customer how they can utilize new features.'
-    ticket_object.DueDateTime = '2012-06-18 13:38:30.940000+01:00'
-    ticket_object.EstimatedHours = 3.0
-    ticket_object.LastActivityDate = '2019-08-29 00:16:31.970000+01:00'
-    ticket_object.TicketNumber = 'T20120529.0001'
+    # Create test suds objects from the list of fixtures.
+    for fixture in fixture_objects:
+        suds_object = \
+            set_attributes(client.factory.create(object_type), fixture)
 
-    return QueryCursor(mock_query_generator([ticket_object]))
+        object_list.append(suds_object)
 
-
-def mock_query_generator(suds_objects):
-    for obj in suds_objects:
-        yield obj
+    return QueryCursor(mock_query_generator(object_list))
