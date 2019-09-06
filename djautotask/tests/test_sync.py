@@ -4,8 +4,7 @@ from dateutil.parser import parse
 
 from djautotask.models import Ticket, SyncJob
 from djautotask import sync
-from djautotask.tests import fixtures, fixture_utils
-from djautotask.tests import mocks
+from djautotask.tests import fixtures, mocks, fixture_utils
 
 
 def assert_sync_job(model_class):
@@ -18,10 +17,11 @@ class TestTicketSynchronizer(TestCase):
     def setUp(self):
         super().setUp()
 
-        ticket = fixture_utils.generate_ticket_object()
+        ticket = fixture_utils.generate_objects(
+            'Ticket', [fixtures.API_SERVICE_TICKET])
 
         mocks.init_api_connection(Wrapper)
-        mocks.atws_wrapper_query(ticket)
+        mocks.service_ticket_api_call(ticket)
 
     def _assert_sync(self, instance, object_data):
 
@@ -63,7 +63,7 @@ class TestTicketSynchronizer(TestCase):
         ticket_qset = Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
 
-        mocks.atws_wrapper_query([])
+        mocks.service_ticket_api_call([])
 
         synchronizer = sync.TicketSynchronizer(full=True)
         synchronizer.sync()

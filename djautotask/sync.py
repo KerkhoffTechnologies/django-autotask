@@ -66,14 +66,16 @@ class Synchronizer:
 
     def __init__(self, full=False, *args, **kwargs):
         self.full = full
-
-        self.at_api_object = self.init_api_connection()
+        self.at_api_client = self.init_api_connection()
 
     def init_api_connection(self):
+
         return connect(
             username=settings.AUTOTASK_CREDENTIALS['username'],
             password=settings.AUTOTASK_CREDENTIALS['password'],
             integrationcode=settings.AUTOTASK_CREDENTIALS['integration_code'],
+            apiversion=settings.AUTOTASK_CREDENTIALS['api_version'],
+            url=settings.AUTOTASK_CREDENTIALS['url'],
         )
 
     def _instance_ids(self, filter_params=None):
@@ -183,7 +185,7 @@ class Synchronizer:
         else:
             query.WHERE('id', query.GreaterThan, 0)
 
-        query_object = self.at_api_object.query(query)
+        query_object = self.at_api_client.query(query)
 
         # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
