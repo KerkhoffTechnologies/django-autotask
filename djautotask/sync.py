@@ -184,6 +184,7 @@ class Synchronizer:
         stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
+            import pdb; pdb.set_trace()
             delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
             deleted_count = delete_qset.count()
 
@@ -237,9 +238,10 @@ class PicklistSynchronizer(Synchronizer):
         """
         results = SyncResults()
         picklist_objects = None
+        initial_ids = self._instance_ids()
 
         field_info = \
-            helpers.get_field_info(self.at_api_object, self.entity_type)
+            helpers.get_field_info(self.at_api_client, self.entity_type)
 
         try:
             field_picklist = \
@@ -257,12 +259,28 @@ class PicklistSynchronizer(Synchronizer):
             for record in picklist_objects:
                 self.persist_record(record, results)
 
+        if self.full:
+            results.deleted_count = self.prune_stale_records(
+                initial_ids, results.synced_ids
+            )
+
         return \
             results.created_count, results.updated_count, results.deleted_count
 
+    def _instance_ids(self, filter_params=None):
+        if not filter_params:
+            ids = self.model_class.objects.all().values_list(
+                self.lookup_key.lower(), flat=True
+            )
+        else:
+            ids = self.model_class.objects.filter(filter_params).values_list(
+                self.lookup_key.lower(), flat=True
+            )
+        return set(ids)
+
     def _assign_field_data(self, instance, object_data):
 
-        instance.value = object_data.get('Value')
+        instance.value = str(object_data.get('Value'))
         instance.label = object_data.get('Label')
         instance.is_default = object_data.get('IsDefaultValue')
         instance.sort_order = object_data.get('SortOrder')

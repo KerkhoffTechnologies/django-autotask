@@ -4,6 +4,14 @@ import urllib
 import os
 
 
+def init_api_client():
+    path = os.path.abspath("djautotask/tests/atws.wsdl")
+    url = urllib.parse.urljoin('file:', urllib.request.pathname2url(path))
+    client = Client(url)
+
+    return client
+
+
 def mock_query_generator(suds_objects):
     """
     A generator to return suds objects to mock the same behaviour as the
@@ -27,9 +35,7 @@ def generate_objects(object_type, fixture_objects):
     """
     Generate multiple objects based on the given fixtures.
     """
-    path = os.path.abspath("djautotask/tests/atws.wsdl")
-    url = urllib.parse.urljoin('file:', urllib.request.pathname2url(path))
-    client = Client(url)
+    client = init_api_client()
     object_list = []
 
     # Create test suds objects from the list of fixtures.
@@ -40,3 +46,27 @@ def generate_objects(object_type, fixture_objects):
         object_list.append(suds_object)
 
     return QueryCursor(mock_query_generator(object_list))
+
+
+def generate_picklist_objects(object_type, fixture_objects):
+    """
+    Generate a mock ArrayOfField object that simulates an entity returned
+    from the API with a picklist of objects.
+    """
+    client = init_api_client()
+    object_list = []
+    array_of_field = client.factory.create('ArrayOfField')
+    field = client.factory.create('Field')
+
+    for fixture in fixture_objects:
+        pick_list_value = client.factory.create('PickListValue')
+        picklist_object = set_attributes(pick_list_value, fixture)
+        object_list.append(picklist_object)
+
+    field.Name = object_type
+    field.IsPickList = True
+    field.PicklistValues.PickListValue = object_list
+
+    array_of_field[0].append(field)
+
+    return array_of_field

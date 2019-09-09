@@ -19,9 +19,15 @@ class TestTicketSynchronizer(TestCase):
 
         ticket = fixture_utils.generate_objects(
             'Ticket', [fixtures.API_SERVICE_TICKET])
+        field_info = fixture_utils.generate_picklist_objects(
+            'Status', fixtures.API_TICKET_STATUS_LIST)
 
         mocks.init_api_connection(Wrapper)
+        mocks.service_ticket_status_api_call(field_info)
         mocks.service_ticket_api_call(ticket)
+
+        status_synchronizer = sync.TicketStatusSynchronizer()
+        status_synchronizer.sync()
 
     def _assert_sync(self, instance, object_data):
 
@@ -39,6 +45,7 @@ class TestTicketSynchronizer(TestCase):
                          object_data['EstimatedHours'])
         self.assertEqual(instance.last_activity_date,
                          parse(object_data['LastActivityDate']))
+        self.assertEqual(instance.status.value, str(object_data['Status']))
 
     def test_sync_ticket(self):
         """
@@ -51,6 +58,7 @@ class TestTicketSynchronizer(TestCase):
 
         object_data = fixtures.API_SERVICE_TICKET
         instance = Ticket.objects.get(id=object_data['id'])
+
         self._assert_sync(instance, object_data)
         assert_sync_job(Ticket)
 

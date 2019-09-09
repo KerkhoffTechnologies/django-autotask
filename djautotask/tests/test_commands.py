@@ -23,35 +23,40 @@ class AbstractBaseSyncTest(object):
         mocks.init_api_connection(Wrapper)
 
     def _title_for_at_object(self, at_object):
-        return at_object.replace('_', ' ')
+        return at_object.title().replace('_', ' ')
 
-    def _test_sync(self, mock_call, at_object, fixture_list,
+    def get_return_value(self, at_object, fixture_list):
+        return fixture_utils.generate_objects(at_object, fixture_list)
+
+    def _test_sync(self, mock_call, fixture_list, at_object,
                    full_option=False):
 
-        return_value = fixture_utils.generate_objects(at_object, fixture_list)
+        model_class = at_object.title().replace('_', '')
+        return_value = self.get_return_value(model_class, fixture_list)
         mock_call(return_value)
 
         out = io.StringIO()
-        args = ['atsync', at_object.lower()]
+        args = ['atsync', at_object]
         if full_option:
             args.append('--full')
         call_command(*args, stdout=out)
         return out
 
-    def test_sync(self):
-
+    def _nope_test_sync(self):
         out = self._test_sync(*self.args)
-        obj_title = self._title_for_at_object(self.args[1])
+        obj_title = self._title_for_at_object(self.args[-1])
 
         self.assertIn(obj_title, out.getvalue().strip())
 
     def test_full_sync(self):
-        self.test_sync()
-        mock_call, at_object, fixture_list = self.args
+        self._nope_test_sync()
+
+        mock_call, fixture_list, at_object = self.args
+        print(fixture_list)
         args = [
             mock_call,
+            [],
             at_object,
-            []
         ]
 
         out = self._test_sync(*args, full_option=True)
@@ -68,6 +73,21 @@ class AbstractBaseSyncTest(object):
 class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_ticket_api_call,
-        'Ticket',
-        [fixtures.API_SERVICE_TICKET]
+        [fixtures.API_SERVICE_TICKET],
+        'ticket',
+    )
+
+
+class TestSyncTicketStatusCommand(AbstractBaseSyncTest, TestCase):
+
+    def get_return_value(self, at_object, fixture_list):
+        field_info = fixture_utils.generate_picklist_objects(
+            'Status', fixture_list)
+
+        return field_info
+
+    args = (
+        mocks.service_ticket_status_api_call,
+        fixtures.API_TICKET_STATUS_LIST,
+        'ticket_status',
     )
