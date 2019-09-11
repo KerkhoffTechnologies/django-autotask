@@ -122,7 +122,6 @@ class TestSyncAllCommand(TestCase):
 
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
-
         at_object_map = {
             'ticket': models.Ticket,
         }
