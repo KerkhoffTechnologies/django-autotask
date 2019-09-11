@@ -17,6 +17,7 @@ settings.configure(
     INSTALLED_APPS=(  # Including django.contrib apps prevents warnings during
         # tests.
         'djautotask',
+        'easy_thumbnails',
         'django.contrib.contenttypes',
         'django.contrib.auth',
         'django.contrib.sessions',
@@ -25,7 +26,6 @@ settings.configure(
     AUTOTASK_CREDENTIALS={
         'username': '',
         'password': '',
-        'integration_code': '',
     },
     DATABASES={
         'default': {
@@ -87,7 +87,7 @@ def suite():
 
 if __name__ == '__main__':
     _setup()
-    #call_command('test')
+    call_command('test')
     # To run specific tests, try something such as:
-    call_command('test', 'djautotask.tests.test_commands.TestSyncTicketStatusCommand')  # noqa: E501
+    # call_command('test', 'djautotask.tests.test_api.TestAPISettings.test_retry_attempts_cloud_domain_warm_cache')  # noqa: E501
     exit_on_failure(flake8_main())

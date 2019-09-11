@@ -93,9 +93,8 @@ class Synchronizer:
                          object_field, model_class, field_name):
 
         relation_id = object_data.get(object_field)
-
         try:
-            related_instance = model_class.objects.get(pk=relation_id)
+            related_instance = self.get_related_instance(relation_id)
             setattr(instance, field_name, related_instance)
         except model_class.DoesNotExist:
             logger.warning(
@@ -105,15 +104,17 @@ class Synchronizer:
             )
 
     def _instance_ids(self, filter_params=None):
+        key = self.get_lookup_key()
         if not filter_params:
-            ids = self.model_class.objects.all().values_list(
-                self.lookup_key, flat=True
-            )
+            ids = self.model_class.objects.all().values_list(key, flat=True)
         else:
             ids = self.model_class.objects.filter(filter_params).values_list(
-                self.lookup_key, flat=True
+                key, flat=True
             )
         return set(ids)
+
+    def get_lookup_key(self):
+        return self.lookup_key
 
     def get(self, query_object, results):
         """
@@ -145,6 +146,12 @@ class Synchronizer:
 
         return results
 
+    def get_delete_qset(self, stale_ids):
+        return self.model_class.objects.filter(pk__in=stale_ids)
+
+    def get_instance(self, instance_pk):
+        return self.model_class.objects.get(pk=instance_pk)
+
     def update_or_create_instance(self, record):
         """Creates and returns an instance if it does not already exist."""
         created = False
@@ -152,7 +159,7 @@ class Synchronizer:
 
         try:
             instance_pk = api_instance[self.lookup_key]
-            instance = self.model_class.objects.get(pk=instance_pk)
+            instance = self.get_instance(instance_pk)
         except self.model_class.DoesNotExist:
             instance = self.model_class()
             created = True
@@ -184,8 +191,7 @@ class Synchronizer:
         stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
-            import pdb; pdb.set_trace()
-            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
+            delete_qset = self.get_delete_qset(stale_ids)
             deleted_count = delete_qset.count()
 
             logger.info(
@@ -232,6 +238,7 @@ class Synchronizer:
 class PicklistSynchronizer(Synchronizer):
     lookup_key = 'Value'
 
+    @log_sync_job
     def sync(self):
         """
         Fetch picklist for a field from the API and persist in the database.
@@ -267,16 +274,14 @@ class PicklistSynchronizer(Synchronizer):
         return \
             results.created_count, results.updated_count, results.deleted_count
 
-    def _instance_ids(self, filter_params=None):
-        if not filter_params:
-            ids = self.model_class.objects.all().values_list(
-                self.lookup_key.lower(), flat=True
-            )
-        else:
-            ids = self.model_class.objects.filter(filter_params).values_list(
-                self.lookup_key.lower(), flat=True
-            )
-        return set(ids)
+    def get_delete_qset(self, stale_ids):
+        return self.model_class.objects.filter(value__in=stale_ids)
+
+    def get_lookup_key(self):
+        return self.lookup_key.lower()
+
+    def get_instance(self, instance_pk):
+        return self.model_class.objects.get(value=instance_pk)
 
     def _assign_field_data(self, instance, object_data):
 
@@ -313,6 +318,9 @@ class TicketSynchronizer(Synchronizer):
 
         self.set_relations(instance, object_data)
         return instance
+
+    def get_related_instance(self, relation_id):
+        return models.TicketStatus.objects.get(value=relation_id)
 
 
 class TicketStatusSynchronizer(PicklistSynchronizer):

@@ -61,4 +61,4 @@ class TicketStatus(Picklist):
         verbose_name_plural = 'Ticket statuses'
 
     def __str__(self):
-        return '{}-{}'.format(self.id, self.label)
+        return '{}-{}'.format(self.value, self.label)

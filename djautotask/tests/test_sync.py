@@ -26,9 +26,6 @@ class TestTicketSynchronizer(TestCase):
         mocks.service_ticket_status_api_call(field_info)
         mocks.service_ticket_api_call(ticket)
 
-        status_synchronizer = sync.TicketStatusSynchronizer()
-        status_synchronizer.sync()
-
     def _assert_sync(self, instance, object_data):
 
         self.assertEqual(instance.id, object_data['id'])
@@ -51,6 +48,8 @@ class TestTicketSynchronizer(TestCase):
         """
         Test to ensure ticket synchronizer saves a Ticket instance locally.
         """
+        status_synchronizer = sync.TicketStatusSynchronizer()
+        status_synchronizer.sync()
         synchronizer = sync.TicketSynchronizer()
         synchronizer.sync()
 

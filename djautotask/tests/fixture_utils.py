@@ -5,7 +5,7 @@ import os
 
 
 def init_api_client():
-    # Access a copy of the Autotask API's WSDL file from the tests directory
+    # Access the Autotask API's WSDL file from the tests directory
     # so that we can generate mock objects from the API without actually
     # calling the API.
     path = os.path.abspath("djautotask/tests/atws.wsdl")
