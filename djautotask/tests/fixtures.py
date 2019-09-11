@@ -7,7 +7,7 @@ API_TICKET_STATUS_LIST = [
         'Label': 'Waiting Materials',
         'SortOrder': 6,
         'Value': 9,
-        'parentValue': None,
+        'ParentValue': None,
     },
     {
         'IsActive': True,
@@ -16,7 +16,7 @@ API_TICKET_STATUS_LIST = [
         'Label': 'Scheduled',
         'SortOrder': 3,
         'Value': 10,
-        'parentValue': None
+        'ParentValue': None
     },
     {
         'IsActive': True,
@@ -25,7 +25,7 @@ API_TICKET_STATUS_LIST = [
         'Label': 'Escalate',
         'SortOrder': 5,
         'Value': 11,
-        'parentValue': None
+        'ParentValue': None
     },
     {
         'IsActive': True,
@@ -34,7 +34,7 @@ API_TICKET_STATUS_LIST = [
         'Label': 'Waiting Vendor',
         'SortOrder': 8,
         'Value': 12,
-        'parentValue': None
+        'ParentValue': None
     }
 ]
 
@@ -78,3 +78,5 @@ API_SERVICE_TICKET = {
     'UserDefinedFields': '',
     'id': 7688
 }
+
+API_SERVICE_TICKET_LIST = [API_SERVICE_TICKET]

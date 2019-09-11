@@ -88,9 +88,13 @@ class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
     command_name = 'ticket'
     args = (
         mocks.service_ticket_api_call,
-        [fixtures.API_SERVICE_TICKET],
+        fixtures.API_SERVICE_TICKET_LIST,
         'ticket',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_ticket_statuses()
 
 
 class TestSyncTicketStatusCommand(AbstractBaseSyncTest, TestCase):
@@ -115,8 +119,9 @@ class TestSyncAllCommand(TestCase):
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
+
         ticket = fixture_utils.generate_objects(
-            'Ticket', [fixtures.API_SERVICE_TICKET])
+            'Ticket', fixtures.API_SERVICE_TICKET_LIST)
         ticket_status = fixture_utils.generate_picklist_objects(
             'Status', fixtures.API_TICKET_STATUS_LIST
         )
@@ -125,7 +130,8 @@ class TestSyncAllCommand(TestCase):
         mocks.service_ticket_status_api_call(ticket_status)
 
         sync_test_cases = [
-            TestSyncTicketCommand
+            TestSyncTicketCommand,
+            TestSyncTicketStatusCommand,
         ]
 
         self.test_args = []
@@ -145,16 +151,19 @@ class TestSyncAllCommand(TestCase):
             self.assertIn(summary, output.getvalue().strip())
 
         self.assertEqual(models.Ticket.objects.all().count(),
-                         len([fixtures.API_SERVICE_TICKET]))
+                         len(fixtures.API_SERVICE_TICKET_LIST))
 
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
-
         at_object_map = {
+            'ticket_status': models.TicketStatus,
             'ticket': models.Ticket,
         }
         run_sync_command()
         pre_full_sync_counts = {}
+
+        empty_api_call = fixture_utils.generate_picklist_objects('Status', [])
+        mocks.service_ticket_status_api_call(empty_api_call)
 
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()

@@ -2,6 +2,8 @@ from suds.client import Client
 from atws.wrapper import QueryCursor
 import urllib
 import os
+from djautotask import sync
+from djautotask.tests import mocks, fixtures
 
 
 def init_api_client():
@@ -10,9 +12,12 @@ def init_api_client():
     # calling the API.
     path = os.path.abspath("djautotask/tests/atws.wsdl")
     url = urllib.parse.urljoin('file:', urllib.request.pathname2url(path))
-    client = Client(url)
 
-    return client
+    return Client(url)
+
+
+# Set as a constant so the file only has to be opened once.
+API_CLIENT = init_api_client()
 
 
 def mock_query_generator(suds_objects):
@@ -38,7 +43,7 @@ def generate_objects(object_type, fixture_objects):
     """
     Generate multiple objects based on the given fixtures.
     """
-    client = init_api_client()
+    client = API_CLIENT
     object_list = []
 
     # Create test suds objects from the list of fixtures.
@@ -56,7 +61,7 @@ def generate_picklist_objects(object_type, fixture_objects):
     Generate a mock ArrayOfField object that simulates an entity returned
     from the API with a picklist of objects.
     """
-    client = init_api_client()
+    client = API_CLIENT
     object_list = []
     array_of_field = client.factory.create('ArrayOfField')
     field = client.factory.create('Field')
@@ -73,3 +78,20 @@ def generate_picklist_objects(object_type, fixture_objects):
     array_of_field[0].append(field)
 
     return array_of_field
+
+
+def init_ticket_statuses():
+    field_info = generate_picklist_objects(
+        'Status', fixtures.API_TICKET_STATUS_LIST
+    )
+    mocks.service_ticket_status_api_call(field_info)
+    synchronizer = sync.TicketStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_tickets():
+    tickets = generate_objects('Ticket', fixtures.API_SERVICE_TICKET_LIST)
+
+    mocks.service_ticket_api_call(tickets)
+    synchronizer = sync.TicketSynchronizer()
+    return synchronizer.sync()

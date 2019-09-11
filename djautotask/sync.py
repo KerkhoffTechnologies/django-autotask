@@ -287,8 +287,9 @@ class PicklistSynchronizer(Synchronizer):
 
         instance.value = str(object_data.get('Value'))
         instance.label = object_data.get('Label')
-        instance.is_default = object_data.get('IsDefaultValue')
+        instance.is_default_value = object_data.get('IsDefaultValue')
         instance.sort_order = object_data.get('SortOrder')
+        instance.parent_value = object_data.get('ParentValue')
         instance.is_active = object_data.get('IsActive')
         instance.is_system = object_data.get('IsSystem')
 
