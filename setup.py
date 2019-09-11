@@ -24,12 +24,12 @@ setup(
     install_requires=[
         'requests',
         'django',
-        'easy-thumbnails',
         'python-dateutil',
         'django-model-utils',
         'django-braces',
         'django-extensions',
         'retrying',
+        'atws',
     ],
     test_suite='runtests.suite',
     tests_require=[
