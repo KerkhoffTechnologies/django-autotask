@@ -6,8 +6,8 @@ from . import models
 
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'ticket_number')
-    search_fields = ('id', 'title', 'ticket_number')
+    list_display = ('id', 'title', 'ticket_number', 'status')
+    search_fields = ('id', 'title', 'ticket_number', 'status')
 
 
 @admin.register(models.SyncJob)

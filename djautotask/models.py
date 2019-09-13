@@ -44,7 +44,7 @@ class Picklist(TimeStampedModel):
     value = models.CharField(blank=True, null=True, max_length=50)
     label = models.CharField(blank=True, null=True, max_length=50)
     is_default_value = models.BooleanField(default=False)
-    sort_order = models.CharField(blank=True, null=True, max_length=20)
+    sort_order = models.PositiveSmallIntegerField(blank=True, null=True)
     parent_value = models.CharField(blank=True, null=True, max_length=20)
     is_active = models.BooleanField(default=False)
     is_system = models.BooleanField(default=False)
