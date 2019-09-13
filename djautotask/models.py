@@ -32,6 +32,9 @@ class Ticket(TimeStampedModel):
     status = models.ForeignKey(
         'TicketStatus', blank=True, null=True, on_delete=models.SET_NULL
     )
+    assigned_resource = models.ForeignKey(
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -62,3 +65,17 @@ class TicketStatus(Picklist):
 
     def __str__(self):
         return '{}-{}'.format(self.value, self.label)
+
+
+class Resource(TimeStampedModel):
+    user_name = models.CharField(max_length=32)
+    email = models.CharField(max_length=50)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    active = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ('first_name', 'last_name')
+
+    def __str__(self):
+        return '{} {}'.format(self.first_name, self.last_name)

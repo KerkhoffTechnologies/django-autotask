@@ -94,7 +94,8 @@ class Synchronizer:
 
         relation_id = object_data.get(object_field)
         try:
-            related_instance = self.get_related_instance(relation_id)
+            related_instance = \
+                self.get_related_instance(relation_id, object_field)
             setattr(instance, field_name, related_instance)
         except model_class.DoesNotExist:
             logger.warning(
@@ -211,7 +212,8 @@ class Synchronizer:
         results = SyncResults()
         query = Query(self.model_class.__name__)
 
-        if sync_job_qset.exists() and not self.full:
+        if sync_job_qset.exists() and self.last_updated_field \
+                and not self.full:
             last_sync_job_time = sync_job_qset.last().start_time
             query.WHERE(self.last_updated_field,
                         query.GreaterThanorEquals, last_sync_job_time)
@@ -281,10 +283,11 @@ class PicklistSynchronizer(Synchronizer):
         return self.lookup_key.lower()
 
     def get_instance(self, instance_pk):
-        return self.model_class.objects.get(value=instance_pk)
+        return self.model_class.objects.get(pk=instance_pk)
 
     def _assign_field_data(self, instance, object_data):
 
+        instance.id = object_data.get('Value')
         instance.value = str(object_data.get('Value'))
         instance.label = object_data.get('Label')
         instance.is_default_value = object_data.get('IsDefaultValue')
@@ -301,7 +304,8 @@ class TicketSynchronizer(Synchronizer):
     last_updated_field = 'LastActivityDate'
 
     related_meta = {
-        'Status': (models.TicketStatus, 'status')
+        'Status': (models.TicketStatus, 'status'),
+        'AssignedResourceID': (models.Resource, 'assigned_resource'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -320,11 +324,26 @@ class TicketSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
         return instance
 
-    def get_related_instance(self, relation_id):
-        return models.TicketStatus.objects.get(value=relation_id)
+    def get_related_instance(self, relation_id, object_field):
+        return self.related_meta[object_field][0].objects.get(pk=relation_id)
 
 
 class TicketStatusSynchronizer(PicklistSynchronizer):
     model_class = models.TicketStatus
     entity_type = 'Ticket'
     picklist_field = 'Status'
+
+
+class ResourceSynchronizer(Synchronizer):
+    model_class = models.Resource
+    last_updated_field = None
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.user_name = object_data['UserName']
+        instance.email = object_data['Email']
+        instance.first_name = object_data['FirstName']
+        instance.last_name = object_data['LastName']
+        instance.active = object_data['Active']
+
+        return instance

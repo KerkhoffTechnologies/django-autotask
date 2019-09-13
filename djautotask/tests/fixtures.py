@@ -1,4 +1,37 @@
 
+API_RESOURCE = {
+    'AccountingReferenceID': '',
+    'Active': True,
+    'DateFormat': 'MM/dd/yyyy',
+    'Email': '',
+    'Email2': '',
+    'Email3': '',
+    'EmailTypeCode': 'PRIMARY',
+    'FirstName': 'Autotask',
+    'HireDate': '',
+    'HomePhone': '',
+    'Initials': '',
+    'InternalCost': 1.0,
+    'LastName': 'Administrator',
+    'LicenseType': 1,
+    'LocationID': 90682,
+    'MiddleName': '',
+    'MobilePhone': '',
+    'NumberFormat': 'X,XXX.XX',
+    'OfficeExtension': '',
+    'OfficePhone': '(518) 720-3500',
+    'Password': '******',
+    'PayrollType': 1,
+    'ResourceType': 'Employee',
+    'TimeFormat': 'hh:mm a',
+    'Title': '',
+    'UserDefinedFields': '',
+    'UserName': 'administrator',
+    'UserType': 10,
+    'id': 4,
+}
+
+
 API_TICKET_STATUS_LIST = [
     {
         'IsActive': True,
