@@ -1,7 +1,7 @@
 import logging
 
 from suds.client import Client
-from atws import connect, Query
+from atws import connect, Query, helpers, picklist
 
 from django.conf import settings
 from django.db import transaction, IntegrityError
@@ -78,16 +78,43 @@ class Synchronizer:
             url=settings.AUTOTASK_CREDENTIALS['url'],
         )
 
-    def _instance_ids(self, filter_params=None):
-        if not filter_params:
-            ids = self.model_class.objects.all().values_list(
-                self.lookup_key, flat=True
+    def set_relations(self, instance, object_data):
+        for object_field, value in self.related_meta.items():
+            model_class, field_name = value
+            self._assign_relation(
+                instance,
+                object_data,
+                object_field,
+                model_class,
+                field_name
             )
+
+    def _assign_relation(self, instance, object_data,
+                         object_field, model_class, field_name):
+
+        relation_id = object_data.get(object_field)
+        try:
+            related_instance = self.get_related_instance(relation_id)
+            setattr(instance, field_name, related_instance)
+        except model_class.DoesNotExist:
+            logger.warning(
+                'Failed to find {} {} for {} {}.'.format(
+                    object_field, relation_id, type(instance), instance.id
+                )
+            )
+
+    def _instance_ids(self, filter_params=None):
+        key = self.get_lookup_key()
+        if not filter_params:
+            ids = self.model_class.objects.all().values_list(key, flat=True)
         else:
             ids = self.model_class.objects.filter(filter_params).values_list(
-                self.lookup_key, flat=True
+                key, flat=True
             )
         return set(ids)
+
+    def get_lookup_key(self):
+        return self.lookup_key
 
     def get(self, query_object, results):
         """
@@ -97,6 +124,7 @@ class Synchronizer:
         logger.info(
             'Fetching {} records'.format(self.model_class)
         )
+        # Iterate over suds objects returned from the API.
         for record in query_object:
             self.persist_record(record, results)
 
@@ -114,9 +142,15 @@ class Synchronizer:
         except InvalidObjectException as e:
             logger.warning('{}'.format(e))
 
-        results.synced_ids.add(record['id'])
+        results.synced_ids.add(record[self.lookup_key])
 
         return results
+
+    def get_delete_qset(self, stale_ids):
+        return self.model_class.objects.filter(pk__in=stale_ids)
+
+    def get_instance(self, instance_pk):
+        return self.model_class.objects.get(pk=instance_pk)
 
     def update_or_create_instance(self, record):
         """Creates and returns an instance if it does not already exist."""
@@ -125,7 +159,7 @@ class Synchronizer:
 
         try:
             instance_pk = api_instance[self.lookup_key]
-            instance = self.model_class.objects.get(pk=instance_pk)
+            instance = self.get_instance(instance_pk)
         except self.model_class.DoesNotExist:
             instance = self.model_class()
             created = True
@@ -157,7 +191,7 @@ class Synchronizer:
         stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
-            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
+            delete_qset = self.get_delete_qset(stale_ids)
             deleted_count = delete_qset.count()
 
             logger.info(
@@ -201,9 +235,74 @@ class Synchronizer:
             results.created_count, results.updated_count, results.deleted_count
 
 
+class PicklistSynchronizer(Synchronizer):
+    lookup_key = 'Value'
+
+    @log_sync_job
+    def sync(self):
+        """
+        Fetch picklist for a field from the API and persist in the database.
+        """
+        results = SyncResults()
+        picklist_objects = None
+        initial_ids = self._instance_ids()
+
+        field_info = \
+            helpers.get_field_info(self.at_api_client, self.entity_type)
+
+        try:
+            field_picklist = \
+                picklist.get_field_picklist(self.picklist_field, field_info)
+            picklist_objects = field_picklist.PicklistValues[0]
+
+        except KeyError as e:
+            logger.warning(
+                'Failed to find {} picklist field. {}'.format(
+                    self.picklist_field, e
+                )
+            )
+
+        if picklist_objects:
+            for record in picklist_objects:
+                self.persist_record(record, results)
+
+        if self.full:
+            results.deleted_count = self.prune_stale_records(
+                initial_ids, results.synced_ids
+            )
+
+        return \
+            results.created_count, results.updated_count, results.deleted_count
+
+    def get_delete_qset(self, stale_ids):
+        return self.model_class.objects.filter(value__in=stale_ids)
+
+    def get_lookup_key(self):
+        return self.lookup_key.lower()
+
+    def get_instance(self, instance_pk):
+        return self.model_class.objects.get(value=instance_pk)
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.value = str(object_data.get('Value'))
+        instance.label = object_data.get('Label')
+        instance.is_default_value = object_data.get('IsDefaultValue')
+        instance.sort_order = object_data.get('SortOrder')
+        instance.parent_value = object_data.get('ParentValue')
+        instance.is_active = object_data.get('IsActive')
+        instance.is_system = object_data.get('IsSystem')
+
+        return instance
+
+
 class TicketSynchronizer(Synchronizer):
     model_class = models.Ticket
     last_updated_field = 'LastActivityDate'
+
+    related_meta = {
+        'Status': (models.TicketStatus, 'status')
+    }
 
     def _assign_field_data(self, instance, object_data):
 
@@ -218,4 +317,14 @@ class TicketSynchronizer(Synchronizer):
         instance.estimated_hours = object_data.get('EstimatedHours')
         instance.last_activity_date = object_data.get('LastActivityDate')
 
+        self.set_relations(instance, object_data)
         return instance
+
+    def get_related_instance(self, relation_id):
+        return models.TicketStatus.objects.get(value=relation_id)
+
+
+class TicketStatusSynchronizer(PicklistSynchronizer):
+    model_class = models.TicketStatus
+    entity_type = 'Ticket'
+    picklist_field = 'Status'

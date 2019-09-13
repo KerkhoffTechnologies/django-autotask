@@ -2,7 +2,7 @@ from django.test import TestCase
 from atws.wrapper import Wrapper
 from dateutil.parser import parse
 
-from djautotask.models import Ticket, SyncJob
+from djautotask.models import Ticket, TicketStatus, SyncJob
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -17,11 +17,10 @@ class TestTicketSynchronizer(TestCase):
     def setUp(self):
         super().setUp()
 
-        ticket = fixture_utils.generate_objects(
-            'Ticket', [fixtures.API_SERVICE_TICKET])
-
         mocks.init_api_connection(Wrapper)
-        mocks.service_ticket_api_call(ticket)
+
+        fixture_utils.init_ticket_statuses()
+        fixture_utils.init_tickets()
 
     def _assert_sync(self, instance, object_data):
 
@@ -39,26 +38,24 @@ class TestTicketSynchronizer(TestCase):
                          object_data['EstimatedHours'])
         self.assertEqual(instance.last_activity_date,
                          parse(object_data['LastActivityDate']))
+        self.assertEqual(instance.status.value, str(object_data['Status']))
 
     def test_sync_ticket(self):
         """
         Test to ensure ticket synchronizer saves a Ticket instance locally.
         """
-        synchronizer = sync.TicketSynchronizer()
-        synchronizer.sync()
-
         self.assertGreater(Ticket.objects.all().count(), 0)
 
         object_data = fixtures.API_SERVICE_TICKET
         instance = Ticket.objects.get(id=object_data['id'])
+
         self._assert_sync(instance, object_data)
         assert_sync_job(Ticket)
 
     def test_delete_stale_tickets(self):
-        """Local ticket should be deleted if not returned during a full sync"""
-        synchronizer = sync.TicketSynchronizer()
-        synchronizer.sync()
-
+        """
+        Local ticket should be deleted if not returned during a full sync
+        """
         ticket_id = fixtures.API_SERVICE_TICKET['id']
         ticket_qset = Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
@@ -68,3 +65,53 @@ class TestTicketSynchronizer(TestCase):
         synchronizer = sync.TicketSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(ticket_qset.count(), 0)
+
+
+class TestTicketStatusSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_ticket_statuses()
+
+    def _assert_sync(self, instance, object_data):
+
+        self.assertEqual(instance.value, str(object_data['Value']))
+        self.assertEqual(instance.label, object_data['Label'])
+        self.assertEqual(
+            instance.is_default_value, object_data['IsDefaultValue'])
+        self.assertEqual(instance.sort_order, object_data['SortOrder'])
+        self.assertEqual(instance.parent_value, object_data['ParentValue'])
+        self.assertEqual(instance.is_active, object_data['IsActive'])
+        self.assertEqual(instance.is_system, object_data['IsSystem'])
+
+    def test_sync_ticket_status(self):
+        """
+        Test to ensure ticket status synchronizer saves a TicketStatus
+        instance locally.
+        """
+        instance_dict = {}
+        for status in fixtures.API_TICKET_STATUS_LIST:
+            instance_dict[str(status['Value'])] = status
+
+        for instance in TicketStatus.objects.all():
+            object_data = instance_dict[instance.value]
+
+            self._assert_sync(instance, object_data)
+
+        assert_sync_job(TicketStatus)
+
+    def test_delete_stale_ticket_statuses(self):
+        """
+        Test that ticket status is deleted if not returned during a full sync.
+        """
+        status_qset = TicketStatus.objects.all()
+        self.assertEqual(status_qset.count(), 4)
+
+        empty_api_call = fixture_utils.generate_picklist_objects('Status', [])
+        mocks.service_ticket_status_api_call(empty_api_call)
+
+        synchronizer = sync.TicketStatusSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(status_qset.count(), 0)

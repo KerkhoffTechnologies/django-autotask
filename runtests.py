@@ -25,7 +25,6 @@ settings.configure(
     AUTOTASK_CREDENTIALS={
         'username': '',
         'password': '',
-        'integration_code': '',
     },
     DATABASES={
         'default': {

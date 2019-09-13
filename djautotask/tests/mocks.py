@@ -22,3 +22,9 @@ def service_ticket_api_call(return_value):
     method_name = 'atws.wrapper.Wrapper.query'
 
     return create_mock_call(method_name, return_value)
+
+
+def service_ticket_status_api_call(return_value):
+    method_name = 'atws.helpers.get_field_info'
+
+    return create_mock_call(method_name, return_value)

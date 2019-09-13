@@ -1,4 +1,43 @@
 
+API_TICKET_STATUS_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Waiting Materials',
+        'SortOrder': 6,
+        'Value': 9,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Scheduled',
+        'SortOrder': 3,
+        'Value': 10,
+        'ParentValue': None
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Escalate',
+        'SortOrder': 5,
+        'Value': 11,
+        'ParentValue': None
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Waiting Vendor',
+        'SortOrder': 8,
+        'Value': 12,
+        'ParentValue': None
+    }
+]
+
 API_SERVICE_TICKET = {
     'AccountID': 29683561,
     'AllocationCodeID': 29683407,
@@ -39,3 +78,5 @@ API_SERVICE_TICKET = {
     'UserDefinedFields': '',
     'id': 7688
 }
+
+API_SERVICE_TICKET_LIST = [API_SERVICE_TICKET]

@@ -29,8 +29,36 @@ class Ticket(TimeStampedModel):
     last_activity_date = models.DateTimeField(blank=True, null=True)
     title = models.CharField(blank=True, null=True, max_length=255)
 
+    status = models.ForeignKey(
+        'TicketStatus', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
     class Meta:
         verbose_name = 'Ticket'
 
     def __str__(self):
         return '{}-{}'.format(self.id, self.title)
+
+
+class Picklist(TimeStampedModel):
+    value = models.CharField(blank=True, null=True, max_length=50)
+    label = models.CharField(blank=True, null=True, max_length=50)
+    is_default_value = models.BooleanField(default=False)
+    sort_order = models.PositiveSmallIntegerField(blank=True, null=True)
+    parent_value = models.CharField(blank=True, null=True, max_length=20)
+    is_active = models.BooleanField(default=False)
+    is_system = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+
+class TicketStatus(Picklist):
+    pass
+
+    class Meta:
+        verbose_name = 'Ticket status'
+        verbose_name_plural = 'Ticket statuses'
+
+    def __str__(self):
+        return '{}-{}'.format(self.value, self.label)

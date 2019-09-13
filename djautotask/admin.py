@@ -6,8 +6,8 @@ from . import models
 
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'ticket_number')
-    search_fields = ('id', 'title', 'ticket_number')
+    list_display = ('id', 'title', 'ticket_number', 'status')
+    search_fields = ('id', 'title', 'ticket_number', 'status')
 
 
 @admin.register(models.SyncJob)
@@ -30,3 +30,8 @@ class SyncJobAdmin(admin.ModelAdmin):
             )
             return duration_seconds if duration_seconds else '0'
     duration_or_zero.short_description = 'Duration'
+
+
+@admin.register(models.TicketStatus)
+class TicketStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'value')
