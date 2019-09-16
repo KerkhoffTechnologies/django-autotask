@@ -28,9 +28,10 @@ API_RESOURCE = {
     'UserDefinedFields': '',
     'UserName': 'administrator',
     'UserType': 10,
-    'id': 4,
+    'id': 29683794,
 }
 
+API_RESOURCE_LIST = [API_RESOURCE]
 
 API_TICKET_STATUS_LIST = [
     {

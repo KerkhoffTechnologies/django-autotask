@@ -114,24 +114,36 @@ class TestSyncTicketStatusCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
+    command_name = 'resource'
+
+    args = (
+        mocks.resource_api_call,
+        fixtures.API_RESOURCE_LIST,
+        'resource',
+
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
 
-        ticket = fixture_utils.generate_objects(
-            'Ticket', fixtures.API_SERVICE_TICKET_LIST)
         ticket_status = fixture_utils.generate_picklist_objects(
             'Status', fixtures.API_TICKET_STATUS_LIST
         )
-
-        mocks.service_ticket_api_call(ticket)
         mocks.service_ticket_status_api_call(ticket_status)
+
+        # Mock API calls to values based on what entity is being requested
+        mocks.wrapper_query_api_calls(
+            fixture_utils.manage_full_sync_return_data)
 
         sync_test_cases = [
             TestSyncTicketCommand,
             TestSyncTicketStatusCommand,
+            TestSyncResourceCommand,
         ]
 
         self.test_args = []
@@ -158,10 +170,14 @@ class TestSyncAllCommand(TestCase):
         at_object_map = {
             'ticket_status': models.TicketStatus,
             'ticket': models.Ticket,
+            'resource': models.Resource,
         }
         run_sync_command()
         pre_full_sync_counts = {}
 
+        # Mock the API request to return no results to ensure
+        # objects get deleted.
+        mocks.wrapper_query_api_calls()
         empty_api_call = fixture_utils.generate_picklist_objects('Status', [])
         mocks.service_ticket_status_api_call(empty_api_call)
 

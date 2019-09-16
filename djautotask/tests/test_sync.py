@@ -2,7 +2,7 @@ from django.test import TestCase
 from atws.wrapper import Wrapper
 from dateutil.parser import parse
 
-from djautotask.models import Ticket, TicketStatus, SyncJob
+from djautotask.models import Ticket, TicketStatus, Resource, SyncJob
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -20,6 +20,7 @@ class TestTicketSynchronizer(TestCase):
         mocks.init_api_connection(Wrapper)
 
         fixture_utils.init_ticket_statuses()
+        fixture_utils.init_resources()
         fixture_utils.init_tickets()
 
     def _assert_sync(self, instance, object_data):
@@ -39,6 +40,8 @@ class TestTicketSynchronizer(TestCase):
         self.assertEqual(instance.last_activity_date,
                          parse(object_data['LastActivityDate']))
         self.assertEqual(instance.status.value, str(object_data['Status']))
+        self.assertEqual(instance.assigned_resource.id,
+                         object_data['AssignedResourceID'])
 
     def test_sync_ticket(self):
         """
@@ -115,3 +118,37 @@ class TestTicketStatusSynchronizer(TestCase):
         synchronizer = sync.TicketStatusSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(status_qset.count(), 0)
+
+
+class TestResourceSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_resources()
+
+    def _assert_sync(self, instance, object_data):
+
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.user_name, object_data['UserName'])
+        self.assertEqual(instance.first_name, object_data['FirstName'])
+        self.assertEqual(instance.last_name, object_data['LastName'])
+        self.assertEqual(instance.email, object_data['Email'])
+        self.assertEqual(instance.active, object_data['Active'])
+
+    def test_sync_resource(self):
+        """
+        Test to ensure resource synchronizer saves a Resource
+        instance locally.
+        """
+        self.assertGreater(Resource.objects.all().count(), 0)
+
+        object_data = fixtures.API_RESOURCE
+        instance = Resource.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(Resource)
+
+    def test_delete_stale_resources(self):
+        pass

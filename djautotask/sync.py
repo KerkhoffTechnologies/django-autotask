@@ -94,8 +94,7 @@ class Synchronizer:
 
         relation_id = object_data.get(object_field)
         try:
-            related_instance = \
-                self.get_related_instance(relation_id, object_field)
+            related_instance = model_class.objects.get(pk=relation_id)
             setattr(instance, field_name, related_instance)
         except model_class.DoesNotExist:
             logger.warning(
@@ -147,12 +146,6 @@ class Synchronizer:
 
         return results
 
-    def get_delete_qset(self, stale_ids):
-        return self.model_class.objects.filter(pk__in=stale_ids)
-
-    def get_instance(self, instance_pk):
-        return self.model_class.objects.get(pk=instance_pk)
-
     def update_or_create_instance(self, record):
         """Creates and returns an instance if it does not already exist."""
         created = False
@@ -160,7 +153,7 @@ class Synchronizer:
 
         try:
             instance_pk = api_instance[self.lookup_key]
-            instance = self.get_instance(instance_pk)
+            instance = self.model_class.objects.get(pk=instance_pk)
         except self.model_class.DoesNotExist:
             instance = self.model_class()
             created = True
@@ -192,7 +185,7 @@ class Synchronizer:
         stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
-            delete_qset = self.get_delete_qset(stale_ids)
+            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
             deleted_count = delete_qset.count()
 
             logger.info(
@@ -276,14 +269,8 @@ class PicklistSynchronizer(Synchronizer):
         return \
             results.created_count, results.updated_count, results.deleted_count
 
-    def get_delete_qset(self, stale_ids):
-        return self.model_class.objects.filter(value__in=stale_ids)
-
     def get_lookup_key(self):
         return self.lookup_key.lower()
-
-    def get_instance(self, instance_pk):
-        return self.model_class.objects.get(pk=instance_pk)
 
     def _assign_field_data(self, instance, object_data):
 
@@ -340,10 +327,10 @@ class ResourceSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
-        instance.user_name = object_data['UserName']
-        instance.email = object_data['Email']
-        instance.first_name = object_data['FirstName']
-        instance.last_name = object_data['LastName']
-        instance.active = object_data['Active']
+        instance.user_name = object_data.get('UserName')
+        instance.email = object_data.get('Email')
+        instance.first_name = object_data.get('FirstName')
+        instance.last_name = object_data.get('LastName')
+        instance.active = object_data.get('Active')
 
         return instance

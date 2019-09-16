@@ -1,6 +1,7 @@
 from suds.client import Client
 from atws.wrapper import QueryCursor
 import urllib
+from xml.etree import ElementTree
 import os
 from djautotask import sync
 from djautotask.tests import mocks, fixtures
@@ -80,6 +81,23 @@ def generate_picklist_objects(object_type, fixture_objects):
     return array_of_field
 
 
+def manage_full_sync_return_data(value):
+    """
+    Generate and return objects based on the entity specified in the query.
+    """
+    fixture_dict = {
+        'Ticket': fixtures.API_SERVICE_TICKET_LIST,
+        'Resource': fixtures.API_RESOURCE_LIST
+    }
+    xml_value = ElementTree.fromstring(value.get_query_xml())
+    object_type = xml_value.find('entity').text
+
+    fixture = fixture_dict[object_type]
+    return_value = generate_objects(object_type, fixture)
+
+    return return_value
+
+
 def init_ticket_statuses():
     field_info = generate_picklist_objects(
         'Status', fixtures.API_TICKET_STATUS_LIST
@@ -94,4 +112,12 @@ def init_tickets():
 
     mocks.service_ticket_api_call(tickets)
     synchronizer = sync.TicketSynchronizer()
+    return synchronizer.sync()
+
+
+def init_resources():
+    tickets = generate_objects('Resource', fixtures.API_RESOURCE_LIST)
+
+    mocks.resource_api_call(tickets)
+    synchronizer = sync.ResourceSynchronizer()
     return synchronizer.sync()
