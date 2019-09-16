@@ -151,4 +151,15 @@ class TestResourceSynchronizer(TestCase):
         assert_sync_job(Resource)
 
     def test_delete_stale_resources(self):
-        pass
+        """
+        Test that resource is removed if not fetched from the API during a
+        full sync.
+        """
+        resource_qset = Resource.objects.all()
+        self.assertEqual(resource_qset.count(), 1)
+
+        mocks.resource_api_call([])
+
+        synchronizer = sync.ResourceSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(resource_qset.count(), 0)
