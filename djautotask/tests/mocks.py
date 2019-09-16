@@ -30,6 +30,12 @@ def resource_api_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def secondary_resource_api_call(return_value):
+    method_name = 'atws.wrapper.Wrapper.query'
+
+    return create_mock_call(method_name, return_value)
+
+
 def service_ticket_status_api_call(return_value):
     method_name = 'atws.helpers.get_field_info'
 

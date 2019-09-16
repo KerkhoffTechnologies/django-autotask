@@ -87,7 +87,8 @@ def manage_full_sync_return_data(value):
     """
     fixture_dict = {
         'Ticket': fixtures.API_SERVICE_TICKET_LIST,
-        'Resource': fixtures.API_RESOURCE_LIST
+        'Resource': fixtures.API_RESOURCE_LIST,
+        'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text

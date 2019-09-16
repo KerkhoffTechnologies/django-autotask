@@ -35,6 +35,10 @@ class Ticket(TimeStampedModel):
     assigned_resource = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.SET_NULL
     )
+    secondary_resources = models.ManyToManyField(
+        'Resource', through='TicketSecondaryResource',
+        related_name='secondary_resource_tickets'
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -79,3 +83,15 @@ class Resource(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.first_name, self.last_name)
+
+
+class TicketSecondaryResource(TimeStampedModel):
+    resource = models.ForeignKey(
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    ticket = models.ForeignKey(
+        'Ticket', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return '{} {}'.format(self.resource, self.ticket)

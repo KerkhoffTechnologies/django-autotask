@@ -46,7 +46,8 @@ class AbstractBaseSyncTest(object):
         return at_object.title().replace('_', ' ')
 
     def get_return_value(self, at_object, fixture_list):
-        return fixture_utils.generate_objects(at_object.title(), fixture_list)
+        return fixture_utils.generate_objects(
+            at_object.title().replace('_', ''), fixture_list)
 
     def init_sync_command(self, mock_call, fixture_list, at_object,
                           full_option=False):
@@ -121,7 +122,16 @@ class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
         mocks.resource_api_call,
         fixtures.API_RESOURCE_LIST,
         'resource',
+    )
 
+
+class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
+    command_name = 'secondary_resource'
+
+    args = (
+        mocks.secondary_resource_api_call,
+        fixtures.API_SECONDARY_RESOURCE_LIST,
+        'ticket_secondary_resource',
     )
 
 
@@ -171,6 +181,7 @@ class TestSyncAllCommand(TestCase):
             'ticket_status': models.TicketStatus,
             'ticket': models.Ticket,
             'resource': models.Resource,
+            'ticket_secondary_resource': models.TicketSecondaryResource,
         }
         run_sync_command()
         pre_full_sync_counts = {}

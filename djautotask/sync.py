@@ -334,3 +334,19 @@ class ResourceSynchronizer(Synchronizer):
         instance.active = object_data.get('Active')
 
         return instance
+
+
+class TicketSecondaryResourceSynchronizer(Synchronizer):
+    model_class = models.TicketSecondaryResource
+    last_updated_field = None
+
+    related_meta = {
+        'ResourceID': (models.Resource, 'resource'),
+        'TicketID': (models.Ticket, 'ticket'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance

@@ -11,6 +11,10 @@ import tempfile
 DEBUG = True
 tmp_media = tempfile.TemporaryDirectory()
 
+if 'test' in sys.argv:
+    pass
+
+
 settings.configure(
     DEBUG=True,
     ALLOWED_HOSTS=('testserver',),
@@ -44,6 +48,14 @@ settings.configure(
             'LOCATION': 'unique-snowflake',
         }
     },
+    LOGGING={
+        'version': 1,
+        'loggers': {
+            'djautotask': {
+                'level': 'ERROR'
+            }
+        }
+    }
 )
 
 

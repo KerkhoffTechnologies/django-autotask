@@ -1,4 +1,21 @@
 
+API_SECONDARY_RESOURCE_LIST = [
+    {
+        'id': 29684157,
+        'UserDefinedFields': '',
+        'TicketID': 7725,
+        'ResourceID': 29683915,
+        'RoleID': 29683394
+    },
+    {
+        'id': 29684156,
+        'UserDefinedFields': '',
+        'TicketID': 7731,
+        'ResourceID': 29683915,
+        'RoleID': 29683395
+    }
+]
+
 API_RESOURCE = {
     'AccountingReferenceID': '',
     'Active': True,
