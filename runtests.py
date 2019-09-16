@@ -11,9 +11,6 @@ import tempfile
 DEBUG = True
 tmp_media = tempfile.TemporaryDirectory()
 
-if 'test' in sys.argv:
-    pass
-
 
 settings.configure(
     DEBUG=True,
