@@ -122,3 +122,12 @@ def init_resources():
     mocks.resource_api_call(tickets)
     synchronizer = sync.ResourceSynchronizer()
     return synchronizer.sync()
+
+
+def init_secondary_resources():
+    secondary_resources = generate_objects(
+        'TicketSecondaryResource', fixtures.API_SECONDARY_RESOURCE_LIST)
+
+    mocks.secondary_resource_api_call(secondary_resources)
+    synchronizer = sync.TicketSecondaryResourceSynchronizer()
+    return synchronizer.sync()

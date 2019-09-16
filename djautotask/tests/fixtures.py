@@ -3,8 +3,8 @@ API_SECONDARY_RESOURCE_LIST = [
     {
         'id': 29684157,
         'UserDefinedFields': '',
-        'TicketID': 7725,
-        'ResourceID': 29683915,
+        'TicketID': 7688,
+        'ResourceID': 29683794,
         'RoleID': 29683394
     },
     {
