@@ -3,7 +3,7 @@ from atws.wrapper import Wrapper
 from dateutil.parser import parse
 
 from djautotask.models import Ticket, TicketStatus, Resource, SyncJob, \
-    TicketSecondaryResource, TicketPriority, Queue
+    TicketSecondaryResource, TicketPriority, Queue, Account
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -260,3 +260,36 @@ class TestTicketSecondaryResourceSynchronizer(TestCase):
         synchronizer = sync.TicketSecondaryResourceSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(secondary_resources_qset.count(), 0)
+
+
+class TestAccountSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_accounts()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.name, object_data['AccountName'])
+        self.assertEqual(instance.number, str(object_data['AccountNumber']))
+        self.assertEqual(instance.active, object_data['Active'])
+        self.assertEqual(instance.last_activity_date,
+                         parse(object_data['LastActivityDate']))
+
+    def test_sync_account(self):
+        self.assertGreater(Account.objects.all().count(), 0)
+        object_data = fixtures.API_ACCOUNT_LIST[0]
+        instance = Account.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(Account)
+
+    def test_delete_stale_account(self):
+        account_qset = Account.objects.all()
+        self.assertEqual(account_qset.count(), 1)
+
+        mocks.account_api_call([])
+
+        synchronizer = sync.AccountSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(account_qset.count(), 0)

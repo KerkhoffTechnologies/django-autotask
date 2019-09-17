@@ -34,6 +34,10 @@ def secondary_resource_api_call(return_value):
     return create_mock_call(WRAPPER_QUERY_METHOD, return_value)
 
 
+def account_api_call(return_value):
+    return create_mock_call(WRAPPER_QUERY_METHOD, return_value)
+
+
 def ticket_status_api_call(return_value):
     return create_mock_call(GET_FIELD_INFO_METHOD, return_value)
 

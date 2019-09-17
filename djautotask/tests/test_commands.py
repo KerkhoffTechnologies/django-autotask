@@ -162,6 +162,16 @@ class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
+    command_name = 'account'
+
+    args = (
+        mocks.account_api_call,
+        fixtures.API_ACCOUNT_LIST,
+        command_name,
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -182,6 +192,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncResourceCommand,
             TestSyncTicketPriorityCommand,
             TestSyncQueueCommand,
+            TestSyncAccountCommand,
         ]
 
         self.test_args = []
@@ -212,6 +223,7 @@ class TestSyncAllCommand(TestCase):
             'ticket_secondary_resource': models.TicketSecondaryResource,
             'ticket_priority': models.TicketPriority,
             'queue': models.Queue,
+            'account': models.Account,
         }
         run_sync_command()
         pre_full_sync_counts = {}
@@ -219,8 +231,7 @@ class TestSyncAllCommand(TestCase):
         # Mock the API request to return no results to ensure
         # objects get deleted.
         mocks.wrapper_query_api_calls()
-        empty_api_call = fixture_utils.generate_picklist_objects('Status', [])
-        mocks.ticket_status_api_call(empty_api_call)
+        mocks.get_field_info_api_calls()
 
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()

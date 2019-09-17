@@ -296,6 +296,7 @@ class TicketSynchronizer(Synchronizer):
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
         'Priority': (models.TicketPriority, 'priority'),
         'QueueID': (models.Queue, 'queue'),
+        'AccountID': (models.Account, 'account'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -362,5 +363,19 @@ class TicketSecondaryResourceSynchronizer(Synchronizer):
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
         self.set_relations(instance, object_data)
+
+        return instance
+
+
+class AccountSynchronizer(Synchronizer):
+    model_class = models.Account
+    last_updated_field = 'LastActivityDate'
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('AccountName')
+        instance.number = object_data.get('AccountNumber')
+        instance.active = object_data.get('Active')
+        instance.last_activity_date = object_data.get('LastActivityDate')
 
         return instance

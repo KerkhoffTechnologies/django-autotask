@@ -45,6 +45,9 @@ class Ticket(TimeStampedModel):
     queue = models.ForeignKey(
         'Queue', blank=True, null=True, on_delete=models.SET_NULL
     )
+    account = models.ForeignKey(
+        'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -65,37 +68,26 @@ class Picklist(TimeStampedModel):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return '{}-{}'.format(self.value, self.label)
+
 
 class TicketStatus(Picklist):
     pass
 
     class Meta:
-        verbose_name = 'Ticket status'
         verbose_name_plural = 'Ticket statuses'
-
-    def __str__(self):
-        return '{}-{}'.format(self.value, self.label)
 
 
 class TicketPriority(Picklist):
     pass
 
     class Meta:
-        verbose_name = 'Ticket priority'
         verbose_name_plural = 'Ticket priorities'
-
-    def __str__(self):
-        return '{}-{}'.format(self.value, self.label)
 
 
 class Queue(Picklist):
     pass
-
-    class Meta:
-        verbose_name_plural = 'Queues'
-
-    def __str__(self):
-        return '{}-{}'.format(self.value, self.label)
 
 
 class Resource(TimeStampedModel):
@@ -122,3 +114,13 @@ class TicketSecondaryResource(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.ticket)
+
+
+class Account(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    number = models.CharField(max_length=50)
+    active = models.BooleanField(default=True)
+    last_activity_date = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
