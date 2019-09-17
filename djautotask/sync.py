@@ -7,7 +7,6 @@ from django.conf import settings
 from django.db import transaction, IntegrityError
 from django.utils import timezone
 
-
 from djautotask import models
 
 logger = logging.getLogger(__name__)
@@ -49,11 +48,13 @@ def log_sync_job(f):
             sync_job.save()
 
         return created_count, updated_count, deleted_count
+
     return wrapper
 
 
 class SyncResults:
     """Track results of a sync job."""
+
     def __init__(self):
         self.created_count = 0
         self.updated_count = 0
@@ -293,10 +294,11 @@ class TicketSynchronizer(Synchronizer):
     related_meta = {
         'Status': (models.TicketStatus, 'status'),
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
+        'Priority': (models.TicketPriority, 'priority'),
+        'QueueID': (models.Queue, 'queue'),
     }
 
     def _assign_field_data(self, instance, object_data):
-
         instance.id = object_data['id']
         instance.title = object_data['Title']
 
@@ -319,6 +321,18 @@ class TicketStatusSynchronizer(PicklistSynchronizer):
     model_class = models.TicketStatus
     entity_type = 'Ticket'
     picklist_field = 'Status'
+
+
+class TicketPrioritySynchronizer(PicklistSynchronizer):
+    model_class = models.TicketPriority
+    entity_type = 'Ticket'
+    picklist_field = 'Priority'
+
+
+class QueueSynchronizer(PicklistSynchronizer):
+    model_class = models.Queue
+    entity_type = 'Ticket'
+    picklist_field = 'QueueID'
 
 
 class ResourceSynchronizer(Synchronizer):

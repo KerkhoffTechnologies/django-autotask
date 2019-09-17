@@ -85,12 +85,21 @@ class AbstractBaseSyncTest(object):
         self.assertEqual(msg, out.getvalue().strip())
 
 
+class AbstractPicklistSyncCommandTest(AbstractBaseSyncTest):
+
+    def get_return_value(self, at_object, fixture_list):
+        field_info = fixture_utils.generate_picklist_objects(
+            self.field_name, fixture_list)
+
+        return field_info
+
+
 class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
     command_name = 'ticket'
     args = (
-        mocks.service_ticket_api_call,
+        mocks.ticket_api_call,
         fixtures.API_SERVICE_TICKET_LIST,
-        'ticket',
+        command_name,
     )
 
     def setUp(self):
@@ -98,19 +107,37 @@ class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_ticket_statuses()
 
 
-class TestSyncTicketStatusCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncTicketStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
     command_name = 'ticket_status'
-
-    def get_return_value(self, at_object, fixture_list):
-        field_info = fixture_utils.generate_picklist_objects(
-            'Status', fixture_list)
-
-        return field_info
+    field_name = 'Status'
 
     args = (
-        mocks.service_ticket_status_api_call,
+        mocks.ticket_status_api_call,
         fixtures.API_TICKET_STATUS_LIST,
-        'ticket_status',
+        command_name,
+
+    )
+
+
+class TestSyncTicketPriorityCommand(AbstractPicklistSyncCommandTest, TestCase):
+    command_name = 'ticket_priority'
+    field_name = 'Priority'
+
+    args = (
+        mocks.ticket_priority_api_call,
+        fixtures.API_TICKET_PRIORITY_LIST,
+        command_name,
+    )
+
+
+class TestSyncQueueCommand(AbstractPicklistSyncCommandTest, TestCase):
+    command_name = 'queue'
+    field_name = 'QueueID'
+
+    args = (
+        mocks.queue_api_call,
+        fixtures.API_QUEUE_LIST,
+        command_name,
 
     )
 
@@ -121,17 +148,17 @@ class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.resource_api_call,
         fixtures.API_RESOURCE_LIST,
-        'resource',
+        command_name,
     )
 
 
 class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
-    command_name = 'secondary_resource'
+    command_name = 'ticket_secondary_resource'
 
     args = (
         mocks.secondary_resource_api_call,
         fixtures.API_SECONDARY_RESOURCE_LIST,
-        'ticket_secondary_resource',
+        command_name,
     )
 
 
@@ -141,19 +168,20 @@ class TestSyncAllCommand(TestCase):
         super().setUp()
         mocks.init_api_connection(Wrapper)
 
-        ticket_status = fixture_utils.generate_picklist_objects(
-            'Status', fixtures.API_TICKET_STATUS_LIST
-        )
-        mocks.service_ticket_status_api_call(ticket_status)
-
         # Mock API calls to values based on what entity is being requested
+        mocks.get_field_info_api_calls(
+            fixture_utils.manage_sync_picklist_return_data
+        )
         mocks.wrapper_query_api_calls(
-            fixture_utils.manage_full_sync_return_data)
+            fixture_utils.manage_full_sync_return_data
+        )
 
         sync_test_cases = [
             TestSyncTicketCommand,
             TestSyncTicketStatusCommand,
             TestSyncResourceCommand,
+            TestSyncTicketPriorityCommand,
+            TestSyncQueueCommand,
         ]
 
         self.test_args = []
@@ -182,6 +210,8 @@ class TestSyncAllCommand(TestCase):
             'ticket': models.Ticket,
             'resource': models.Resource,
             'ticket_secondary_resource': models.TicketSecondaryResource,
+            'ticket_priority': models.TicketPriority,
+            'queue': models.Queue,
         }
         run_sync_command()
         pre_full_sync_counts = {}
@@ -190,7 +220,7 @@ class TestSyncAllCommand(TestCase):
         # objects get deleted.
         mocks.wrapper_query_api_calls()
         empty_api_call = fixture_utils.generate_picklist_objects('Status', [])
-        mocks.service_ticket_status_api_call(empty_api_call)
+        mocks.ticket_status_api_call(empty_api_call)
 
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()

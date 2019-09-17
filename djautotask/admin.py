@@ -45,6 +45,16 @@ class TicketStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'label', 'value')
 
 
+@admin.register(models.TicketPriority)
+class TicketPriorityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'value')
+
+
+@admin.register(models.Queue)
+class QueueAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'value')
+
+
 @admin.register(models.Resource)
 class ResourceAdmin(admin.ModelAdmin):
     list_display = ('user_name', 'full_name', 'email', 'active')
