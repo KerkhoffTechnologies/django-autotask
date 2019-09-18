@@ -142,6 +142,28 @@ class TestSyncQueueCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
+class TestSyncProjectStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
+    command_name = 'project_status'
+    field_name = 'Status'
+
+    args = (
+        mocks.project_status_api_call,
+        fixtures.API_PROJECT_STATUS_LIST,
+        command_name,
+    )
+
+
+class TestSyncProjectTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
+    command_name = 'project_type'
+    field_name = 'Type'
+
+    args = (
+        mocks.project_type_api_call,
+        fixtures.API_PROJECT_TYPE_LIST,
+        command_name,
+    )
+
+
 class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
     command_name = 'resource'
 
@@ -172,6 +194,16 @@ class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncProjectCommand(AbstractBaseSyncTest, TestCase):
+    command_name = 'project'
+
+    args = (
+        mocks.project_api_call,
+        fixtures.API_PROJECT_LIST,
+        command_name,
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -193,6 +225,9 @@ class TestSyncAllCommand(TestCase):
             TestSyncTicketPriorityCommand,
             TestSyncQueueCommand,
             TestSyncAccountCommand,
+            TestSyncProjectCommand,
+            TestSyncProjectStatusCommand,
+            TestSyncProjectTypeCommand,
         ]
 
         self.test_args = []
@@ -224,6 +259,9 @@ class TestSyncAllCommand(TestCase):
             'ticket_priority': models.TicketPriority,
             'queue': models.Queue,
             'account': models.Account,
+            'project': models.Project,
+            'project_status': models.ProjectStatus,
+            'project_type': models.ProjectType,
         }
         run_sync_command()
         pre_full_sync_counts = {}

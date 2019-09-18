@@ -3,7 +3,8 @@ from atws.wrapper import Wrapper
 from dateutil.parser import parse
 
 from djautotask.models import Ticket, TicketStatus, Resource, SyncJob, \
-    TicketSecondaryResource, TicketPriority, Queue, Account
+    TicketSecondaryResource, TicketPriority, Queue, Account, Project, \
+    ProjectType, ProjectStatus
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -85,8 +86,35 @@ class AbstractPicklistSynchronizer(object):
         self.assertEqual(instance.is_active, object_data['IsActive'])
         self.assertEqual(instance.is_system, object_data['IsSystem'])
 
+    def _evaluate_test_sync(self):
+        instance_dict = {}
+        for item in self.fixture:
+            instance_dict[str(item['Value'])] = item
+
+        for instance in self.model_class.objects.all():
+            object_data = instance_dict[instance.value]
+
+            self._assert_sync(instance, object_data)
+
+        assert_sync_job(self.model_class)
+
+    def _evaluate_objects_deleted(self):
+        qset = self.model_class.objects.all()
+        self.assertEqual(qset.count(), len(self.fixture))
+
+        # Ensure that the get_field_info method returns no API objects
+        # so that the full sync will remove the existing objects in the DB.
+        mocks.get_field_info_api_calls()
+
+        synchronizer = self.synchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(qset.count(), 0)
+
 
 class TestTicketStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = TicketStatus
+    fixture = fixtures.API_TICKET_STATUS_LIST
+    synchronizer = sync.TicketStatusSynchronizer
 
     def setUp(self):
         super().setUp()
@@ -97,93 +125,77 @@ class TestTicketStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
         Test to ensure ticket status synchronizer saves a TicketStatus
         instance locally.
         """
-        instance_dict = {}
-        for status in fixtures.API_TICKET_STATUS_LIST:
-            instance_dict[str(status['Value'])] = status
-
-        for instance in TicketStatus.objects.all():
-            object_data = instance_dict[instance.value]
-
-            self._assert_sync(instance, object_data)
-
-        assert_sync_job(TicketStatus)
+        self._evaluate_test_sync()
 
     def test_delete_stale_ticket_statuses(self):
         """
         Test that ticket status is deleted if not returned during a full sync.
         """
-        status_qset = TicketStatus.objects.all()
-        self.assertEqual(status_qset.count(), 4)
-
-        empty_api_call = fixture_utils.generate_picklist_objects('Status', [])
-        mocks.ticket_status_api_call(empty_api_call)
-
-        synchronizer = sync.TicketStatusSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(status_qset.count(), 0)
+        self._evaluate_objects_deleted()
 
 
 class TestTicketPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = TicketPriority
+    fixture = fixtures.API_TICKET_PRIORITY_LIST
+    synchronizer = sync.TicketPrioritySynchronizer
 
     def setUp(self):
         super().setUp()
         fixture_utils.init_ticket_priorities()
 
     def test_sync_ticket_priority(self):
-        instance_dict = {}
-        for priority in fixtures.API_TICKET_PRIORITY_LIST:
-            instance_dict[str(priority['Value'])] = priority
-
-        for instance in TicketPriority.objects.all():
-            object_data = instance_dict[instance.value]
-
-            self._assert_sync(instance, object_data)
-
-        assert_sync_job(TicketPriority)
+        self._evaluate_test_sync()
 
     def test_delete_stale_ticket_priorities(self):
-
-        priority_qset = TicketPriority.objects.all()
-        self.assertEqual(priority_qset.count(), 2)
-
-        empty_api_call = \
-            fixture_utils.generate_picklist_objects('Priority', [])
-        mocks.ticket_priority_api_call(empty_api_call)
-
-        synchronizer = sync.TicketPrioritySynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(priority_qset.count(), 0)
+        self._evaluate_objects_deleted()
 
 
 class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = Queue
+    fixture = fixtures.API_QUEUE_LIST
+    synchronizer = sync.QueueSynchronizer
 
     def setUp(self):
         super().setUp()
         fixture_utils.init_queues()
 
     def test_sync_queue(self):
-        instance_dict = {}
-        for queue in fixtures.API_QUEUE_LIST:
-            instance_dict[str(queue['Value'])] = queue
-
-        for instance in Queue.objects.all():
-            object_data = instance_dict[instance.value]
-
-            self._assert_sync(instance, object_data)
-
-        assert_sync_job(Queue)
+        self._evaluate_test_sync()
 
     def test_delete_stale_queue(self):
+        self._evaluate_objects_deleted()
 
-        queue_qset = Queue.objects.all()
-        self.assertEqual(queue_qset.count(), 3)
 
-        empty_api_call = fixture_utils.generate_picklist_objects('QueueID', [])
-        mocks.queue_api_call(empty_api_call)
+class TestProjectStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = ProjectStatus
+    fixture = fixtures.API_PROJECT_STATUS_LIST
+    synchronizer = sync.ProjectStatusSynchronizer
 
-        synchronizer = sync.QueueSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(queue_qset.count(), 0)
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_statuses()
+
+    def test_sync_project_status(self):
+        self._evaluate_test_sync()
+
+    def test_delete_stale_project_status(self):
+        self._evaluate_test_sync()
+
+
+class TestProjectTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = ProjectType
+    fixture = fixtures.API_PROJECT_TYPE_LIST
+    synchronizer = sync.ProjectTypeSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_types()
+
+    def test_sync_project_type(self):
+        self._evaluate_test_sync()
+
+    def test_delete_stale_project_type(self):
+        self._evaluate_objects_deleted()
 
 
 class TestResourceSynchronizer(TestCase):
@@ -293,3 +305,56 @@ class TestAccountSynchronizer(TestCase):
         synchronizer = sync.AccountSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(account_qset.count(), 0)
+
+
+class TestProjectSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_resources()
+        fixture_utils.init_accounts()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_project_types()
+        fixture_utils.init_projects()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.name, object_data['ProjectName'])
+        self.assertEqual(instance.number, object_data['ProjectNumber'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(instance.actual_hours, object_data['ActualHours'])
+        self.assertEqual(instance.completed_date_time,
+                         parse(object_data['CompletedDateTime']))
+        self.assertEqual(instance.completed_percentage,
+                         object_data['CompletedPercentage'])
+        self.assertEqual(instance.duration, object_data['Duration'])
+        self.assertEqual(instance.start_date_time,
+                         parse(object_data['StartDateTime']))
+        self.assertEqual(instance.end_date_time,
+                         parse(object_data['EndDateTime']))
+        self.assertEqual(instance.estimated_time, object_data['EstimatedTime'])
+        self.assertEqual(instance.last_activity_date_time,
+                         parse(object_data['LastActivityDateTime']))
+        self.assertEqual(instance.project_lead_resource.id,
+                         object_data['ProjectLeadResourceID'])
+        self.assertEqual(instance.account.id, object_data['AccountID'])
+        self.assertEqual(instance.status.id, object_data['Status'])
+        self.assertEqual(instance.type.id, object_data['Type'])
+
+    def test_sync_project(self):
+        self.assertGreater(Project.objects.all().count(), 0)
+        object_data = fixtures.API_PROJECT_LIST[0]
+        instance = Project.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(Project)
+
+    def test_delete_stale_project(self):
+        project_qset = Project.objects.all()
+        self.assertEqual(project_qset.count(), 1)
+
+        mocks.project_api_call([])
+
+        synchronizer = sync.ProjectSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(project_qset.count(), 0)

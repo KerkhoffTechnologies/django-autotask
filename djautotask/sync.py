@@ -213,7 +213,7 @@ class Synchronizer:
                         query.GreaterThanorEquals, last_sync_job_time)
 
         else:
-            query.WHERE('id', query.GreaterThan, 0)
+            query.WHERE('id', query.GreaterThanorEquals, 0)
 
         query_object = self.at_api_client.query(query)
 
@@ -297,6 +297,7 @@ class TicketSynchronizer(Synchronizer):
         'Priority': (models.TicketPriority, 'priority'),
         'QueueID': (models.Queue, 'queue'),
         'AccountID': (models.Account, 'account'),
+        'ProjectID': (models.Project, 'project'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -334,6 +335,18 @@ class QueueSynchronizer(PicklistSynchronizer):
     model_class = models.Queue
     entity_type = 'Ticket'
     picklist_field = 'QueueID'
+
+
+class ProjectStatusSynchronizer(PicklistSynchronizer):
+    model_class = models.ProjectStatus
+    entity_type = 'Project'
+    picklist_field = 'Status'
+
+
+class ProjectTypeSynchronizer(PicklistSynchronizer):
+    model_class = models.ProjectType
+    entity_type = 'Project'
+    picklist_field = 'Type'
 
 
 class ResourceSynchronizer(Synchronizer):
@@ -377,5 +390,36 @@ class AccountSynchronizer(Synchronizer):
         instance.number = object_data.get('AccountNumber')
         instance.active = object_data.get('Active')
         instance.last_activity_date = object_data.get('LastActivityDate')
+
+        return instance
+
+
+class ProjectSynchronizer(Synchronizer):
+    model_class = models.Project
+    last_updated_field = 'LastActivityDateTime'
+
+    related_meta = {
+        'ProjectLeadResourceID': (models.Resource, 'project_lead_resource'),
+        'AccountID': (models.Account, 'account'),
+        'Status': (models.ProjectStatus, 'status'),
+        'Type': (models.ProjectType, 'type'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('ProjectName')
+        instance.number = object_data.get('ProjectNumber')
+        instance.description = object_data.get('Description')
+        instance.actual_hours = object_data.get('ActualHours')
+        instance.completed_date_time = object_data.get('CompletedDateTime')
+        instance.completed_percentage = object_data.get('CompletedPercentage')
+        instance.duration = object_data.get('Duration')
+        instance.start_date_time = object_data.get('StartDateTime')
+        instance.end_date_time = object_data.get('EndDateTime')
+        instance.estimated_time = object_data.get('EstimatedTime')
+        instance.last_activity_date_time = \
+            object_data.get('LastActivityDateTime')
+
+        self.set_relations(instance, object_data)
 
         return instance

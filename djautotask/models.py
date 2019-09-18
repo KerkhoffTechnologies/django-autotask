@@ -48,6 +48,9 @@ class Ticket(TimeStampedModel):
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
+    project = models.ForeignKey(
+        'Project', null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -90,6 +93,17 @@ class Queue(Picklist):
     pass
 
 
+class ProjectStatus(Picklist):
+    pass
+
+    class Meta:
+        verbose_name_plural = 'Project statuses'
+
+
+class ProjectType(Picklist):
+    pass
+
+
 class Resource(TimeStampedModel):
     user_name = models.CharField(max_length=32)
     email = models.CharField(max_length=50)
@@ -121,6 +135,39 @@ class Account(TimeStampedModel):
     number = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Project(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    number = models.CharField(null=True, max_length=50)
+    description = models.CharField(max_length=2000)
+    actual_hours = models.DecimalField(
+        null=True, decimal_places=2, max_digits=9)
+    completed_date_time = models.DateTimeField(null=True)
+    completed_percentage = models.PositiveSmallIntegerField(default=0)
+    duration = models.PositiveSmallIntegerField(default=0)
+    start_date_time = models.DateTimeField(null=True)
+    end_date_time = models.DateTimeField(null=True)
+    estimated_time = models.DecimalField(
+        null=True, decimal_places=2, max_digits=9
+    )
+    last_activity_date_time = models.DateTimeField(null=True)
+
+    project_lead_resource = models.ForeignKey(
+        'Resource', null=True, on_delete=models.SET_NULL
+    )
+    account = models.ForeignKey(
+        'Account', null=True, on_delete=models.SET_NULL
+    )
+    status = models.ForeignKey(
+        'ProjectStatus', null=True, on_delete=models.SET_NULL
+    )
+    type = models.ForeignKey(
+        'ProjectType', null=True, on_delete=models.SET_NULL
+    )
 
     def __str__(self):
         return self.name
