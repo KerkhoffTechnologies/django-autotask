@@ -4,10 +4,18 @@ import datetime
 from . import models
 
 
+class TicketSecondaryResourceInline(admin.StackedInline):
+    model = models.TicketSecondaryResource
+
+
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'ticket_number', 'status')
     search_fields = ('id', 'title', 'ticket_number', 'status')
+
+    inlines = [
+        TicketSecondaryResourceInline
+    ]
 
 
 @admin.register(models.SyncJob)
@@ -44,3 +52,8 @@ class ResourceAdmin(admin.ModelAdmin):
 
     def full_name(self, obj):
         return str(obj)
+
+
+@admin.register(models.TicketSecondaryResource)
+class TicketSecondaryResourceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'resource', 'ticket')

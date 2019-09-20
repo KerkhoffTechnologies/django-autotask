@@ -2,7 +2,8 @@ from django.test import TestCase
 from atws.wrapper import Wrapper
 from dateutil.parser import parse
 
-from djautotask.models import Ticket, TicketStatus, Resource, SyncJob
+from djautotask.models import Ticket, TicketStatus, Resource, SyncJob, \
+    TicketSecondaryResource
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -163,3 +164,35 @@ class TestResourceSynchronizer(TestCase):
         synchronizer = sync.ResourceSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(resource_qset.count(), 0)
+
+
+class TestTicketSecondaryResourceSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_resources()
+        fixture_utils.init_tickets()
+        fixture_utils.init_secondary_resources()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.ticket.id, object_data['TicketID'])
+        self.assertEqual(instance.resource.id, object_data['ResourceID'])
+
+    def test_sync_ticket_secondary_resource(self):
+        self.assertGreater(TicketSecondaryResource.objects.all().count(), 0)
+        object_data = fixtures.API_SECONDARY_RESOURCE_LIST[0]
+        instance = TicketSecondaryResource.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TicketSecondaryResource)
+
+    def test_delete_ticket_secondary_resource(self):
+        secondary_resources_qset = TicketSecondaryResource.objects.all()
+        self.assertEqual(secondary_resources_qset.count(), 2)
+
+        mocks.secondary_resource_api_call([])
+
+        synchronizer = sync.TicketSecondaryResourceSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(secondary_resources_qset.count(), 0)

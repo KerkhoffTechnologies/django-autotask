@@ -87,7 +87,8 @@ def manage_full_sync_return_data(value):
     """
     fixture_dict = {
         'Ticket': fixtures.API_SERVICE_TICKET_LIST,
-        'Resource': fixtures.API_RESOURCE_LIST
+        'Resource': fixtures.API_RESOURCE_LIST,
+        'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -120,4 +121,13 @@ def init_resources():
 
     mocks.resource_api_call(tickets)
     synchronizer = sync.ResourceSynchronizer()
+    return synchronizer.sync()
+
+
+def init_secondary_resources():
+    secondary_resources = generate_objects(
+        'TicketSecondaryResource', fixtures.API_SECONDARY_RESOURCE_LIST)
+
+    mocks.secondary_resource_api_call(secondary_resources)
+    synchronizer = sync.TicketSecondaryResourceSynchronizer()
     return synchronizer.sync()
