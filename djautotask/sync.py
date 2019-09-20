@@ -94,7 +94,7 @@ class Synchronizer:
 
         relation_id = object_data.get(object_field)
         try:
-            related_instance = self.get_related_instance(relation_id)
+            related_instance = model_class.objects.get(pk=relation_id)
             setattr(instance, field_name, related_instance)
         except model_class.DoesNotExist:
             logger.warning(
@@ -104,17 +104,13 @@ class Synchronizer:
             )
 
     def _instance_ids(self, filter_params=None):
-        key = self.get_lookup_key()
         if not filter_params:
-            ids = self.model_class.objects.all().values_list(key, flat=True)
+            ids = self.model_class.objects.all().values_list('id', flat=True)
         else:
             ids = self.model_class.objects.filter(filter_params).values_list(
-                key, flat=True
+                'id', flat=True
             )
         return set(ids)
-
-    def get_lookup_key(self):
-        return self.lookup_key
 
     def get(self, query_object, results):
         """
@@ -146,12 +142,6 @@ class Synchronizer:
 
         return results
 
-    def get_delete_qset(self, stale_ids):
-        return self.model_class.objects.filter(pk__in=stale_ids)
-
-    def get_instance(self, instance_pk):
-        return self.model_class.objects.get(pk=instance_pk)
-
     def update_or_create_instance(self, record):
         """Creates and returns an instance if it does not already exist."""
         created = False
@@ -159,7 +149,7 @@ class Synchronizer:
 
         try:
             instance_pk = api_instance[self.lookup_key]
-            instance = self.get_instance(instance_pk)
+            instance = self.model_class.objects.get(pk=instance_pk)
         except self.model_class.DoesNotExist:
             instance = self.model_class()
             created = True
@@ -191,7 +181,7 @@ class Synchronizer:
         stale_ids = initial_ids - synced_ids
         deleted_count = 0
         if stale_ids:
-            delete_qset = self.get_delete_qset(stale_ids)
+            delete_qset = self.model_class.objects.filter(pk__in=stale_ids)
             deleted_count = delete_qset.count()
 
             logger.info(
@@ -211,7 +201,8 @@ class Synchronizer:
         results = SyncResults()
         query = Query(self.model_class.__name__)
 
-        if sync_job_qset.exists() and not self.full:
+        if sync_job_qset.exists() and self.last_updated_field \
+                and not self.full:
             last_sync_job_time = sync_job_qset.last().start_time
             query.WHERE(self.last_updated_field,
                         query.GreaterThanorEquals, last_sync_job_time)
@@ -274,18 +265,9 @@ class PicklistSynchronizer(Synchronizer):
         return \
             results.created_count, results.updated_count, results.deleted_count
 
-    def get_delete_qset(self, stale_ids):
-        return self.model_class.objects.filter(value__in=stale_ids)
-
-    def get_lookup_key(self):
-        return self.lookup_key.lower()
-
-    def get_instance(self, instance_pk):
-        return self.model_class.objects.get(value=instance_pk)
-
     def _assign_field_data(self, instance, object_data):
 
-        instance.value = str(object_data.get('Value'))
+        instance.id = object_data.get('Value')
         instance.label = object_data.get('Label')
         instance.is_default_value = object_data.get('IsDefaultValue')
         instance.sort_order = object_data.get('SortOrder')
@@ -301,7 +283,8 @@ class TicketSynchronizer(Synchronizer):
     last_updated_field = 'LastActivityDate'
 
     related_meta = {
-        'Status': (models.TicketStatus, 'status')
+        'Status': (models.TicketStatus, 'status'),
+        'AssignedResourceID': (models.Resource, 'assigned_resource'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -320,11 +303,23 @@ class TicketSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
         return instance
 
-    def get_related_instance(self, relation_id):
-        return models.TicketStatus.objects.get(value=relation_id)
-
 
 class TicketStatusSynchronizer(PicklistSynchronizer):
     model_class = models.TicketStatus
     entity_type = 'Ticket'
     picklist_field = 'Status'
+
+
+class ResourceSynchronizer(Synchronizer):
+    model_class = models.Resource
+    last_updated_field = None
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.user_name = object_data.get('UserName')
+        instance.email = object_data.get('Email')
+        instance.first_name = object_data.get('FirstName')
+        instance.last_name = object_data.get('LastName')
+        instance.active = object_data.get('Active')
+
+        return instance

@@ -24,7 +24,22 @@ def service_ticket_api_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def resource_api_call(return_value):
+    method_name = 'atws.wrapper.Wrapper.query'
+
+    return create_mock_call(method_name, return_value)
+
+
 def service_ticket_status_api_call(return_value):
     method_name = 'atws.helpers.get_field_info'
 
     return create_mock_call(method_name, return_value)
+
+
+def wrapper_query_api_calls(side_effect=None):
+    """
+    Patch the Wrapper query method to return values based on the
+    supplied side effect.
+    """
+    _patch = patch('atws.wrapper.Wrapper.query', side_effect=side_effect)
+    _patch.start()

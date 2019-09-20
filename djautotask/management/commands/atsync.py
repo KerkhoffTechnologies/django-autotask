@@ -22,6 +22,7 @@ class Command(BaseCommand):
         synchronizers = (
             ('ticket_status',
              sync.TicketStatusSynchronizer, _('Ticket Status')),
+            ('resource', sync.ResourceSynchronizer, _('Resource')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()

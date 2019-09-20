@@ -34,4 +34,13 @@ class SyncJobAdmin(admin.ModelAdmin):
 
 @admin.register(models.TicketStatus)
 class TicketStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'label', 'value')
+    list_display = ('id', 'label')
+
+
+@admin.register(models.Resource)
+class ResourceAdmin(admin.ModelAdmin):
+    list_display = ('user_name', 'full_name', 'email', 'active')
+    search_fields = ('user_name', 'first_name', 'last_name', 'email')
+
+    def full_name(self, obj):
+        return str(obj)
