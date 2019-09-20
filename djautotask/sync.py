@@ -303,9 +303,6 @@ class TicketSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
         return instance
 
-    def get_related_instance(self, relation_id, object_field):
-        return self.related_meta[object_field][0].objects.get(pk=relation_id)
-
 
 class TicketStatusSynchronizer(PicklistSynchronizer):
     model_class = models.TicketStatus
