@@ -39,7 +39,7 @@ class TestTicketSynchronizer(TestCase):
                          object_data['EstimatedHours'])
         self.assertEqual(instance.last_activity_date,
                          parse(object_data['LastActivityDate']))
-        self.assertEqual(instance.status.value, str(object_data['Status']))
+        self.assertEqual(instance.status.id, object_data['Status'])
         self.assertEqual(instance.assigned_resource.id,
                          object_data['AssignedResourceID'])
 
@@ -80,7 +80,7 @@ class TestTicketStatusSynchronizer(TestCase):
 
     def _assert_sync(self, instance, object_data):
 
-        self.assertEqual(instance.value, str(object_data['Value']))
+        self.assertEqual(instance.id, object_data['Value'])
         self.assertEqual(instance.label, object_data['Label'])
         self.assertEqual(
             instance.is_default_value, object_data['IsDefaultValue'])
@@ -96,10 +96,10 @@ class TestTicketStatusSynchronizer(TestCase):
         """
         instance_dict = {}
         for status in fixtures.API_TICKET_STATUS_LIST:
-            instance_dict[str(status['Value'])] = status
+            instance_dict[status['Value']] = status
 
         for instance in TicketStatus.objects.all():
-            object_data = instance_dict[instance.value]
+            object_data = instance_dict[instance.id]
 
             self._assert_sync(instance, object_data)
 
