@@ -105,17 +105,13 @@ class Synchronizer:
             )
 
     def _instance_ids(self, filter_params=None):
-        key = self.get_lookup_key()
         if not filter_params:
-            ids = self.model_class.objects.all().values_list(key, flat=True)
+            ids = self.model_class.objects.all().values_list('id', flat=True)
         else:
             ids = self.model_class.objects.filter(filter_params).values_list(
-                key, flat=True
+                'id', flat=True
             )
         return set(ids)
-
-    def get_lookup_key(self):
-        return self.lookup_key
 
     def get(self, query_object, results):
         """
@@ -270,13 +266,9 @@ class PicklistSynchronizer(Synchronizer):
         return \
             results.created_count, results.updated_count, results.deleted_count
 
-    def get_lookup_key(self):
-        return self.lookup_key.lower()
-
     def _assign_field_data(self, instance, object_data):
 
         instance.id = object_data.get('Value')
-        instance.value = str(object_data.get('Value'))
         instance.label = object_data.get('Label')
         instance.is_default_value = object_data.get('IsDefaultValue')
         instance.sort_order = object_data.get('SortOrder')
@@ -312,9 +304,6 @@ class TicketSynchronizer(Synchronizer):
 
         self.set_relations(instance, object_data)
         return instance
-
-    def get_related_instance(self, relation_id, object_field):
-        return self.related_meta[object_field][0].objects.get(pk=relation_id)
 
 
 class TicketStatusSynchronizer(PicklistSynchronizer):
