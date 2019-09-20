@@ -48,7 +48,6 @@ class Ticket(TimeStampedModel):
 
 
 class Picklist(TimeStampedModel):
-    value = models.CharField(blank=True, null=True, max_length=50)
     label = models.CharField(blank=True, null=True, max_length=50)
     is_default_value = models.BooleanField(default=False)
     sort_order = models.PositiveSmallIntegerField(blank=True, null=True)
@@ -68,7 +67,7 @@ class TicketStatus(Picklist):
         verbose_name_plural = 'Ticket statuses'
 
     def __str__(self):
-        return '{}-{}'.format(self.value, self.label)
+        return '{}-{}'.format(self.id, self.label)
 
 
 class Resource(TimeStampedModel):

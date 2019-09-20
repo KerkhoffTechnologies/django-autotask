@@ -42,7 +42,7 @@ class SyncJobAdmin(admin.ModelAdmin):
 
 @admin.register(models.TicketStatus)
 class TicketStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'label', 'value')
+    list_display = ('id', 'label')
 
 
 @admin.register(models.Resource)
