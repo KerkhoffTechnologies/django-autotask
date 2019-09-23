@@ -235,7 +235,6 @@ API_QUEUE_LIST = [
     },
 ]
 
-
 API_TICKET_PRIORITY_LIST = [
     {
         'IsActive': True,
@@ -256,7 +255,6 @@ API_TICKET_PRIORITY_LIST = [
         'ParentValue': None,
     }
 ]
-
 
 API_TICKET_STATUS_LIST = [
     {

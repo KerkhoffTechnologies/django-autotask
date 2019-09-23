@@ -22,27 +22,11 @@ def init_api_connection(return_value):
     return create_mock_call(method_name, return_value)
 
 
-def ticket_api_call(return_value):
+def api_query_call(return_value):
     return create_mock_call(WRAPPER_QUERY_METHOD, return_value)
 
 
-def resource_api_call(return_value):
-    return create_mock_call(WRAPPER_QUERY_METHOD, return_value)
-
-
-def secondary_resource_api_call(return_value):
-    return create_mock_call(WRAPPER_QUERY_METHOD, return_value)
-
-
-def ticket_status_api_call(return_value):
-    return create_mock_call(GET_FIELD_INFO_METHOD, return_value)
-
-
-def ticket_priority_api_call(return_value):
-    return create_mock_call(GET_FIELD_INFO_METHOD, return_value)
-
-
-def queue_api_call(return_value):
+def api_picklist_call(return_value):
     return create_mock_call(GET_FIELD_INFO_METHOD, return_value)
 
 

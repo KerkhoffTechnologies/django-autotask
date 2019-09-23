@@ -55,6 +55,16 @@ class QueueAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
+@admin.register(models.ProjectStatus)
+class ProjectStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
+@admin.register(models.ProjectType)
+class ProjectTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
 @admin.register(models.Resource)
 class ResourceAdmin(admin.ModelAdmin):
     list_display = ('user_name', 'full_name', 'email', 'active')
@@ -67,3 +77,15 @@ class ResourceAdmin(admin.ModelAdmin):
 @admin.register(models.TicketSecondaryResource)
 class TicketSecondaryResourceAdmin(admin.ModelAdmin):
     list_display = ('id', 'resource', 'ticket')
+
+
+@admin.register(models.Account)
+class AccountAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'number', 'active')
+    search_fields = ('id', 'name', 'number')
+
+
+@admin.register(models.Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'number')
+    search_fields = ('id', 'name', 'number')

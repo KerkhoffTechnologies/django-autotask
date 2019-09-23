@@ -88,12 +88,14 @@ def manage_full_sync_return_data(value):
     fixture_dict = {
         'Ticket': fixtures.API_TICKET_LIST,
         'Resource': fixtures.API_RESOURCE_LIST,
-        'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST
+        'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST,
+        'Account': fixtures.API_ACCOUNT_LIST,
+        'Project': fixtures.API_PROJECT_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
 
-    fixture = fixture_dict[object_type]
+    fixture = fixture_dict.get(object_type)
     return_value = generate_objects(object_type, fixture)
 
     return return_value
@@ -105,9 +107,15 @@ def manage_sync_picklist_return_data(wrapper, entity):
     specified in the query.
     """
     fixture_dict = {
-        'Status': fixtures.API_TICKET_STATUS_LIST,
-        'Priority': fixtures.API_TICKET_PRIORITY_LIST,
-        'QueueID': fixtures.API_QUEUE_LIST,
+        'Ticket': {
+            'Status': fixtures.API_TICKET_STATUS_LIST,
+            'Priority': fixtures.API_TICKET_PRIORITY_LIST,
+            'QueueID': fixtures.API_QUEUE_LIST,
+        },
+        'Project': {
+            'Status': fixtures.API_PROJECT_STATUS_LIST,
+            'Type': fixtures.API_PROJECT_TYPE_LIST,
+        }
     }
     client = API_CLIENT
     array_of_field = client.factory.create('ArrayOfField')
@@ -115,8 +123,10 @@ def manage_sync_picklist_return_data(wrapper, entity):
     # Since get_field_info normally returns all fields on a given entity
     # as well as the picklists for picklist fields, we generate as many
     # picklist objects as we need and append to the array field.
-    for entity_type, fixture in fixture_dict.items():
-        api_object = generate_picklist_objects(entity_type, fixture)
+    entity_fields = fixture_dict.get(entity)
+
+    for field_type, fixture in entity_fields.items():
+        api_object = generate_picklist_objects(field_type, fixture)
         array_of_field[0].append(api_object[0][0])
 
     return array_of_field
@@ -126,7 +136,7 @@ def init_ticket_statuses():
     field_info = generate_picklist_objects(
         'Status', fixtures.API_TICKET_STATUS_LIST
     )
-    mocks.ticket_status_api_call(field_info)
+    mocks.api_picklist_call(field_info)
     synchronizer = sync.TicketStatusSynchronizer()
     return synchronizer.sync()
 
@@ -135,7 +145,7 @@ def init_ticket_priorities():
     field_info = generate_picklist_objects(
         'Priority', fixtures.API_TICKET_PRIORITY_LIST
     )
-    mocks.ticket_priority_api_call(field_info)
+    mocks.api_picklist_call(field_info)
     synchronizer = sync.TicketPrioritySynchronizer()
     return synchronizer.sync()
 
@@ -144,15 +154,33 @@ def init_queues():
     field_info = generate_picklist_objects(
         'QueueID', fixtures.API_QUEUE_LIST
     )
-    mocks.queue_api_call(field_info)
+    mocks.api_picklist_call(field_info)
     synchronizer = sync.QueueSynchronizer()
+    return synchronizer.sync()
+
+
+def init_project_statuses():
+    field_info = generate_picklist_objects(
+        'Status', fixtures.API_PROJECT_STATUS_LIST
+    )
+    mocks.api_picklist_call(field_info)
+    synchronizer = sync.ProjectStatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_project_types():
+    field_info = generate_picklist_objects(
+        'Type', fixtures.API_PROJECT_TYPE_LIST
+    )
+    mocks.api_picklist_call(field_info)
+    synchronizer = sync.ProjectTypeSynchronizer()
     return synchronizer.sync()
 
 
 def init_tickets():
     tickets = generate_objects('Ticket', fixtures.API_TICKET_LIST)
 
-    mocks.ticket_api_call(tickets)
+    mocks.api_query_call(tickets)
     synchronizer = sync.TicketSynchronizer()
     return synchronizer.sync()
 
@@ -160,7 +188,7 @@ def init_tickets():
 def init_resources():
     tickets = generate_objects('Resource', fixtures.API_RESOURCE_LIST)
 
-    mocks.resource_api_call(tickets)
+    mocks.api_query_call(tickets)
     synchronizer = sync.ResourceSynchronizer()
     return synchronizer.sync()
 
@@ -169,6 +197,22 @@ def init_secondary_resources():
     secondary_resources = generate_objects(
         'TicketSecondaryResource', fixtures.API_SECONDARY_RESOURCE_LIST)
 
-    mocks.secondary_resource_api_call(secondary_resources)
+    mocks.api_query_call(secondary_resources)
     synchronizer = sync.TicketSecondaryResourceSynchronizer()
+    return synchronizer.sync()
+
+
+def init_accounts():
+    account = generate_objects('Account', fixtures.API_ACCOUNT_LIST)
+
+    mocks.api_query_call(account)
+    synchronizer = sync.AccountSynchronizer()
+    return synchronizer.sync()
+
+
+def init_projects():
+    project = generate_objects('Project', fixtures.API_PROJECT_LIST)
+
+    mocks.api_query_call(project)
+    synchronizer = sync.ProjectSynchronizer()
     return synchronizer.sync()

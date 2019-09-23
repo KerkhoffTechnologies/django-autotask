@@ -45,6 +45,12 @@ class Ticket(TimeStampedModel):
     queue = models.ForeignKey(
         'Queue', blank=True, null=True, on_delete=models.SET_NULL
     )
+    account = models.ForeignKey(
+        'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    project = models.ForeignKey(
+        'Project', null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -64,27 +70,22 @@ class Picklist(TimeStampedModel):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return '{}-{}'.format(self.id, self.label)
+
 
 class TicketStatus(Picklist):
     pass
 
     class Meta:
-        verbose_name = 'Ticket status'
         verbose_name_plural = 'Ticket statuses'
-
-    def __str__(self):
-        return '{}-{}'.format(self.id, self.label)
 
 
 class TicketPriority(Picklist):
     pass
 
     class Meta:
-        verbose_name = 'Ticket priority'
         verbose_name_plural = 'Ticket priorities'
-
-    def __str__(self):
-        return '{}-{}'.format(self.id, self.label)
 
 
 class Queue(Picklist):
@@ -93,8 +94,16 @@ class Queue(Picklist):
     class Meta:
         verbose_name_plural = 'Queues'
 
-    def __str__(self):
-        return '{}-{}'.format(self.id, self.label)
+
+class ProjectStatus(Picklist):
+    pass
+
+    class Meta:
+        verbose_name_plural = 'Project statuses'
+
+
+class ProjectType(Picklist):
+    pass
 
 
 class Resource(TimeStampedModel):
@@ -121,3 +130,46 @@ class TicketSecondaryResource(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.ticket)
+
+
+class Account(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    number = models.CharField(max_length=50)
+    active = models.BooleanField(default=True)
+    last_activity_date = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Project(TimeStampedModel):
+    name = models.CharField(max_length=100)
+    number = models.CharField(null=True, max_length=50)
+    description = models.CharField(max_length=2000)
+    actual_hours = models.DecimalField(
+        null=True, decimal_places=2, max_digits=9)
+    completed_date = models.DateField(null=True)
+    completed_percentage = models.PositiveSmallIntegerField(default=0)
+    duration = models.PositiveSmallIntegerField(default=0)
+    start_date = models.DateField(null=True)
+    end_date = models.DateField(null=True)
+    estimated_time = models.DecimalField(
+        null=True, decimal_places=2, max_digits=9
+    )
+    last_activity_date_time = models.DateTimeField(null=True)
+
+    project_lead_resource = models.ForeignKey(
+        'Resource', null=True, on_delete=models.SET_NULL
+    )
+    account = models.ForeignKey(
+        'Account', null=True, on_delete=models.SET_NULL
+    )
+    status = models.ForeignKey(
+        'ProjectStatus', null=True, on_delete=models.SET_NULL
+    )
+    type = models.ForeignKey(
+        'ProjectType', null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return self.name
