@@ -97,7 +97,7 @@ class AbstractPicklistSyncCommandTest(AbstractBaseSyncTest):
 class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.ticket_api_call,
-        fixtures.API_SERVICE_TICKET_LIST,
+        fixtures.API_TICKET_LIST,
         'ticket',
     )
 
@@ -193,7 +193,7 @@ class TestSyncAllCommand(TestCase):
             self.assertIn(summary, output.getvalue().strip())
 
         self.assertEqual(models.Ticket.objects.all().count(),
-                         len(fixtures.API_SERVICE_TICKET_LIST))
+                         len(fixtures.API_TICKET_LIST))
 
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""

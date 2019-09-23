@@ -86,7 +86,7 @@ def manage_full_sync_return_data(value):
     Generate and return objects based on the entity specified in the query.
     """
     fixture_dict = {
-        'Ticket': fixtures.API_SERVICE_TICKET_LIST,
+        'Ticket': fixtures.API_TICKET_LIST,
         'Resource': fixtures.API_RESOURCE_LIST,
         'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST
     }
@@ -150,7 +150,7 @@ def init_queues():
 
 
 def init_tickets():
-    tickets = generate_objects('Ticket', fixtures.API_SERVICE_TICKET_LIST)
+    tickets = generate_objects('Ticket', fixtures.API_TICKET_LIST)
 
     mocks.ticket_api_call(tickets)
     synchronizer = sync.TicketSynchronizer()

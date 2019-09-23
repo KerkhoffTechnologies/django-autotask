@@ -49,7 +49,7 @@ class TestTicketSynchronizer(TestCase):
         """
         self.assertGreater(Ticket.objects.all().count(), 0)
 
-        object_data = fixtures.API_SERVICE_TICKET
+        object_data = fixtures.API_TICKET
         instance = Ticket.objects.get(id=object_data['id'])
 
         self._assert_sync(instance, object_data)
@@ -59,7 +59,7 @@ class TestTicketSynchronizer(TestCase):
         """
         Local ticket should be deleted if not returned during a full sync
         """
-        ticket_id = fixtures.API_SERVICE_TICKET['id']
+        ticket_id = fixtures.API_TICKET['id']
         ticket_qset = Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
 
