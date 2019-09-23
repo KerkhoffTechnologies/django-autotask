@@ -1,3 +1,53 @@
+API_ACCOUNT_LIST = [
+    {
+        'id': 174,
+        'UserDefinedFields': '',
+        'Address1': '26 Tech Valley Drive',
+        'Address2': 'Suite 2',
+        'AlternatePhone1': '',
+        'AlternatePhone2': '',
+        'City': 'East Greenbush',
+        'Country': 'United States',
+        'CreateDate': '2002-05-30 11:56:33.810000+01:00',
+        'Fax': '555-555-6677',
+        'LastActivityDate': '2012-06-18 13:15:47+01:00',
+        'MarketSegmentID': 29683456,
+        'AccountName': 'Autotask Corporation',
+        'AccountNumber': 289843,
+        'OwnerResourceID': 29682885,
+        'Phone': '555-555-5566',
+        'PostalCode': 12061,
+        'SICCode': '',
+        'State': 'NY',
+        'StockMarket': '',
+        'StockSymbol': '',
+        'TerritoryID': 29683453,
+        'AccountType': 7,
+        'WebAddress': 'www.autotask.com',
+        'Active': True,
+        'ClientPortalActive': True,
+        'TaskFireActive': False,
+        'TaxExempt': False,
+        'TaxID': '',
+        'AdditionalAddressInformation': '',
+        'CountryID': 237,
+        'BillToAddressToUse': 1,
+        'BillToAttention': '',
+        'BillToAddress1': '26 Tech Valley Drive',
+        'BillToAddress2': 'Suite 2',
+        'BillToCity': 'East Greenbush',
+        'BillToState': 'NY',
+        'BillToZipCode': 12061,
+        'BillToCountryID': 237,
+        'BillToAdditionalAddressInformation': '',
+        'QuoteTemplateID': 1,
+        'QuoteEmailMessageID': 2,
+        'InvoiceTemplateID': 102,
+        'InvoiceEmailMessageID': 1,
+        'CurrencyID': 1,
+        'CreatedByResourceID': 29682885,
+    }
+]
 
 API_SECONDARY_RESOURCE_LIST = [
     {
@@ -80,7 +130,6 @@ API_QUEUE_LIST = [
     },
 ]
 
-
 API_TICKET_PRIORITY_LIST = [
     {
         'IsActive': True,
@@ -101,7 +150,6 @@ API_TICKET_PRIORITY_LIST = [
         'ParentValue': None,
     }
 ]
-
 
 API_TICKET_STATUS_LIST = [
     {

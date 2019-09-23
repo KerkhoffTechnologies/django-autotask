@@ -67,3 +67,9 @@ class ResourceAdmin(admin.ModelAdmin):
 @admin.register(models.TicketSecondaryResource)
 class TicketSecondaryResourceAdmin(admin.ModelAdmin):
     list_display = ('id', 'resource', 'ticket')
+
+
+@admin.register(models.Account)
+class AccountAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'number', 'active')
+    search_fields = ('id', 'name', 'number')

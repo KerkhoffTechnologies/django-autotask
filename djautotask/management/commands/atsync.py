@@ -29,6 +29,7 @@ class Command(BaseCommand):
             ('ticket_priority',
              sync.TicketPrioritySynchronizer, _('Ticket Priority')),
             ('queue', sync.QueueSynchronizer, _('Queue')),
+            ('account', sync.AccountSynchronizer, _('Account')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()
