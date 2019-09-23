@@ -95,11 +95,10 @@ class AbstractPicklistSyncCommandTest(AbstractBaseSyncTest):
 
 
 class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
-    command_name = 'ticket'
     args = (
         mocks.ticket_api_call,
         fixtures.API_SERVICE_TICKET_LIST,
-        command_name,
+        'ticket',
     )
 
     def setUp(self):
@@ -108,57 +107,50 @@ class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
 
 
 class TestSyncTicketStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
-    command_name = 'ticket_status'
     field_name = 'Status'
 
     args = (
         mocks.ticket_status_api_call,
         fixtures.API_TICKET_STATUS_LIST,
-        command_name,
+        'ticket_status',
 
     )
 
 
 class TestSyncTicketPriorityCommand(AbstractPicklistSyncCommandTest, TestCase):
-    command_name = 'ticket_priority'
     field_name = 'Priority'
 
     args = (
         mocks.ticket_priority_api_call,
         fixtures.API_TICKET_PRIORITY_LIST,
-        command_name,
+        'ticket_priority',
     )
 
 
 class TestSyncQueueCommand(AbstractPicklistSyncCommandTest, TestCase):
-    command_name = 'queue'
     field_name = 'QueueID'
 
     args = (
         mocks.queue_api_call,
         fixtures.API_QUEUE_LIST,
-        command_name,
+        'queue',
 
     )
 
 
 class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
-    command_name = 'resource'
-
     args = (
         mocks.resource_api_call,
         fixtures.API_RESOURCE_LIST,
-        command_name,
+        'resource',
     )
 
 
 class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
-    command_name = 'ticket_secondary_resource'
-
     args = (
         mocks.secondary_resource_api_call,
         fixtures.API_SECONDARY_RESOURCE_LIST,
-        command_name,
+        'ticket_secondary_resource',
     )
 
 
