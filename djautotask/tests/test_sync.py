@@ -39,7 +39,7 @@ class TestTicketSynchronizer(TestCase):
                          object_data['EstimatedHours'])
         self.assertEqual(instance.last_activity_date,
                          parse(object_data['LastActivityDate']))
-        self.assertEqual(instance.status.value, str(object_data['Status']))
+        self.assertEqual(instance.status.id, object_data['Status'])
         self.assertEqual(instance.assigned_resource.id,
                          object_data['AssignedResourceID'])
 
@@ -49,7 +49,7 @@ class TestTicketSynchronizer(TestCase):
         """
         self.assertGreater(Ticket.objects.all().count(), 0)
 
-        object_data = fixtures.API_SERVICE_TICKET
+        object_data = fixtures.API_TICKET
         instance = Ticket.objects.get(id=object_data['id'])
 
         self._assert_sync(instance, object_data)
@@ -59,7 +59,7 @@ class TestTicketSynchronizer(TestCase):
         """
         Local ticket should be deleted if not returned during a full sync
         """
-        ticket_id = fixtures.API_SERVICE_TICKET['id']
+        ticket_id = fixtures.API_TICKET['id']
         ticket_qset = Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
 
@@ -76,7 +76,7 @@ class AbstractPicklistSynchronizer(object):
         mocks.init_api_connection(Wrapper)
 
     def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.value, str(object_data['Value']))
+        self.assertEqual(instance.id, object_data['Value'])
         self.assertEqual(instance.label, object_data['Label'])
         self.assertEqual(
             instance.is_default_value, object_data['IsDefaultValue'])
@@ -99,10 +99,10 @@ class TestTicketStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
         """
         instance_dict = {}
         for status in fixtures.API_TICKET_STATUS_LIST:
-            instance_dict[str(status['Value'])] = status
+            instance_dict[status['Value']] = status
 
         for instance in TicketStatus.objects.all():
-            object_data = instance_dict[instance.value]
+            object_data = instance_dict[instance.id]
 
             self._assert_sync(instance, object_data)
 
@@ -132,10 +132,10 @@ class TestTicketPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
     def test_sync_ticket_priority(self):
         instance_dict = {}
         for priority in fixtures.API_TICKET_PRIORITY_LIST:
-            instance_dict[str(priority['Value'])] = priority
+            instance_dict[priority['Value']] = priority
 
         for instance in TicketPriority.objects.all():
-            object_data = instance_dict[instance.value]
+            object_data = instance_dict[instance.id]
 
             self._assert_sync(instance, object_data)
 
@@ -164,10 +164,10 @@ class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
     def test_sync_queue(self):
         instance_dict = {}
         for queue in fixtures.API_QUEUE_LIST:
-            instance_dict[str(queue['Value'])] = queue
+            instance_dict[queue['Value']] = queue
 
         for instance in Queue.objects.all():
-            object_data = instance_dict[instance.value]
+            object_data = instance_dict[instance.id]
 
             self._assert_sync(instance, object_data)
 

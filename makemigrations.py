@@ -16,7 +16,7 @@ settings.configure(
 def makemigrations():
     django.setup()
     # If a migration ever says to run makemigrations --merge, run this:
-    # call_command('makemigrations', 'djconnectwise', '--merge')
+    # call_command('makemigrations', 'djautotask', '--merge')
     # (And consider adding --merge to this script.)
     call_command('makemigrations', 'djautotask')
 
