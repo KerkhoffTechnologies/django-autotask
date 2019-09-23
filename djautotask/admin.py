@@ -57,12 +57,12 @@ class QueueAdmin(admin.ModelAdmin):
 
 @admin.register(models.ProjectStatus)
 class ProjectStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'label', 'value')
+    list_display = ('id', 'label')
 
 
 @admin.register(models.ProjectType)
 class ProjectTypeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'label', 'value')
+    list_display = ('id', 'label')
 
 
 @admin.register(models.Resource)

@@ -413,13 +413,13 @@ class ProjectSynchronizer(Synchronizer):
             object_data.get('LastActivityDateTime')
 
         if completed_date:
-            instance.completed_date = parse(completed_date).date()
+            instance.completed_date = completed_date.date()
 
         if end_date:
-            instance.end_date = parse(end_date).date()
+            instance.end_date = end_date.date()
 
         if start_date:
-            instance.start_date = parse(start_date).date()
+            instance.start_date = start_date.date()
 
         self.set_relations(instance, object_data)
 
