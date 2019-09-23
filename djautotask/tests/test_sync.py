@@ -63,7 +63,7 @@ class TestTicketSynchronizer(TestCase):
         ticket_qset = Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
 
-        mocks.ticket_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.TicketSynchronizer(full=True)
         synchronizer.sync()
@@ -116,7 +116,7 @@ class TestTicketStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
         self.assertEqual(status_qset.count(), 4)
 
         empty_api_call = fixture_utils.generate_picklist_objects('Status', [])
-        mocks.ticket_status_api_call(empty_api_call)
+        mocks.api_picklist_call(empty_api_call)
 
         synchronizer = sync.TicketStatusSynchronizer(full=True)
         synchronizer.sync()
@@ -148,7 +148,7 @@ class TestTicketPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
 
         empty_api_call = \
             fixture_utils.generate_picklist_objects('Priority', [])
-        mocks.ticket_priority_api_call(empty_api_call)
+        mocks.api_picklist_call(empty_api_call)
 
         synchronizer = sync.TicketPrioritySynchronizer(full=True)
         synchronizer.sync()
@@ -179,7 +179,7 @@ class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
         self.assertEqual(queue_qset.count(), 3)
 
         empty_api_call = fixture_utils.generate_picklist_objects('QueueID', [])
-        mocks.queue_api_call(empty_api_call)
+        mocks.api_picklist_call(empty_api_call)
 
         synchronizer = sync.QueueSynchronizer(full=True)
         synchronizer.sync()
@@ -223,7 +223,7 @@ class TestResourceSynchronizer(TestCase):
         resource_qset = Resource.objects.all()
         self.assertEqual(resource_qset.count(), 1)
 
-        mocks.resource_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.ResourceSynchronizer(full=True)
         synchronizer.sync()
@@ -255,7 +255,7 @@ class TestTicketSecondaryResourceSynchronizer(TestCase):
         secondary_resources_qset = TicketSecondaryResource.objects.all()
         self.assertEqual(secondary_resources_qset.count(), 2)
 
-        mocks.secondary_resource_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.TicketSecondaryResourceSynchronizer(full=True)
         synchronizer.sync()
@@ -288,7 +288,7 @@ class TestAccountSynchronizer(TestCase):
         account_qset = Account.objects.all()
         self.assertEqual(account_qset.count(), 1)
 
-        mocks.account_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.AccountSynchronizer(full=True)
         synchronizer.sync()

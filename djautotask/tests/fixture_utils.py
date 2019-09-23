@@ -127,7 +127,7 @@ def init_ticket_statuses():
     field_info = generate_picklist_objects(
         'Status', fixtures.API_TICKET_STATUS_LIST
     )
-    mocks.ticket_status_api_call(field_info)
+    mocks.api_picklist_call(field_info)
     synchronizer = sync.TicketStatusSynchronizer()
     return synchronizer.sync()
 
@@ -136,7 +136,7 @@ def init_ticket_priorities():
     field_info = generate_picklist_objects(
         'Priority', fixtures.API_TICKET_PRIORITY_LIST
     )
-    mocks.ticket_priority_api_call(field_info)
+    mocks.api_picklist_call(field_info)
     synchronizer = sync.TicketPrioritySynchronizer()
     return synchronizer.sync()
 
@@ -145,7 +145,7 @@ def init_queues():
     field_info = generate_picklist_objects(
         'QueueID', fixtures.API_QUEUE_LIST
     )
-    mocks.queue_api_call(field_info)
+    mocks.api_picklist_call(field_info)
     synchronizer = sync.QueueSynchronizer()
     return synchronizer.sync()
 
@@ -153,7 +153,7 @@ def init_queues():
 def init_tickets():
     tickets = generate_objects('Ticket', fixtures.API_TICKET_LIST)
 
-    mocks.ticket_api_call(tickets)
+    mocks.api_query_call(tickets)
     synchronizer = sync.TicketSynchronizer()
     return synchronizer.sync()
 
@@ -161,7 +161,7 @@ def init_tickets():
 def init_resources():
     tickets = generate_objects('Resource', fixtures.API_RESOURCE_LIST)
 
-    mocks.resource_api_call(tickets)
+    mocks.api_query_call(tickets)
     synchronizer = sync.ResourceSynchronizer()
     return synchronizer.sync()
 
@@ -170,7 +170,7 @@ def init_secondary_resources():
     secondary_resources = generate_objects(
         'TicketSecondaryResource', fixtures.API_SECONDARY_RESOURCE_LIST)
 
-    mocks.secondary_resource_api_call(secondary_resources)
+    mocks.api_query_call(secondary_resources)
     synchronizer = sync.TicketSecondaryResourceSynchronizer()
     return synchronizer.sync()
 
@@ -178,6 +178,6 @@ def init_secondary_resources():
 def init_accounts():
     account = generate_objects('Account', fixtures.API_ACCOUNT_LIST)
 
-    mocks.account_api_call(account)
+    mocks.api_query_call(account)
     synchronizer = sync.AccountSynchronizer()
     return synchronizer.sync()

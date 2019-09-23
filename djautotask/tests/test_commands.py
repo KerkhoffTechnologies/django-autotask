@@ -45,14 +45,17 @@ class AbstractBaseSyncTest(object):
     def _title_for_at_object(self, at_object):
         return at_object.title().replace('_', ' ')
 
+    def get_api_mock(self):
+        return mocks.api_query_call
+
     def get_return_value(self, at_object, fixture_list):
         return fixture_utils.generate_objects(
             at_object.title().replace('_', ''), fixture_list)
 
-    def init_sync_command(self, mock_call, fixture_list, at_object,
-                          full_option=False):
+    def init_sync_command(self, fixture_list, at_object, full_option=False):
         return_value = self.get_return_value(at_object, fixture_list)
-        mock_call(return_value)
+        api_call = self.get_api_mock()
+        api_call(return_value)
 
         output = run_sync_command(full_option, at_object)
         return output
@@ -66,9 +69,8 @@ class AbstractBaseSyncTest(object):
     def test_full_sync(self):
         out = self.init_sync_command(*self.args)
 
-        mock_call, fixture_list, at_object = self.args
+        fixture_list, at_object = self.args
         args = [
-            mock_call,
             [],
             at_object,
         ]
@@ -93,10 +95,12 @@ class AbstractPicklistSyncCommandTest(AbstractBaseSyncTest):
 
         return field_info
 
+    def get_api_mock(self):
+        return mocks.api_picklist_call
+
 
 class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
     args = (
-        mocks.ticket_api_call,
         fixtures.API_TICKET_LIST,
         'ticket',
     )
@@ -110,10 +114,8 @@ class TestSyncTicketStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'Status'
 
     args = (
-        mocks.ticket_status_api_call,
         fixtures.API_TICKET_STATUS_LIST,
         'ticket_status',
-
     )
 
 
@@ -121,7 +123,6 @@ class TestSyncTicketPriorityCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'Priority'
 
     args = (
-        mocks.ticket_priority_api_call,
         fixtures.API_TICKET_PRIORITY_LIST,
         'ticket_priority',
     )
@@ -131,7 +132,6 @@ class TestSyncQueueCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'QueueID'
 
     args = (
-        mocks.queue_api_call,
         fixtures.API_QUEUE_LIST,
         'queue',
 
@@ -140,7 +140,6 @@ class TestSyncQueueCommand(AbstractPicklistSyncCommandTest, TestCase):
 
 class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
     args = (
-        mocks.resource_api_call,
         fixtures.API_RESOURCE_LIST,
         'resource',
     )
@@ -148,7 +147,6 @@ class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
 
 class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     args = (
-        mocks.secondary_resource_api_call,
         fixtures.API_SECONDARY_RESOURCE_LIST,
         'ticket_secondary_resource',
     )
@@ -156,7 +154,6 @@ class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
 
 class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
     args = (
-        mocks.account_api_call,
         fixtures.API_ACCOUNT_LIST,
         'account',
     )
@@ -197,7 +194,7 @@ class TestSyncAllCommand(TestCase):
         """
         output = run_sync_command()
 
-        for apicall, fixture, at_object in self.test_args:
+        for fixture, at_object in self.test_args:
             summary = sync_summary(slug_to_title(at_object), len(fixture))
             self.assertIn(summary, output.getvalue().strip())
 
@@ -227,7 +224,7 @@ class TestSyncAllCommand(TestCase):
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
         output = run_sync_command(full_option=True)
-        for apicall, fixture, at_object in self.test_args:
+        for fixture, at_object in self.test_args:
             summary = full_sync_summary(
                 slug_to_title(at_object),
                 pre_full_sync_counts[at_object.lower()]
