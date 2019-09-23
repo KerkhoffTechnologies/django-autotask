@@ -49,6 +49,100 @@ API_ACCOUNT_LIST = [
     }
 ]
 
+API_PROJECT_STATUS_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Inactive',
+        'SortOrder': 1,
+        'Value': 0,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'New',
+        'SortOrder': 2,
+        'Value': 1,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Complete',
+        'SortOrder': 8,
+        'Value': 5,
+        'ParentValue': None,
+    }
+]
+
+API_PROJECT_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Client',
+        'SortOrder': 5,
+        'Value': 5,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Internal',
+        'SortOrder': 4,
+        'Value': 4,
+        'ParentValue': None,
+    }
+]
+
+API_PROJECT_LIST = [
+    {
+        'id': 4,
+        'UserDefinedFields': '',
+        'ProjectName': 'Software Project',
+        'AccountID': 174,
+        'Type': 5,
+        'ExtPNumber': '',
+        'ProjectNumber': 'P20120604.0001',
+        'Description': '',
+        'CreateDateTime': '2012-06-18 05:00:00+01:00',
+        'CreatorResourceID': 4,
+        'StartDateTime': '2012-08-27 05:00:00+01:00',
+        'EndDateTime': '2012-10-24 05:00:00+01:00',
+        'Duration': 59,
+        'ActualHours': 0.0,
+        'ActualBilledHours': 0.0,
+        'EstimatedTime': 164.0,
+        'LaborEstimatedRevenue': 0.0,
+        'LaborEstimatedCosts': 0.0,
+        'LaborEstimatedMarginPercentage': 0.0,
+        'ProjectCostsRevenue': 0.0,
+        'ProjectCostsBudget': 0.0,
+        'ProjectCostEstimatedMarginPercentage': 0.0,
+        'ChangeOrdersRevenue': 0.0,
+        'SGDA': 0.0,
+        'OriginalEstimatedRevenue': 0.0,
+        'EstimatedSalesCost': 0.0,
+        'Status': 1,
+        'ProjectLeadResourceID': 29683794,
+        'CompletedPercentage': 0,
+        'CompletedDateTime': '2019-09-18 05:00:00+01:00',
+        'StatusDetail': '',
+        'StatusDateTime': '2012-06-18 05:00:00+01:00',
+        'LineOfBusiness': 6,
+        'PurchaseOrderNumber': '',
+        'BusinessDivisionSubdivisionID': 6,
+        'LastActivityResourceID': 4,
+        'LastActivityDateTime': '2012-06-18 01:00:00+01:00',
+        'LastActivityPersonType': 1,
+    }
+]
+
 API_SECONDARY_RESOURCE_LIST = [
     {
         'id': 29684157,
