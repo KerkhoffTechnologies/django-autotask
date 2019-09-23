@@ -1,3 +1,158 @@
+from datetime import datetime
+from dateutil.tz import tzoffset
+
+API_ACCOUNT_LIST = [
+    {
+        'id': 174,
+        'UserDefinedFields': '',
+        'Address1': '26 Tech Valley Drive',
+        'Address2': 'Suite 2',
+        'AlternatePhone1': '',
+        'AlternatePhone2': '',
+        'City': 'East Greenbush',
+        'Country': 'United States',
+        'CreateDate':
+            datetime(2012, 10, 24, 5, 0, tzinfo=tzoffset(None, 3600)),
+        'Fax': '555-555-6677',
+        'LastActivityDate':
+            datetime(2012, 6, 18, 13, 15, 47, tzinfo=tzoffset(None, 3600)),
+        'MarketSegmentID': 29683456,
+        'AccountName': 'Autotask Corporation',
+        'AccountNumber': 289843,
+        'OwnerResourceID': 29682885,
+        'Phone': '555-555-5566',
+        'PostalCode': 12061,
+        'SICCode': '',
+        'State': 'NY',
+        'StockMarket': '',
+        'StockSymbol': '',
+        'TerritoryID': 29683453,
+        'AccountType': 7,
+        'WebAddress': 'www.autotask.com',
+        'Active': True,
+        'ClientPortalActive': True,
+        'TaskFireActive': False,
+        'TaxExempt': False,
+        'TaxID': '',
+        'AdditionalAddressInformation': '',
+        'CountryID': 237,
+        'BillToAddressToUse': 1,
+        'BillToAttention': '',
+        'BillToAddress1': '26 Tech Valley Drive',
+        'BillToAddress2': 'Suite 2',
+        'BillToCity': 'East Greenbush',
+        'BillToState': 'NY',
+        'BillToZipCode': 12061,
+        'BillToCountryID': 237,
+        'BillToAdditionalAddressInformation': '',
+        'QuoteTemplateID': 1,
+        'QuoteEmailMessageID': 2,
+        'InvoiceTemplateID': 102,
+        'InvoiceEmailMessageID': 1,
+        'CurrencyID': 1,
+        'CreatedByResourceID': 29682885,
+    }
+]
+
+API_PROJECT_STATUS_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Inactive',
+        'SortOrder': 1,
+        'Value': 0,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'New',
+        'SortOrder': 2,
+        'Value': 1,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Complete',
+        'SortOrder': 8,
+        'Value': 5,
+        'ParentValue': None,
+    }
+]
+
+API_PROJECT_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Client',
+        'SortOrder': 5,
+        'Value': 5,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Internal',
+        'SortOrder': 4,
+        'Value': 4,
+        'ParentValue': None,
+    }
+]
+
+API_PROJECT_LIST = [
+    {
+        'id': 4,
+        'UserDefinedFields': '',
+        'ProjectName': 'Software Project',
+        'AccountID': 174,
+        'Type': 5,
+        'ExtPNumber': '',
+        'ProjectNumber': 'P20120604.0001',
+        'Description': '',
+        'CreateDateTime':
+            datetime(2012, 6, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
+        'CreatorResourceID': 4,
+        'StartDateTime':
+            datetime(2012, 6, 19, 5, 0, tzinfo=tzoffset(None, 3600)),
+        'EndDateTime':
+            datetime(2012, 10, 24, 5, 0, tzinfo=tzoffset(None, 3600)),
+        'Duration': 59,
+        'ActualHours': 0.0,
+        'ActualBilledHours': 0.0,
+        'EstimatedTime': 164.0,
+        'LaborEstimatedRevenue': 0.0,
+        'LaborEstimatedCosts': 0.0,
+        'LaborEstimatedMarginPercentage': 0.0,
+        'ProjectCostsRevenue': 0.0,
+        'ProjectCostsBudget': 0.0,
+        'ProjectCostEstimatedMarginPercentage': 0.0,
+        'ChangeOrdersRevenue': 0.0,
+        'SGDA': 0.0,
+        'OriginalEstimatedRevenue': 0.0,
+        'EstimatedSalesCost': 0.0,
+        'Status': 1,
+        'ProjectLeadResourceID': 29683794,
+        'CompletedPercentage': 0,
+        'CompletedDateTime':
+            datetime(2019, 9, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
+        'StatusDetail': '',
+        'StatusDateTime':
+            datetime(2012, 6, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
+        'LineOfBusiness': 6,
+        'PurchaseOrderNumber': '',
+        'BusinessDivisionSubdivisionID': 6,
+        'LastActivityResourceID': 4,
+        'LastActivityDateTime':
+            datetime(2012, 6, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
+        'LastActivityPersonType': 1,
+    }
+]
 
 API_SECONDARY_RESOURCE_LIST = [
     {
@@ -153,19 +308,24 @@ API_TICKET = {
     'ChangeInfoField4': '',
     'ChangeInfoField5': '',
     'CompletedByResourceID': 29682885,
-    'CompletedDate': '2019-09-05T13:08:23.450+01:00',
+    'CompletedDate':
+        datetime(2019, 9, 5, 8, 23, tzinfo=tzoffset(None, 3600)),
     'ContactID': 29683586,
-    'CreateDate': '2012-06-18T13:08:23.450+01:00',
+    'CreateDate':
+        datetime(2019, 8, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
     'CreatorResourceID': 4,
     'CreatorType': 1,
     'Description': 'Monthy Services Checkup',
-    'DueDateTime': '2012-10-15T17:00:00+01:00',
+    'DueDateTime':
+        datetime(2012, 9, 7, 1, 0, tzinfo=tzoffset(None, 3600)),
     'EstimatedHours': 2.0,
     'ExternalID': '',
-    'FirstResponseDateTime': '2012-06-18T13:08:23.683+01:00',
+    'FirstResponseDateTime':
+        datetime(2012, 6, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
     'HoursToBeScheduled': 0.0,
     'IssueType': 10,
-    'LastActivityDate': '2012-09-24T17:00:25.823+01:00',
+    'LastActivityDate':
+        datetime(2019, 9, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
     'LastActivityPersonType': 1,
     'LastActivityResourceID': 4,
     'Priority': 3,
