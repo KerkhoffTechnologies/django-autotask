@@ -323,15 +323,15 @@ class TestProjectSynchronizer(TestCase):
         self.assertEqual(instance.number, object_data['ProjectNumber'])
         self.assertEqual(instance.description, object_data['Description'])
         self.assertEqual(instance.actual_hours, object_data['ActualHours'])
-        self.assertEqual(instance.completed_date_time,
-                         parse(object_data['CompletedDateTime']))
+        self.assertEqual(instance.completed_date,
+                         parse(object_data['CompletedDateTime']).date())
         self.assertEqual(instance.completed_percentage,
                          object_data['CompletedPercentage'])
         self.assertEqual(instance.duration, object_data['Duration'])
-        self.assertEqual(instance.start_date_time,
-                         parse(object_data['StartDateTime']))
-        self.assertEqual(instance.end_date_time,
-                         parse(object_data['EndDateTime']))
+        self.assertEqual(instance.start_date,
+                         parse(object_data['StartDateTime']).date())
+        self.assertEqual(instance.end_date,
+                         parse(object_data['EndDateTime']).date())
         self.assertEqual(instance.estimated_time, object_data['EstimatedTime'])
         self.assertEqual(instance.last_activity_date_time,
                          parse(object_data['LastActivityDateTime']))

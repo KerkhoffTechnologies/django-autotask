@@ -2,6 +2,7 @@ import logging
 
 from suds.client import Client
 from atws import connect, Query, helpers, picklist
+from dateutil.parser import parse
 
 from django.conf import settings
 from django.db import transaction, IntegrityError
@@ -406,19 +407,30 @@ class ProjectSynchronizer(Synchronizer):
     }
 
     def _assign_field_data(self, instance, object_data):
+
+        completed_date = object_data.get('CompletedDateTime')
+        end_date = object_data.get('EndDateTime')
+        start_date = object_data.get('StartDateTime')
+
         instance.id = object_data['id']
         instance.name = object_data.get('ProjectName')
         instance.number = object_data.get('ProjectNumber')
         instance.description = object_data.get('Description')
         instance.actual_hours = object_data.get('ActualHours')
-        instance.completed_date_time = object_data.get('CompletedDateTime')
         instance.completed_percentage = object_data.get('CompletedPercentage')
         instance.duration = object_data.get('Duration')
-        instance.start_date_time = object_data.get('StartDateTime')
-        instance.end_date_time = object_data.get('EndDateTime')
         instance.estimated_time = object_data.get('EstimatedTime')
         instance.last_activity_date_time = \
             object_data.get('LastActivityDateTime')
+
+        if completed_date:
+            instance.completed_date = parse(completed_date).date()
+
+        if end_date:
+            instance.end_date = parse(end_date).date()
+
+        if start_date:
+            instance.start_date = parse(start_date).date()
 
         self.set_relations(instance, object_data)
 

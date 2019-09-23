@@ -146,11 +146,11 @@ class Project(TimeStampedModel):
     description = models.CharField(max_length=2000)
     actual_hours = models.DecimalField(
         null=True, decimal_places=2, max_digits=9)
-    completed_date_time = models.DateTimeField(null=True)
+    completed_date = models.DateField(null=True)
     completed_percentage = models.PositiveSmallIntegerField(default=0)
     duration = models.PositiveSmallIntegerField(default=0)
-    start_date_time = models.DateTimeField(null=True)
-    end_date_time = models.DateTimeField(null=True)
+    start_date = models.DateField(null=True)
+    end_date = models.DateField(null=True)
     estimated_time = models.DecimalField(
         null=True, decimal_places=2, max_digits=9
     )
