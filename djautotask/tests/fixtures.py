@@ -50,6 +50,59 @@ API_RESOURCE = {
 
 API_RESOURCE_LIST = [API_RESOURCE]
 
+API_QUEUE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Client Portal',
+        'SortOrder': 0,
+        'Value': 5,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Post Sale',
+        'SortOrder': 1,
+        'Value': 6,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Monitoring Alert',
+        'SortOrder': 2,
+        'Value': 8,
+        'ParentValue': None,
+    },
+]
+
+
+API_TICKET_PRIORITY_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'High',
+        'SortOrder': 2,
+        'Value': 1,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Medium',
+        'SortOrder': 3,
+        'Value': 2,
+        'ParentValue': None,
+    }
+]
+
+
 API_TICKET_STATUS_LIST = [
     {
         'IsActive': True,
@@ -89,7 +142,7 @@ API_TICKET_STATUS_LIST = [
     }
 ]
 
-API_SERVICE_TICKET = {
+API_TICKET = {
     'AccountID': 29683561,
     'AllocationCodeID': 29683407,
     'AssignedResourceID': 29683794,
@@ -130,4 +183,4 @@ API_SERVICE_TICKET = {
     'id': 7688
 }
 
-API_SERVICE_TICKET_LIST = [API_SERVICE_TICKET]
+API_TICKET_LIST = [API_TICKET]

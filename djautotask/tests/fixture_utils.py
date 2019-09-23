@@ -86,7 +86,7 @@ def manage_full_sync_return_data(value):
     Generate and return objects based on the entity specified in the query.
     """
     fixture_dict = {
-        'Ticket': fixtures.API_SERVICE_TICKET_LIST,
+        'Ticket': fixtures.API_TICKET_LIST,
         'Resource': fixtures.API_RESOURCE_LIST,
         'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST
     }
@@ -99,19 +99,60 @@ def manage_full_sync_return_data(value):
     return return_value
 
 
+def manage_sync_picklist_return_data(wrapper, entity):
+    """
+    Generate and return picklist objects based on the entity
+    specified in the query.
+    """
+    fixture_dict = {
+        'Status': fixtures.API_TICKET_STATUS_LIST,
+        'Priority': fixtures.API_TICKET_PRIORITY_LIST,
+        'QueueID': fixtures.API_QUEUE_LIST,
+    }
+    client = API_CLIENT
+    array_of_field = client.factory.create('ArrayOfField')
+
+    # Since get_field_info normally returns all fields on a given entity
+    # as well as the picklists for picklist fields, we generate as many
+    # picklist objects as we need and append to the array field.
+    for entity_type, fixture in fixture_dict.items():
+        api_object = generate_picklist_objects(entity_type, fixture)
+        array_of_field[0].append(api_object[0][0])
+
+    return array_of_field
+
+
 def init_ticket_statuses():
     field_info = generate_picklist_objects(
         'Status', fixtures.API_TICKET_STATUS_LIST
     )
-    mocks.service_ticket_status_api_call(field_info)
+    mocks.ticket_status_api_call(field_info)
     synchronizer = sync.TicketStatusSynchronizer()
     return synchronizer.sync()
 
 
-def init_tickets():
-    tickets = generate_objects('Ticket', fixtures.API_SERVICE_TICKET_LIST)
+def init_ticket_priorities():
+    field_info = generate_picklist_objects(
+        'Priority', fixtures.API_TICKET_PRIORITY_LIST
+    )
+    mocks.ticket_priority_api_call(field_info)
+    synchronizer = sync.TicketPrioritySynchronizer()
+    return synchronizer.sync()
 
-    mocks.service_ticket_api_call(tickets)
+
+def init_queues():
+    field_info = generate_picklist_objects(
+        'QueueID', fixtures.API_QUEUE_LIST
+    )
+    mocks.queue_api_call(field_info)
+    synchronizer = sync.QueueSynchronizer()
+    return synchronizer.sync()
+
+
+def init_tickets():
+    tickets = generate_objects('Ticket', fixtures.API_TICKET_LIST)
+
+    mocks.ticket_api_call(tickets)
     synchronizer = sync.TicketSynchronizer()
     return synchronizer.sync()
 

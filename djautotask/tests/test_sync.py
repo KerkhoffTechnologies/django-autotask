@@ -3,7 +3,7 @@ from atws.wrapper import Wrapper
 from dateutil.parser import parse
 
 from djautotask.models import Ticket, TicketStatus, Resource, SyncJob, \
-    TicketSecondaryResource
+    TicketSecondaryResource, TicketPriority, Queue
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -25,7 +25,6 @@ class TestTicketSynchronizer(TestCase):
         fixture_utils.init_tickets()
 
     def _assert_sync(self, instance, object_data):
-
         self.assertEqual(instance.id, object_data['id'])
         self.assertEqual(instance.title, object_data['Title'])
         self.assertEqual(instance.ticket_number, object_data['TicketNumber'])
@@ -50,7 +49,7 @@ class TestTicketSynchronizer(TestCase):
         """
         self.assertGreater(Ticket.objects.all().count(), 0)
 
-        object_data = fixtures.API_SERVICE_TICKET
+        object_data = fixtures.API_TICKET
         instance = Ticket.objects.get(id=object_data['id'])
 
         self._assert_sync(instance, object_data)
@@ -60,27 +59,23 @@ class TestTicketSynchronizer(TestCase):
         """
         Local ticket should be deleted if not returned during a full sync
         """
-        ticket_id = fixtures.API_SERVICE_TICKET['id']
+        ticket_id = fixtures.API_TICKET['id']
         ticket_qset = Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
 
-        mocks.service_ticket_api_call([])
+        mocks.ticket_api_call([])
 
         synchronizer = sync.TicketSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(ticket_qset.count(), 0)
 
 
-class TestTicketStatusSynchronizer(TestCase):
+class AbstractPicklistSynchronizer(object):
 
     def setUp(self):
-        super().setUp()
-
         mocks.init_api_connection(Wrapper)
-        fixture_utils.init_ticket_statuses()
 
     def _assert_sync(self, instance, object_data):
-
         self.assertEqual(instance.id, object_data['Value'])
         self.assertEqual(instance.label, object_data['Label'])
         self.assertEqual(
@@ -89,6 +84,13 @@ class TestTicketStatusSynchronizer(TestCase):
         self.assertEqual(instance.parent_value, object_data['ParentValue'])
         self.assertEqual(instance.is_active, object_data['IsActive'])
         self.assertEqual(instance.is_system, object_data['IsSystem'])
+
+
+class TestTicketStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_ticket_statuses()
 
     def test_sync_ticket_status(self):
         """
@@ -114,11 +116,74 @@ class TestTicketStatusSynchronizer(TestCase):
         self.assertEqual(status_qset.count(), 4)
 
         empty_api_call = fixture_utils.generate_picklist_objects('Status', [])
-        mocks.service_ticket_status_api_call(empty_api_call)
+        mocks.ticket_status_api_call(empty_api_call)
 
         synchronizer = sync.TicketStatusSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(status_qset.count(), 0)
+
+
+class TestTicketPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_ticket_priorities()
+
+    def test_sync_ticket_priority(self):
+        instance_dict = {}
+        for priority in fixtures.API_TICKET_PRIORITY_LIST:
+            instance_dict[priority['Value']] = priority
+
+        for instance in TicketPriority.objects.all():
+            object_data = instance_dict[instance.id]
+
+            self._assert_sync(instance, object_data)
+
+        assert_sync_job(TicketPriority)
+
+    def test_delete_stale_ticket_priorities(self):
+
+        priority_qset = TicketPriority.objects.all()
+        self.assertEqual(priority_qset.count(), 2)
+
+        empty_api_call = \
+            fixture_utils.generate_picklist_objects('Priority', [])
+        mocks.ticket_priority_api_call(empty_api_call)
+
+        synchronizer = sync.TicketPrioritySynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(priority_qset.count(), 0)
+
+
+class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_queues()
+
+    def test_sync_queue(self):
+        instance_dict = {}
+        for queue in fixtures.API_QUEUE_LIST:
+            instance_dict[queue['Value']] = queue
+
+        for instance in Queue.objects.all():
+            object_data = instance_dict[instance.id]
+
+            self._assert_sync(instance, object_data)
+
+        assert_sync_job(Queue)
+
+    def test_delete_stale_queue(self):
+
+        queue_qset = Queue.objects.all()
+        self.assertEqual(queue_qset.count(), 3)
+
+        empty_api_call = fixture_utils.generate_picklist_objects('QueueID', [])
+        mocks.queue_api_call(empty_api_call)
+
+        synchronizer = sync.QueueSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(queue_qset.count(), 0)
 
 
 class TestResourceSynchronizer(TestCase):
@@ -130,7 +195,6 @@ class TestResourceSynchronizer(TestCase):
         fixture_utils.init_resources()
 
     def _assert_sync(self, instance, object_data):
-
         self.assertEqual(instance.id, object_data['id'])
         self.assertEqual(instance.user_name, object_data['UserName'])
         self.assertEqual(instance.first_name, object_data['FirstName'])

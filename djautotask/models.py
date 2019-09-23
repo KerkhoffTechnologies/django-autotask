@@ -32,12 +32,18 @@ class Ticket(TimeStampedModel):
     status = models.ForeignKey(
         'TicketStatus', blank=True, null=True, on_delete=models.SET_NULL
     )
+    priority = models.ForeignKey(
+        'TicketPriority', blank=True, null=True, on_delete=models.SET_NULL
+    )
     assigned_resource = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.SET_NULL
     )
     secondary_resources = models.ManyToManyField(
         'Resource', through='TicketSecondaryResource',
         related_name='secondary_resource_tickets'
+    )
+    queue = models.ForeignKey(
+        'Queue', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     class Meta:
@@ -65,6 +71,27 @@ class TicketStatus(Picklist):
     class Meta:
         verbose_name = 'Ticket status'
         verbose_name_plural = 'Ticket statuses'
+
+    def __str__(self):
+        return '{}-{}'.format(self.id, self.label)
+
+
+class TicketPriority(Picklist):
+    pass
+
+    class Meta:
+        verbose_name = 'Ticket priority'
+        verbose_name_plural = 'Ticket priorities'
+
+    def __str__(self):
+        return '{}-{}'.format(self.id, self.label)
+
+
+class Queue(Picklist):
+    pass
+
+    class Meta:
+        verbose_name_plural = 'Queues'
 
     def __str__(self):
         return '{}-{}'.format(self.id, self.label)
