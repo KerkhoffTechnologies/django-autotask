@@ -40,7 +40,7 @@ class TestTicketSynchronizer(TestCase):
                          object_data['EstimatedHours'])
         self.assertEqual(instance.last_activity_date,
                          parse(object_data['LastActivityDate']))
-        self.assertEqual(instance.status.value, str(object_data['Status']))
+        self.assertEqual(instance.status.id, object_data['Status'])
         self.assertEqual(instance.assigned_resource.id,
                          object_data['AssignedResourceID'])
 
@@ -50,7 +50,7 @@ class TestTicketSynchronizer(TestCase):
         """
         self.assertGreater(Ticket.objects.all().count(), 0)
 
-        object_data = fixtures.API_SERVICE_TICKET
+        object_data = fixtures.API_TICKET
         instance = Ticket.objects.get(id=object_data['id'])
 
         self._assert_sync(instance, object_data)
@@ -60,11 +60,11 @@ class TestTicketSynchronizer(TestCase):
         """
         Local ticket should be deleted if not returned during a full sync
         """
-        ticket_id = fixtures.API_SERVICE_TICKET['id']
+        ticket_id = fixtures.API_TICKET['id']
         ticket_qset = Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
 
-        mocks.ticket_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.TicketSynchronizer(full=True)
         synchronizer.sync()
@@ -77,7 +77,7 @@ class AbstractPicklistSynchronizer(object):
         mocks.init_api_connection(Wrapper)
 
     def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.value, str(object_data['Value']))
+        self.assertEqual(instance.id, object_data['Value'])
         self.assertEqual(instance.label, object_data['Label'])
         self.assertEqual(
             instance.is_default_value, object_data['IsDefaultValue'])
@@ -89,10 +89,10 @@ class AbstractPicklistSynchronizer(object):
     def _evaluate_test_sync(self):
         instance_dict = {}
         for item in self.fixture:
-            instance_dict[str(item['Value'])] = item
+            instance_dict[item['Value']] = item
 
         for instance in self.model_class.objects.all():
-            object_data = instance_dict[instance.value]
+            object_data = instance_dict[instance.id]
 
             self._assert_sync(instance, object_data)
 
@@ -235,7 +235,7 @@ class TestResourceSynchronizer(TestCase):
         resource_qset = Resource.objects.all()
         self.assertEqual(resource_qset.count(), 1)
 
-        mocks.resource_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.ResourceSynchronizer(full=True)
         synchronizer.sync()
@@ -267,7 +267,7 @@ class TestTicketSecondaryResourceSynchronizer(TestCase):
         secondary_resources_qset = TicketSecondaryResource.objects.all()
         self.assertEqual(secondary_resources_qset.count(), 2)
 
-        mocks.secondary_resource_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.TicketSecondaryResourceSynchronizer(full=True)
         synchronizer.sync()
@@ -300,7 +300,7 @@ class TestAccountSynchronizer(TestCase):
         account_qset = Account.objects.all()
         self.assertEqual(account_qset.count(), 1)
 
-        mocks.account_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.AccountSynchronizer(full=True)
         synchronizer.sync()
@@ -353,7 +353,7 @@ class TestProjectSynchronizer(TestCase):
         project_qset = Project.objects.all()
         self.assertEqual(project_qset.count(), 1)
 
-        mocks.project_api_call([])
+        mocks.api_query_call([])
 
         synchronizer = sync.ProjectSynchronizer(full=True)
         synchronizer.sync()
