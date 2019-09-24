@@ -3,7 +3,8 @@ from atws.wrapper import Wrapper
 
 from djautotask.models import Ticket, TicketStatus, Resource, SyncJob, \
     TicketSecondaryResource, TicketPriority, Queue, Account, Project, \
-    ProjectType, ProjectStatus
+    ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
+    SubIssueType, TicketType
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -82,7 +83,10 @@ class AbstractPicklistSynchronizer(object):
         self.assertEqual(instance.is_active, object_data['IsActive'])
         self.assertEqual(instance.is_system, object_data['IsSystem'])
 
-    def _evaluate_test_sync(self):
+    def test_evaluate_sync(self):
+        """
+        Test to ensure given picklist synchronizer saves its instance locally.
+        """
         instance_dict = {}
         for item in self.fixture:
             instance_dict[item['Value']] = item
@@ -94,7 +98,10 @@ class AbstractPicklistSynchronizer(object):
 
         assert_sync_job(self.model_class)
 
-    def _evaluate_objects_deleted(self):
+    def test_evaluate_objects_deleted(self):
+        """
+        Test that a give object is deleted if not returned during a full sync.
+        """
         qset = self.model_class.objects.all()
         self.assertEqual(qset.count(), len(self.fixture))
 
@@ -116,19 +123,6 @@ class TestTicketStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
         super().setUp()
         fixture_utils.init_ticket_statuses()
 
-    def test_sync_ticket_status(self):
-        """
-        Test to ensure ticket status synchronizer saves a TicketStatus
-        instance locally.
-        """
-        self._evaluate_test_sync()
-
-    def test_delete_stale_ticket_statuses(self):
-        """
-        Test that ticket status is deleted if not returned during a full sync.
-        """
-        self._evaluate_objects_deleted()
-
 
 class TestTicketPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
     model_class = TicketPriority
@@ -138,12 +132,6 @@ class TestTicketPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_ticket_priorities()
-
-    def test_sync_ticket_priority(self):
-        self._evaluate_test_sync()
-
-    def test_delete_stale_ticket_priorities(self):
-        self._evaluate_objects_deleted()
 
 
 class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
@@ -155,12 +143,6 @@ class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
         super().setUp()
         fixture_utils.init_queues()
 
-    def test_sync_queue(self):
-        self._evaluate_test_sync()
-
-    def test_delete_stale_queue(self):
-        self._evaluate_objects_deleted()
-
 
 class TestProjectStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
     model_class = ProjectStatus
@@ -170,12 +152,6 @@ class TestProjectStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_project_statuses()
-
-    def test_sync_project_status(self):
-        self._evaluate_test_sync()
-
-    def test_delete_stale_project_status(self):
-        self._evaluate_test_sync()
 
 
 class TestProjectTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
@@ -187,11 +163,55 @@ class TestProjectTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         super().setUp()
         fixture_utils.init_project_types()
 
-    def test_sync_project_type(self):
-        self._evaluate_test_sync()
 
-    def test_delete_stale_project_type(self):
-        self._evaluate_objects_deleted()
+class TestTicketCategorySynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = TicketCategory
+    fixture = fixtures.API_TICKET_CATEGORY_LIST
+    synchronizer = sync.TicketCategorySynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_ticket_categories()
+
+
+class TestSourceSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = Source
+    fixture = fixtures.API_SOURCE_LIST
+    synchronizer = sync.SourceSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_sources()
+
+
+class TestIssueTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = IssueType
+    fixture = fixtures.API_ISSUE_TYPE_LIST
+    synchronizer = sync.IssueTypeSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_issue_types()
+
+
+class TestSubIssueTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = SubIssueType
+    fixture = fixtures.API_SUB_ISSUE_TYPE_LIST
+    synchronizer = sync.SubIssueTypeSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_sub_issue_types()
+
+
+class TicketTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = TicketType
+    fixture = fixtures.API_TICKET_TYPE_LIST
+    synchronizer = sync.TicketTypeSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_ticket_types()
 
 
 class TestResourceSynchronizer(TestCase):

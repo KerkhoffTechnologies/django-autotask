@@ -111,6 +111,11 @@ def manage_sync_picklist_return_data(wrapper, entity):
             'Status': fixtures.API_TICKET_STATUS_LIST,
             'Priority': fixtures.API_TICKET_PRIORITY_LIST,
             'QueueID': fixtures.API_QUEUE_LIST,
+            'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
+            'Source': fixtures.API_SOURCE_LIST,
+            'IssueType': fixtures.API_ISSUE_TYPE_LIST,
+            'SubIssueType': fixtures.API_SUB_ISSUE_TYPE_LIST,
+            'TicketType': fixtures.API_TICKET_TYPE_LIST,
         },
         'Project': {
             'Status': fixtures.API_PROJECT_STATUS_LIST,
@@ -132,87 +137,141 @@ def manage_sync_picklist_return_data(wrapper, entity):
     return array_of_field
 
 
-def init_ticket_statuses():
+def sync_objects(entity_type, fixture, sync_class):
+    created_objects = generate_objects(
+        entity_type, fixture
+    )
+    mocks.api_query_call(created_objects)
+    synchronizer = sync_class()
+
+    return synchronizer.sync()
+
+
+def sync_picklist_objects(entity_type, fixture, sync_class):
     field_info = generate_picklist_objects(
-        'Status', fixtures.API_TICKET_STATUS_LIST
+        entity_type, fixture
     )
     mocks.api_picklist_call(field_info)
-    synchronizer = sync.TicketStatusSynchronizer()
+    synchronizer = sync_class()
+
     return synchronizer.sync()
+
+
+def init_ticket_statuses():
+    sync_picklist_objects(
+        'Status',
+        fixtures.API_TICKET_STATUS_LIST,
+        sync.TicketStatusSynchronizer
+    )
 
 
 def init_ticket_priorities():
-    field_info = generate_picklist_objects(
-        'Priority', fixtures.API_TICKET_PRIORITY_LIST
+    sync_picklist_objects(
+        'Priority',
+        fixtures.API_TICKET_PRIORITY_LIST,
+        sync.TicketPrioritySynchronizer
     )
-    mocks.api_picklist_call(field_info)
-    synchronizer = sync.TicketPrioritySynchronizer()
-    return synchronizer.sync()
 
 
 def init_queues():
-    field_info = generate_picklist_objects(
-        'QueueID', fixtures.API_QUEUE_LIST
+    sync_picklist_objects(
+        'QueueID',
+        fixtures.API_QUEUE_LIST,
+        sync.QueueSynchronizer
     )
-    mocks.api_picklist_call(field_info)
-    synchronizer = sync.QueueSynchronizer()
-    return synchronizer.sync()
 
 
 def init_project_statuses():
-    field_info = generate_picklist_objects(
-        'Status', fixtures.API_PROJECT_STATUS_LIST
+    sync_picklist_objects(
+        'Status',
+        fixtures.API_PROJECT_STATUS_LIST,
+        sync.ProjectStatusSynchronizer
     )
-    mocks.api_picklist_call(field_info)
-    synchronizer = sync.ProjectStatusSynchronizer()
-    return synchronizer.sync()
 
 
 def init_project_types():
-    field_info = generate_picklist_objects(
-        'Type', fixtures.API_PROJECT_TYPE_LIST
+    sync_picklist_objects(
+        'Type',
+        fixtures.API_PROJECT_TYPE_LIST,
+        sync.ProjectTypeSynchronizer
     )
-    mocks.api_picklist_call(field_info)
-    synchronizer = sync.ProjectTypeSynchronizer()
-    return synchronizer.sync()
+
+
+def init_ticket_categories():
+    sync_picklist_objects(
+        'TicketCategory',
+        fixtures.API_TICKET_CATEGORY_LIST,
+        sync.TicketCategorySynchronizer
+    )
+
+
+def init_sources():
+    sync_picklist_objects(
+        'Source',
+        fixtures.API_SOURCE_LIST,
+        sync.SourceSynchronizer
+    )
+
+
+def init_issue_types():
+    sync_picklist_objects(
+        'IssueType',
+        fixtures.API_ISSUE_TYPE_LIST,
+        sync.IssueTypeSynchronizer
+    )
+
+
+def init_sub_issue_types():
+    sync_picklist_objects(
+        'SubIssueType',
+        fixtures.API_SUB_ISSUE_TYPE_LIST,
+        sync.SubIssueTypeSynchronizer
+    )
+
+
+def init_ticket_types():
+    sync_picklist_objects(
+        'TicketType',
+        fixtures.API_TICKET_TYPE_LIST,
+        sync.TicketTypeSynchronizer
+    )
 
 
 def init_tickets():
-    tickets = generate_objects('Ticket', fixtures.API_TICKET_LIST)
-
-    mocks.api_query_call(tickets)
-    synchronizer = sync.TicketSynchronizer()
-    return synchronizer.sync()
+    return sync_objects(
+        'Ticket',
+        fixtures.API_TICKET_LIST,
+        sync.TicketSynchronizer
+    )
 
 
 def init_resources():
-    tickets = generate_objects('Resource', fixtures.API_RESOURCE_LIST)
-
-    mocks.api_query_call(tickets)
-    synchronizer = sync.ResourceSynchronizer()
-    return synchronizer.sync()
+    sync_objects(
+        'Resource',
+        fixtures.API_RESOURCE_LIST,
+        sync.ResourceSynchronizer
+    )
 
 
 def init_secondary_resources():
-    secondary_resources = generate_objects(
-        'TicketSecondaryResource', fixtures.API_SECONDARY_RESOURCE_LIST)
-
-    mocks.api_query_call(secondary_resources)
-    synchronizer = sync.TicketSecondaryResourceSynchronizer()
-    return synchronizer.sync()
+    sync_objects(
+        'TicketSecondaryResource',
+        fixtures.API_SECONDARY_RESOURCE_LIST,
+        sync.TicketSecondaryResourceSynchronizer
+    )
 
 
 def init_accounts():
-    account = generate_objects('Account', fixtures.API_ACCOUNT_LIST)
-
-    mocks.api_query_call(account)
-    synchronizer = sync.AccountSynchronizer()
-    return synchronizer.sync()
+    sync_objects(
+        'Account',
+        fixtures.API_ACCOUNT_LIST,
+        sync.AccountSynchronizer
+    )
 
 
 def init_projects():
-    project = generate_objects('Project', fixtures.API_PROJECT_LIST)
-
-    mocks.api_query_call(project)
-    synchronizer = sync.ProjectSynchronizer()
-    return synchronizer.sync()
+    sync_objects(
+        'Project',
+        fixtures.API_PROJECT_LIST,
+        sync.ProjectSynchronizer
+    )
