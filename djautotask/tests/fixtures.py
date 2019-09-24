@@ -295,6 +295,114 @@ API_TICKET_STATUS_LIST = [
     }
 ]
 
+API_TICKET_CATEGORY_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Standard',
+        'SortOrder': 2,
+        'Value': 3,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Important Alert',
+        'SortOrder': 1,
+        'Value': 1,
+        'ParentValue': None,
+    },
+
+
+]
+
+API_SOURCE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Monitoring Alert',
+        'SortOrder': 8,
+        'Value': 2,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Web Portal',
+        'SortOrder': 6,
+        'Value': 9,
+        'ParentValue': None,
+    },
+
+]
+
+API_ISSUE_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Hardware',
+        'SortOrder': 1,
+        'Value': 2,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Internal',
+        'SortOrder': 2,
+        'Value': 3,
+        'ParentValue': None,
+    },
+]
+
+API_TICKET_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Service Request',
+        'SortOrder': 5,
+        'Value': 3,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Incident',
+        'SortOrder': 6,
+        'Value': 2,
+        'ParentValue': None,
+    },
+]
+
+API_SUB_ISSUE_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Rapid Response',
+        'SortOrder': 5,
+        'Value': 3,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Hardware Request',
+        'SortOrder': 7,
+        'Value': 8,
+        'ParentValue': None,
+    },
+]
+
 API_TICKET = {
     'AccountID': 29683561,
     'AllocationCodeID': 29683407,

@@ -139,7 +139,7 @@ class Synchronizer:
         except InvalidObjectException as e:
             logger.warning('{}'.format(e))
 
-        results.synced_ids.add(record[self.lookup_key])
+        results.synced_ids.add(int(record[self.lookup_key]))
 
         return results
 
@@ -290,6 +290,11 @@ class TicketSynchronizer(Synchronizer):
         'QueueID': (models.Queue, 'queue'),
         'AccountID': (models.Account, 'account'),
         'ProjectID': (models.Project, 'project'),
+        'TicketCategory': (models.TicketCategory, 'category'),
+        'TicketType': (models.TicketType, 'type'),
+        'Source': (models.Source, 'source'),
+        'IssueType': (models.IssueType, 'issue_type'),
+        'SubIssueType': (models.SubIssueType, 'sub_issue_type'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -308,22 +313,48 @@ class TicketSynchronizer(Synchronizer):
         return instance
 
 
-class TicketStatusSynchronizer(PicklistSynchronizer):
-    model_class = models.TicketStatus
+class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
+
+
+class TicketStatusSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.TicketStatus
     picklist_field = 'Status'
 
 
-class TicketPrioritySynchronizer(PicklistSynchronizer):
+class TicketPrioritySynchronizer(TicketPicklistSynchronizer):
     model_class = models.TicketPriority
-    entity_type = 'Ticket'
     picklist_field = 'Priority'
 
 
-class QueueSynchronizer(PicklistSynchronizer):
+class QueueSynchronizer(TicketPicklistSynchronizer):
     model_class = models.Queue
-    entity_type = 'Ticket'
     picklist_field = 'QueueID'
+
+
+class TicketCategorySynchronizer(TicketPicklistSynchronizer):
+    model_class = models.TicketCategory
+    picklist_field = 'TicketCategory'
+
+
+class SourceSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.Source
+    picklist_field = 'Source'
+
+
+class IssueTypeSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.IssueType
+    picklist_field = 'IssueType'
+
+
+class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.SubIssueType
+    picklist_field = 'SubIssueType'
+
+
+class TicketTypeSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.TicketType
+    picklist_field = 'TicketType'
 
 
 class ProjectStatusSynchronizer(PicklistSynchronizer):

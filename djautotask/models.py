@@ -51,6 +51,21 @@ class Ticket(TimeStampedModel):
     project = models.ForeignKey(
         'Project', null=True, on_delete=models.SET_NULL
     )
+    category = models.ForeignKey(
+        'TicketCategory', null=True, on_delete=models.SET_NULL
+    )
+    source = models.ForeignKey(
+        'Source', null=True, on_delete=models.SET_NULL
+    )
+    issue_type = models.ForeignKey(
+        'IssueType', null=True, on_delete=models.SET_NULL
+    )
+    sub_issue_type = models.ForeignKey(
+        'SubIssueType', null=True, on_delete=models.SET_NULL
+    )
+    type = models.ForeignKey(
+        'TicketType', null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -102,7 +117,30 @@ class ProjectStatus(Picklist):
         verbose_name_plural = 'Project statuses'
 
 
+class TicketCategory(Picklist):
+    pass
+
+    class Meta:
+        verbose_name_plural = 'Ticket categories'
+
+
 class ProjectType(Picklist):
+    pass
+
+
+class Source(Picklist):
+    pass
+
+
+class IssueType(Picklist):
+    pass
+
+
+class TicketType(Picklist):
+    pass
+
+
+class SubIssueType(Picklist):
     pass
 
 

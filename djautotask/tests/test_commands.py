@@ -180,11 +180,16 @@ class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
 
 
 class TestSyncProjectCommand(AbstractBaseSyncTest, TestCase):
-    command_name = 'project'
-
     args = (
         fixtures.API_PROJECT_LIST,
-        command_name,
+        'project',
+    )
+
+
+class TestSyncTicketCategoryCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TICKET_CATEGORY_LIST,
+        'ticket_category',
     )
 
 

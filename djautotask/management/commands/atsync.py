@@ -34,6 +34,13 @@ class Command(BaseCommand):
              sync.ProjectStatusSynchronizer, _('Project Status')),
             ('project_type', sync.ProjectTypeSynchronizer, _('Project Type')),
             ('project', sync.ProjectSynchronizer, _('Project')),
+            ('ticket_category', sync.TicketCategorySynchronizer,
+             _('Ticket Category')),
+            ('source', sync.SourceSynchronizer, _('Source')),
+            ('issue_type', sync.IssueTypeSynchronizer, _('Issue Type')),
+            ('ticket_type', sync.TicketTypeSynchronizer, _('Ticket Type')),
+            ('sub_issue_type', sync.SubIssueTypeSynchronizer,
+             _('Sub Issue Type')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
         )
         self.synchronizer_map = OrderedDict()
