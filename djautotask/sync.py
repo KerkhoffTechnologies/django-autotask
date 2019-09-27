@@ -1,13 +1,19 @@
 import logging
 
 from suds.client import Client
-from atws import connect, Query, helpers, picklist
+from atws.wrapper import AutotaskAPIException
+from atws import wrapper, Query, helpers, picklist, connection
+from requests.exceptions import ConnectTimeout, Timeout, ReadTimeout, SSLError
+from io import BytesIO
 
 from django.conf import settings
 from django.db import transaction, IntegrityError
 from django.utils import timezone
+import requests
+import suds.transport as transport
 
 from djautotask import models
+from djautotask.utils import DjautotaskSettings
 
 logger = logging.getLogger(__name__)
 
@@ -62,22 +68,89 @@ class SyncResults:
         self.synced_ids = set()
 
 
+class CustomRequestsTransport(transport.Transport):
+    # Adapted from atws.connection.RequestsTransport so that we can set
+    # our own request settings.
+
+    def __init__(self, session, request_settings):
+        transport.Transport.__init__(self)
+
+        self._session = session
+        self.timeout = (request_settings.get('timeout'))
+        self.max_attempts = request_settings.get('max_attempts')
+
+    def open(self, request):
+        for attempt in range(1, self.max_attempts + 1):
+            try:
+                resp = self._session.get(request.url, timeout=self.timeout)
+                break
+            except (SSLError, ConnectTimeout, Timeout, ReadTimeout) as e:
+                if attempt == self.max_attempts:
+                    raise AutotaskAPIException
+                logger.error(
+                    'Connection error. The error was: {}'.format(e)
+                )
+                continue
+        return BytesIO(resp.content)
+
+    def send(self, request):
+        for attempt in range(1, self.max_attempts + 1):
+            try:
+                resp = self._session.post(
+                    request.url,
+                    data=request.message,
+                    headers=request.headers,
+                    timeout=self.max_attempts
+                )
+                break
+            except (SSLError, Timeout) as e:
+                if attempt == self.max_attempts:
+                    raise
+                logger.error(
+                    'Connection error. The error was: {}'.format(e)
+                )
+                continue
+        return transport.Reply(
+            resp.status_code,
+            resp.headers,
+            resp.content,
+        )
+
+
 class Synchronizer:
     lookup_key = 'id'
 
     def __init__(self, full=False, *args, **kwargs):
         self.full = full
+        self.request_settings = DjautotaskSettings().get_settings()
         self.at_api_client = self.init_api_connection()
 
-    def init_api_connection(self):
+    def init_api_connection(self, **kwargs):
 
-        return connect(
-            username=settings.AUTOTASK_CREDENTIALS['username'],
-            password=settings.AUTOTASK_CREDENTIALS['password'],
-            integrationcode=settings.AUTOTASK_CREDENTIALS['integration_code'],
-            apiversion=settings.AUTOTASK_CREDENTIALS['api_version'],
-            url=settings.AUTOTASK_CREDENTIALS['url'],
+        client_options = kwargs.setdefault('client_options', {})
+
+        kwargs['apiversion'] = settings.AUTOTASK_CREDENTIALS['api_version']
+        kwargs['integrationcode'] = \
+            settings.AUTOTASK_CREDENTIALS['integration_code']
+        kwargs['url'] = settings.AUTOTASK_CREDENTIALS['url']
+
+        session = requests.Session()
+        session.auth = (
+            settings.AUTOTASK_CREDENTIALS['username'],
+            settings.AUTOTASK_CREDENTIALS['password']
         )
+        session.mount(
+            'https://',
+            requests.adapters.HTTPAdapter(
+                max_retries=self.request_settings.get('max_attempts'))
+        )
+        client_options['transport'] = \
+            CustomRequestsTransport(session, self.request_settings)
+
+        url = connection.get_connection_url(**kwargs)
+        client_options['url'] = url
+
+        return wrapper.Wrapper(**kwargs)
 
     def set_relations(self, instance, object_data):
         for object_field, value in self.related_meta.items():
@@ -121,9 +194,16 @@ class Synchronizer:
         logger.info(
             'Fetching {} records'.format(self.model_class)
         )
-        # Iterate over suds objects returned from the API.
-        for record in query_object:
-            self.persist_record(record, results)
+        batch_size = self.request_settings.get('batch_size')
+        if batch_size:
+            queries = self.get_batch_queries()
+            for query in queries:
+                for record in self.at_api_client.query(query):
+                    self.persist_record(record, results)
+        else:
+            # Iterate over suds objects returned from the API.
+            for record in query_object:
+                self.persist_record(record, results)
 
         return results
 
@@ -193,6 +273,45 @@ class Synchronizer:
             delete_qset.delete()
 
         return deleted_count
+
+    def get_batch_queries(self):
+        batch_size = self.request_settings.get('batch_size')
+        finished = False
+        min_id = 0
+        limit_index = batch_size
+        queries = []
+
+        query = Query(self.model_class.__name__)
+        query.WHERE('id', query.GreaterThanorEquals, min_id)
+        xml = query.get_query_xml()
+
+        result = self.at_api_client.client.service.query(xml)
+        result_list = list(result)
+        result_count = helpers.query_result_count(result)
+
+        if result_count > batch_size:
+
+            while not finished:
+                query = Query(self.model_class.__name__)
+                query.WHERE('id', query.GreaterThanorEquals, min_id)
+
+                if limit_index < result_count:
+                    try:
+                        max_id = result_list[1][1][0][limit_index].id
+                    except IndexError:
+                        pass
+
+                    query.AND('id', query.LessThanOrEquals, max_id)
+                else:
+                    finished = True
+
+                queries.append(query)
+                min_id = max_id
+                limit_index += batch_size
+        else:
+            queries.append(query)
+
+        return queries
 
     @log_sync_job
     def sync(self):
