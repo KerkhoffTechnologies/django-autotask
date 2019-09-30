@@ -1,7 +1,7 @@
 import logging
 
 from suds.client import Client
-from atws.wrapper import AutotaskAPIException
+from atws.wrapper import AutotaskAPIException, ResponseQuery
 from atws import wrapper, Query, helpers, picklist, connection
 from requests.exceptions import ConnectTimeout, Timeout, ReadTimeout, SSLError
 from io import BytesIO
@@ -68,7 +68,7 @@ class SyncResults:
         self.synced_ids = set()
 
 
-class CustomRequestsTransport(transport.Transport):
+class AutotaskRequestsTransport(transport.Transport):
     # Adapted from atws.connection.RequestsTransport so that we can set
     # our own request settings.
 
@@ -76,8 +76,14 @@ class CustomRequestsTransport(transport.Transport):
         transport.Transport.__init__(self)
 
         self._session = session
-        self.timeout = (request_settings.get('timeout'))
+        self.timeout = request_settings.get('timeout')
         self.max_attempts = request_settings.get('max_attempts')
+
+    def format_error_message(self, error):
+        response = ResponseQuery(wrapper.Wrapper)
+        response.add_error(str(error))
+
+        return response
 
     def open(self, request):
         for attempt in range(1, self.max_attempts + 1):
@@ -86,11 +92,10 @@ class CustomRequestsTransport(transport.Transport):
                 break
             except (SSLError, ConnectTimeout, Timeout, ReadTimeout) as e:
                 if attempt == self.max_attempts:
-                    raise AutotaskAPIException
-                logger.error(
-                    'Connection error. The error was: {}'.format(e)
-                )
+                    response = self.format_error_message(e)
+                    raise AutotaskAPIException(response)
                 continue
+
         return BytesIO(resp.content)
 
     def send(self, request):
@@ -105,11 +110,10 @@ class CustomRequestsTransport(transport.Transport):
                 break
             except (SSLError, Timeout) as e:
                 if attempt == self.max_attempts:
-                    raise
-                logger.error(
-                    'Connection error. The error was: {}'.format(e)
-                )
+                    response = self.format_error_message(e)
+                    raise AutotaskAPIException(response)
                 continue
+
         return transport.Reply(
             resp.status_code,
             resp.headers,
@@ -145,7 +149,7 @@ class Synchronizer:
                 max_retries=self.request_settings.get('max_attempts'))
         )
         client_options['transport'] = \
-            CustomRequestsTransport(session, self.request_settings)
+            AutotaskRequestsTransport(session, self.request_settings)
 
         url = connection.get_connection_url(**kwargs)
         client_options['url'] = url
@@ -186,24 +190,38 @@ class Synchronizer:
             )
         return set(ids)
 
-    def get(self, query_object, results):
+    def get(self, results):
         """
         Fetch records from the API. ATWS automatically makes multiple separate
         queries if the request is over 500 records.
         """
-        logger.info(
-            'Fetching {} records'.format(self.model_class)
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
         )
-        batch_size = self.request_settings.get('batch_size')
-        if batch_size:
+        query = Query(self.model_class.__name__)
+
+        if sync_job_qset.exists() and self.last_updated_field \
+                and not self.full:
+            last_sync_job_time = sync_job_qset.last().start_time
+            query.WHERE(self.last_updated_field,
+                        query.GreaterThanorEquals, last_sync_job_time)
+            queries = [query]
+        else:
             queries = self.get_batch_queries()
-            for query in queries:
+
+        for query in queries:
+            logger.info(
+                'Fetching {} records batch {} of {}'.format(
+                    self.model_class, queries.index(query) + 1, len(queries))
+            )
+            try:
                 for record in self.at_api_client.query(query):
                     self.persist_record(record, results)
-        else:
-            # Iterate over suds objects returned from the API.
-            for record in query_object:
-                self.persist_record(record, results)
+            except AutotaskAPIException as e:
+                logger.error(
+                    'Failed to fetch {} object. {}'.format(self.model_class, e)
+                )
+                continue
 
         return results
 
@@ -274,6 +292,22 @@ class Synchronizer:
 
         return deleted_count
 
+    def get_initial_api_result(self, query):
+        xml = query.get_query_xml()
+
+        try:
+            result = self.at_api_client.client.service.query(xml)
+            result_count = helpers.query_result_count(result)
+
+        except requests.RequestException as e:
+            logger.error('Request failed: {}'.format(e))
+
+            response = ResponseQuery(self.at_api_client)
+            response.add_error(e)
+            raise AutotaskAPIException(response)
+
+        return result, result_count
+
     def get_batch_queries(self):
         batch_size = self.request_settings.get('batch_size')
         finished = False
@@ -283,11 +317,8 @@ class Synchronizer:
 
         query = Query(self.model_class.__name__)
         query.WHERE('id', query.GreaterThanorEquals, min_id)
-        xml = query.get_query_xml()
 
-        result = self.at_api_client.client.service.query(xml)
-        result_list = list(result)
-        result_count = helpers.query_result_count(result)
+        result, result_count = self.get_initial_api_result(query)
 
         if result_count > batch_size:
 
@@ -297,7 +328,7 @@ class Synchronizer:
 
                 if limit_index < result_count:
                     try:
-                        max_id = result_list[1][1][0][limit_index].id
+                        max_id = result[1][1][0][limit_index].id
                     except IndexError:
                         pass
 
@@ -315,27 +346,12 @@ class Synchronizer:
 
     @log_sync_job
     def sync(self):
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
-        )
         results = SyncResults()
-        query = Query(self.model_class.__name__)
-
-        if sync_job_qset.exists() and self.last_updated_field \
-                and not self.full:
-            last_sync_job_time = sync_job_qset.last().start_time
-            query.WHERE(self.last_updated_field,
-                        query.GreaterThanorEquals, last_sync_job_time)
-
-        else:
-            query.WHERE('id', query.GreaterThanorEquals, 0)
-
-        query_object = self.at_api_client.query(query)
 
         # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
         initial_ids = self._instance_ids()
-        results = self.get(query_object, results)
+        results = self.get(results)
 
         if self.full:
             results.deleted_count = self.prune_stale_records(
@@ -374,6 +390,9 @@ class PicklistSynchronizer(Synchronizer):
             )
 
         if picklist_objects:
+            logger.info(
+                'Fetching {} records.'.format(self.model_class)
+            )
             for record in picklist_objects:
                 self.persist_record(record, results)
 

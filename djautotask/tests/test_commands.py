@@ -41,6 +41,9 @@ class AbstractBaseSyncTest(object):
 
     def setUp(self):
         mocks.init_api_connection(Wrapper)
+        mocks.generate_initial_api_result(
+            fixture_utils.manage_client_service_query_return_data
+        )
 
     def _title_for_at_object(self, at_object):
         return at_object.title().replace('_', ' ')
