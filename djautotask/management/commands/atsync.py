@@ -34,6 +34,8 @@ class Command(BaseCommand):
              sync.ProjectStatusSynchronizer, _('Project Status')),
             ('project_type', sync.ProjectTypeSynchronizer, _('Project Type')),
             ('project', sync.ProjectSynchronizer, _('Project')),
+            ('display_color', sync.DisplayColorSynchronizer,
+             _('Display Color')),
             ('ticket_category', sync.TicketCategorySynchronizer,
              _('Ticket Category')),
             ('source', sync.SourceSynchronizer, _('Source')),

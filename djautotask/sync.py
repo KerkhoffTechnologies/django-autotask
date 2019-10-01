@@ -332,11 +332,6 @@ class QueueSynchronizer(TicketPicklistSynchronizer):
     picklist_field = 'QueueID'
 
 
-class TicketCategorySynchronizer(TicketPicklistSynchronizer):
-    model_class = models.TicketCategory
-    picklist_field = 'TicketCategory'
-
-
 class SourceSynchronizer(TicketPicklistSynchronizer):
     model_class = models.Source
     picklist_field = 'Source'
@@ -369,6 +364,12 @@ class ProjectTypeSynchronizer(PicklistSynchronizer):
     picklist_field = 'Type'
 
 
+class DisplayColorSynchronizer(PicklistSynchronizer):
+    model_class = models.DisplayColor
+    entity_type = 'TicketCategory'
+    picklist_field = 'DisplayColorRGB'
+
+
 class ResourceSynchronizer(Synchronizer):
     model_class = models.Resource
     last_updated_field = None
@@ -380,6 +381,24 @@ class ResourceSynchronizer(Synchronizer):
         instance.first_name = object_data.get('FirstName')
         instance.last_name = object_data.get('LastName')
         instance.active = object_data.get('Active')
+
+        return instance
+
+
+class TicketCategorySynchronizer(Synchronizer):
+    model_class = models.TicketCategory
+    last_updated_field = None
+
+    related_meta = {
+        'DisplayColorRGB': (models.DisplayColor, 'display_color')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('Name')
+        instance.active = object_data.get('Active')
+
+        self.set_relations(instance, object_data)
 
         return instance
 

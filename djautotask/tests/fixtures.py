@@ -297,25 +297,46 @@ API_TICKET_STATUS_LIST = [
 
 API_TICKET_CATEGORY_LIST = [
     {
+        'id': 5,
+        'UserDefinedFields': '',
+        'Name': 'Standard (non-editable)',
+        'Nickname': '',
+        'Active': False,
+        'DisplayColorRGB': 19,
+        'GlobalDefault': False,
+        'ApiOnly': False
+    },
+    {
+        'id': 3,
+        'UserDefinedFields': '',
+        'Name': '',
+        'Nickname': 'AEM Alert',
+        'Active': False,
+        'DisplayColorRGB': 21,
+        'GlobalDefault': False,
+        'ApiOnly': False
+    }
+]
+
+API_DISPLAY_COLOR_LIST = [
+    {
         'IsActive': True,
         'IsDefaultValue': False,
         'IsSystem': False,
-        'Label': 'Standard',
-        'SortOrder': 2,
-        'Value': 3,
-        'ParentValue': None,
+        'Label': '#ff6666',
+        'SortOrder': 1,
+        'Value': 19,
+        'ParentValue': None
     },
     {
         'IsActive': True,
         'IsDefaultValue': False,
         'IsSystem': False,
-        'Label': 'Important Alert',
-        'SortOrder': 1,
-        'Value': 1,
-        'ParentValue': None,
+        'Label': '#ff855d',
+        'SortOrder': 2,
+        'Value': 21,
+        'ParentValue': None
     },
-
-
 ]
 
 API_SOURCE_LIST = [

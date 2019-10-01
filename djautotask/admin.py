@@ -67,7 +67,7 @@ class ProjectTypeAdmin(admin.ModelAdmin):
 
 @admin.register(models.TicketCategory)
 class TicketCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'label')
+    list_display = ('id', 'name', 'active')
 
 
 @admin.register(models.Source)
@@ -88,6 +88,11 @@ class SubIssueType(admin.ModelAdmin):
 @admin.register(models.TicketType)
 class TicketTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
+
+
+@admin.register(models.DisplayColor)
+class DisplayColorAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'is_active')
 
 
 @admin.register(models.Resource)
