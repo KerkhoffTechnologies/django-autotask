@@ -1,3 +1,6 @@
+from datetime import datetime
+from dateutil.tz import tzoffset
+
 API_ACCOUNT_LIST = [
     {
         'id': 174,
@@ -8,9 +11,11 @@ API_ACCOUNT_LIST = [
         'AlternatePhone2': '',
         'City': 'East Greenbush',
         'Country': 'United States',
-        'CreateDate': '2002-05-30 11:56:33.810000+01:00',
+        'CreateDate':
+            datetime(2012, 10, 24, 5, 0, tzinfo=tzoffset(None, 3600)),
         'Fax': '555-555-6677',
-        'LastActivityDate': '2012-06-18 13:15:47+01:00',
+        'LastActivityDate':
+            datetime(2012, 6, 18, 13, 15, 47, tzinfo=tzoffset(None, 3600)),
         'MarketSegmentID': 29683456,
         'AccountName': 'Autotask Corporation',
         'AccountNumber': 289843,
@@ -110,10 +115,13 @@ API_PROJECT_LIST = [
         'ExtPNumber': '',
         'ProjectNumber': 'P20120604.0001',
         'Description': '',
-        'CreateDateTime': '2012-06-18 05:00:00+01:00',
+        'CreateDateTime':
+            datetime(2012, 6, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
         'CreatorResourceID': 4,
-        'StartDateTime': '2012-08-27 05:00:00+01:00',
-        'EndDateTime': '2012-10-24 05:00:00+01:00',
+        'StartDateTime':
+            datetime(2012, 6, 19, 5, 0, tzinfo=tzoffset(None, 3600)),
+        'EndDateTime':
+            datetime(2012, 10, 24, 5, 0, tzinfo=tzoffset(None, 3600)),
         'Duration': 59,
         'ActualHours': 0.0,
         'ActualBilledHours': 0.0,
@@ -131,14 +139,17 @@ API_PROJECT_LIST = [
         'Status': 1,
         'ProjectLeadResourceID': 29683794,
         'CompletedPercentage': 0,
-        'CompletedDateTime': '2019-09-18 05:00:00+01:00',
+        'CompletedDateTime':
+            datetime(2019, 9, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
         'StatusDetail': '',
-        'StatusDateTime': '2012-06-18 05:00:00+01:00',
+        'StatusDateTime':
+            datetime(2012, 6, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
         'LineOfBusiness': 6,
         'PurchaseOrderNumber': '',
         'BusinessDivisionSubdivisionID': 6,
         'LastActivityResourceID': 4,
-        'LastActivityDateTime': '2012-06-18 01:00:00+01:00',
+        'LastActivityDateTime':
+            datetime(2012, 6, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
         'LastActivityPersonType': 1,
     }
 ]
@@ -284,6 +295,135 @@ API_TICKET_STATUS_LIST = [
     }
 ]
 
+API_TICKET_CATEGORY_LIST = [
+    {
+        'id': 5,
+        'UserDefinedFields': '',
+        'Name': 'Standard (non-editable)',
+        'Nickname': '',
+        'Active': False,
+        'DisplayColorRGB': 19,
+        'GlobalDefault': False,
+        'ApiOnly': False
+    },
+    {
+        'id': 3,
+        'UserDefinedFields': '',
+        'Name': '',
+        'Nickname': 'AEM Alert',
+        'Active': False,
+        'DisplayColorRGB': 21,
+        'GlobalDefault': False,
+        'ApiOnly': False
+    }
+]
+
+API_DISPLAY_COLOR_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': '#ff6666',
+        'SortOrder': 1,
+        'Value': 19,
+        'ParentValue': None
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': '#ff855d',
+        'SortOrder': 2,
+        'Value': 21,
+        'ParentValue': None
+    },
+]
+
+API_SOURCE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Monitoring Alert',
+        'SortOrder': 8,
+        'Value': 2,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Web Portal',
+        'SortOrder': 6,
+        'Value': 9,
+        'ParentValue': None,
+    },
+
+]
+
+API_ISSUE_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Hardware',
+        'SortOrder': 1,
+        'Value': 2,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Internal',
+        'SortOrder': 2,
+        'Value': 3,
+        'ParentValue': None,
+    },
+]
+
+API_TICKET_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Service Request',
+        'SortOrder': 5,
+        'Value': 3,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Incident',
+        'SortOrder': 6,
+        'Value': 2,
+        'ParentValue': None,
+    },
+]
+
+API_SUB_ISSUE_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Rapid Response',
+        'SortOrder': 5,
+        'Value': 3,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Hardware Request',
+        'SortOrder': 7,
+        'Value': 8,
+        'ParentValue': None,
+    },
+]
+
 API_TICKET = {
     'AccountID': 29683561,
     'AllocationCodeID': 29683407,
@@ -295,19 +435,24 @@ API_TICKET = {
     'ChangeInfoField4': '',
     'ChangeInfoField5': '',
     'CompletedByResourceID': 29682885,
-    'CompletedDate': '2019-09-05T13:08:23.450+01:00',
+    'CompletedDate':
+        datetime(2019, 9, 5, 8, 23, tzinfo=tzoffset(None, 3600)),
     'ContactID': 29683586,
-    'CreateDate': '2012-06-18T13:08:23.450+01:00',
+    'CreateDate':
+        datetime(2019, 8, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
     'CreatorResourceID': 4,
     'CreatorType': 1,
     'Description': 'Monthy Services Checkup',
-    'DueDateTime': '2012-10-15T17:00:00+01:00',
+    'DueDateTime':
+        datetime(2012, 9, 7, 1, 0, tzinfo=tzoffset(None, 3600)),
     'EstimatedHours': 2.0,
     'ExternalID': '',
-    'FirstResponseDateTime': '2012-06-18T13:08:23.683+01:00',
+    'FirstResponseDateTime':
+        datetime(2012, 6, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
     'HoursToBeScheduled': 0.0,
     'IssueType': 10,
-    'LastActivityDate': '2012-09-24T17:00:25.823+01:00',
+    'LastActivityDate':
+        datetime(2019, 9, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
     'LastActivityPersonType': 1,
     'LastActivityResourceID': 4,
     'Priority': 3,

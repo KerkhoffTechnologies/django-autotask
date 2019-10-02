@@ -51,6 +51,21 @@ class Ticket(TimeStampedModel):
     project = models.ForeignKey(
         'Project', null=True, on_delete=models.SET_NULL
     )
+    category = models.ForeignKey(
+        'TicketCategory', null=True, on_delete=models.SET_NULL
+    )
+    source = models.ForeignKey(
+        'Source', null=True, on_delete=models.SET_NULL
+    )
+    issue_type = models.ForeignKey(
+        'IssueType', null=True, on_delete=models.SET_NULL
+    )
+    sub_issue_type = models.ForeignKey(
+        'SubIssueType', null=True, on_delete=models.SET_NULL
+    )
+    type = models.ForeignKey(
+        'TicketType', null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -102,7 +117,30 @@ class ProjectStatus(Picklist):
         verbose_name_plural = 'Project statuses'
 
 
+class DisplayColor(Picklist):
+    pass
+
+    class Meta:
+        verbose_name_plural = 'Display colors'
+
+
 class ProjectType(Picklist):
+    pass
+
+
+class Source(Picklist):
+    pass
+
+
+class IssueType(Picklist):
+    pass
+
+
+class TicketType(Picklist):
+    pass
+
+
+class SubIssueType(Picklist):
     pass
 
 
@@ -118,6 +156,20 @@ class Resource(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.first_name, self.last_name)
+
+
+class TicketCategory(TimeStampedModel):
+    name = models.CharField(max_length=30)
+    active = models.BooleanField(default=False)
+    display_color = models.ForeignKey(
+        'DisplayColor', null=True, on_delete=models.SET_NULL
+    )
+
+    class Meta:
+        verbose_name_plural = 'Ticket categories'
+
+    def __str__(self):
+        return self.name
 
 
 class TicketSecondaryResource(TimeStampedModel):

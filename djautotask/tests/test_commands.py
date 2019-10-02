@@ -139,22 +139,72 @@ class TestSyncQueueCommand(AbstractPicklistSyncCommandTest, TestCase):
 
 
 class TestSyncProjectStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
-    command_name = 'project_status'
     field_name = 'Status'
 
     args = (
         fixtures.API_PROJECT_STATUS_LIST,
-        command_name,
+        'project_status',
     )
 
 
 class TestSyncProjectTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
-    command_name = 'project_type'
     field_name = 'Type'
 
     args = (
         fixtures.API_PROJECT_TYPE_LIST,
-        command_name,
+        'project_type',
+    )
+
+
+class TestSyncSourceCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'Source'
+
+    args = (
+        fixtures.API_SOURCE_LIST,
+        'source',
+    )
+
+
+class TestSyncIssueTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'IssueType'
+
+    args = (
+        fixtures.API_ISSUE_TYPE_LIST,
+        'issue_type',
+    )
+
+
+class TestSyncSubIssueTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'SubIssueType'
+
+    args = (
+        fixtures.API_SUB_ISSUE_TYPE_LIST,
+        'sub_issue_type',
+    )
+
+
+class TestSyncTicketTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'TicketType'
+
+    args = (
+        fixtures.API_TICKET_TYPE_LIST,
+        'ticket_type',
+    )
+
+
+class TestDisplayColorCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'DisplayColorRGB'
+
+    args = (
+        fixtures.API_DISPLAY_COLOR_LIST,
+        'display_color',
+    )
+
+
+class TestSyncTicketCategoryCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TICKET_CATEGORY_LIST,
+        'ticket_category',
     )
 
 
@@ -180,11 +230,9 @@ class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
 
 
 class TestSyncProjectCommand(AbstractBaseSyncTest, TestCase):
-    command_name = 'project'
-
     args = (
         fixtures.API_PROJECT_LIST,
-        command_name,
+        'project',
     )
 
 
@@ -194,7 +242,8 @@ class TestSyncAllCommand(TestCase):
         super().setUp()
         mocks.init_api_connection(Wrapper)
 
-        # Mock API calls to values based on what entity is being requested
+        # Mock API calls to return values based on what entity
+        # is being requested
         mocks.get_field_info_api_calls(
             fixture_utils.manage_sync_picklist_return_data
         )
@@ -212,6 +261,12 @@ class TestSyncAllCommand(TestCase):
             TestSyncProjectCommand,
             TestSyncProjectStatusCommand,
             TestSyncProjectTypeCommand,
+            TestSyncTicketCategoryCommand,
+            TestSyncSourceCommand,
+            TestSyncIssueTypeCommand,
+            TestSyncSubIssueTypeCommand,
+            TestSyncTicketTypeCommand,
+            TestDisplayColorCommand,
         ]
 
         self.test_args = []
@@ -246,6 +301,12 @@ class TestSyncAllCommand(TestCase):
             'project': models.Project,
             'project_status': models.ProjectStatus,
             'project_type': models.ProjectType,
+            'ticket_category': models.TicketCategory,
+            'source': models.Source,
+            'issue_type': models.IssueType,
+            'sub_issue_type': models.SubIssueType,
+            'ticket_type': models.TicketType,
+            'display_color': models.DisplayColor,
         }
         run_sync_command()
         pre_full_sync_counts = {}

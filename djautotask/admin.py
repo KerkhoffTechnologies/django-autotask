@@ -65,6 +65,36 @@ class ProjectTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
+@admin.register(models.TicketCategory)
+class TicketCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'active')
+
+
+@admin.register(models.Source)
+class SourceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
+@admin.register(models.IssueType)
+class IssueTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
+@admin.register(models.SubIssueType)
+class SubIssueType(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
+@admin.register(models.TicketType)
+class TicketTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
+@admin.register(models.DisplayColor)
+class DisplayColorAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'is_active')
+
+
 @admin.register(models.Resource)
 class ResourceAdmin(admin.ModelAdmin):
     list_display = ('user_name', 'full_name', 'email', 'active')
