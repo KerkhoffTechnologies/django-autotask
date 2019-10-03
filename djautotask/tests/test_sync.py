@@ -4,7 +4,7 @@ from atws.wrapper import Wrapper
 from djautotask.models import Ticket, TicketStatus, Resource, SyncJob, \
     TicketSecondaryResource, TicketPriority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
-    SubIssueType, TicketType
+    SubIssueType, TicketType, DisplayColor
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -170,16 +170,6 @@ class TestProjectTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_project_types()
 
 
-class TestTicketCategorySynchronizer(AbstractPicklistSynchronizer, TestCase):
-    model_class = TicketCategory
-    fixture = fixtures.API_TICKET_CATEGORY_LIST
-    synchronizer = sync.TicketCategorySynchronizer
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_ticket_categories()
-
-
 class TestSourceSynchronizer(AbstractPicklistSynchronizer, TestCase):
     model_class = Source
     fixture = fixtures.API_SOURCE_LIST
@@ -220,7 +210,62 @@ class TicketTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_ticket_types()
 
 
-class TestResourceSynchronizer(AbstractSynchronizer, TestCase):
+class DisplayColorSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = DisplayColor
+    fixture = fixtures.API_DISPLAY_COLOR_LIST
+    synchronizer = sync.DisplayColorSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_display_colors()
+
+
+class TestTicketCategorySynchronizer(TestCase):
+    model_class = TicketCategory
+    fixture = fixtures.API_TICKET_CATEGORY_LIST
+    synchronizer = sync.TicketCategorySynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_display_colors()
+        fixture_utils.init_ticket_categories()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.name, object_data['Name'])
+        self.assertEqual(instance.active, object_data['Active'])
+        self.assertEqual(instance.display_color.id,
+                         object_data['DisplayColorRGB'])
+
+    def test_sync_ticket_category(self):
+        """
+        Test to ensure ticket category synchronizer saves a Ticket Category
+        instance locally.
+        """
+        self.assertGreater(TicketCategory.objects.all().count(), 0)
+
+        object_data = fixtures.API_TICKET_CATEGORY_LIST[0]
+        instance = TicketCategory.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TicketCategory)
+
+    def test_delete_stale_ticket_category(self):
+        """
+        Test that ticket category is removed if not fetched from the API
+        during a full sync.
+        """
+        ticket_category_qset = TicketCategory.objects.all()
+        self.assertEqual(ticket_category_qset.count(), 2)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.TicketCategorySynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(ticket_category_qset.count(), 0)
+
+
+class TestResourceSynchronizer(TestCase):
 
     def setUp(self):
         super().setUp()
@@ -249,7 +294,7 @@ class TestResourceSynchronizer(AbstractSynchronizer, TestCase):
 
     def test_delete_stale_resources(self):
         """
-        Test that resource is removed if not fetched from the API during a
+        Test that  is removed if not fetched from the API during a
         full sync.
         """
         resource_qset = Resource.objects.all()

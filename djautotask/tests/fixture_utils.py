@@ -92,6 +92,7 @@ def manage_full_sync_return_data(value):
         'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST,
         'Account': fixtures.API_ACCOUNT_LIST,
         'Project': fixtures.API_PROJECT_LIST,
+        'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -127,7 +128,6 @@ def manage_sync_picklist_return_data(wrapper, entity):
             'Status': fixtures.API_TICKET_STATUS_LIST,
             'Priority': fixtures.API_TICKET_PRIORITY_LIST,
             'QueueID': fixtures.API_QUEUE_LIST,
-            'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
             'Source': fixtures.API_SOURCE_LIST,
             'IssueType': fixtures.API_ISSUE_TYPE_LIST,
             'SubIssueType': fixtures.API_SUB_ISSUE_TYPE_LIST,
@@ -136,6 +136,9 @@ def manage_sync_picklist_return_data(wrapper, entity):
         'Project': {
             'Status': fixtures.API_PROJECT_STATUS_LIST,
             'Type': fixtures.API_PROJECT_TYPE_LIST,
+        },
+        'TicketCategory': {
+            'DisplayColorRGB': fixtures.API_DISPLAY_COLOR_LIST,
         }
     }
     client = API_CLIENT
@@ -146,9 +149,10 @@ def manage_sync_picklist_return_data(wrapper, entity):
     # picklist objects as we need and append to the array field.
     entity_fields = fixture_dict.get(entity)
 
-    for field_type, fixture in entity_fields.items():
-        api_object = generate_picklist_objects(field_type, fixture)
-        array_of_field[0].append(api_object[0][0])
+    if entity_fields:
+        for field_type, fixture in entity_fields.items():
+            api_object = generate_picklist_objects(field_type, fixture)
+            array_of_field[0].append(api_object[0][0])
 
     return array_of_field
 
@@ -213,14 +217,6 @@ def init_project_types():
     )
 
 
-def init_ticket_categories():
-    sync_picklist_objects(
-        'TicketCategory',
-        fixtures.API_TICKET_CATEGORY_LIST,
-        sync.TicketCategorySynchronizer
-    )
-
-
 def init_sources():
     sync_picklist_objects(
         'Source',
@@ -250,6 +246,22 @@ def init_ticket_types():
         'TicketType',
         fixtures.API_TICKET_TYPE_LIST,
         sync.TicketTypeSynchronizer
+    )
+
+
+def init_display_colors():
+    sync_picklist_objects(
+        'DisplayColorRGB',
+        fixtures.API_DISPLAY_COLOR_LIST,
+        sync.DisplayColorSynchronizer
+    )
+
+
+def init_ticket_categories():
+    sync_objects(
+        'TicketCategory',
+        fixtures.API_TICKET_CATEGORY_LIST,
+        sync.TicketCategorySynchronizer
     )
 
 
