@@ -1,5 +1,6 @@
 from suds.client import Client
 from atws.wrapper import QueryCursor
+from atws import helpers
 import urllib
 from xml.etree import ElementTree
 import os
@@ -100,6 +101,21 @@ def manage_full_sync_return_data(value):
     return_value = generate_objects(object_type, fixture)
 
     return return_value
+
+
+def manage_client_service_query_return_data(value):
+    """
+    Generate a complete ATWSResponse object and populate with entities
+    specified in the query.
+    """
+    response = API_CLIENT.factory.create('ATWSResponse')
+    response.ReturnCode = 1
+
+    for entity in manage_full_sync_return_data(value):
+        response.EntityResults.Entity.append(entity)
+
+    result_count = helpers.query_result_count(response)
+    return response, result_count
 
 
 def manage_sync_picklist_return_data(wrapper, entity):

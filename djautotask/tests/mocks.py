@@ -17,9 +17,16 @@ def create_mock_call(method_name, return_value, side_effect=None):
 
 
 def init_api_connection(return_value):
-    method_name = 'djautotask.sync.Synchronizer.init_api_connection'
+    method_name = 'djautotask.api.init_api_connection'
 
     return create_mock_call(method_name, return_value)
+
+
+def generate_initial_api_result(side_effect=None):
+    method_name = 'djautotask.sync.Synchronizer.get_initial_api_result'
+
+    _patch = patch(method_name, side_effect=side_effect)
+    _patch.start()
 
 
 def api_query_call(return_value):

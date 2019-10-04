@@ -14,12 +14,18 @@ def assert_sync_job(model_class):
     assert qset.exists()
 
 
-class TestTicketSynchronizer(TestCase):
+class AbstractSynchronizer(object):
+
+    def setUp(self):
+        mocks.generate_initial_api_result(
+            fixture_utils.manage_client_service_query_return_data
+        )
+
+
+class TestTicketSynchronizer(AbstractSynchronizer, TestCase):
 
     def setUp(self):
         super().setUp()
-
-        mocks.init_api_connection(Wrapper)
 
         fixture_utils.init_ticket_statuses()
         fixture_utils.init_resources()
@@ -263,8 +269,6 @@ class TestResourceSynchronizer(TestCase):
 
     def setUp(self):
         super().setUp()
-
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_resources()
 
     def _assert_sync(self, instance, object_data):
@@ -303,7 +307,7 @@ class TestResourceSynchronizer(TestCase):
         self.assertEqual(resource_qset.count(), 0)
 
 
-class TestTicketSecondaryResourceSynchronizer(TestCase):
+class TestTicketSecondaryResourceSynchronizer(AbstractSynchronizer, TestCase):
 
     def setUp(self):
         super().setUp()
@@ -335,7 +339,7 @@ class TestTicketSecondaryResourceSynchronizer(TestCase):
         self.assertEqual(secondary_resources_qset.count(), 0)
 
 
-class TestAccountSynchronizer(TestCase):
+class TestAccountSynchronizer(AbstractSynchronizer, TestCase):
 
     def setUp(self):
         super().setUp()
@@ -368,7 +372,7 @@ class TestAccountSynchronizer(TestCase):
         self.assertEqual(account_qset.count(), 0)
 
 
-class TestProjectSynchronizer(TestCase):
+class TestProjectSynchronizer(AbstractSynchronizer, TestCase):
 
     def setUp(self):
         super().setUp()

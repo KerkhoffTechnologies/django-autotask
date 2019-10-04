@@ -1,13 +1,14 @@
 import logging
 
 from suds.client import Client
-from atws import connect, Query, helpers, picklist
-
-from django.conf import settings
+from atws.wrapper import AutotaskAPIException, ResponseQuery
+from atws import Query, helpers, picklist
+import requests
 from django.db import transaction, IntegrityError
 from django.utils import timezone
 
-from djautotask import models
+from djautotask import api, models
+from djautotask.utils import DjautotaskSettings
 
 logger = logging.getLogger(__name__)
 
@@ -67,17 +68,7 @@ class Synchronizer:
 
     def __init__(self, full=False, *args, **kwargs):
         self.full = full
-        self.at_api_client = self.init_api_connection()
-
-    def init_api_connection(self):
-
-        return connect(
-            username=settings.AUTOTASK_CREDENTIALS['username'],
-            password=settings.AUTOTASK_CREDENTIALS['password'],
-            integrationcode=settings.AUTOTASK_CREDENTIALS['integration_code'],
-            apiversion=settings.AUTOTASK_CREDENTIALS['api_version'],
-            url=settings.AUTOTASK_CREDENTIALS['url'],
-        )
+        self.at_api_client = api.init_api_connection(**kwargs)
 
     def set_relations(self, instance, object_data):
         for object_field, value in self.related_meta.items():
@@ -113,17 +104,38 @@ class Synchronizer:
             )
         return set(ids)
 
-    def get(self, query_object, results):
+    def get(self, results):
         """
         Fetch records from the API. ATWS automatically makes multiple separate
         queries if the request is over 500 records.
         """
-        logger.info(
-            'Fetching {} records'.format(self.model_class)
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
         )
-        # Iterate over suds objects returned from the API.
-        for record in query_object:
-            self.persist_record(record, results)
+        query = Query(self.model_class.__name__)
+
+        if sync_job_qset.exists() and self.last_updated_field \
+                and not self.full:
+            last_sync_job_time = sync_job_qset.last().start_time
+            query.WHERE(self.last_updated_field,
+                        query.GreaterThanorEquals, last_sync_job_time)
+            queries = [query]
+        else:
+            queries = self.get_batch_queries()
+
+        for query in queries:
+            logger.info(
+                'Fetching {} records batch {} of {}'.format(
+                    self.model_class, queries.index(query) + 1, len(queries))
+            )
+            try:
+                for record in self.at_api_client.query(query):
+                    self.persist_record(record, results)
+            except AutotaskAPIException as e:
+                logger.error(
+                    'Failed to fetch {} object. {}'.format(self.model_class, e)
+                )
+                continue
 
         return results
 
@@ -194,29 +206,68 @@ class Synchronizer:
 
         return deleted_count
 
+    def get_initial_api_result(self, query):
+        xml = query.get_query_xml()
+
+        try:
+            result = self.at_api_client.client.service.query(xml)
+            result_count = helpers.query_result_count(result)
+
+        except requests.RequestException as e:
+            logger.error('Request failed: {}'.format(e))
+
+            response = ResponseQuery(self.at_api_client)
+            response.add_error(e)
+            raise AutotaskAPIException(response)
+
+        return result, result_count
+
+    def get_batch_queries(self):
+        request_settings = DjautotaskSettings().get_settings()
+        batch_size = request_settings.get('batch_size')
+        finished = False
+        min_id = 0
+        limit_index = batch_size
+        queries = []
+
+        query = Query(self.model_class.__name__)
+        query.WHERE('id', query.GreaterThanorEquals, min_id)
+
+        result, result_count = self.get_initial_api_result(query)
+
+        if result_count > batch_size:
+
+            while not finished:
+                query = Query(self.model_class.__name__)
+                query.WHERE('id', query.GreaterThanorEquals, min_id)
+
+                if limit_index < result_count:
+                    try:
+                        max_id = result[1][1][0][limit_index].id
+                        query.AND('id', query.LessThanOrEquals, max_id)
+
+                    except IndexError:
+                        pass
+
+                else:
+                    finished = True
+
+                queries.append(query)
+                min_id = max_id
+                limit_index += batch_size
+        else:
+            queries.append(query)
+
+        return queries
+
     @log_sync_job
     def sync(self):
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
-        )
         results = SyncResults()
-        query = Query(self.model_class.__name__)
-
-        if sync_job_qset.exists() and self.last_updated_field \
-                and not self.full:
-            last_sync_job_time = sync_job_qset.last().start_time
-            query.WHERE(self.last_updated_field,
-                        query.GreaterThanorEquals, last_sync_job_time)
-
-        else:
-            query.WHERE('id', query.GreaterThanorEquals, 0)
-
-        query_object = self.at_api_client.query(query)
 
         # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
         initial_ids = self._instance_ids()
-        results = self.get(query_object, results)
+        results = self.get(results)
 
         if self.full:
             results.deleted_count = self.prune_stale_records(
@@ -255,6 +306,9 @@ class PicklistSynchronizer(Synchronizer):
             )
 
         if picklist_objects:
+            logger.info(
+                'Fetching {} records.'.format(self.model_class)
+            )
             for record in picklist_objects:
                 self.persist_record(record, results)
 
