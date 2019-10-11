@@ -3,7 +3,7 @@ from requests.exceptions import ConnectTimeout, Timeout, ReadTimeout, SSLError
 from io import BytesIO
 import suds.transport as transport
 from atws.wrapper import AutotaskAPIException, ResponseQuery
-from atws import wrapper, connection
+from atws import wrapper, connection, Query
 
 from django.conf import settings
 from djautotask.utils import DjautotaskSettings
@@ -87,3 +87,15 @@ class AutotaskRequestsTransport(transport.Transport):
             resp.headers,
             resp.content,
         )
+
+
+def update_ticket(ticket, status):
+    query = Query('Ticket')
+    query.WHERE('id', query.Equals, ticket.id)
+    at = init_api_connection()
+
+    t = at.query(query).fetch_one()
+    t.Status = status.id
+
+    # Fetch one executes the update and returns the created object.
+    return at.update([t]).fetch_one()
