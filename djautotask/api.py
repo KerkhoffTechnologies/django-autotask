@@ -15,7 +15,7 @@ def init_api_connection(**kwargs):
     kwargs['apiversion'] = settings.AUTOTASK_CREDENTIALS['api_version']
     kwargs['integrationcode'] = \
         settings.AUTOTASK_CREDENTIALS['integration_code']
-    kwargs['url'] = settings.AUTOTASK_CREDENTIALS['url']
+    kwargs['username'] = settings.AUTOTASK_CREDENTIALS['username']
 
     client_options['transport'] = AutotaskRequestsTransport()
 
