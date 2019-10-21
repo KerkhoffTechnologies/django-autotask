@@ -108,6 +108,7 @@ class Picklist(TimeStampedModel):
     is_active = models.BooleanField(default=False)
     is_system = models.BooleanField(default=False)
 
+    objects = models.Manager()
     available_objects = AvailablePicklistManager()
 
     class Meta:
