@@ -93,6 +93,13 @@ class Ticket(TimeStampedModel):
         return api.update_ticket(self, self.status)
 
 
+class AvailablePicklistManager(models.Manager):
+    """ Return only active Picklist objects. """
+
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
+
 class Picklist(TimeStampedModel):
     label = models.CharField(blank=True, null=True, max_length=50)
     is_default_value = models.BooleanField(default=False)
@@ -100,6 +107,8 @@ class Picklist(TimeStampedModel):
     parent_value = models.CharField(blank=True, null=True, max_length=20)
     is_active = models.BooleanField(default=False)
     is_system = models.BooleanField(default=False)
+
+    available_objects = AvailablePicklistManager()
 
     class Meta:
         abstract = True
