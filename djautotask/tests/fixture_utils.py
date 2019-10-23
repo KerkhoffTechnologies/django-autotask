@@ -1,19 +1,18 @@
 from suds.client import Client
 from atws.wrapper import QueryCursor
 from atws import helpers
-import urllib
 from xml.etree import ElementTree
-import os
 from djautotask import sync
 from djautotask.tests import mocks, fixtures
+from pathlib import Path
 
 
 def init_api_client():
     # Access the Autotask API's WSDL file from the tests directory
     # so that we can generate mock objects from the API without actually
     # calling the API.
-    path = os.path.abspath("djautotask/tests/atws.wsdl")
-    url = urllib.parse.urljoin('file:', urllib.request.pathname2url(path))
+    path = Path(__file__).parent / 'atws.wsdl'
+    url = 'file://{}'.format(str(path))
 
     return Client(url)
 
