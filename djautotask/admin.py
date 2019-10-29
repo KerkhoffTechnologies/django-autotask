@@ -95,6 +95,11 @@ class DisplayColorAdmin(admin.ModelAdmin):
     list_display = ('id', 'label', 'is_active')
 
 
+@admin.register(models.LicenseType)
+class LicenseTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
 @admin.register(models.Resource)
 class ResourceAdmin(admin.ModelAdmin):
     list_display = ('user_name', 'full_name', 'email', 'active')

@@ -424,6 +424,36 @@ API_SUB_ISSUE_TYPE_LIST = [
     },
 ]
 
+API_LICENSE_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'API User',
+        'SortOrder': 7,
+        'Value': 7,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Team Member',
+        'SortOrder': 4,
+        'Value': 4,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Administrator',
+        'SortOrder': 1,
+        'Value': 1,
+        'ParentValue': None,
+    },
+]
+
 API_TICKET = {
     'AccountID': 29683561,
     'AllocationCodeID': 29683407,

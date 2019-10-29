@@ -173,12 +173,19 @@ class SubIssueType(Picklist):
     pass
 
 
+class LicenseType(Picklist):
+    pass
+
+
 class Resource(TimeStampedModel):
     user_name = models.CharField(max_length=32)
     email = models.CharField(max_length=50)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     active = models.BooleanField(default=False)
+    license_type = models.ForeignKey(
+        'LicenseType', null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         ordering = ('first_name', 'last_name')
