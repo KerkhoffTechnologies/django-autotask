@@ -366,6 +366,13 @@ class TicketSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
         return instance
 
+    def fetch_sync_by_id(self, instance_id):
+        query = Query(self.model_class.__name__)
+        query.WHERE('id', query.Equals, instance_id)
+        ticket = self.at_api_client.query(query).fetch_one()
+        instance, _ = self.update_or_create_instance(ticket)
+        return instance
+
 
 class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
