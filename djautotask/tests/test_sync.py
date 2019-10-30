@@ -26,6 +26,7 @@ class TestTicketSynchronizer(AbstractSynchronizer, TestCase):
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.TicketSynchronizer()
 
         fixture_utils.init_ticket_statuses()
         fixture_utils.init_resources()
@@ -72,6 +73,15 @@ class TestTicketSynchronizer(AbstractSynchronizer, TestCase):
         synchronizer = sync.TicketSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(ticket_qset.count(), 0)
+
+    def test_fetch_sync_by_id(self):
+        test_instance = fixture_utils.generate_objects(
+            'Ticket', fixtures.API_TICKET_LIST)
+        _, patch = mocks.create_mock_call(
+            mocks.WRAPPER_QUERY_METHOD, test_instance)
+        result = self.synchronizer.fetch_sync_by_id(fixtures.API_TICKET['id'])
+        self._assert_sync(result, fixtures.API_TICKET)
+        patch.stop()
 
 
 class AbstractPicklistSynchronizer(object):
