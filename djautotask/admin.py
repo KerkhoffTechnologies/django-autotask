@@ -11,11 +11,16 @@ class TicketSecondaryResourceInline(admin.StackedInline):
 @admin.register(models.Ticket)
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'ticket_number', 'status')
-    search_fields = ('id', 'title', 'ticket_number', 'status')
+    list_filter = ('status',)
+    search_fields = ('id', 'title', 'ticket_number', 'status__label')
 
     inlines = [
         TicketSecondaryResourceInline
     ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('status')
 
 
 @admin.register(models.SyncJob)
@@ -102,7 +107,10 @@ class LicenseTypeAdmin(admin.ModelAdmin):
 
 @admin.register(models.Resource)
 class ResourceAdmin(admin.ModelAdmin):
-    list_display = ('user_name', 'full_name', 'email', 'active')
+    list_display = (
+        'user_name', 'full_name', 'email', 'active', 'license_type'
+    )
+    list_filter = ('active', 'license_type')
     search_fields = ('user_name', 'first_name', 'last_name', 'email')
 
     def full_name(self, obj):
