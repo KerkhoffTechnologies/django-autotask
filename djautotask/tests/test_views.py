@@ -10,8 +10,7 @@ class TestCallBackView(TestCase):
         client = Client()
         body = b'id=7865&number=T20191029.0002&status=New&created_datetime=' \
                b'2019-10-29T14:14:47.64300000-04:00:00&last_activity_dateti' \
-               b'me=2019-10-30T15:06:38.58300000-04:00:00&domain=KERKHOFFSA' \
-               b'NDBOX.COM'
+               b'me=2019-10-30T15:06:38.58300000-04:00:00'
 
         return client.post(
             reverse('djautotask:callback'),
