@@ -22,6 +22,7 @@ class Command(BaseCommand):
         synchronizers = (
             ('ticket_status',
              sync.TicketStatusSynchronizer, _('Ticket Status')),
+            ('license_type', sync.LicenseTypeSynchronizer, _('License Type')),
             ('resource', sync.ResourceSynchronizer, _('Resource')),
             ('ticket_secondary_resource',
              sync.TicketSecondaryResourceSynchronizer,
