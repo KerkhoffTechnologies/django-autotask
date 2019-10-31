@@ -50,22 +50,22 @@ class Ticket(TimeStampedModel):
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
     project = models.ForeignKey(
-        'Project', null=True, on_delete=models.SET_NULL
+        'Project', blank=True, null=True, on_delete=models.SET_NULL
     )
     category = models.ForeignKey(
-        'TicketCategory', null=True, on_delete=models.SET_NULL
+        'TicketCategory', blank=True, null=True, on_delete=models.SET_NULL
     )
     source = models.ForeignKey(
-        'Source', null=True, on_delete=models.SET_NULL
+        'Source', blank=True, null=True, on_delete=models.SET_NULL
     )
     issue_type = models.ForeignKey(
-        'IssueType', null=True, on_delete=models.SET_NULL
+        'IssueType', blank=True, null=True, on_delete=models.SET_NULL
     )
     sub_issue_type = models.ForeignKey(
-        'SubIssueType', null=True, on_delete=models.SET_NULL
+        'SubIssueType', blank=True, null=True, on_delete=models.SET_NULL
     )
     type = models.ForeignKey(
-        'TicketType', null=True, on_delete=models.SET_NULL
+        'TicketType', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     class Meta:
