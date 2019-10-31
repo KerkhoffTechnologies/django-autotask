@@ -235,28 +235,36 @@ class Synchronizer:
 
         result, result_count = self.get_initial_api_result(query)
 
-        if result_count > batch_size:
+        if result_count < batch_size:
+            # No need to create batch queries since the result is less than
+            # the size of the batch, just return the query to be executed.
+            return [query]
 
-            while not finished:
-                query = Query(self.model_class.__name__)
-                query.WHERE('id', query.GreaterThanorEquals, min_id)
+        while not finished:
+            query = Query(self.model_class.__name__)
+            query.WHERE('id', query.GreaterThanorEquals, min_id)
 
-                if limit_index < result_count:
-                    try:
-                        max_id = result[1][1][0][limit_index].id
-                        query.AND('id', query.LessThanOrEquals, max_id)
+            if limit_index < result_count:
+                try:
+                    array = getattr(result, 'EntityResults')
+                    object_list = getattr(array, 'Entity')
 
-                    except IndexError:
-                        pass
+                    max_id = object_list[limit_index].id
+                    query.AND('id', query.LessThanOrEquals, max_id)
+                    min_id = max_id
 
-                else:
+                except AttributeError as e:
+                    logger.error(
+                        'Could not access attributes on the object '
+                        'returned from the API. '
+                        'The error was: {}'.format(e)
+                    )
                     finished = True
+            else:
+                finished = True
 
-                queries.append(query)
-                min_id = max_id
-                limit_index += batch_size
-        else:
             queries.append(query)
+            limit_index += batch_size
 
         return queries
 
