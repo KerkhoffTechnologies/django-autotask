@@ -243,24 +243,17 @@ class Synchronizer:
 
                 if limit_index < result_count:
                     try:
-                        array = getattr(result, 'EntityResults')
-                        object_list = getattr(array, 'Entity')
-
-                        max_id = object_list[limit_index].id
+                        max_id = result[1][1][0][limit_index].id
                         query.AND('id', query.LessThanOrEquals, max_id)
-                        min_id = max_id
 
-                    except AttributeError as e:
-                        logger.error(
-                            'Could not access attributes on the object '
-                            'returned from the API. '
-                            'The error was: {}'.format(e)
-                        )
-                        finished = True
+                    except IndexError:
+                        pass
+
                 else:
                     finished = True
 
                 queries.append(query)
+                min_id = max_id
                 limit_index += batch_size
         else:
             queries.append(query)
