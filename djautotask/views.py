@@ -45,7 +45,7 @@ class CallBackView(views.CsrfExemptMixin,
             return HttpResponseBadRequest(json.dumps(form.errors))
 
         entity_id = form.cleaned_data['id']
-        synchronizer = sync.TicketSynchronizer()
+        synchronizer = sync.TicketSynchronizer
 
         try:
             self.handle(entity_id, synchronizer)
@@ -65,7 +65,7 @@ class CallBackView(views.CsrfExemptMixin,
         Do the interesting stuff here, so that it can be overridden in
         a child class if needed.
         """
-        synchronizer.fetch_sync_by_id(entity_id)
+        synchronizer().fetch_sync_by_id(entity_id)
 
 
 class CallBackForm(forms.Form):
