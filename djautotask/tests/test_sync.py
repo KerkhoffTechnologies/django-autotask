@@ -73,6 +73,9 @@ class TestTicketSynchronizer(AbstractSynchronizer, TestCase):
         synchronizer.sync()
         self.assertEqual(ticket_qset.count(), 0)
 
+    def test_sync_ticket_batches(self):
+        pass
+
 
 class AbstractPicklistSynchronizer(object):
 
