@@ -2,7 +2,7 @@ import requests
 from requests.exceptions import ConnectTimeout, Timeout, ReadTimeout, SSLError
 from io import BytesIO
 import suds.transport as transport
-from atws.wrapper import AutotaskAPIException, ResponseQuery
+from atws.wrapper import AutotaskAPIException, ResponseQuery, Wrapper
 from atws import wrapper, connection, Query
 
 from django.conf import settings
@@ -22,7 +22,7 @@ def init_api_connection(**kwargs):
     url = connection.get_connection_url(**kwargs)
     client_options['url'] = url
 
-    return wrapper.Wrapper(**kwargs)
+    return Wrapper(**kwargs)
 
 
 class AutotaskRequestsTransport(transport.Transport):
