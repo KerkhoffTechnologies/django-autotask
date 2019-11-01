@@ -110,19 +110,21 @@ class Synchronizer:
         sync_job_qset = models.SyncJob.objects.filter(
             entity_name=self.model_class.__name__
         )
+        query = Query(self.model_class.__name__)
 
         if sync_job_qset.exists() and self.last_updated_field \
                 and not self.full:
 
-            query = Query(self.model_class.__name__)
             last_sync_job_time = sync_job_qset.last().start_time
             query.WHERE(self.last_updated_field,
                         query.GreaterThanorEquals, last_sync_job_time)
         else:
-            query = Query(self.model_class.__name__)
             query.WHERE('id', query.GreaterThanorEquals, 0)
 
         try:
+            logger.info(
+                'Fetching {} records.'.format(self.model_class)
+            )
             for record in self.at_api_client.query(query):
                 self.persist_record(record, results)
         except AutotaskAPIException as e:
