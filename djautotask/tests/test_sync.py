@@ -4,7 +4,7 @@ from atws.wrapper import Wrapper
 from djautotask.models import Ticket, TicketStatus, Resource, SyncJob, \
     TicketSecondaryResource, TicketPriority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
-    SubIssueType, TicketType, DisplayColor
+    SubIssueType, TicketType, DisplayColor, LicenseType
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -210,7 +210,7 @@ class TestSubIssueTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_sub_issue_types()
 
 
-class TicketTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestTicketTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
     model_class = TicketType
     fixture = fixtures.API_TICKET_TYPE_LIST
     synchronizer = sync.TicketTypeSynchronizer
@@ -220,7 +220,7 @@ class TicketTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_ticket_types()
 
 
-class DisplayColorSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestDisplayColorSynchronizer(AbstractPicklistSynchronizer, TestCase):
     model_class = DisplayColor
     fixture = fixtures.API_DISPLAY_COLOR_LIST
     synchronizer = sync.DisplayColorSynchronizer
@@ -228,6 +228,16 @@ class DisplayColorSynchronizer(AbstractPicklistSynchronizer, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_display_colors()
+
+
+class TestLicenseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = LicenseType
+    fixture = fixtures.API_LICENSE_TYPE_LIST
+    synchronizer = sync.LicenseTypeSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_license_types()
 
 
 class TestTicketCategorySynchronizer(TestCase):

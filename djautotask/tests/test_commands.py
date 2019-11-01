@@ -204,6 +204,15 @@ class TestDisplayColorCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
+class TestLicenseTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'LicenseType'
+
+    args = (
+        fixtures.API_LICENSE_TYPE_LIST,
+        'license_type',
+    )
+
+
 class TestSyncTicketCategoryCommand(AbstractBaseSyncTest, TestCase):
     args = (
         fixtures.API_TICKET_CATEGORY_LIST,
@@ -270,6 +279,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncSubIssueTypeCommand,
             TestSyncTicketTypeCommand,
             TestDisplayColorCommand,
+            TestLicenseTypeCommand,
         ]
 
         self.test_args = []
@@ -310,6 +320,7 @@ class TestSyncAllCommand(TestCase):
             'sub_issue_type': models.SubIssueType,
             'ticket_type': models.TicketType,
             'display_color': models.DisplayColor,
+            'license_type': models.LicenseType,
         }
         run_sync_command()
         pre_full_sync_counts = {}

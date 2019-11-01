@@ -431,9 +431,19 @@ class DisplayColorSynchronizer(PicklistSynchronizer):
     picklist_field = 'DisplayColorRGB'
 
 
+class LicenseTypeSynchronizer(PicklistSynchronizer):
+    model_class = models.LicenseType
+    entity_type = 'Resource'
+    picklist_field = 'LicenseType'
+
+
 class ResourceSynchronizer(Synchronizer):
     model_class = models.Resource
     last_updated_field = None
+
+    related_meta = {
+        'LicenseType': (models.LicenseType, 'license_type')
+    }
 
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
@@ -442,6 +452,8 @@ class ResourceSynchronizer(Synchronizer):
         instance.first_name = object_data.get('FirstName')
         instance.last_name = object_data.get('LastName')
         instance.active = object_data.get('Active')
+
+        self.set_relations(instance, object_data)
 
         return instance
 

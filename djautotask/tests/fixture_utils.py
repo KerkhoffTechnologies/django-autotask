@@ -138,6 +138,9 @@ def manage_sync_picklist_return_data(wrapper, entity):
         },
         'TicketCategory': {
             'DisplayColorRGB': fixtures.API_DISPLAY_COLOR_LIST,
+        },
+        'Resource': {
+            'LicenseType': fixtures.API_LICENSE_TYPE_LIST,
         }
     }
     client = API_CLIENT
@@ -253,6 +256,14 @@ def init_display_colors():
         'DisplayColorRGB',
         fixtures.API_DISPLAY_COLOR_LIST,
         sync.DisplayColorSynchronizer
+    )
+
+
+def init_license_types():
+    sync_picklist_objects(
+        'LicenseType',
+        fixtures.API_LICENSE_TYPE_LIST,
+        sync.LicenseTypeSynchronizer
     )
 
 

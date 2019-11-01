@@ -173,12 +173,29 @@ class SubIssueType(Picklist):
     pass
 
 
+class LicenseType(Picklist):
+    pass
+
+
+class RegularResourceManager(models.Manager):
+    API_USER_LICENSE_ID = 7
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(
+            license_type=self.API_USER_LICENSE_ID)
+
+
 class Resource(TimeStampedModel):
     user_name = models.CharField(max_length=32)
     email = models.CharField(max_length=50)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     active = models.BooleanField(default=False)
+    license_type = models.ForeignKey(
+        'LicenseType', null=True, on_delete=models.SET_NULL
+    )
+    objects = models.Manager()
+    regular_objects = RegularResourceManager()
 
     class Meta:
         ordering = ('first_name', 'last_name')
