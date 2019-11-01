@@ -115,7 +115,7 @@ class Picklist(TimeStampedModel):
         abstract = True
 
     def __str__(self):
-        return '{}-{}'.format(self.id, self.label)
+        return self.label if self.label else self.pk
 
 
 class TicketStatus(Picklist):
