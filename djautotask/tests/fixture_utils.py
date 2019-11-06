@@ -276,6 +276,8 @@ def init_ticket_categories():
 
 
 def init_tickets():
+    mocks.create_mock_call(
+        'djautotask.sync.TicketSynchronizer._get_query_conditions', None)
     return sync_objects(
         'Ticket',
         fixtures.API_TICKET_LIST,
