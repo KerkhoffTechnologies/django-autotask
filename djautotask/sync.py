@@ -121,6 +121,9 @@ class Synchronizer:
         else:
             query.WHERE('id', query.GreaterThanorEquals, 0)
 
+        # Apply extra conditions if they exist, else nothing happens
+        self._get_query_conditions(query)
+
         try:
             logger.info(
                 'Fetching {} records.'.format(self.model_class)
@@ -218,6 +221,9 @@ class Synchronizer:
         return \
             results.created_count, results.updated_count, results.deleted_count
 
+    def _get_query_conditions(self, query):
+        pass
+
 
 class PicklistSynchronizer(Synchronizer):
     lookup_key = 'Value'
@@ -313,6 +319,19 @@ class TicketSynchronizer(Synchronizer):
         ticket = self.at_api_client.query(query).fetch_one()
         instance, _ = self.update_or_create_instance(ticket)
         return instance
+
+    def _get_query_conditions(self, query):
+        # Don't sync the 'Complete' status. Most if not all tickets end
+        # up here and stay here forever or until deleted. This would cause
+        # ticket syncs to take a very long time.
+        query.open_bracket('AND')
+        query.WHERE(
+            'Status',
+            query.NotEqual,
+            self.at_api_client.picklist['Ticket']['Status']['Complete']
+        )
+        query.close_bracket()
+        return query
 
 
 class TicketPicklistSynchronizer(PicklistSynchronizer):
