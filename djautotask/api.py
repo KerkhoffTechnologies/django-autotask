@@ -1,3 +1,4 @@
+import logging
 import requests
 from requests.exceptions import ConnectTimeout, Timeout, ReadTimeout, SSLError
 from io import BytesIO
@@ -7,6 +8,9 @@ from atws import wrapper, connection, Query
 
 from django.conf import settings
 from djautotask.utils import DjautotaskSettings
+from django.core.cache import cache
+
+logger = logging.getLogger(__name__)
 
 
 def init_api_connection(**kwargs):
@@ -15,14 +19,54 @@ def init_api_connection(**kwargs):
     kwargs['apiversion'] = settings.AUTOTASK_CREDENTIALS['api_version']
     kwargs['integrationcode'] = \
         settings.AUTOTASK_CREDENTIALS['integration_code']
-    kwargs['url'] = settings.AUTOTASK_CREDENTIALS['url']
+    kwargs['username'] = settings.AUTOTASK_CREDENTIALS['username']
 
     client_options['transport'] = AutotaskRequestsTransport()
 
-    url = connection.get_connection_url(**kwargs)
-    client_options['url'] = url
+    client_options['url'] = get_connection_url(**kwargs)
 
     return Wrapper(**kwargs)
+
+
+def get_cached_url(cache_key):
+    return cache.get(cache_key)
+
+
+def get_connection_url(**kwargs):
+    cache_key = 'zone_wsdl_url'
+
+    logger.debug('Fetching Autotask wsdl url from cache.')
+    wsdl_url_from_cache = get_cached_url(cache_key)
+    logger.debug(
+        'Cached Autotask {} was: {}'.format(
+            cache_key,
+            wsdl_url_from_cache
+        )
+    )
+
+    if not wsdl_url_from_cache:
+        url = connection.get_connection_url(**kwargs)
+        cache.set(cache_key, url)
+    else:
+        url = wsdl_url_from_cache
+
+    return url
+
+
+def get_web_url():
+    cache_key = 'zone_web_url'
+    web_url_from_cache = get_cached_url(cache_key)
+
+    if not web_url_from_cache:
+        url = connection.get_zone_info(
+            settings.AUTOTASK_CREDENTIALS['username'],
+            settings.AUTOTASK_CREDENTIALS['api_version']
+        )['WebUrl']
+        cache.set(cache_key, url, timeout=None)
+    else:
+        url = web_url_from_cache
+
+    return url
 
 
 class AutotaskRequestsTransport(transport.Transport):
