@@ -13,6 +13,15 @@ from django.core.cache import cache
 logger = logging.getLogger(__name__)
 
 
+class AtwsTransportError(Exception):
+    """
+    Raise this to indicate exceptions when attempting to get autotask URLs.
+    Atws captures requests.RequestException and re-raises them as
+    transport.TransportError
+    """
+    pass
+
+
 def init_api_connection(**kwargs):
     client_options = kwargs.setdefault('client_options', {})
 
@@ -45,8 +54,13 @@ def get_connection_url(**kwargs):
     )
 
     if not wsdl_url_from_cache:
-        url = connection.get_connection_url(**kwargs)
-        cache.set(cache_key, url)
+        try:
+            url = connection.get_connection_url(**kwargs)
+            cache.set(cache_key, url)
+        except transport.TransportError as e:
+            raise AtwsTransportError(
+                        'Failed to get webservices URL: {}'.format(e)
+            )
     else:
         url = wsdl_url_from_cache
 
@@ -58,11 +72,14 @@ def get_web_url():
     web_url_from_cache = get_cached_url(cache_key)
 
     if not web_url_from_cache:
-        url = connection.get_zone_info(
-            settings.AUTOTASK_CREDENTIALS['username'],
-            settings.AUTOTASK_CREDENTIALS['api_version']
-        )['WebUrl']
-        cache.set(cache_key, url, timeout=None)
+        try:
+            url = connection.get_zone_info(
+                settings.AUTOTASK_CREDENTIALS['username'],
+                settings.AUTOTASK_CREDENTIALS['api_version']
+            )['WebUrl']
+            cache.set(cache_key, url, timeout=None)
+        except transport.TransportError as e:
+            raise AtwsTransportError('Failed to get web URL: {}'.format(e))
     else:
         url = web_url_from_cache
 
