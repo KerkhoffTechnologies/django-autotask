@@ -494,6 +494,12 @@ class ProjectSynchronizer(Synchronizer):
         instance.last_activity_date_time = \
             object_data.get('LastActivityDateTime')
 
+        if instance.description:
+            # Autotask docs say the max description length is 2000
+            # characters but we've seen descriptions that are longer than that.
+            # So truncate the field to 2000 characters just in case.
+            instance.description = instance.description[:2000]
+
         if completed_date:
             instance.completed_date = completed_date.date()
 

@@ -248,7 +248,7 @@ class Project(TimeStampedModel):
         null=True, decimal_places=2, max_digits=9)
     completed_date = models.DateField(null=True)
     completed_percentage = models.PositiveSmallIntegerField(default=0)
-    duration = models.PositiveSmallIntegerField(default=0)
+    duration = models.PositiveIntegerField(default=0)
     start_date = models.DateField(null=True)
     end_date = models.DateField(null=True)
     estimated_time = models.DecimalField(
