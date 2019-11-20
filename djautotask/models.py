@@ -271,3 +271,25 @@ class Project(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+
+class Task(TimeStampedModel):
+    title = models.CharField(blank=True, null=True, max_length=255)
+    number = models.CharField(blank=True, null=True, max_length=50)
+    description = models.CharField(blank=True, null=True, max_length=8000)
+    completed_date = models.DateTimeField(blank=True, null=True)
+    create_date = models.DateTimeField(blank=True, null=True)
+    start_date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+    estimated_hours = models.PositiveIntegerField(default=0)
+    last_activity_date = models.DateTimeField(blank=True, null=True)
+
+    assigned_resource = models.ForeignKey(
+        'Resource', null=True, on_delete=models.SET_NULL
+    )
+    project = models.ForeignKey(
+        'Project', null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return self.title
