@@ -1,7 +1,7 @@
 import logging
 
 from suds.client import Client
-from atws.wrapper import AutotaskAPIException
+from atws.wrapper import AutotaskProcessException, AutotaskAPIException
 from atws import Query, helpers, picklist
 from django.db import transaction, IntegrityError
 from django.utils import timezone
@@ -130,9 +130,11 @@ class Synchronizer:
             )
             for record in self.at_api_client.query(query):
                 self.persist_record(record, results)
-        except AutotaskAPIException as e:
+
+        except (AutotaskProcessException, AutotaskAPIException) as e:
+            msg = ' '.join(e.message.split())
             logger.error(
-                'Failed to fetch {} object. {}'.format(self.model_class, e)
+                'Failed to fetch {} object. {}'.format(self.model_class, msg)
             )
 
         return results
