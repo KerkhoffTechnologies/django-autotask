@@ -1,7 +1,6 @@
 import logging
 import requests
-from requests.exceptions import ConnectTimeout, Timeout, ReadTimeout, \
-    SSLError, ConnectionError
+from requests.exceptions import RequestException
 from io import BytesIO
 import suds.transport as transport
 from atws.wrapper import AutotaskAPIException, ResponseQuery, Wrapper
@@ -120,8 +119,7 @@ class AutotaskRequestsTransport(transport.Transport):
             try:
                 resp = self.session.get(request.url, timeout=self.timeout)
                 break
-            except (SSLError, ConnectTimeout, Timeout,
-                    ConnectionError, ReadTimeout) as e:
+            except RequestException as e:
                 if attempt == self.max_attempts:
                     response = self.format_error_message(e)
                     raise AutotaskAPIException(response)
@@ -139,7 +137,7 @@ class AutotaskRequestsTransport(transport.Transport):
                     timeout=self.max_attempts
                 )
                 break
-            except (SSLError, Timeout, ConnectionError) as e:
+            except RequestException as e:
                 if attempt == self.max_attempts:
                     response = self.format_error_message(e)
                     raise AutotaskAPIException(response)
