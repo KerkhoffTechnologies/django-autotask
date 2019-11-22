@@ -134,7 +134,7 @@ class AutotaskRequestsTransport(transport.Transport):
                     request.url,
                     data=request.message,
                     headers=request.headers,
-                    timeout=self.max_attempts
+                    timeout=self.timeout
                 )
                 break
             except RequestException as e:

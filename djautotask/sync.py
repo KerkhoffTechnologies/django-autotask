@@ -134,7 +134,7 @@ class Synchronizer:
         except (AutotaskProcessException, AutotaskAPIException) as e:
             msg = ' '.join(e.message.split())
             logger.error(
-                'Failed to fetch {} object. {}'.format(self.model_class, msg)
+                'Failed to fetch {} object. {}.'.format(self.model_class, msg)
             )
 
         return results
