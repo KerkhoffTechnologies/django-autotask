@@ -20,8 +20,7 @@ class Command(BaseCommand):
         # now.
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
-            ('ticket_status',
-             sync.TicketStatusSynchronizer, _('Ticket Status')),
+            ('status', sync.StatusSynchronizer, _('Status')),
             ('license_type', sync.LicenseTypeSynchronizer, _('License Type')),
             ('resource', sync.ResourceSynchronizer, _('Resource')),
             ('ticket_secondary_resource',
@@ -35,6 +34,10 @@ class Command(BaseCommand):
              sync.ProjectStatusSynchronizer, _('Project Status')),
             ('project_type', sync.ProjectTypeSynchronizer, _('Project Type')),
             ('project', sync.ProjectSynchronizer, _('Project')),
+            ('task_secondary_resource',
+             sync.TaskSecondaryResourceSynchronizer,
+             _('Task Secondary Resource')),
+            ('task', sync.TaskSynchronizer, _('Task')),
             ('display_color', sync.DisplayColorSynchronizer,
              _('Display Color')),
             ('ticket_category', sync.TicketCategorySynchronizer,

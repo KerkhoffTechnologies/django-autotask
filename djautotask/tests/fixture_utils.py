@@ -92,6 +92,8 @@ def manage_full_sync_return_data(value):
         'Account': fixtures.API_ACCOUNT_LIST,
         'Project': fixtures.API_PROJECT_LIST,
         'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
+        'Task': fixtures.API_TASK_LIST,
+        'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -183,7 +185,7 @@ def init_ticket_statuses():
     sync_picklist_objects(
         'Status',
         fixtures.API_TICKET_STATUS_LIST,
-        sync.TicketStatusSynchronizer
+        sync.StatusSynchronizer
     )
 
 

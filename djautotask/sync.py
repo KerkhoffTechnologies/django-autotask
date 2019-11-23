@@ -285,7 +285,7 @@ class TicketSynchronizer(Synchronizer):
     last_updated_field = 'LastActivityDate'
 
     related_meta = {
-        'Status': (models.TicketStatus, 'status'),
+        'Status': (models.Status, 'status'),
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
         'Priority': (models.TicketPriority, 'priority'),
         'QueueID': (models.Queue, 'queue'),
@@ -338,8 +338,8 @@ class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
 
 
-class TicketStatusSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.TicketStatus
+class StatusSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.Status
     picklist_field = 'Status'
 
 
@@ -508,6 +508,53 @@ class ProjectSynchronizer(Synchronizer):
 
         if start_date:
             instance.start_date = start_date.date()
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class TaskSynchronizer(Synchronizer):
+    model_class = models.Task
+    last_updated_field = 'LastActivityDateTime'
+
+    related_meta = {
+        'ResourceID': (models.Resource, 'resource'),
+        'ProjectID': (models.Project, 'project'),
+        'Status': (models.Status, 'status'),
+        'Priority': (models.TicketPriority, 'priority'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('Title')
+        instance.number = object_data.get('TaskNumber')
+        instance.description = object_data.get('Description')
+        instance.completed_date = object_data.get('CompletedDateTime')
+        instance.create_date = object_data.get('CreateDateTime')
+        instance.start_date = object_data.get('StartDateTime')
+        instance.end_date = object_data.get('EndDateTime')
+        instance.estimated_hours = object_data.get('EstimatedHours')
+        instance.remaining_hours = object_data.get('RemainingHours')
+        instance.last_activity_date = object_data.get('LastActivityDateTime')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class TaskSecondaryResourceSynchronizer(Synchronizer):
+    model_class = models.TaskSecondaryResource
+    last_updated_field = None
+
+    related_meta = {
+        'ResourceID': (models.Resource, 'resource'),
+        'TaskID': (models.Task, 'task'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
 
         self.set_relations(instance, object_data)
 

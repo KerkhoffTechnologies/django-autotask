@@ -114,12 +114,12 @@ class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_ticket_statuses()
 
 
-class TestSyncTicketStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
+class TestSyncStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'Status'
 
     args = (
         fixtures.API_TICKET_STATUS_LIST,
-        'ticket_status',
+        'status',
     )
 
 
@@ -249,6 +249,20 @@ class TestSyncProjectCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncTaskCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TASK_LIST,
+        'task',
+    )
+
+
+class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
+        'task_secondary_resource',
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -266,7 +280,7 @@ class TestSyncAllCommand(TestCase):
 
         sync_test_cases = [
             TestSyncTicketCommand,
-            TestSyncTicketStatusCommand,
+            TestSyncStatusCommand,
             TestSyncResourceCommand,
             TestSyncTicketPriorityCommand,
             TestSyncQueueCommand,
@@ -281,6 +295,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncTicketTypeCommand,
             TestDisplayColorCommand,
             TestLicenseTypeCommand,
+            TestSyncTaskCommand,
+            TestSyncTaskSecondaryResourceCommand,
         ]
 
         self.test_args = []
@@ -305,7 +321,7 @@ class TestSyncAllCommand(TestCase):
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
         at_object_map = {
-            'ticket_status': models.TicketStatus,
+            'status': models.Status,
             'ticket': models.Ticket,
             'resource': models.Resource,
             'ticket_secondary_resource': models.TicketSecondaryResource,
@@ -322,6 +338,8 @@ class TestSyncAllCommand(TestCase):
             'ticket_type': models.TicketType,
             'display_color': models.DisplayColor,
             'license_type': models.LicenseType,
+            'task': models.Task,
+            'task_secondary_resource': models.TaskSecondaryResource,
         }
         run_sync_command()
         pre_full_sync_counts = {}

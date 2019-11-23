@@ -501,3 +501,46 @@ API_TICKET = {
 }
 
 API_TICKET_LIST = [API_TICKET]
+
+API_TASK = {
+    'id': 7733,
+    'UserDefinedFields': None,
+    'AllocationCodeID': 29683415,
+    'AssignedResourceID': 29683663,
+    'AssignedResourceRoleID': 29682834,
+    'CanClientPortalUserCompleteTask': False,
+    'CreateDateTime': '2012-06-18 17:50:31+01:00',
+    'CreatorResourceID': 4,
+    'DepartmentID': 29683385,
+    'Description': 'Review modular code',
+    'EndDateTime': '2012-09-03 05:00:00+01:00',
+    'EstimatedHours': 5.0,
+    'ExternalID': None,
+    'HoursToBeScheduled': 5.0,
+    'IsVisibleInClientPortal': True,
+    'LastActivityDateTime': '2019-11-05 00:28:25.490000+00:00',
+    'PhaseID': 7732,
+    'Priority': 0,
+    'ProjectID': 4,
+    'PurchaseOrderNumber': None,
+    'RemainingHours': 5.0,
+    'StartDateTime': '2012-08-27 05:00:00+01:00',
+    'Status': 1,
+    'TaskIsBillable': False,
+    'TaskNumber': 'T20120604.0012',
+    'TaskType': 1,
+    'Title': 'Review modular code',
+    'CreatorType': 1,
+    'LastActivityResourceID': 29683968,
+    'LastActivityPersonType': 1,
+}
+API_TASK_LIST = [API_TASK]
+
+API_TASK_SECONDARY_RESOURCE = {
+    'id': 29684411,
+    'UserDefinedFields': None,
+    'TaskID': 8488,
+    'ResourceID': 29683463,
+    'RoleID': 29683461,
+}
+API_TASK_SECONDARY_RESOURCE_LIST = [API_TASK_SECONDARY_RESOURCE]

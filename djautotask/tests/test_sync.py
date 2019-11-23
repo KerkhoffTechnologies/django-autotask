@@ -1,7 +1,7 @@
 from django.test import TestCase
 from atws.wrapper import Wrapper
 
-from djautotask.models import Ticket, TicketStatus, Resource, SyncJob, \
+from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, TicketPriority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType
@@ -122,10 +122,10 @@ class AbstractPicklistSynchronizer(object):
         self.assertEqual(qset.count(), 0)
 
 
-class TestTicketStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
-    model_class = TicketStatus
+class TestStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = Status
     fixture = fixtures.API_TICKET_STATUS_LIST
-    synchronizer = sync.TicketStatusSynchronizer
+    synchronizer = sync.StatusSynchronizer
 
     def setUp(self):
         super().setUp()

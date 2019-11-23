@@ -31,7 +31,7 @@ class Ticket(TimeStampedModel):
     title = models.CharField(blank=True, null=True, max_length=255)
 
     status = models.ForeignKey(
-        'TicketStatus', blank=True, null=True, on_delete=models.SET_NULL
+        'Status', blank=True, null=True, on_delete=models.SET_NULL
     )
     priority = models.ForeignKey(
         'TicketPriority', blank=True, null=True, on_delete=models.SET_NULL
@@ -118,11 +118,11 @@ class Picklist(TimeStampedModel):
         return self.label if self.label else self.pk
 
 
-class TicketStatus(Picklist):
+class Status(Picklist):
     pass
 
     class Meta:
-        verbose_name_plural = 'Ticket statuses'
+        verbose_name_plural = 'Statuses'
 
 
 class TicketPriority(Picklist):
@@ -282,6 +282,7 @@ class Task(TimeStampedModel):
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     estimated_hours = models.PositiveIntegerField(default=0)
+    remaining_hours = models.PositiveIntegerField(default=0)
     last_activity_date = models.DateTimeField(blank=True, null=True)
 
     assigned_resource = models.ForeignKey(
@@ -290,6 +291,24 @@ class Task(TimeStampedModel):
     project = models.ForeignKey(
         'Project', null=True, on_delete=models.SET_NULL
     )
+    priority_label = models.ForeignKey(
+        'TicketPriority', null=True, on_delete=models.SET_NULL
+    )
+    status = models.ForeignKey(
+        'Status', null=True, on_delete=models.SET_NULL
+    )
 
     def __str__(self):
         return self.title
+
+
+class TaskSecondaryResource(TimeStampedModel):
+    resource = models.ForeignKey(
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    task = models.ForeignKey(
+        'Task', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return '{} {}'.format(self.resource, self.task)
