@@ -263,7 +263,7 @@ class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncAllCommand(TestCase):
+class TestSyncAllCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
