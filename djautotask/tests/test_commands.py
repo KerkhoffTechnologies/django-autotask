@@ -128,7 +128,7 @@ class TestSyncPriorityCommand(AbstractPicklistSyncCommandTest, TestCase):
 
     args = (
         fixtures.API_TICKET_PRIORITY_LIST,
-        'ticket_priority',
+        'priority',
     )
 
 
@@ -325,7 +325,7 @@ class TestSyncAllCommand(TestCase):
             'ticket': models.Ticket,
             'resource': models.Resource,
             'ticket_secondary_resource': models.TicketSecondaryResource,
-            'ticket_priority': models.Priority,
+            'priority': models.Priority,
             'queue': models.Queue,
             'account': models.Account,
             'project': models.Project,
