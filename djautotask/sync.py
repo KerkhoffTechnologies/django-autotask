@@ -280,7 +280,24 @@ class PicklistSynchronizer(Synchronizer):
         return instance
 
 
-class TicketSynchronizer(Synchronizer):
+class QueryConditionMixin:
+
+    def _get_query_conditions(self, query):
+        # Don't sync the 'Complete' status for tickets and tasks.
+        # Most if not all tickets/tasks end up here and stay here forever
+        # or until deleted.
+        # This would cause ticket/task syncs to take a very long time.
+        query.open_bracket('AND')
+        query.WHERE(
+            'Status',
+            query.NotEqual,
+            self.at_api_client.picklist['Ticket']['Status']['Complete']
+        )
+        query.close_bracket()
+        return query
+
+
+class TicketSynchronizer(Synchronizer, QueryConditionMixin):
     model_class = models.Ticket
     last_updated_field = 'LastActivityDate'
 
@@ -319,19 +336,6 @@ class TicketSynchronizer(Synchronizer):
         ticket = self.at_api_client.query(query).fetch_one()
         instance, _ = self.update_or_create_instance(ticket)
         return instance
-
-    def _get_query_conditions(self, query):
-        # Don't sync the 'Complete' status. Most if not all tickets end
-        # up here and stay here forever or until deleted. This would cause
-        # ticket syncs to take a very long time.
-        query.open_bracket('AND')
-        query.WHERE(
-            'Status',
-            query.NotEqual,
-            self.at_api_client.picklist['Ticket']['Status']['Complete']
-        )
-        query.close_bracket()
-        return query
 
 
 class TicketPicklistSynchronizer(PicklistSynchronizer):
@@ -514,7 +518,7 @@ class ProjectSynchronizer(Synchronizer):
         return instance
 
 
-class TaskSynchronizer(Synchronizer):
+class TaskSynchronizer(Synchronizer, QueryConditionMixin):
     model_class = models.Task
     last_updated_field = 'LastActivityDateTime'
 
