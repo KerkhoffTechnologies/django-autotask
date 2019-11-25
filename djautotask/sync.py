@@ -525,10 +525,10 @@ class TaskSynchronizer(Synchronizer, QueryConditionMixin):
     last_updated_field = 'LastActivityDateTime'
 
     related_meta = {
-        'ResourceID': (models.Resource, 'resource'),
+        'AssignedResourceID': (models.Resource, 'assigned_resource'),
         'ProjectID': (models.Project, 'project'),
         'Status': (models.Status, 'status'),
-        'Priority': (models.Priority, 'priority'),
+        'PriorityLabel': (models.Priority, 'priority'),
     }
 
     def _assign_field_data(self, instance, object_data):

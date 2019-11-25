@@ -181,7 +181,7 @@ def sync_picklist_objects(entity_type, fixture, sync_class):
     return synchronizer.sync()
 
 
-def init_ticket_statuses():
+def init_statuses():
     sync_picklist_objects(
         'Status',
         fixtures.API_TICKET_STATUS_LIST,
@@ -189,7 +189,7 @@ def init_ticket_statuses():
     )
 
 
-def init_ticket_priorities():
+def init_priorities():
     sync_picklist_objects(
         'Priority',
         fixtures.API_TICKET_PRIORITY_LIST,
@@ -316,4 +316,20 @@ def init_projects():
         'Project',
         fixtures.API_PROJECT_LIST,
         sync.ProjectSynchronizer
+    )
+
+
+def init_tasks():
+    sync_objects(
+        'Task',
+        fixtures.API_TASK_LIST,
+        sync.TaskSynchronizer
+    )
+
+
+def init_task_secondary_resources():
+    sync_objects(
+        'TaskSecondaryResource',
+        fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
+        sync.TaskSecondaryResourceSynchronizer
     )

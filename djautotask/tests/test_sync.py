@@ -4,7 +4,8 @@ from atws.wrapper import Wrapper
 from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, Priority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
-    SubIssueType, TicketType, DisplayColor, LicenseType
+    SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
+    TaskSecondaryResource
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -20,7 +21,7 @@ class TestTicketSynchronizer(TestCase):
         super().setUp()
         self.synchronizer = sync.TicketSynchronizer()
 
-        fixture_utils.init_ticket_statuses()
+        fixture_utils.init_statuses()
         fixture_utils.init_resources()
         fixture_utils.init_tickets()
 
@@ -129,7 +130,7 @@ class TestStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_ticket_statuses()
+        fixture_utils.init_statuses()
 
 
 class TestPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
@@ -139,7 +140,7 @@ class TestPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_ticket_priorities()
+        fixture_utils.init_priorities()
 
 
 class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
@@ -435,3 +436,96 @@ class TestProjectSynchronizer(TestCase):
         synchronizer = sync.ProjectSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(project_qset.count(), 0)
+
+
+class TestTaskSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_connection(Wrapper)
+
+        fixture_utils.init_resources()
+        fixture_utils.init_statuses()
+        fixture_utils.init_priorities()
+        fixture_utils.init_projects()
+        fixture_utils.init_tasks()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.title, object_data['Title'])
+        self.assertEqual(instance.number, object_data['TaskNumber'])
+        self.assertEqual(instance.completed_date,
+                         object_data['CompletedDateTime'])
+        self.assertEqual(instance.create_date, object_data['CreateDateTime'])
+        self.assertEqual(instance.start_date, object_data['StartDateTime'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(instance.remaining_hours,
+                         object_data['RemainingHours'])
+        self.assertEqual(instance.estimated_hours,
+                         object_data['EstimatedHours'])
+        self.assertEqual(instance.last_activity_date,
+                         object_data['LastActivityDateTime'])
+
+        self.assertEqual(instance.status.id, object_data['Status'])
+        self.assertEqual(instance.priority.id, object_data['PriorityLabel'])
+        self.assertEqual(instance.project.id, object_data['ProjectID'])
+        self.assertEqual(instance.assigned_resource.id,
+                         object_data['AssignedResourceID'])
+
+    def test_sync_task(self):
+        """
+        Test to ensure task synchronizer saves a Task instance locally.
+        """
+        self.assertGreater(Task.objects.all().count(), 0)
+
+        object_data = fixtures.API_TASK
+        instance = Task.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(Task)
+
+    def test_delete_stale_tasks(self):
+        """
+        Local task should be deleted if not returned during a full sync
+        """
+        task_id = fixtures.API_TASK['id']
+        task_qset = Task.objects.filter(id=task_id)
+        self.assertEqual(task_qset.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.TaskSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(task_qset.count(), 0)
+
+
+class TestTaskSecondaryResourceSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_resources()
+        fixture_utils.init_tasks()
+        fixture_utils.init_task_secondary_resources()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.resource.id, object_data['ResourceID'])
+        self.assertEqual(instance.task.id, object_data['TaskID'])
+
+    def test_sync_task_secondary_resource(self):
+        self.assertGreater(TaskSecondaryResource.objects.all().count(), 0)
+        object_data = fixtures.API_TASK_SECONDARY_RESOURCE
+        instance = TaskSecondaryResource.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TaskSecondaryResource)
+
+    def test_delete_task_secondary_resource(self):
+        secondary_resources_qset = TaskSecondaryResource.objects.all()
+        self.assertEqual(secondary_resources_qset.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.TaskSecondaryResourceSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(secondary_resources_qset.count(), 0)

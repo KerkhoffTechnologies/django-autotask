@@ -111,7 +111,7 @@ class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_ticket_statuses()
+        fixture_utils.init_statuses()
 
 
 class TestSyncStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
@@ -263,7 +263,7 @@ class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncAllCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncAllCommand(TestCase):
 
     def setUp(self):
         super().setUp()

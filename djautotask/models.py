@@ -291,7 +291,7 @@ class Task(TimeStampedModel):
     project = models.ForeignKey(
         'Project', null=True, on_delete=models.SET_NULL
     )
-    priority_label = models.ForeignKey(
+    priority = models.ForeignKey(
         'Priority', null=True, on_delete=models.SET_NULL
     )
     status = models.ForeignKey(
