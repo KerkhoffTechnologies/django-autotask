@@ -193,7 +193,7 @@ def init_ticket_priorities():
     sync_picklist_objects(
         'Priority',
         fixtures.API_TICKET_PRIORITY_LIST,
-        sync.TicketPrioritySynchronizer
+        sync.PrioritySynchronizer
     )
 
 

@@ -123,7 +123,7 @@ class TestSyncStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
-class TestSyncTicketPriorityCommand(AbstractPicklistSyncCommandTest, TestCase):
+class TestSyncPriorityCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'Priority'
 
     args = (
@@ -282,7 +282,7 @@ class TestSyncAllCommand(AbstractBaseSyncTest, TestCase):
             TestSyncTicketCommand,
             TestSyncStatusCommand,
             TestSyncResourceCommand,
-            TestSyncTicketPriorityCommand,
+            TestSyncPriorityCommand,
             TestSyncQueueCommand,
             TestSyncAccountCommand,
             TestSyncProjectCommand,
@@ -325,7 +325,7 @@ class TestSyncAllCommand(AbstractBaseSyncTest, TestCase):
             'ticket': models.Ticket,
             'resource': models.Resource,
             'ticket_secondary_resource': models.TicketSecondaryResource,
-            'ticket_priority': models.TicketPriority,
+            'ticket_priority': models.Priority,
             'queue': models.Queue,
             'account': models.Account,
             'project': models.Project,

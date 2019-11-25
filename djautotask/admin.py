@@ -50,8 +50,8 @@ class StatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
-@admin.register(models.TicketPriority)
-class TicketPriorityAdmin(admin.ModelAdmin):
+@admin.register(models.Priority)
+class PriorityAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 

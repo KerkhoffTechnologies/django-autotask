@@ -27,7 +27,7 @@ class Command(BaseCommand):
              sync.TicketSecondaryResourceSynchronizer,
              _('Ticket Secondary Resource')),
             ('ticket_priority',
-             sync.TicketPrioritySynchronizer, _('Ticket Priority')),
+             sync.PrioritySynchronizer, _('Ticket Priority')),
             ('queue', sync.QueueSynchronizer, _('Queue')),
             ('account', sync.AccountSynchronizer, _('Account')),
             ('project_status',

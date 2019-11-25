@@ -34,7 +34,7 @@ class Ticket(TimeStampedModel):
         'Status', blank=True, null=True, on_delete=models.SET_NULL
     )
     priority = models.ForeignKey(
-        'TicketPriority', blank=True, null=True, on_delete=models.SET_NULL
+        'Priority', blank=True, null=True, on_delete=models.SET_NULL
     )
     assigned_resource = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.SET_NULL
@@ -125,11 +125,11 @@ class Status(Picklist):
         verbose_name_plural = 'Statuses'
 
 
-class TicketPriority(Picklist):
+class Priority(Picklist):
     pass
 
     class Meta:
-        verbose_name_plural = 'Ticket priorities'
+        verbose_name_plural = 'Priorities'
 
 
 class Queue(Picklist):
@@ -292,7 +292,7 @@ class Task(TimeStampedModel):
         'Project', null=True, on_delete=models.SET_NULL
     )
     priority_label = models.ForeignKey(
-        'TicketPriority', null=True, on_delete=models.SET_NULL
+        'Priority', null=True, on_delete=models.SET_NULL
     )
     status = models.ForeignKey(
         'Status', null=True, on_delete=models.SET_NULL

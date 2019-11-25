@@ -304,7 +304,7 @@ class TicketSynchronizer(Synchronizer, QueryConditionMixin):
     related_meta = {
         'Status': (models.Status, 'status'),
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
-        'Priority': (models.TicketPriority, 'priority'),
+        'Priority': (models.Priority, 'priority'),
         'QueueID': (models.Queue, 'queue'),
         'AccountID': (models.Account, 'account'),
         'ProjectID': (models.Project, 'project'),
@@ -347,8 +347,8 @@ class StatusSynchronizer(TicketPicklistSynchronizer):
     picklist_field = 'Status'
 
 
-class TicketPrioritySynchronizer(TicketPicklistSynchronizer):
-    model_class = models.TicketPriority
+class PrioritySynchronizer(TicketPicklistSynchronizer):
+    model_class = models.Priority
     picklist_field = 'Priority'
 
 
@@ -526,7 +526,7 @@ class TaskSynchronizer(Synchronizer, QueryConditionMixin):
         'ResourceID': (models.Resource, 'resource'),
         'ProjectID': (models.Project, 'project'),
         'Status': (models.Status, 'status'),
-        'Priority': (models.TicketPriority, 'priority'),
+        'Priority': (models.Priority, 'priority'),
     }
 
     def _assign_field_data(self, instance, object_data):

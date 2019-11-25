@@ -2,7 +2,7 @@ from django.test import TestCase
 from atws.wrapper import Wrapper
 
 from djautotask.models import Ticket, Status, Resource, SyncJob, \
-    TicketSecondaryResource, TicketPriority, Queue, Account, Project, \
+    TicketSecondaryResource, Priority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType
 from djautotask import sync
@@ -132,10 +132,10 @@ class TestStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_ticket_statuses()
 
 
-class TestTicketPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
-    model_class = TicketPriority
+class TestPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = Priority
     fixture = fixtures.API_TICKET_PRIORITY_LIST
-    synchronizer = sync.TicketPrioritySynchronizer
+    synchronizer = sync.PrioritySynchronizer
 
     def setUp(self):
         super().setUp()
