@@ -136,8 +136,9 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(models.Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'number')
-    search_fields = ('id', 'title', 'number')
+    list_display = ('id', 'title', 'number', 'status')
+    list_filter = ('status', )
+    search_fields = ('id', 'title', 'number', 'status')
 
 
 @admin.register(models.TaskSecondaryResource)

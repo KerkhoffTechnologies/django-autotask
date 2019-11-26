@@ -320,6 +320,8 @@ def init_projects():
 
 
 def init_tasks():
+    mocks.create_mock_call(
+        'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
     sync_objects(
         'Task',
         fixtures.API_TASK_LIST,

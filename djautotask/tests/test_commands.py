@@ -255,6 +255,11 @@ class TestSyncTaskCommand(AbstractBaseSyncTest, TestCase):
         'task',
     )
 
+    def setUp(self):
+        super().setUp()
+        mocks.create_mock_call(
+            'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
+
 
 class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     args = (
@@ -268,6 +273,8 @@ class TestSyncAllCommand(TestCase):
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
+        mocks.create_mock_call(
+            'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
 
         # Mock API calls to return values based on what entity
         # is being requested

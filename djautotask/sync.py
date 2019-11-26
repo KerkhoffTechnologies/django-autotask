@@ -299,7 +299,7 @@ class QueryConditionMixin:
         return query
 
 
-class TicketSynchronizer(Synchronizer, QueryConditionMixin):
+class TicketSynchronizer(QueryConditionMixin, Synchronizer):
     model_class = models.Ticket
     last_updated_field = 'LastActivityDate'
 
@@ -520,7 +520,7 @@ class ProjectSynchronizer(Synchronizer):
         return instance
 
 
-class TaskSynchronizer(Synchronizer, QueryConditionMixin):
+class TaskSynchronizer(QueryConditionMixin, Synchronizer):
     model_class = models.Task
     last_updated_field = 'LastActivityDateTime'
 
