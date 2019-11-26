@@ -125,7 +125,7 @@ class AbstractPicklistSynchronizer(object):
 
 class TestStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
     model_class = Status
-    fixture = fixtures.API_TICKET_STATUS_LIST
+    fixture = fixtures.API_STATUS_LIST
     synchronizer = sync.StatusSynchronizer
 
     def setUp(self):
@@ -135,7 +135,7 @@ class TestStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
 
 class TestPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
     model_class = Priority
-    fixture = fixtures.API_TICKET_PRIORITY_LIST
+    fixture = fixtures.API_PRIORITY_LIST
     synchronizer = sync.PrioritySynchronizer
 
     def setUp(self):

@@ -118,7 +118,7 @@ class TestSyncStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'Status'
 
     args = (
-        fixtures.API_TICKET_STATUS_LIST,
+        fixtures.API_STATUS_LIST,
         'status',
     )
 
@@ -127,7 +127,7 @@ class TestSyncPriorityCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'Priority'
 
     args = (
-        fixtures.API_TICKET_PRIORITY_LIST,
+        fixtures.API_PRIORITY_LIST,
         'priority',
     )
 
