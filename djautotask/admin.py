@@ -45,13 +45,13 @@ class SyncJobAdmin(admin.ModelAdmin):
     duration_or_zero.short_description = 'Duration'
 
 
-@admin.register(models.TicketStatus)
-class TicketStatusAdmin(admin.ModelAdmin):
+@admin.register(models.Status)
+class StatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
-@admin.register(models.TicketPriority)
-class TicketPriorityAdmin(admin.ModelAdmin):
+@admin.register(models.Priority)
+class PriorityAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
@@ -132,3 +132,15 @@ class AccountAdmin(admin.ModelAdmin):
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'number')
     search_fields = ('id', 'name', 'number')
+
+
+@admin.register(models.Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'number', 'status')
+    list_filter = ('status', )
+    search_fields = ('id', 'title', 'number', 'status')
+
+
+@admin.register(models.TaskSecondaryResource)
+class TaskSecondaryResourceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'resource', 'task')
