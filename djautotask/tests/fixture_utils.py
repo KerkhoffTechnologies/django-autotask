@@ -126,8 +126,8 @@ def manage_sync_picklist_return_data(wrapper, entity):
     """
     fixture_dict = {
         'Ticket': {
-            'Status': fixtures.API_TICKET_STATUS_LIST,
-            'Priority': fixtures.API_TICKET_PRIORITY_LIST,
+            'Status': fixtures.API_STATUS_LIST,
+            'Priority': fixtures.API_PRIORITY_LIST,
             'QueueID': fixtures.API_QUEUE_LIST,
             'Source': fixtures.API_SOURCE_LIST,
             'IssueType': fixtures.API_ISSUE_TYPE_LIST,
@@ -184,7 +184,7 @@ def sync_picklist_objects(entity_type, fixture, sync_class):
 def init_statuses():
     sync_picklist_objects(
         'Status',
-        fixtures.API_TICKET_STATUS_LIST,
+        fixtures.API_STATUS_LIST,
         sync.StatusSynchronizer
     )
 
@@ -192,7 +192,7 @@ def init_statuses():
 def init_priorities():
     sync_picklist_objects(
         'Priority',
-        fixtures.API_TICKET_PRIORITY_LIST,
+        fixtures.API_PRIORITY_LIST,
         sync.PrioritySynchronizer
     )
 
