@@ -282,14 +282,31 @@ class PicklistSynchronizer(Synchronizer):
         return instance
 
 
-class TicketSynchronizer(Synchronizer):
+class QueryConditionMixin:
+
+    def _get_query_conditions(self, query):
+        # Don't sync the 'Complete' status for tickets and tasks.
+        # Most if not all tickets/tasks end up here and stay here forever
+        # or until deleted.
+        # This would cause ticket/task syncs to take a very long time.
+        query.open_bracket('AND')
+        query.WHERE(
+            'Status',
+            query.NotEqual,
+            self.at_api_client.picklist['Ticket']['Status']['Complete']
+        )
+        query.close_bracket()
+        return query
+
+
+class TicketSynchronizer(QueryConditionMixin, Synchronizer):
     model_class = models.Ticket
     last_updated_field = 'LastActivityDate'
 
     related_meta = {
-        'Status': (models.TicketStatus, 'status'),
+        'Status': (models.Status, 'status'),
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
-        'Priority': (models.TicketPriority, 'priority'),
+        'Priority': (models.Priority, 'priority'),
         'QueueID': (models.Queue, 'queue'),
         'AccountID': (models.Account, 'account'),
         'ProjectID': (models.Project, 'project'),
@@ -322,31 +339,18 @@ class TicketSynchronizer(Synchronizer):
         instance, _ = self.update_or_create_instance(ticket)
         return instance
 
-    def _get_query_conditions(self, query):
-        # Don't sync the 'Complete' status. Most if not all tickets end
-        # up here and stay here forever or until deleted. This would cause
-        # ticket syncs to take a very long time.
-        query.open_bracket('AND')
-        query.WHERE(
-            'Status',
-            query.NotEqual,
-            self.at_api_client.picklist['Ticket']['Status']['Complete']
-        )
-        query.close_bracket()
-        return query
-
 
 class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
 
 
-class TicketStatusSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.TicketStatus
+class StatusSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.Status
     picklist_field = 'Status'
 
 
-class TicketPrioritySynchronizer(TicketPicklistSynchronizer):
-    model_class = models.TicketPriority
+class PrioritySynchronizer(TicketPicklistSynchronizer):
+    model_class = models.Priority
     picklist_field = 'Priority'
 
 
@@ -510,6 +514,53 @@ class ProjectSynchronizer(Synchronizer):
 
         if start_date:
             instance.start_date = start_date.date()
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class TaskSynchronizer(QueryConditionMixin, Synchronizer):
+    model_class = models.Task
+    last_updated_field = 'LastActivityDateTime'
+
+    related_meta = {
+        'AssignedResourceID': (models.Resource, 'assigned_resource'),
+        'ProjectID': (models.Project, 'project'),
+        'Status': (models.Status, 'status'),
+        'PriorityLabel': (models.Priority, 'priority'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('Title')
+        instance.number = object_data.get('TaskNumber')
+        instance.description = object_data.get('Description')
+        instance.completed_date = object_data.get('CompletedDateTime')
+        instance.create_date = object_data.get('CreateDateTime')
+        instance.start_date = object_data.get('StartDateTime')
+        instance.end_date = object_data.get('EndDateTime')
+        instance.estimated_hours = object_data.get('EstimatedHours')
+        instance.remaining_hours = object_data.get('RemainingHours')
+        instance.last_activity_date = object_data.get('LastActivityDateTime')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class TaskSecondaryResourceSynchronizer(Synchronizer):
+    model_class = models.TaskSecondaryResource
+    last_updated_field = None
+
+    related_meta = {
+        'ResourceID': (models.Resource, 'resource'),
+        'TaskID': (models.Task, 'task'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
 
         self.set_relations(instance, object_data)
 
