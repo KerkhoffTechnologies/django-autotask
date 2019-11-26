@@ -9,7 +9,6 @@ settings.configure(
     INSTALLED_APPS=(
         'djautotask',
     ),
-    DJAUTOTASK_API_BATCH_LIMIT=25,
 )
 
 
