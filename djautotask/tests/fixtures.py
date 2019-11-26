@@ -235,7 +235,7 @@ API_QUEUE_LIST = [
     },
 ]
 
-API_TICKET_PRIORITY_LIST = [
+API_PRIORITY_LIST = [
     {
         'IsActive': True,
         'IsDefaultValue': False,
@@ -256,7 +256,7 @@ API_TICKET_PRIORITY_LIST = [
     }
 ]
 
-API_TICKET_STATUS_LIST = [
+API_STATUS_LIST = [
     {
         'IsActive': True,
         'IsDefaultValue': False,
