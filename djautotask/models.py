@@ -288,6 +288,10 @@ class Task(TimeStampedModel):
     assigned_resource = models.ForeignKey(
         'Resource', null=True, on_delete=models.SET_NULL
     )
+    secondary_resources = models.ManyToManyField(
+        'Resource', through='TaskSecondaryResource',
+        related_name='secondary_resource_tasks'
+    )
     project = models.ForeignKey(
         'Project', null=True, on_delete=models.SET_NULL
     )
