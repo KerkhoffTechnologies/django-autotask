@@ -520,6 +520,31 @@ class ProjectSynchronizer(Synchronizer):
         return instance
 
 
+class PhaseSynchronizer(Synchronizer):
+    model_class = models.Phase
+    last_updated_field = 'LastActivityDateTime'
+
+    related_meta = {
+        'ProjectID': (models.Project, 'project'),
+        'ParentPhaseID': (models.Phase, 'parent_phase'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('Title')
+        instance.number = object_data.get('PhaseNumber')
+        instance.description = object_data.get('Description')
+        instance.start_date = object_data.get('StartDate')
+        instance.due_date = object_data.get('DueDate')
+        instance.estimated_hours = object_data.get('EstimatedHours')
+        instance.last_activity_date = object_data.get('LastActivityDateTime')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
 class TaskSynchronizer(QueryConditionMixin, Synchronizer):
     model_class = models.Task
     last_updated_field = 'LastActivityDateTime'

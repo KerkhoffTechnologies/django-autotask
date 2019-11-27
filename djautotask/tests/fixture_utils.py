@@ -93,6 +93,7 @@ def manage_full_sync_return_data(value):
         'Project': fixtures.API_PROJECT_LIST,
         'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
         'Task': fixtures.API_TASK_LIST,
+        'Phase': fixtures.API_PHASE_LIST,
         'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
@@ -316,6 +317,14 @@ def init_projects():
         'Project',
         fixtures.API_PROJECT_LIST,
         sync.ProjectSynchronizer
+    )
+
+
+def init_phases():
+    sync_objects(
+        'Phase',
+        fixtures.API_PHASE_LIST,
+        sync.PhaseSynchronizer
     )
 
 

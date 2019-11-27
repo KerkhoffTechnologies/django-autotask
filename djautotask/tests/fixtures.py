@@ -502,6 +502,25 @@ API_TICKET = {
 
 API_TICKET_LIST = [API_TICKET]
 
+API_PHASE = {
+    'EstimatedHours': 23.0,
+    'StartDate': datetime(2012, 8, 27, 5, 0, tzinfo=tzoffset(None, 3600)),
+    'PhaseNumber': 'T20120604.0011',
+    'ProjectID': 4,
+    'UserDefinedFields': '',
+    'Scheduled': False,
+    'DueDate': datetime(2012, 9, 17, 5, 0, tzinfo=tzoffset(None, 3600)),
+    'id': 7732,
+    'Description': 'Unit Testing',
+    'CreateDate': datetime(2012, 6, 18, 17, 50, 31, tzinfo=tzoffset(None, 3600)),
+    'LastActivityDateTime': datetime(2019, 11, 5, 0, 28, 25, 490000, tzinfo=tzoffset(None, 3600)),
+    'ExternalID': None,
+    'Title': 'Unit Testing',
+    'CreatorResourceID': 4
+}
+
+API_PHASE_LIST = [API_PHASE]
+
 API_TASK = {
     'id': 7733,
     'UserDefinedFields': None,

@@ -5,7 +5,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, Priority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
-    TaskSecondaryResource
+    TaskSecondaryResource, Phase
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -529,3 +529,50 @@ class TestTaskSecondaryResourceSynchronizer(TestCase):
         synchronizer = sync.TaskSecondaryResourceSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(secondary_resources_qset.count(), 0)
+
+
+class TestPhaseSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_connection(Wrapper)
+
+        fixture_utils.init_projects()
+        fixture_utils.init_phases()
+        fixture_utils.init_tasks()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.title, object_data['Title'])
+        self.assertEqual(instance.start_date, object_data['StartDate'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(instance.estimated_hours,
+                         object_data['EstimatedHours'])
+        self.assertEqual(instance.last_activity_date,
+                         object_data['LastActivityDateTime'])
+        self.assertEqual(instance.number, object_data['PhaseNumber'])
+
+    def test_sync_phase(self):
+        """
+        Test to ensure task synchronizer saves a Phase instance locally.
+        """
+        self.assertGreater(Phase.objects.all().count(), 0)
+
+        object_data = fixtures.API_PHASE
+        instance = Phase.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(Phase)
+
+    def test_delete_stale_phases(self):
+        """
+        Local task should be deleted if not returned during a full sync
+        """
+        qset = Phase.objects.all()
+        self.assertEqual(qset.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.PhaseSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(qset.count(), 0)

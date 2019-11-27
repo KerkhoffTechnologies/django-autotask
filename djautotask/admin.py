@@ -144,3 +144,9 @@ class TaskAdmin(admin.ModelAdmin):
 @admin.register(models.TaskSecondaryResource)
 class TaskSecondaryResourceAdmin(admin.ModelAdmin):
     list_display = ('id', 'resource', 'task')
+
+
+@admin.register(models.Phase)
+class PhaseTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'parent_phase')
+    search_fields = ('id', 'title')
