@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from atws.wrapper import AutotaskAPIException
+from atws.wrapper import AutotaskProcessException, AutotaskAPIException
 from xml.sax._exceptions import SAXParseException
 
 from django.core.management.base import BaseCommand, CommandError
@@ -110,9 +110,10 @@ class Command(BaseCommand):
                 self.sync_by_class(sync_class, obj_name,
                                    full_option=full_option)
 
-            except AutotaskAPIException as e:
+            except (AutotaskProcessException, AutotaskAPIException) as e:
+                errors = e.exception.args[0].errors + e.response.errors
                 msg = 'Failed to sync {}. Autotask API returned an error: ' \
-                      '{}.'.format(obj_name, ' '.join(e.response.errors))
+                      '{}.'.format(obj_name, ' '.join(errors))
 
                 error_messages += '{}\n'.format(msg)
                 failed_classes += 1

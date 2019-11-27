@@ -53,9 +53,11 @@ class CallBackView(views.CsrfExemptMixin,
             # Something bad happened when talking to the API. There's not
             # much we can do, so just log it. We should get synced back up
             # when the next periodic sync job runs.
+            errors = e.exception.args[0].errors + e.response.errors
+            msg = ' '.join(errors)
             logger.error(
                 'API call failed in Ticket ID {} callback: '
-                '{}'.format(entity_id, e)
+                '{}'.format(entity_id, msg)
             )
 
         return HttpResponse(status=204)

@@ -132,9 +132,12 @@ class Synchronizer:
                 self.persist_record(record, results)
 
         except (AutotaskProcessException, AutotaskAPIException) as e:
-            msg = ' '.join(e.message.split())
+            errors = e.exception.args[0].errors + e.response.errors
+            msg = ' '.join(errors)
             logger.error(
-                'Failed to fetch {} object. {}.'.format(self.model_class, msg)
+                'Failed to fetch {} object. Error(s): {}.'.format(
+                    self.model_class, msg
+                )
             )
 
         return results
