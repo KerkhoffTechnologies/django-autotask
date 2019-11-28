@@ -552,6 +552,7 @@ class TaskSynchronizer(QueryConditionMixin, Synchronizer):
     related_meta = {
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
         'ProjectID': (models.Project, 'project'),
+        'PhaseID': (models.Phase, 'phase'),
         'Status': (models.Status, 'status'),
         'PriorityLabel': (models.Priority, 'priority'),
     }

@@ -320,6 +320,10 @@ class Task(TimeStampedModel):
     status = models.ForeignKey(
         'Status', null=True, on_delete=models.SET_NULL
     )
+    phase = models.ForeignKey(
+        'Phase', null=True,
+        on_delete=models.SET_NULL
+    )
 
     def __str__(self):
         return self.title
