@@ -33,6 +33,7 @@ class Command(BaseCommand):
              sync.ProjectStatusSynchronizer, _('Project Status')),
             ('project_type', sync.ProjectTypeSynchronizer, _('Project Type')),
             ('project', sync.ProjectSynchronizer, _('Project')),
+            ('phase', sync.PhaseSynchronizer, _('Phase')),
             ('task_secondary_resource',
              sync.TaskSecondaryResourceSynchronizer,
              _('Task Secondary Resource')),

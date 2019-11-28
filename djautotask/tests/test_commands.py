@@ -249,6 +249,13 @@ class TestSyncProjectCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncPhaseCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_PHASE_LIST,
+        'phase',
+    )
+
+
 class TestSyncTaskCommand(AbstractBaseSyncTest, TestCase):
     args = (
         fixtures.API_TASK_LIST,
@@ -304,6 +311,7 @@ class TestSyncAllCommand(TestCase):
             TestLicenseTypeCommand,
             TestSyncTaskCommand,
             TestSyncTaskSecondaryResourceCommand,
+            TestSyncPhaseCommand
         ]
 
         self.test_args = []
@@ -347,6 +355,7 @@ class TestSyncAllCommand(TestCase):
             'license_type': models.LicenseType,
             'task': models.Task,
             'task_secondary_resource': models.TaskSecondaryResource,
+            'phase': models.Phase,
         }
         run_sync_command()
         pre_full_sync_counts = {}

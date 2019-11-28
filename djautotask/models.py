@@ -273,6 +273,29 @@ class Project(TimeStampedModel):
         return self.name
 
 
+class Phase(TimeStampedModel):
+    title = models.CharField(blank=True, null=True, max_length=255)
+    description = models.CharField(blank=True, null=True, max_length=8000)
+    start_date = models.DateTimeField(blank=True, null=True)
+    # due_date is end date in autotask UI
+    due_date = models.DateTimeField(blank=True, null=True)
+    estimated_hours = models.PositiveIntegerField(default=0)
+    number = models.CharField(blank=True, null=True, max_length=50)
+    scheduled = models.BooleanField(default=False)
+    last_activity_date = models.DateTimeField(blank=True, null=True)
+
+    parent_phase = models.ForeignKey(
+        'self', null=True, on_delete=models.SET_NULL
+    )
+
+    project = models.ForeignKey(
+        'Project', null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return self.title
+
+
 class Task(TimeStampedModel):
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
@@ -296,6 +319,10 @@ class Task(TimeStampedModel):
     )
     status = models.ForeignKey(
         'Status', null=True, on_delete=models.SET_NULL
+    )
+    phase = models.ForeignKey(
+        'Phase', null=True,
+        on_delete=models.SET_NULL
     )
 
     def __str__(self):
