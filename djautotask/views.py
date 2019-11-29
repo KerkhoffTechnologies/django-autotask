@@ -4,10 +4,12 @@ import logging
 from braces import views
 from django import forms
 from django.views.generic import View
-from atws.wrapper import AutotaskAPIException
+from atws.wrapper import AutotaskAPIException, AutotaskProcessException
 from django.http import HttpResponse, HttpResponseBadRequest
 
 from djautotask import sync, models
+from djautotask.api import parse_autotaskprocessexception, \
+    parse_autotaskapiexception
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,7 @@ class CallBackView(views.CsrfExemptMixin,
         """
 
         form = CallBackForm(request.POST)
+        error_msg = None
 
         if not form.is_valid():
             fields = ', '.join(form.errors.keys())
@@ -49,15 +52,19 @@ class CallBackView(views.CsrfExemptMixin,
 
         try:
             self.handle(entity_id, synchronizer)
+        except AutotaskProcessException as e:
+            error_msg = parse_autotaskprocessexception(e)
         except AutotaskAPIException as e:
             # Something bad happened when talking to the API. There's not
             # much we can do, so just log it. We should get synced back up
             # when the next periodic sync job runs.
-            msg = ' '.join(e.response.errors)
-            logger.error(
-                'API call failed in Ticket ID {} callback: '
-                '{}'.format(entity_id, msg)
-            )
+            error_msg = parse_autotaskapiexception(e)
+        finally:
+            if error_msg:
+                logger.error(
+                    'API call failed in Ticket ID {} callback: '
+                    '{}'.format(entity_id, error_msg)
+                )
 
         return HttpResponse(status=204)
 
