@@ -34,6 +34,14 @@ def log_sync_job(f):
         try:
             created_count, updated_count, deleted_count = f(*args, **kwargs)
             sync_job.success = True
+        except AutotaskProcessException as e:
+            sync_job.message = api.parse_autotaskprocessexception(e)
+            sync_job.success = False
+            raise
+        except AutotaskAPIException as e:
+            sync_job.message = api.parse_autotaskapiexception(e)
+            sync_job.success = False
+            raise
         except Exception as e:
             sync_job.message = str(e.args[0])
             sync_job.success = False
@@ -66,7 +74,7 @@ class Synchronizer:
 
     def __init__(self, full=False, *args, **kwargs):
         self.full = full
-        self.at_api_client = api.init_api_connection(**kwargs)
+        self.at_api_client = None
 
     def set_relations(self, instance, object_data):
         for object_field, value in self.related_meta.items():
@@ -124,21 +132,11 @@ class Synchronizer:
         # Apply extra conditions if they exist, else nothing happens
         self._get_query_conditions(query)
 
-        try:
-            logger.info(
-                'Fetching {} records.'.format(self.model_class)
-            )
-            for record in self.at_api_client.query(query):
-                self.persist_record(record, results)
-
-        except (AutotaskProcessException, AutotaskAPIException) as e:
-            errors = e.exception.args[0].errors + e.response.errors
-            msg = ' '.join(errors)
-            logger.error(
-                'Failed to fetch {} object. Error(s): {}.'.format(
-                    self.model_class, msg
-                )
-            )
+        logger.info(
+            'Fetching {} records.'.format(self.model_class)
+        )
+        for record in self.at_api_client.query(query):
+            self.persist_record(record, results)
 
         return results
 
@@ -212,6 +210,7 @@ class Synchronizer:
     @log_sync_job
     def sync(self):
         results = SyncResults()
+        self.at_api_client = api.init_api_connection()
 
         # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
@@ -241,6 +240,7 @@ class PicklistSynchronizer(Synchronizer):
         results = SyncResults()
         picklist_objects = None
         initial_ids = self._instance_ids()
+        self.at_api_client = api.init_api_connection()
 
         field_info = \
             helpers.get_field_info(self.at_api_client, self.entity_type)
@@ -336,6 +336,7 @@ class TicketSynchronizer(QueryConditionMixin, Synchronizer):
         return instance
 
     def fetch_sync_by_id(self, instance_id):
+        self.at_api_client = api.init_api_connection()
         query = Query(self.model_class.__name__)
         query.WHERE('id', query.Equals, instance_id)
         ticket = self.at_api_client.query(query).fetch_one()

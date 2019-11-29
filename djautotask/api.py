@@ -22,6 +22,19 @@ class AtwsTransportError(Exception):
     pass
 
 
+def parse_autotaskprocessexception(e):
+    response = getattr(e.exception, 'response', None)
+    if response:
+        msg = str(', '.join(response.errors))
+    else:
+        msg = str(e.args[0])
+    return msg
+
+
+def parse_autotaskapiexception(e):
+    return str(', '.join(e.response.errors))
+
+
 def init_api_connection(**kwargs):
     client_options = kwargs.setdefault('client_options', {})
 
