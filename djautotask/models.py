@@ -90,7 +90,8 @@ class Ticket(TimeStampedModel):
         """
         Send ticket status updates to Autotask.
         """
-        return api.update_ticket(self, self.status)
+        at_client = api.AutotaskAPIClient()
+        return at_client.update_object(self, self.status)
 
 
 class AvailablePicklistManager(models.Manager):
@@ -304,6 +305,25 @@ class Task(TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        """
+        Save the object.
+
+        If update_at as a kwarg is True, then update Autotask with changes.
+        """
+
+        update_at = kwargs.pop('update_at', False)
+        super().save(*args, **kwargs)
+        if update_at:
+            self.update_at()
+
+    def update_at(self):
+        """
+        Send ticket status updates to Autotask.
+        """
+        at_client = api.AutotaskAPIClient()
+        return at_client.update_object(self, self.status)
 
 
 class TaskSecondaryResource(TimeStampedModel):

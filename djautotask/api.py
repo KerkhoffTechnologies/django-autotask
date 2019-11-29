@@ -150,20 +150,23 @@ class AutotaskRequestsTransport(transport.Transport):
         )
 
 
-def update_ticket(ticket, status):
-    # We need to query for the object first, then alter it and execute it.
-    # https://atws.readthedocs.io/usage.html#querying-for-entities
+class AutotaskAPIClient(object):
 
-    # This is because we can not create a valid (enough) object to update
-    # to autotask unless we sync EVERY non-readonly field. If you submit the
-    # object with no values supplied for the readonly fields, autotask will
-    # null them out.
-    query = Query('Ticket')
-    query.WHERE('id', query.Equals, ticket.id)
-    at = init_api_connection()
+    def update_object(self, at_object, status):
+        # We need to query for the object first, then alter it and execute it.
+        # https://atws.readthedocs.io/usage.html#querying-for-entities
 
-    t = at.query(query).fetch_one()
-    t.Status = status.id
+        # This is because we can not create a valid (enough) object to update
+        # to autotask unless we sync EVERY non-readonly field. If you submit
+        # the object with no values supplied for the readonly fields,
+        # autotask will null them out.
+        entity = at_object.type_name.capitalize()
+        query = Query(entity)
+        query.WHERE('id', query.Equals, at_object.id)
+        at = init_api_connection()
 
-    # Fetch one executes the update and returns the created object.
-    return at.update([t]).fetch_one()
+        t = at.query(query).fetch_one()
+        t.Status = status.id
+
+        # Fetch one executes the update and returns the created object.
+        return at.update([t]).fetch_one()
