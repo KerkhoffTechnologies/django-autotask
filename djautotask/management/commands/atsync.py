@@ -7,6 +7,8 @@ from django.utils.translation import ugettext_lazy as _
 from djautotask import sync, api
 
 OPTION_NAME = 'autotask_object'
+ERROR_MESSAGE_TEMPLATE = 'Failed to sync {}. Autotask API returned an ' \
+                             'error(s): {}.'
 
 
 class Command(BaseCommand):
@@ -96,8 +98,6 @@ class Command(BaseCommand):
 
         failed_classes = 0
         error_messages = ''
-        error_msg_template = 'Failed to sync {}. Autotask API returned an ' \
-                             'error(s): {}.'
 
         num_synchronizers = len(self.synchronizer_map)
         has_ticket_sync = 'ticket' in self.synchronizer_map
@@ -114,11 +114,11 @@ class Command(BaseCommand):
                                    full_option=full_option)
 
             except AutotaskProcessException as e:
-                error_msg = error_msg_template.format(
+                error_msg = ERROR_MESSAGE_TEMPLATE.format(
                     obj_name, api.parse_autotaskprocessexception(e))
 
             except AutotaskAPIException as e:
-                error_msg = error_msg_template.format(
+                error_msg = ERROR_MESSAGE_TEMPLATE.format(
                     obj_name, api.parse_autotaskapiexception(e))
 
             except SAXParseException as e:

@@ -23,6 +23,11 @@ class AtwsTransportError(Exception):
 
 
 def parse_autotaskprocessexception(e):
+    """
+    AutotaskProcessException could have any exception wrapped inside of it,
+    so handle as an AutotaskAPIException if a response attr is present,
+    or handle as we would a regular exception we don't know about.
+    """
     response = getattr(e.exception, 'response', None)
     if response:
         msg = str(', '.join(response.errors))
