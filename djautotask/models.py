@@ -123,6 +123,7 @@ class Status(Picklist):
     pass
 
     class Meta:
+        ordering = ('label',)
         verbose_name_plural = 'Statuses'
 
 
@@ -138,6 +139,7 @@ class Queue(Picklist):
     pass
 
     class Meta:
+        ordering = ('label',)
         verbose_name_plural = 'Queues'
 
 
@@ -145,6 +147,7 @@ class ProjectStatus(Picklist):
     pass
 
     class Meta:
+        ordering = ('label',)
         verbose_name_plural = 'Project statuses'
 
 
@@ -152,6 +155,7 @@ class DisplayColor(Picklist):
     pass
 
     class Meta:
+        ordering = ('label',)
         verbose_name_plural = 'Display colors'
 
 
