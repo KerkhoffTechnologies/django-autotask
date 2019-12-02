@@ -112,6 +112,7 @@ class Picklist(TimeStampedModel):
     available_objects = AvailablePicklistManager()
 
     class Meta:
+        ordering = ('label',)
         abstract = True
 
     def __str__(self):
@@ -122,6 +123,7 @@ class Status(Picklist):
     pass
 
     class Meta:
+        ordering = ('label',)
         verbose_name_plural = 'Statuses'
 
 
@@ -129,6 +131,7 @@ class Priority(Picklist):
     pass
 
     class Meta:
+        ordering = ('sort_order',)
         verbose_name_plural = 'Priorities'
 
 
@@ -136,6 +139,7 @@ class Queue(Picklist):
     pass
 
     class Meta:
+        ordering = ('label',)
         verbose_name_plural = 'Queues'
 
 
@@ -143,6 +147,7 @@ class ProjectStatus(Picklist):
     pass
 
     class Meta:
+        ordering = ('label',)
         verbose_name_plural = 'Project statuses'
 
 
@@ -150,6 +155,7 @@ class DisplayColor(Picklist):
     pass
 
     class Meta:
+        ordering = ('label',)
         verbose_name_plural = 'Display colors'
 
 
@@ -212,6 +218,7 @@ class TicketCategory(TimeStampedModel):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name_plural = 'Ticket categories'
 
     def __str__(self):
@@ -235,6 +242,9 @@ class Account(TimeStampedModel):
     number = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -269,6 +279,9 @@ class Project(TimeStampedModel):
         'ProjectType', null=True, on_delete=models.SET_NULL
     )
 
+    class Meta:
+        ordering = ('name',)
+
     def __str__(self):
         return self.name
 
@@ -291,6 +304,9 @@ class Phase(TimeStampedModel):
     project = models.ForeignKey(
         'Project', null=True, on_delete=models.SET_NULL
     )
+
+    class Meta:
+        ordering = ('title',)
 
     def __str__(self):
         return self.title
