@@ -1,12 +1,14 @@
 from collections import OrderedDict
-from atws.wrapper import AutotaskAPIException
+from atws.wrapper import AutotaskProcessException, AutotaskAPIException
 from xml.sax._exceptions import SAXParseException
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import ugettext_lazy as _
-from djautotask import sync
+from djautotask import sync, api
 
 OPTION_NAME = 'autotask_object'
+ERROR_MESSAGE_TEMPLATE = 'Failed to sync {}. Autotask API returned an ' \
+                             'error(s): {}.'
 
 
 class Command(BaseCommand):
@@ -107,23 +109,28 @@ class Command(BaseCommand):
             sync_classes.append(sync_classes.pop(0))
 
         for sync_class, obj_name in sync_classes:
+            error_msg = None
             try:
                 self.sync_by_class(sync_class, obj_name,
                                    full_option=full_option)
 
-            except AutotaskAPIException as e:
-                msg = 'Failed to sync {}. Autotask API returned an error: ' \
-                      '{}.'.format(obj_name, ' '.join(e.response.errors))
+            except AutotaskProcessException as e:
+                error_msg = ERROR_MESSAGE_TEMPLATE.format(
+                    obj_name, api.parse_autotaskprocessexception(e))
 
-                error_messages += '{}\n'.format(msg)
-                failed_classes += 1
+            except AutotaskAPIException as e:
+                error_msg = ERROR_MESSAGE_TEMPLATE.format(
+                    obj_name, api.parse_autotaskapiexception(e))
 
             except SAXParseException as e:
-                msg = 'Failed to connect to Autotask API. ' \
+                error_msg = 'Failed to connect to Autotask API. ' \
                       'The error was: {}'.format(e)
 
-                error_messages += '{}\n'.format(msg)
-                failed_classes += 1
+            finally:
+                if error_msg:
+                    self.stderr.write(error_msg)
+                    error_messages += '{}\n'.format(error_msg)
+                    failed_classes += 1
 
         if failed_classes > 0:
             msg = '{} class{} failed to sync.\n'.format(
