@@ -347,7 +347,7 @@ class Task(TimeStampedModel):
 
     def update_at(self):
         """
-        Send ticket status updates to Autotask.
+        Send task status updates to Autotask.
         """
         at_client = api.AutotaskAPIClient()
         return at_client.update_object(self, self.status)
