@@ -90,8 +90,7 @@ class Ticket(TimeStampedModel):
         """
         Send ticket status updates to Autotask.
         """
-        at_client = api.AutotaskAPIClient()
-        return at_client.update_object(self, self.status)
+        return api.update_object(self, self.status)
 
 
 class AvailablePicklistManager(models.Manager):
@@ -365,8 +364,7 @@ class Task(TimeStampedModel):
         """
         Send task status updates to Autotask.
         """
-        at_client = api.AutotaskAPIClient()
-        return at_client.update_object(self, self.status)
+        return api.update_object(self, self.status)
 
 
 class TaskSecondaryResource(TimeStampedModel):
