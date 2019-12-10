@@ -37,7 +37,23 @@ def parse_autotaskprocessexception(e):
 
 
 def parse_autotaskapiexception(e):
-    return str(e.response.errors)
+    return ', '.join(get_errors(e.response.errors))
+
+
+def get_errors(response):
+    errors = []
+    try:
+        for item in response:
+            error = item.get('errors')
+            message = error[0].get('message')
+            errors.append(str(message))
+    except (IndexError, TypeError, AttributeError, KeyError):
+        # AutotaskAPIException, has given us something unexpected, log
+        # it and we can handle this new case.
+        logger.exception(str(response))
+        errors.append("An unknown Autotask API error.")
+
+    return errors
 
 
 def init_api_connection(**kwargs):
