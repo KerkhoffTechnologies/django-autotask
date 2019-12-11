@@ -1,6 +1,10 @@
 from django.db import models
+from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from djautotask import api
+
+
+PROJECT_STATUS_COMPLETE = 'Complete'
 
 
 class SyncJob(models.Model):
@@ -312,6 +316,18 @@ class Phase(TimeStampedModel):
         return self.title
 
 
+class AvailableTaskManager(models.Manager):
+    """Return only tasks from projects that have a status that is active."""
+
+    def get_queryset(self):
+        qset = super().get_queryset()
+
+        return qset.exclude(
+            Q(project__status__is_active=False) |
+            Q(project__status__label=PROJECT_STATUS_COMPLETE)
+        )
+
+
 class Task(TimeStampedModel):
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
@@ -344,6 +360,9 @@ class Task(TimeStampedModel):
         'Phase', null=True,
         on_delete=models.SET_NULL
     )
+
+    objects = models.Manager()
+    available_objects = AvailableTaskManager()
 
     def __str__(self):
         return self.title

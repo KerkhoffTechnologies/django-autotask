@@ -7,6 +7,7 @@ from django.db import transaction, IntegrityError
 from django.utils import timezone
 
 from djautotask import api, models
+from djautotask.models import PROJECT_STATUS_COMPLETE
 
 logger = logging.getLogger(__name__)
 
@@ -135,10 +136,14 @@ class Synchronizer:
         logger.info(
             'Fetching {} records.'.format(self.model_class)
         )
-        for record in self.at_api_client.query(query):
-            self.persist_record(record, results)
+        self.fetch_records(query, results)
 
         return results
+
+    def fetch_records(self, query, results):
+
+        for record in self.at_api_client.query(query):
+            self.persist_record(record, results)
 
     def persist_record(self, record, results):
         """Persist each record to the DB."""
@@ -476,9 +481,31 @@ class AccountSynchronizer(Synchronizer):
         return instance
 
 
-class ProjectSynchronizer(Synchronizer):
+class FilterProjectStatusMixin:
+
+    def fetch_records(self, query, results):
+        active_object_ids = self.get_active_ids()
+
+        for record in self.at_api_client.query(query):
+
+            object_id = getattr(record, self.lookup_field)
+            if active_object_ids and object_id:
+
+                if object_id not in active_object_ids:
+                    logger.info(
+                        'Project with ID: {} is set to an inactive status. '
+                        'Skipping this {}.'.format(
+                            object_id, self.model_class.__name__)
+                    )
+                    continue
+
+            self.persist_record(record, results)
+
+
+class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
     model_class = models.Project
     last_updated_field = 'LastActivityDateTime'
+    lookup_field = 'Status'
 
     related_meta = {
         'ProjectLeadResourceID': (models.Resource, 'project_lead_resource'),
@@ -486,6 +513,29 @@ class ProjectSynchronizer(Synchronizer):
         'Status': (models.ProjectStatus, 'status'),
         'Type': (models.ProjectType, 'type'),
     }
+
+    def get_active_ids(self):
+        active_project_statuses = models.ProjectStatus.objects.exclude(
+            is_active=False).values_list('id', flat=True)
+
+        return active_project_statuses
+
+    def _get_query_conditions(self, query):
+
+        try:
+            status = \
+                models.ProjectStatus.objects.get(label=PROJECT_STATUS_COMPLETE)
+            query.open_bracket('AND')
+            query.WHERE('Status', query.NotEqual, status.id)
+            query.close_bracket()
+
+        except models.ProjectStatus.DoesNotExist as e:
+            logger.warning(
+                'Failed to find project status - {}. {}'.format(
+                    PROJECT_STATUS_COMPLETE, e)
+            )
+
+        return query
 
     def _assign_field_data(self, instance, object_data):
 
@@ -549,9 +599,11 @@ class PhaseSynchronizer(Synchronizer):
         return instance
 
 
-class TaskSynchronizer(QueryConditionMixin, Synchronizer):
+class TaskSynchronizer(QueryConditionMixin,
+                       FilterProjectStatusMixin, Synchronizer):
     model_class = models.Task
     last_updated_field = 'LastActivityDateTime'
+    lookup_field = 'ProjectID'
 
     related_meta = {
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
@@ -560,6 +612,12 @@ class TaskSynchronizer(QueryConditionMixin, Synchronizer):
         'Status': (models.Status, 'status'),
         'PriorityLabel': (models.Priority, 'priority'),
     }
+
+    def get_active_ids(self):
+        active_projects = models.Project.objects.exclude(
+            status__is_active=False).values_list('id', flat=True)
+
+        return active_projects
 
     def _assign_field_data(self, instance, object_data):
 
