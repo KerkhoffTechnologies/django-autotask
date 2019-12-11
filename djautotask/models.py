@@ -312,6 +312,13 @@ class Phase(TimeStampedModel):
         return self.title
 
 
+class AvailableTaskManager(models.Manager):
+    """Return only tasks from projects that have a status that is active."""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(project__status__is_active=True)
+
+
 class Task(TimeStampedModel):
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
@@ -344,6 +351,9 @@ class Task(TimeStampedModel):
         'Phase', null=True,
         on_delete=models.SET_NULL
     )
+
+    objects = models.Manager()
+    available_objects = AvailableTaskManager()
 
     def __str__(self):
         return self.title
