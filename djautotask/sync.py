@@ -4,10 +4,10 @@ from suds.client import Client
 from atws.wrapper import AutotaskProcessException, AutotaskAPIException
 from atws import Query, helpers, picklist
 from django.db import transaction, IntegrityError
+from django.db.models import Q
 from django.utils import timezone
 
 from djautotask import api, models
-from djautotask.models import PROJECT_STATUS_COMPLETE
 
 logger = logging.getLogger(__name__)
 
@@ -488,7 +488,7 @@ class FilterProjectStatusMixin:
 
         for record in self.at_api_client.query(query):
 
-            object_id = getattr(record, self.lookup_field)
+            object_id = getattr(record, self.object_filter_field)
             if active_object_ids and object_id:
 
                 if object_id not in active_object_ids:
@@ -505,7 +505,7 @@ class FilterProjectStatusMixin:
 class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
     model_class = models.Project
     last_updated_field = 'LastActivityDateTime'
-    lookup_field = 'Status'
+    object_filter_field = 'Status'
 
     related_meta = {
         'ProjectLeadResourceID': (models.Resource, 'project_lead_resource'),
@@ -523,8 +523,8 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
     def _get_query_conditions(self, query):
 
         try:
-            status = \
-                models.ProjectStatus.objects.get(label=PROJECT_STATUS_COMPLETE)
+            status = models.ProjectStatus.objects.get(
+                label=models.ProjectStatus.COMPLETE)
             query.open_bracket('AND')
             query.WHERE('Status', query.NotEqual, status.id)
             query.close_bracket()
@@ -532,7 +532,7 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
         except models.ProjectStatus.DoesNotExist as e:
             logger.warning(
                 'Failed to find project status - {}. {}'.format(
-                    PROJECT_STATUS_COMPLETE, e)
+                    models.ProjectStatus.COMPLETE, e)
             )
 
         return query
@@ -603,7 +603,7 @@ class TaskSynchronizer(QueryConditionMixin,
                        FilterProjectStatusMixin, Synchronizer):
     model_class = models.Task
     last_updated_field = 'LastActivityDateTime'
-    lookup_field = 'ProjectID'
+    object_filter_field = 'ProjectID'
 
     related_meta = {
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
@@ -615,7 +615,9 @@ class TaskSynchronizer(QueryConditionMixin,
 
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
-            status__is_active=False).values_list('id', flat=True)
+            Q(status__is_active=False) |
+            Q(status__label=models.ProjectStatus.COMPLETE)
+        ).values_list('id', flat=True)
 
         return active_projects
 

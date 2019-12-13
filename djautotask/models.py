@@ -4,9 +4,6 @@ from django_extensions.db.models import TimeStampedModel
 from djautotask import api
 
 
-PROJECT_STATUS_COMPLETE = 'Complete'
-
-
 class SyncJob(models.Model):
     start_time = models.DateTimeField(null=False)
     end_time = models.DateTimeField(blank=True, null=True)
@@ -148,7 +145,7 @@ class Queue(Picklist):
 
 
 class ProjectStatus(Picklist):
-    pass
+    COMPLETE = 'Complete'
 
     class Meta:
         ordering = ('label',)
@@ -324,7 +321,7 @@ class AvailableTaskManager(models.Manager):
 
         return qset.exclude(
             Q(project__status__is_active=False) |
-            Q(project__status__label=PROJECT_STATUS_COMPLETE)
+            Q(project__status__label=ProjectStatus.COMPLETE)
         )
 
 
