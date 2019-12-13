@@ -1,6 +1,7 @@
 from django.test import TestCase
 from atws.wrapper import Wrapper
 
+from copy import deepcopy
 from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, Priority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
@@ -385,7 +386,19 @@ class TestAccountSynchronizer(TestCase):
         self.assertEqual(account_qset.count(), 0)
 
 
-class TestProjectSynchronizer(TestCase):
+class FilterProjectTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.complete_status = ProjectStatus.objects.create(
+            label=ProjectStatus.COMPLETE, is_active=True)
+        cls.inactive_status = ProjectStatus.objects.create(
+            label='New (Inactive)', is_active=False)
+        cls.inactive_project = Project.objects.create(name='Inactive Project')
+        cls.inactive_project.status = cls.inactive_status
+        cls.inactive_project.save()
+
+
+class TestProjectSynchronizer(FilterProjectTestCase):
 
     def setUp(self):
         super().setUp()
@@ -429,7 +442,7 @@ class TestProjectSynchronizer(TestCase):
 
     def test_delete_stale_project(self):
         project_qset = Project.objects.all()
-        self.assertEqual(project_qset.count(), 1)
+        self.assertGreater(project_qset.count(), 1)
 
         mocks.api_query_call([])
 
@@ -437,8 +450,58 @@ class TestProjectSynchronizer(TestCase):
         synchronizer.sync()
         self.assertEqual(project_qset.count(), 0)
 
+    def test_sync_filters_projects_in_inactive_status(self):
+        """
+        Test to ensure that sync does not persist projects in an
+        inactive project status.
+        """
+        project_in_active_status = fixtures.API_PROJECT_LIST[0]
+        project_fixture = deepcopy(project_in_active_status)
+        project_fixture['id'] = '5'
+        project_fixture['Status'] = self.inactive_status.id
 
-class TestTaskSynchronizer(TestCase):
+        project_instance = fixture_utils.generate_objects(
+            'Project', [project_fixture, fixtures.API_PROJECT_LIST[0]]
+        )
+        _, patch = mocks.create_mock_call(
+            mocks.WRAPPER_QUERY_METHOD, project_instance
+        )
+        synchronizer = sync.ProjectSynchronizer(full=True)
+        synchronizer.sync()
+
+        synced_project_ids = Project.objects.values_list('id', flat=True)
+        self.assertGreater(Project.objects.all().count(), 0)
+        self.assertNotIn(project_fixture['id'], synced_project_ids)
+        self.assertIn(project_in_active_status['id'], synced_project_ids)
+        patch.stop()
+
+    def test_sync_filters_projects_in_complete_status(self):
+        """
+        Test to ensure that sync does not persist projects in an
+        inactive project status.
+        """
+        project_in_complete_status = fixtures.API_PROJECT_LIST[0]
+        project_fixture = deepcopy(project_in_complete_status)
+        project_fixture['id'] = '6'
+        project_fixture['Status'] = self.complete_status.id
+
+        project_instance = fixture_utils.generate_objects(
+            'Project', [project_fixture, fixtures.API_PROJECT_LIST[0]]
+        )
+        _, patch = mocks.create_mock_call(
+            mocks.WRAPPER_QUERY_METHOD, project_instance
+        )
+        synchronizer = sync.ProjectSynchronizer(full=True)
+        synchronizer.sync()
+
+        synced_project_ids = Project.objects.values_list('id', flat=True)
+        self.assertGreater(Project.objects.all().count(), 0)
+        self.assertNotIn(project_fixture['id'], synced_project_ids)
+        self.assertIn(project_in_complete_status['id'], synced_project_ids)
+        patch.stop()
+
+
+class TestTaskSynchronizer(FilterProjectTestCase):
 
     def setUp(self):
         super().setUp()
@@ -497,6 +560,56 @@ class TestTaskSynchronizer(TestCase):
         synchronizer = sync.TaskSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(task_qset.count(), 0)
+
+    def test_sync_filters_tasks_on_inactive_project(self):
+
+        # Add copied task to project in 'Complete' status to ensure it is
+        # filtered out during the sync.
+        task_fixture = deepcopy(fixtures.API_TASK)
+        task_fixture['id'] = '7740'
+        task_fixture['ProjectID'] = self.inactive_project.id
+
+        task_instance = fixture_utils.generate_objects(
+            'Task', [task_fixture, fixtures.API_TASK]
+        )
+        _, patch = mocks.create_mock_call(
+            mocks.WRAPPER_QUERY_METHOD, task_instance
+        )
+        synchronizer = sync.TaskSynchronizer(full=True)
+        synchronizer.sync()
+
+        synced_task_ids = Task.objects.values_list('id', flat=True)
+        self.assertGreater(Task.objects.all().count(), 0)
+        self.assertNotIn(task_fixture['id'], synced_task_ids)
+        self.assertIn(fixtures.API_TASK['id'], synced_task_ids)
+        patch.stop()
+
+    def test_sync_filters_tasks_on_complete_project(self):
+        """
+        Test to ensure that sync does not persist tasks on a complete project.
+        """
+        project = Project.objects.create(name='Complete Project')
+        project.status = self.complete_status
+        project.save()
+
+        task_fixture = deepcopy(fixtures.API_TASK)
+        task_fixture['id'] = '7741'
+        task_fixture['ProjectID'] = project.id
+
+        task_instance = fixture_utils.generate_objects(
+            'Task', [task_fixture, fixtures.API_TASK]
+        )
+        _, patch = mocks.create_mock_call(
+            mocks.WRAPPER_QUERY_METHOD, task_instance
+        )
+        synchronizer = sync.TaskSynchronizer(full=True)
+        synchronizer.sync()
+
+        synced_task_ids = Task.objects.values_list('id', flat=True)
+        self.assertGreater(Task.objects.all().count(), 0)
+        self.assertNotIn(task_fixture['id'], synced_task_ids)
+        self.assertIn(fixtures.API_TASK['id'], synced_task_ids)
+        patch.stop()
 
 
 class TestTaskSecondaryResourceSynchronizer(TestCase):

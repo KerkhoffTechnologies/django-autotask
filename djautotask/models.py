@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from djautotask import api
 
@@ -144,7 +145,7 @@ class Queue(Picklist):
 
 
 class ProjectStatus(Picklist):
-    pass
+    COMPLETE = 'Complete'
 
     class Meta:
         ordering = ('label',)
@@ -316,7 +317,12 @@ class AvailableTaskManager(models.Manager):
     """Return only tasks from projects that have a status that is active."""
 
     def get_queryset(self):
-        return super().get_queryset().filter(project__status__is_active=True)
+        qset = super().get_queryset()
+
+        return qset.exclude(
+            Q(project__status__is_active=False) |
+            Q(project__status__label=ProjectStatus.COMPLETE)
+        )
 
 
 class Task(TimeStampedModel):
