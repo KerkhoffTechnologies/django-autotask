@@ -88,10 +88,28 @@ class Synchronizer:
                 field_name
             )
 
+    @staticmethod
+    def _assign_null_relation(instance, model_field):
+        """
+        Set the FK to null, but handle issues like the FK being non-null.
+        """
+        try:
+            setattr(instance, model_field, None)
+        except ValueError:
+            # The model_field may have been non-null.
+            raise InvalidObjectException(
+                "Unable to set field {} on {} to null, as it's required.".
+                format(model_field, instance)
+            )
+
     def _assign_relation(self, instance, object_data,
                          object_field, model_class, field_name):
 
         relation_id = object_data.get(object_field)
+        if relation_id is None:
+            self._assign_null_relation(instance, field_name)
+            return
+
         try:
             related_instance = model_class.objects.get(pk=relation_id)
             setattr(instance, field_name, related_instance)
