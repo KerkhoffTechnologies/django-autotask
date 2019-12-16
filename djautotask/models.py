@@ -161,7 +161,7 @@ class DisplayColor(Picklist):
 
 
 class ProjectType(Picklist):
-    pass
+    TEMPLATE = 'Template'
 
 
 class Source(Picklist):
@@ -251,6 +251,13 @@ class Account(TimeStampedModel):
         return self.name
 
 
+class AvailableProjectManager(models.Manager):
+    """Exclude projects whose type is 'Template'."""
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(type__label=ProjectType.TEMPLATE)
+
+
 class Project(TimeStampedModel):
     name = models.CharField(max_length=100)
     number = models.CharField(null=True, max_length=50)
@@ -279,6 +286,9 @@ class Project(TimeStampedModel):
     type = models.ForeignKey(
         'ProjectType', null=True, on_delete=models.SET_NULL
     )
+
+    objects = models.Manager()
+    available_objects = AvailableProjectManager()
 
     class Meta:
         ordering = ('name',)
@@ -321,7 +331,8 @@ class AvailableTaskManager(models.Manager):
 
         return qset.exclude(
             Q(project__status__is_active=False) |
-            Q(project__status__label=ProjectStatus.COMPLETE)
+            Q(project__status__label=ProjectStatus.COMPLETE) |
+            Q(project__type__label=ProjectType.TEMPLATE)
         )
 
 
