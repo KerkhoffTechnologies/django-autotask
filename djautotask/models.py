@@ -324,8 +324,10 @@ class Phase(TimeStampedModel):
 
 
 class AvailableTaskManager(models.Manager):
-    """Return only tasks from projects that have a status that is active."""
-
+    """
+    Exclude tasks where the project is in a status that is inactive or
+    'Complete' or the project type is 'Template'.
+    """
     def get_queryset(self):
         qset = super().get_queryset()
 
