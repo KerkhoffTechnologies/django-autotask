@@ -162,6 +162,7 @@ class DisplayColor(Picklist):
 
 class ProjectType(Picklist):
     TEMPLATE = 'Template'
+    BASELINE = 'Baseline'
 
 
 class Source(Picklist):
@@ -252,10 +253,15 @@ class Account(TimeStampedModel):
 
 
 class AvailableProjectManager(models.Manager):
-    """Exclude projects whose type is 'Template'."""
-
+    """
+    Exclude projects whose type is 'Template' or 'Baseline'. Neither of these
+    types provide any use for us, so just exclude them.
+    """
     def get_queryset(self):
-        return super().get_queryset().exclude(type__label=ProjectType.TEMPLATE)
+        return super().get_queryset().exclude(
+            Q(type__label=ProjectType.TEMPLATE) |
+            Q(type__label=ProjectType.BASELINE)
+        )
 
 
 class Project(TimeStampedModel):
@@ -326,7 +332,7 @@ class Phase(TimeStampedModel):
 class AvailableTaskManager(models.Manager):
     """
     Exclude tasks where the project is in a status that is inactive or
-    'Complete' or the project type is 'Template'.
+    'Complete' or the project type is 'Template' or 'Baseline'.
     """
     def get_queryset(self):
         qset = super().get_queryset()
@@ -334,7 +340,8 @@ class AvailableTaskManager(models.Manager):
         return qset.exclude(
             Q(project__status__is_active=False) |
             Q(project__status__label=ProjectStatus.COMPLETE) |
-            Q(project__type__label=ProjectType.TEMPLATE)
+            Q(project__type__label=ProjectType.TEMPLATE) |
+            Q(project__type__label=ProjectType.BASELINE)
         )
 
 
