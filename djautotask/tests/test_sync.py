@@ -16,7 +16,35 @@ def assert_sync_job(model_class):
     assert qset.exists()
 
 
-class TestTicketSynchronizer(TestCase):
+class TestAssignNullRelationMixin:
+    def test_sync_assigns_null_relation(self):
+        model_type = self.model_class.__name__
+        model_object = self.model_class.objects.first()
+
+        self.assertIsNotNone(model_object.assigned_resource)
+
+        fixture_instance = deepcopy(
+            getattr(fixtures, 'API_{}'.format(model_type.upper()))
+        )
+        fixture_instance.pop('AssignedResourceID')
+
+        object_instance = fixture_utils.generate_objects(
+            model_type, [fixture_instance]
+        )
+        _, patch = mocks.create_mock_call(
+            mocks.WRAPPER_QUERY_METHOD, object_instance
+        )
+        synchronizer = self.sync_class(full=True)
+        synchronizer.sync()
+
+        model_object = self.model_class.objects.get(id=model_object.id)
+        self.assertIsNone(model_object.assigned_resource)
+        patch.stop()
+
+
+class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
+    model_class = Ticket
+    sync_class = sync.TicketSynchronizer
 
     def setUp(self):
         super().setUp()
@@ -501,7 +529,10 @@ class TestProjectSynchronizer(FilterProjectTestCase):
         patch.stop()
 
 
-class TestTaskSynchronizer(FilterProjectTestCase):
+class TestTaskSynchronizer(TestAssignNullRelationMixin,
+                           FilterProjectTestCase):
+    model_class = Task
+    sync_class = sync.TaskSynchronizer
 
     def setUp(self):
         super().setUp()
