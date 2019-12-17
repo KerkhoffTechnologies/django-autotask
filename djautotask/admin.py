@@ -130,8 +130,13 @@ class AccountAdmin(admin.ModelAdmin):
 
 @admin.register(models.Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'number')
+    list_display = ('id', 'name', 'number', 'type', 'status')
+    list_filter = ('type', 'status')
     search_fields = ('id', 'name', 'number')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('type', 'status')
 
 
 @admin.register(models.Task)
