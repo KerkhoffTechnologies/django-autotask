@@ -6,6 +6,7 @@ from atws import Query, helpers, picklist
 from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.utils import timezone
+from djautotask.utils import DjautotaskSettings
 
 from djautotask import api, models
 
@@ -313,14 +314,25 @@ class QueryConditionMixin:
     def _get_query_conditions(self, query):
         # Don't sync the 'Complete' status for tickets and tasks.
         # Most if not all tickets/tasks end up here and stay here forever
-        # or until deleted.
-        # This would cause ticket/task syncs to take a very long time.
+        # or until deleted. This would cause ticket/task syncs to take a
+        # very long time. Instead only get completed tickets X number of
+        # hours in the past, defined in the settings.
+        request_settings = DjautotaskSettings().get_settings()
         query.open_bracket('AND')
         query.WHERE(
             'Status',
             query.NotEqual,
             self.at_api_client.picklist['Ticket']['Status']['Complete']
         )
+        query.open_bracket('OR')
+        query.WHERE(
+            'CompletedDate',
+            query.GreaterThan,
+            (timezone.now() - timezone.timedelta(
+                hours=request_settings.get('keep_completed_hours')
+            )).isoformat()
+        )
+        query.close_bracket()
         query.close_bracket()
         return query
 
