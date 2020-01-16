@@ -567,3 +567,33 @@ API_TASK_SECONDARY_RESOURCE = {
     'RoleID': 29683461,
 }
 API_TASK_SECONDARY_RESOURCE_LIST = [API_TASK_SECONDARY_RESOURCE]
+
+API_TIME_ENTRY = {
+    'id': 4,
+    'UserDefinedFields': None,
+    'TicketID': 7688,
+    'InternalAllocationCodeID': 29683403,
+    'Type': 2,
+    'DateWorked': datetime(2018, 1, 23, 0, 0, tzinfo=tzoffset(None, 3600)),
+    'StartDateTime': datetime(2018, 1, 23, 10, 0, tzinfo=tzoffset(None, 3600)),
+    'EndDateTime': datetime(2018, 1, 23, 12, 30, tzinfo=tzoffset(None, 3600)),
+    'HoursWorked': 1.0000,
+    'HoursToBill': 1.0000,
+    'OffsetHours': 0.0000,
+    'SummaryNotes': 'Initial triage of issue',
+    'InternalNotes': 'We will need to get more information',
+    'RoleID': 29683396,
+    'CreateDateTime':
+        datetime(2018, 1, 23, 9, 50, tzinfo=tzoffset(None, 3600)),
+    'ResourceID': 29683794,
+    'CreatorUserID': 29683794,
+    'LastModifiedUserID': 29683794,
+    'LastModifiedDateTime':
+        datetime(2018, 1, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
+    'AllocationCodeID': 29683403,
+    'ContractID': 29684054,
+    'ShowOnInvoice': True,
+    'NonBillable': False,
+    'BillingApprovalLevelMostRecent': 0,
+}
+API_TIME_ENTRY_LIST = [API_TIME_ENTRY]

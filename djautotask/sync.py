@@ -673,3 +673,51 @@ class TaskSecondaryResourceSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+
+class TimeEntrySynchronizer(Synchronizer):
+    model_class = models.TimeEntry
+    last_updated_field = 'LastModifiedDateTime'
+
+    related_meta = {
+        'ResourceID': (models.Resource, 'resource'),
+        'TicketID': (models.Ticket, 'ticket'),
+        'TaskID': (models.Task, 'task'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.date_worked = object_data.get('DateWorked')
+        instance.start_date_time = object_data.get('StartDateTime')
+        instance.end_date_time = object_data.get('EndDateTime')
+        instance.summary_notes = object_data.get('SummaryNotes')
+        instance.internal_notes = object_data.get('InternalNotes')
+        instance.non_billable = object_data.get('NonBillable')
+        instance.hours_worked = object_data.get('HoursWorked')
+        instance.hours_to_bill = object_data.get('HoursToBill')
+        instance.offset_hours = object_data.get('OffsetHours')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    def fetch_records(self, query, results):
+        ticket_ids = models.Ticket.objects.values_list('id', flat=True)
+        task_ids = models.Task.objects.values_list('id', flat=True)
+
+        for record in self.at_api_client.query(query):
+            ticket_id = getattr(record, 'TicketID', None)
+            task_id = getattr(record, 'TaskID', None)
+
+            # Only save time entries for tickets or tasks that are
+            # already in the DB
+            if ticket_id and ticket_id in ticket_ids:
+                self.persist_record(record, results)
+
+            if task_id and task_id in task_ids:
+                self.persist_record(record, results)
+
+            else:
+                logger.info(
+                    'Not syncing this time entry.'
+                )

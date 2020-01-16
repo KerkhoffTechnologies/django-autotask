@@ -155,3 +155,11 @@ class TaskSecondaryResourceAdmin(admin.ModelAdmin):
 class PhaseTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'parent_phase')
     search_fields = ('id', 'title')
+
+
+@admin.register(models.TimeEntry)
+class TimeEntryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'resource', 'ticket', 'task',
+                    'date_worked', 'start_date_time', 'end_date_time')
+    list_filter = ('resource', )
+    search_fields = ['id', 'resource', 'ticket', 'task']
