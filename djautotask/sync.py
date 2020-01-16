@@ -326,7 +326,7 @@ class QueryConditionMixin:
         )
         query.open_bracket('OR')
         query.WHERE(
-            'CompletedDate',
+            self.completed_date_field,
             query.GreaterThan,
             (timezone.now() - timezone.timedelta(
                 hours=request_settings.get('keep_completed_hours')
@@ -340,6 +340,7 @@ class QueryConditionMixin:
 class TicketSynchronizer(QueryConditionMixin, Synchronizer):
     model_class = models.Ticket
     last_updated_field = 'LastActivityDate'
+    completed_date_field = 'CompletedDate'
 
     related_meta = {
         'Status': (models.Status, 'status'),
@@ -634,6 +635,7 @@ class TaskSynchronizer(QueryConditionMixin,
     model_class = models.Task
     last_updated_field = 'LastActivityDateTime'
     object_filter_field = 'ProjectID'
+    completed_date_field = 'CompletedDateTime'
 
     related_meta = {
         'AssignedResourceID': (models.Resource, 'assigned_resource'),
