@@ -711,13 +711,29 @@ class TimeEntrySynchronizer(Synchronizer):
 
             # Only save time entries for tickets or tasks that are
             # already in the DB
-            if ticket_id and ticket_id in ticket_ids:
-                self.persist_record(record, results)
-
-            if task_id and task_id in task_ids:
-                self.persist_record(record, results)
-
+            if ticket_id:
+                self.persist_time_entry(
+                    record, results, 'Ticket', ticket_id, ticket_ids)
+            elif task_id:
+                self.persist_time_entry(
+                    record, results, 'Task', task_id, task_ids)
             else:
-                logger.info(
-                    'Not syncing this time entry.'
+                # This shouldn't happen since we haven't observed the API
+                # returning time entries without referenced tasks or tickets.
+                logger.warning(
+                    'Time Entry: {} has no task '
+                    'or ticket - skipping.'.format(record.id)
                 )
+
+    def persist_time_entry(self, record, results, entity,
+                           object_id, object_ids):
+        log_message = '{} {} is not in the local database. ' \
+                      'Skipping Time Entry: {}.'
+
+        # Only save time entries for tickets or tasks that are
+        # already in the DB
+        if object_ids and object_id not in object_ids:
+            entity_id = getattr(record, '{}ID'.format(entity))
+            logger.info(log_message.format(entity, entity_id, record.id))
+        else:
+            self.persist_record(record, results)

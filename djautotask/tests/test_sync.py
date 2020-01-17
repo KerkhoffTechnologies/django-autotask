@@ -6,7 +6,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, Priority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
-    TaskSecondaryResource, Phase
+    TaskSecondaryResource, Phase, TimeEntry
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -718,5 +718,72 @@ class TestPhaseSynchronizer(TestCase):
         mocks.api_query_call([])
 
         synchronizer = sync.PhaseSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(qset.count(), 0)
+
+
+class TestTimeEntrySynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_resources()
+        fixture_utils.init_time_entries()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.date_worked, object_data['DateWorked'])
+        self.assertEqual(instance.start_date_time,
+                         object_data['StartDateTime'])
+        self.assertEqual(instance.end_date_time, object_data['EndDateTime'])
+        self.assertEqual(instance.summary_notes, object_data['SummaryNotes'])
+        self.assertEqual(instance.internal_notes, object_data['InternalNotes'])
+        self.assertEqual(instance.non_billable, object_data['NonBillable'])
+        self.assertEqual(instance.hours_worked, object_data['HoursWorked'])
+        self.assertEqual(instance.hours_to_bill, object_data['HoursToBill'])
+        self.assertEqual(instance.offset_hours, object_data['OffsetHours'])
+        self.assertEqual(instance.ticket.id, object_data['TicketID'])
+        self.assertEqual(instance.resource.id, object_data['ResourceID'])
+
+    def test_sync_time_entry(self):
+        """
+        Test to ensure synchronizer saves a time entry instance locally.
+        """
+        self.assertGreater(TimeEntry.objects.all().count(), 0)
+
+        object_data = fixtures.API_TIME_ENTRY
+        instance = TimeEntry.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TimeEntry)
+
+    def test_sync_time_entry_skipped(self):
+        """
+        Verify that a time entry does not get saved locally if its ticket
+        does not already exist in the local database.
+        """
+        time_entry_ticket = \
+            Ticket.objects.get(id=fixtures.API_TIME_ENTRY['TicketID'])
+        time_entry_ticket.delete()
+
+        synchronizer = sync.TimeEntrySynchronizer(full=True)
+        synchronizer.sync()
+        sync_job = SyncJob.objects.last()
+
+        self.assertEqual(TimeEntry.objects.all().count(), 0)
+        self.assertEqual(sync_job.added, 0)
+        self.assertEqual(sync_job.updated, 0)
+        self.assertEqual(sync_job.deleted, 0)
+
+    def test_delete_stale_time_entries(self):
+        """
+        Verify that time entry is deleted if not returned during a full sync
+        """
+        qset = TimeEntry.objects.all()
+        self.assertEqual(qset.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.TimeEntrySynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(qset.count(), 0)
