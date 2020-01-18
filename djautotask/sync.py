@@ -715,6 +715,18 @@ class TimeEntrySynchronizer(Synchronizer):
 
         return instance
 
+    def _get_query_conditions(self, query):
+
+        query.open_bracket('AND')
+        query.WHERE('TicketID', query.IsNotNull, '')
+
+        query.open_bracket('OR')
+        query.WHERE('TaskID', query.IsNotNull, '')
+        query.close_bracket()
+
+        query.close_bracket()
+        return query
+
     def fetch_records(self, query, results):
         ticket_ids = models.Ticket.objects.values_list('id', flat=True)
         task_ids = models.Task.objects.values_list('id', flat=True)
@@ -728,16 +740,9 @@ class TimeEntrySynchronizer(Synchronizer):
             if ticket_id:
                 self.persist_time_entry(
                     record, results, 'Ticket', ticket_id, ticket_ids)
-            elif task_id:
+            if task_id:
                 self.persist_time_entry(
                     record, results, 'Task', task_id, task_ids)
-            else:
-                # This shouldn't happen since we haven't observed the API
-                # returning time entries without referenced tasks or tickets.
-                logger.warning(
-                    'Time Entry: {} has no task '
-                    'or ticket - skipping.'.format(record.id)
-                )
 
     def persist_time_entry(self, record, results, entity,
                            object_id, object_ids):
