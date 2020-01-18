@@ -8,6 +8,7 @@ class DjautotaskSettings:
             'timeout': 30.0,
             'batch_size': 50,
             'max_attempts': 3,
+            'keep_completed_hours': 8,
         }
 
         if hasattr(settings, 'DJAUTOTASK_CONF_CALLABLE'):
