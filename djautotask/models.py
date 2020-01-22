@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from djautotask import api
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class SyncJob(models.Model):
@@ -179,8 +180,13 @@ class TicketType(Picklist):
 
 class SubIssueType(Picklist):
     def __str__(self):
-        parent_issue = IssueType.objects.get(id=self.parent_value)
-        return '{}/{}'.format(parent_issue.label, self.label)
+        try:
+            parent_issue = IssueType.objects.get(id=self.parent_value)
+            object_name = '{}/{}'.format(parent_issue.label, self.label)
+        except ObjectDoesNotExist:
+            object_name = self.label
+
+        return object_name
 
 
 class LicenseType(Picklist):

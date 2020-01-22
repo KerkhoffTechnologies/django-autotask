@@ -410,7 +410,7 @@ API_SUB_ISSUE_TYPE_LIST = [
         'IsSystem': False,
         'Label': 'Rapid Response',
         'SortOrder': 5,
-        'Value': 3,
+        'Value': 2,
         'ParentValue': None,
     },
     {
@@ -419,7 +419,7 @@ API_SUB_ISSUE_TYPE_LIST = [
         'IsSystem': False,
         'Label': 'Hardware Request',
         'SortOrder': 7,
-        'Value': 8,
+        'Value': 3,
         'ParentValue': None,
     },
 ]
