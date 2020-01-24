@@ -50,6 +50,7 @@ class Command(BaseCommand):
             ('sub_issue_type', sync.SubIssueTypeSynchronizer,
              _('Sub Issue Type')),
             ('ticket', sync.TicketSynchronizer, _('Ticket')),
+            ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
