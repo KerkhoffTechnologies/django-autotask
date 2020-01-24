@@ -443,6 +443,14 @@ class LicenseTypeSynchronizer(PicklistSynchronizer):
     picklist_field = 'LicenseType'
 
 
+class NoteTypeSynchronizer(PicklistSynchronizer):
+    # We are using ticket note to get the picklist, but like Ticket Status
+    # and Task Status both use one status type, so do Ticket and Task notes
+    model_class = models.NoteType
+    entity_type = 'TicketNote'
+    picklist_field = 'NoteType'
+
+
 class ResourceSynchronizer(Synchronizer):
     model_class = models.Resource
     last_updated_field = None
@@ -683,6 +691,65 @@ class TaskSecondaryResourceSynchronizer(Synchronizer):
 
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class NoteQueryMixin:
+    def _get_query_conditions(self, query):
+        query.open_bracket('AND')
+        query.WHERE(
+            'NoteType',
+            query.NotEqual,
+            self.at_api_client.picklist
+            ['TicketNote']['NoteType']['Workflow Rule Note - Task']
+        )
+        query.close_bracket()
+        return query
+
+
+class TicketNoteSynchronizer(NoteQueryMixin, Synchronizer):
+    model_class = models.TicketNote
+    last_updated_field = 'LastActivityDate'
+
+    related_meta = {
+        'NoteType': (models.NoteType, 'note_type'),
+        'CreatorResourceID': (models.Resource, 'creator_resource'),
+        'TicketID': (models.Ticket, 'ticket'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('Title')
+        instance.description = object_data.get('Description')
+        instance.create_date_time = object_data.get('CreateDateTime')
+        instance.last_activity_date = object_data.get('LastActivityDate')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class TaskNoteSynchronizer(NoteQueryMixin, Synchronizer):
+    model_class = models.TaskNote
+    last_updated_field = 'LastActivityDate'
+
+    related_meta = {
+        'NoteType': (models.NoteType, 'note_type'),
+        'CreatorResourceID': (models.Resource, 'creator_resource'),
+        'TaskID': (models.Task, 'task'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('Title')
+        instance.description = object_data.get('Description')
+        instance.create_date_time = object_data.get('CreateDateTime')
+        instance.last_activity_date = object_data.get('LastActivityDate')
 
         self.set_relations(instance, object_data)
 

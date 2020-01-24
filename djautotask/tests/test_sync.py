@@ -6,7 +6,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, Priority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
-    TaskSecondaryResource, Phase
+    TaskSecondaryResource, Phase, TicketNote, TaskNote
 from djautotask import sync
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -40,6 +40,106 @@ class TestAssignNullRelationMixin:
         model_object = self.model_class.objects.get(id=model_object.id)
         self.assertIsNone(model_object.assigned_resource)
         patch.stop()
+
+
+class TestTicketNoteSynchronizer(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.synchronizer = sync.TicketNoteSynchronizer()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_resources()
+        fixture_utils.init_note_types()
+        fixture_utils.init_ticket_notes()
+        fixture_utils.init_tickets()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.title, object_data['Title'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(
+            instance.create_date_time, object_data['CreateDateTime'])
+        self.assertEqual(
+            instance.last_activity_date, object_data['LastActivityDate'])
+        self.assertEqual(instance.ticket.id, object_data['TicketID'])
+        self.assertEqual(
+            instance.creator_resource.id, object_data['CreatorResourceID'])
+        self.assertEqual(instance.note_type.id, object_data['NoteType'])
+
+    def test_sync_ticket_note(self):
+        """
+        Test to ensure note synchronizer saves a TicketNote instance locally.
+        """
+        self.assertGreater(TicketNote.objects.all().count(), 0)
+
+        object_data = fixtures.API_TICKET_NOTE
+        instance = TicketNote.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TicketNote)
+
+    def test_delete_stale_ticket_notes(self):
+        """
+        Local notes should be deleted if not returned during a full sync
+        """
+        note_id = fixtures.API_TICKET_NOTE['id']
+        qs = TicketNote.objects.filter(id=note_id)
+        self.assertEqual(qs.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.TicketNoteSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(qs.count(), 0)
+
+
+class TestTaskNoteSynchronizer(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.synchronizer = sync.TaskNoteSynchronizer()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_resources()
+        fixture_utils.init_note_types()
+        fixture_utils.init_task_notes()
+        fixture_utils.init_tasks()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.title, object_data['Title'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(
+            instance.create_date_time, object_data['CreateDateTime'])
+        self.assertEqual(
+            instance.last_activity_date, object_data['LastActivityDate'])
+        self.assertEqual(instance.task.id, object_data['TaskID'])
+        self.assertEqual(
+            instance.creator_resource.id, object_data['CreatorResourceID'])
+        self.assertEqual(instance.note_type.id, object_data['NoteType'])
+
+    def test_sync_task_note(self):
+        """
+        Test to ensure note synchronizer saves a TaskNote instance locally.
+        """
+        self.assertGreater(TaskNote.objects.all().count(), 0)
+
+        object_data = fixtures.API_TASK_NOTE
+        instance = TaskNote.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TaskNote)
+
+    def test_delete_stale_task_notes(self):
+        """
+        Local notes should be deleted if not returned during a full sync
+        """
+        note_id = fixtures.API_TASK_NOTE['id']
+        qs = TaskNote.objects.filter(id=note_id)
+        self.assertEqual(qs.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.TaskNoteSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(qs.count(), 0)
 
 
 class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):

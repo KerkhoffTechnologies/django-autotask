@@ -275,6 +275,28 @@ class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncTicketNoteCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TICKET_NOTE_LIST,
+        'ticket_note',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_ticket_notes()
+
+
+class TestSyncTaskNoteCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TASK_NOTE_LIST,
+        'task_note',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_task_notes()
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -282,6 +304,14 @@ class TestSyncAllCommand(TestCase):
         mocks.init_api_connection(Wrapper)
         mocks.create_mock_call(
             'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
+        mocks.create_mock_call(
+            'djautotask.sync.TicketNoteSynchronizer._get_query_conditions',
+            None
+        )
+        mocks.create_mock_call(
+            'djautotask.sync.TaskNoteSynchronizer._get_query_conditions',
+            None
+        )
 
         # Mock API calls to return values based on what entity
         # is being requested
@@ -311,7 +341,9 @@ class TestSyncAllCommand(TestCase):
             TestLicenseTypeCommand,
             TestSyncTaskCommand,
             TestSyncTaskSecondaryResourceCommand,
-            TestSyncPhaseCommand
+            TestSyncPhaseCommand,
+            TestSyncTicketNoteCommand,
+            TestSyncTaskNoteCommand,
         ]
 
         self.test_args = []
@@ -356,6 +388,8 @@ class TestSyncAllCommand(TestCase):
             'task': models.Task,
             'task_secondary_resource': models.TaskSecondaryResource,
             'phase': models.Phase,
+            'ticket_note': models.TicketNote,
+            'task_note': models.TaskNote
         }
         run_sync_command()
         pre_full_sync_counts = {}
