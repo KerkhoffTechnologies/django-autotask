@@ -7,9 +7,9 @@ from djautotask.tests import fixtures, mocks, fixture_utils
 from djautotask import models
 
 
-def sync_summary(class_name, created_count):
-    return '{} Sync Summary - Created: {}, Updated: 0'.format(
-        class_name, created_count
+def sync_summary(class_name, created_count, updated_count=0):
+    return '{} Sync Summary - Created: {}, Updated: {}'.format(
+        class_name, created_count, updated_count
     )
 
 
@@ -282,6 +282,10 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
         'time_entry',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_tickets()
+
 
 class TestSyncAllCommand(TestCase):
 
@@ -301,14 +305,20 @@ class TestSyncAllCommand(TestCase):
         mocks.wrapper_query_api_calls(
             fixture_utils.manage_full_sync_return_data
         )
-        # Create ticket and associate with time entry fixture.
+        # Create ticket and task and associate with time entry fixture.
         self.time_entry_ticket = models.Ticket()
-        self.time_entry_ticket.id = fixtures.API_TIME_ENTRY['TicketID']
+        self.time_entry_ticket.id = fixtures.API_TIME_ENTRY_TICKET['TicketID']
         self.time_entry_ticket.due_date_time = timezone.now()
         self.time_entry_ticket.save()
 
+        self.time_entry_task = models.Task()
+        self.time_entry_task.title = 'Task with a time entry'
+        self.time_entry_task.id = fixtures.API_TIME_ENTRY_TASK['TaskID']
+        self.time_entry_task.save()
+
         sync_test_cases = [
             TestSyncTicketCommand,
+            TestSyncTaskCommand,
             TestSyncStatusCommand,
             TestSyncResourceCommand,
             TestSyncPriorityCommand,
@@ -324,7 +334,6 @@ class TestSyncAllCommand(TestCase):
             TestSyncTicketTypeCommand,
             TestDisplayColorCommand,
             TestLicenseTypeCommand,
-            TestSyncTaskCommand,
             TestSyncTaskSecondaryResourceCommand,
             TestSyncPhaseCommand,
             TestSyncTimeEntryCommand,
@@ -390,12 +399,16 @@ class TestSyncAllCommand(TestCase):
 
         # Verify ticket summary first. To handle the time entry sync case,
         # one ticket will be updated while the rest are removed to ensure
-        # the time entry syncs successfully.
-        summary = full_sync_summary(
-            'Ticket', models.Ticket.objects.all().count(), updated_count=1
-        )
+        # the time entry syncs successfully. Same goes for tasks.
+        summary = full_sync_summary('Ticket', 1, updated_count=1)
         self.assertIn(summary, output.getvalue().strip())
-        # We've already tested the ticket summary so remove ticket args
+
+        # We've already tested the ticket summary so remove
+        # from test_args.
+        self.test_args.pop(0)
+
+        summary = full_sync_summary('Task', 1, updated_count=1)
+        self.assertIn(summary, output.getvalue().strip())
         self.test_args.pop(0)
 
         # Verify the rest of sync classes summaries.

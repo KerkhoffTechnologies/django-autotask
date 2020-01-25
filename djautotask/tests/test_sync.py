@@ -751,7 +751,7 @@ class TestTimeEntrySynchronizer(TestCase):
         """
         self.assertGreater(TimeEntry.objects.all().count(), 0)
 
-        object_data = fixtures.API_TIME_ENTRY
+        object_data = fixtures.API_TIME_ENTRY_TICKET
         instance = TimeEntry.objects.get(id=object_data['id'])
 
         self._assert_sync(instance, object_data)
@@ -763,24 +763,26 @@ class TestTimeEntrySynchronizer(TestCase):
         does not already exist in the local database.
         """
         time_entry_ticket = \
-            Ticket.objects.get(id=fixtures.API_TIME_ENTRY['TicketID'])
+            Ticket.objects.get(id=fixtures.API_TIME_ENTRY_TICKET['TicketID'])
         time_entry_ticket.delete()
 
         synchronizer = sync.TimeEntrySynchronizer(full=True)
         synchronizer.sync()
         sync_job = SyncJob.objects.last()
 
+        # Time entry for time entry ticket is not saved locally
+        # and is subsequently removed.
         self.assertEqual(TimeEntry.objects.all().count(), 0)
         self.assertEqual(sync_job.added, 0)
         self.assertEqual(sync_job.updated, 0)
-        self.assertEqual(sync_job.deleted, 0)
+        self.assertEqual(sync_job.deleted, 1)
 
     def test_delete_stale_time_entries(self):
         """
         Verify that time entry is deleted if not returned during a full sync
         """
         qset = TimeEntry.objects.all()
-        self.assertEqual(qset.count(), 1)
+        self.assertEqual(qset.count(), len(fixtures.API_TIME_ENTRY_LIST))
 
         mocks.api_query_call([])
 

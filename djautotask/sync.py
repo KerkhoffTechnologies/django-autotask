@@ -760,6 +760,7 @@ class TimeEntrySynchronizer(Synchronizer):
             for object_id in batch:
                 query.OR(object_id_field, query.Equals, object_id)
 
+            query.close_bracket()
             batch_query_list.append(query)
 
         return batch_query_list

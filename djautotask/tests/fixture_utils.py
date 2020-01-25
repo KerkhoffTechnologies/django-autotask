@@ -98,10 +98,19 @@ def manage_full_sync_return_data(value):
         'Task': fixtures.API_TASK_LIST,
         'Phase': fixtures.API_PHASE_LIST,
         'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
-        'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
+
+    if object_type == 'TimeEntry':
+        condition = xml_value.find('query').find('condition')
+
+        # Ensure that a time entry gets returned with either an associated
+        # task or ticket but not both.
+        if condition.find('condition')[0].text == 'TaskID':
+            fixture_dict['TimeEntry'] = [fixtures.API_TIME_ENTRY_TASK]
+        else:
+            fixture_dict['TimeEntry'] = [fixtures.API_TIME_ENTRY_TICKET]
 
     fixture = fixture_dict.get(object_type)
     return_value = generate_objects(object_type, fixture)
@@ -122,12 +131,17 @@ def handle_empty_full_sync_return_data(value):
 
     if object_type == 'Ticket':
         fixture = deepcopy(fixtures.API_TICKET)
-        fixture['id'] = fixtures.API_TIME_ENTRY['TicketID']
+        fixture['id'] = fixtures.API_TIME_ENTRY_TICKET['TicketID']
         fixture['title'] = 'New Monthly Ticket'
+        return_value = generate_objects(object_type, [fixture])
+    elif object_type == 'Task':
+        fixture = deepcopy(fixtures.API_TASK)
+        fixture['id'] = fixtures.API_TIME_ENTRY_TASK['TaskID']
+        fixture['title'] = 'Another new Task'
         return_value = generate_objects(object_type, [fixture])
     elif object_type == 'Resource':
         fixture = deepcopy(fixtures.API_RESOURCE)
-        fixture['id'] = fixtures.API_TIME_ENTRY['ResourceID']
+        fixture['id'] = fixtures.API_TIME_ENTRY_TICKET['ResourceID']
         return_value = generate_objects(object_type, [fixture])
     else:
         return_value = []
@@ -378,7 +392,7 @@ def init_task_secondary_resources():
 
 def init_time_entries():
     ticket = Ticket()
-    ticket.id = fixtures.API_TIME_ENTRY['TicketID']
+    ticket.id = fixtures.API_TIME_ENTRY_TICKET['TicketID']
     ticket.due_date_time = timezone.now()
     ticket.save()
 
