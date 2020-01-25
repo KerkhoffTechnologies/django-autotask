@@ -166,4 +166,9 @@ class TimeEntryAdmin(admin.ModelAdmin):
     list_display = ('id', 'resource', 'ticket', 'task',
                     'date_worked', 'start_date_time', 'end_date_time')
     list_filter = ('resource', )
-    search_fields = ['id', 'resource', 'ticket', 'task']
+    search_fields = [
+        'id', 'resource__user_name', 'ticket__title', 'task__title']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('resource', 'ticket', 'task')
