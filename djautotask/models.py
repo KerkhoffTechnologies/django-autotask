@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
+from django.utils import timezone
 from djautotask import api
 
 
@@ -441,3 +442,16 @@ class TimeEntry(TimeStampedModel):
 
     def __str__(self):
         return str(self.id) or ''
+
+    def get_entered_time(self):
+        if self.end_date_time:
+            entered_time = self.end_date_time
+        elif self.hours_worked:
+            # timedelta does not like decimals
+            minutes = int(self.hours_worked * 60)
+            entered_time = self.hours_worked + timezone.timedelta(
+                minutes=minutes)
+        else:
+            entered_time = self.start_date_time
+
+        return entered_time
