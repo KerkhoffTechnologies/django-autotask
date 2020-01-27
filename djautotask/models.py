@@ -414,3 +414,31 @@ class TaskSecondaryResource(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.task)
+
+
+class TimeEntry(TimeStampedModel):
+    date_worked = models.DateTimeField(blank=True, null=True)
+    start_date_time = models.DateTimeField(blank=True, null=True)
+    end_date_time = models.DateTimeField(blank=True, null=True)
+    summary_notes = models.TextField(blank=True, null=True, max_length=8000)
+    internal_notes = models.TextField(blank=True, null=True, max_length=8000)
+    non_billable = models.BooleanField(default=False)
+    hours_worked = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    hours_to_bill = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    offset_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+
+    resource = models.ForeignKey(
+        'Resource', blank=True, null=True, on_delete=models.CASCADE)
+    ticket = models.ForeignKey(
+        'Ticket', blank=True, null=True, on_delete=models.CASCADE)
+    task = models.ForeignKey(
+        'Task', blank=True, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = 'Time entries'
+
+    def __str__(self):
+        return str(self.id) or ''
