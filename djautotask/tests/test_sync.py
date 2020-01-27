@@ -117,7 +117,6 @@ class AbstractPicklistSynchronizer(object):
         self.assertEqual(
             instance.is_default_value, object_data['IsDefaultValue'])
         self.assertEqual(instance.sort_order, object_data['SortOrder'])
-        self.assertEqual(instance.parent_value, object_data['ParentValue'])
         self.assertEqual(instance.is_active, object_data['IsActive'])
         self.assertEqual(instance.is_system, object_data['IsSystem'])
 
