@@ -179,14 +179,7 @@ class TicketType(Picklist):
 
 
 class SubIssueType(Picklist):
-    def __str__(self):
-        try:
-            parent_issue = IssueType.objects.get(id=self.parent_value)
-            object_name = '{}/{}'.format(parent_issue.label, self.label)
-        except ObjectDoesNotExist:
-            object_name = self.label
-
-        return object_name
+    pass
 
 
 class LicenseType(Picklist):
