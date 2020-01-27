@@ -62,7 +62,7 @@ API_PROJECT_STATUS_LIST = [
         'Label': 'Inactive',
         'SortOrder': 1,
         'Value': 0,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -71,7 +71,7 @@ API_PROJECT_STATUS_LIST = [
         'Label': 'New',
         'SortOrder': 2,
         'Value': 1,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -80,7 +80,7 @@ API_PROJECT_STATUS_LIST = [
         'Label': 'Complete',
         'SortOrder': 8,
         'Value': 5,
-        'ParentValue': None,
+        'parentValue': None,
     }
 ]
 
@@ -92,7 +92,7 @@ API_PROJECT_TYPE_LIST = [
         'Label': 'Client',
         'SortOrder': 5,
         'Value': 5,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -101,7 +101,7 @@ API_PROJECT_TYPE_LIST = [
         'Label': 'Internal',
         'SortOrder': 4,
         'Value': 4,
-        'ParentValue': None,
+        'parentValue': None,
     }
 ]
 
@@ -213,7 +213,7 @@ API_QUEUE_LIST = [
         'Label': 'Client Portal',
         'SortOrder': 0,
         'Value': 5,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -222,7 +222,7 @@ API_QUEUE_LIST = [
         'Label': 'Post Sale',
         'SortOrder': 1,
         'Value': 6,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -231,7 +231,7 @@ API_QUEUE_LIST = [
         'Label': 'Monitoring Alert',
         'SortOrder': 2,
         'Value': 8,
-        'ParentValue': None,
+        'parentValue': None,
     },
 ]
 
@@ -243,7 +243,7 @@ API_PRIORITY_LIST = [
         'Label': 'High',
         'SortOrder': 2,
         'Value': 1,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -252,7 +252,7 @@ API_PRIORITY_LIST = [
         'Label': 'Medium',
         'SortOrder': 3,
         'Value': 2,
-        'ParentValue': None,
+        'parentValue': None,
     }
 ]
 
@@ -264,7 +264,7 @@ API_STATUS_LIST = [
         'Label': 'Waiting Materials',
         'SortOrder': 6,
         'Value': 9,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -273,7 +273,7 @@ API_STATUS_LIST = [
         'Label': 'Scheduled',
         'SortOrder': 3,
         'Value': 10,
-        'ParentValue': None
+        'parentValue': None
     },
     {
         'IsActive': True,
@@ -282,7 +282,7 @@ API_STATUS_LIST = [
         'Label': 'Escalate',
         'SortOrder': 5,
         'Value': 11,
-        'ParentValue': None
+        'parentValue': None
     },
     {
         'IsActive': True,
@@ -291,7 +291,7 @@ API_STATUS_LIST = [
         'Label': 'Waiting Vendor',
         'SortOrder': 8,
         'Value': 12,
-        'ParentValue': None
+        'parentValue': None
     }
 ]
 
@@ -326,7 +326,7 @@ API_DISPLAY_COLOR_LIST = [
         'Label': '#ff6666',
         'SortOrder': 1,
         'Value': 19,
-        'ParentValue': None
+        'parentValue': None
     },
     {
         'IsActive': True,
@@ -335,7 +335,7 @@ API_DISPLAY_COLOR_LIST = [
         'Label': '#ff855d',
         'SortOrder': 2,
         'Value': 21,
-        'ParentValue': None
+        'parentValue': None
     },
 ]
 
@@ -347,7 +347,7 @@ API_SOURCE_LIST = [
         'Label': 'Monitoring Alert',
         'SortOrder': 8,
         'Value': 2,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -356,7 +356,7 @@ API_SOURCE_LIST = [
         'Label': 'Web Portal',
         'SortOrder': 6,
         'Value': 9,
-        'ParentValue': None,
+        'parentValue': None,
     },
 
 ]
@@ -369,7 +369,7 @@ API_ISSUE_TYPE_LIST = [
         'Label': 'Hardware',
         'SortOrder': 1,
         'Value': 2,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -378,7 +378,7 @@ API_ISSUE_TYPE_LIST = [
         'Label': 'Internal',
         'SortOrder': 2,
         'Value': 3,
-        'ParentValue': None,
+        'parentValue': None,
     },
 ]
 
@@ -390,7 +390,7 @@ API_TICKET_TYPE_LIST = [
         'Label': 'Service Request',
         'SortOrder': 5,
         'Value': 3,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -399,7 +399,7 @@ API_TICKET_TYPE_LIST = [
         'Label': 'Incident',
         'SortOrder': 6,
         'Value': 2,
-        'ParentValue': None,
+        'parentValue': None,
     },
 ]
 
@@ -411,7 +411,7 @@ API_SUB_ISSUE_TYPE_LIST = [
         'Label': 'Rapid Response',
         'SortOrder': 5,
         'Value': 2,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -420,7 +420,7 @@ API_SUB_ISSUE_TYPE_LIST = [
         'Label': 'Hardware Request',
         'SortOrder': 7,
         'Value': 3,
-        'ParentValue': None,
+        'parentValue': None,
     },
 ]
 
@@ -432,7 +432,7 @@ API_LICENSE_TYPE_LIST = [
         'Label': 'API User',
         'SortOrder': 7,
         'Value': 7,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -441,7 +441,7 @@ API_LICENSE_TYPE_LIST = [
         'Label': 'Team Member',
         'SortOrder': 4,
         'Value': 4,
-        'ParentValue': None,
+        'parentValue': None,
     },
     {
         'IsActive': True,
@@ -450,7 +450,7 @@ API_LICENSE_TYPE_LIST = [
         'Label': 'Administrator',
         'SortOrder': 1,
         'Value': 1,
-        'ParentValue': None,
+        'parentValue': None,
     },
 ]
 
