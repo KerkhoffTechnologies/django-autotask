@@ -4,10 +4,10 @@ from atws import helpers
 from xml.etree import ElementTree
 from django.utils import timezone
 from djautotask.models import Ticket
-from djautotask.models import Task
 from djautotask import sync
 from djautotask.tests import mocks, fixtures
 from pathlib import Path
+from copy import deepcopy
 
 
 def init_api_client():
@@ -103,12 +103,39 @@ def manage_full_sync_return_data(value):
         'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
         'TicketNote': fixtures.API_TICKET_NOTE_LIST,
         'TaskNote': fixtures.API_TASK_NOTE_LIST,
+        'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
 
     fixture = fixture_dict.get(object_type)
     return_value = generate_objects(object_type, fixture)
+
+    return return_value
+
+
+def handle_empty_full_sync_return_data(value):
+    """
+    Return no data except if the entity is Ticket or Resource.
+    When running a full ticket or resource sync, any associated time entries
+    will be removed. To ensure that our time entry does not get deleted
+    during full syncs for ticket or resource, just return a ticket and resource
+    that are associated with the time entry fixture.
+    """
+    xml_value = ElementTree.fromstring(value.get_query_xml())
+    object_type = xml_value.find('entity').text
+
+    if object_type == 'Ticket':
+        fixture = deepcopy(fixtures.API_TICKET)
+        fixture['id'] = fixtures.API_TIME_ENTRY['TicketID']
+        fixture['title'] = 'New Monthly Ticket'
+        return_value = generate_objects(object_type, [fixture])
+    elif object_type == 'Resource':
+        fixture = deepcopy(fixtures.API_RESOURCE)
+        fixture['id'] = fixtures.API_TIME_ENTRY['ResourceID']
+        return_value = generate_objects(object_type, [fixture])
+    else:
+        return_value = []
 
     return return_value
 
@@ -358,11 +385,6 @@ def init_task_secondary_resources():
 
 
 def init_ticket_notes():
-    ticket = Ticket()
-    ticket.id = fixtures.API_TICKET_NOTE['TicketID']
-    ticket.due_date_time = timezone.now()
-    ticket.save()
-
     mocks.create_mock_call(
         'djautotask.sync.TicketNoteSynchronizer._get_query_conditions', None)
 
@@ -374,10 +396,6 @@ def init_ticket_notes():
 
 
 def init_task_notes():
-    task = Task()
-    task.id = fixtures.API_TASK_NOTE['TaskID']
-    task.save()
-
     mocks.create_mock_call(
         'djautotask.sync.TaskNoteSynchronizer._get_query_conditions', None)
 
@@ -393,4 +411,17 @@ def init_note_types():
         'NoteType',
         fixtures.API_NOTE_TYPE_LIST,
         sync.NoteTypeSynchronizer
+    )
+
+
+def init_time_entries():
+    ticket = Ticket()
+    ticket.id = fixtures.API_TIME_ENTRY['TicketID']
+    ticket.due_date_time = timezone.now()
+    ticket.save()
+
+    sync_objects(
+        'TimeEntry',
+        fixtures.API_TIME_ENTRY_LIST,
+        sync.TimeEntrySynchronizer
     )

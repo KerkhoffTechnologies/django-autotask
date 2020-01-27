@@ -53,6 +53,7 @@ class Command(BaseCommand):
             ('note_type', sync.NoteTypeSynchronizer, _('Note Type')),
             ('ticket_note', sync.TicketNoteSynchronizer, _('Ticket Note')),
             ('task_note', sync.TaskNoteSynchronizer, _('Task Note')),
+            ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
