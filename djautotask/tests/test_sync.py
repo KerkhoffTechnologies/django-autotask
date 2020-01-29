@@ -1,6 +1,7 @@
 from django.test import TestCase
 from atws.wrapper import Wrapper
 
+import random
 from copy import deepcopy
 from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, Priority, Queue, Account, Project, \
@@ -8,6 +9,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote
 from djautotask import sync
+from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
 
 
@@ -217,7 +219,6 @@ class AbstractPicklistSynchronizer(object):
         self.assertEqual(
             instance.is_default_value, object_data['IsDefaultValue'])
         self.assertEqual(instance.sort_order, object_data['SortOrder'])
-        self.assertEqual(instance.parent_value, object_data['ParentValue'])
         self.assertEqual(instance.is_active, object_data['IsActive'])
         self.assertEqual(instance.is_system, object_data['IsSystem'])
 
@@ -828,7 +829,7 @@ class TestTimeEntrySynchronizer(TestCase):
         super().setUp()
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_resources()
-        fixture_utils.init_time_entries()
+        fixture_utils.init_tickets()
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
@@ -849,10 +850,24 @@ class TestTimeEntrySynchronizer(TestCase):
         """
         Test to ensure synchronizer saves a time entry instance locally.
         """
+        time_entries = fixture_utils.generate_objects(
+            'TimeEntry', fixtures.API_TIME_ENTRY_LIST)
+        mocks.api_query_call(time_entries)
+        synchronizer = sync.TimeEntrySynchronizer()
+        synchronizer.sync()
+
         self.assertGreater(TimeEntry.objects.all().count(), 0)
 
-        object_data = fixtures.API_TIME_ENTRY
+        object_data = fixtures.API_TIME_ENTRY_TICKET
         instance = TimeEntry.objects.get(id=object_data['id'])
+
+        ticket = Ticket.objects.first()
+        ticket.id = object_data['TicketID']
+        instance.ticket = ticket
+
+        resource = Resource.objects.first()
+        resource.id = object_data['ResourceID']
+        instance.resource = resource
 
         self._assert_sync(instance, object_data)
         assert_sync_job(TimeEntry)
@@ -862,28 +877,89 @@ class TestTimeEntrySynchronizer(TestCase):
         Verify that a time entry does not get saved locally if its ticket
         does not already exist in the local database.
         """
-        time_entry_ticket = \
-            Ticket.objects.get(id=fixtures.API_TIME_ENTRY['TicketID'])
-        time_entry_ticket.delete()
+        time_entry_count = TimeEntry.objects.all().count()
 
         synchronizer = sync.TimeEntrySynchronizer(full=True)
         synchronizer.sync()
         sync_job = SyncJob.objects.last()
 
+        # Time entry for time entry ticket is not saved locally
+        # and is subsequently removed.
         self.assertEqual(TimeEntry.objects.all().count(), 0)
         self.assertEqual(sync_job.added, 0)
         self.assertEqual(sync_job.updated, 0)
-        self.assertEqual(sync_job.deleted, 0)
+        self.assertEqual(sync_job.deleted, time_entry_count)
 
     def test_delete_stale_time_entries(self):
         """
         Verify that time entry is deleted if not returned during a full sync
         """
+        time_entries = fixture_utils.generate_objects(
+            'TimeEntry', fixtures.API_TIME_ENTRY_LIST)
+        mocks.api_query_call(time_entries)
+        synchronizer = sync.TimeEntrySynchronizer()
+        synchronizer.sync()
+
         qset = TimeEntry.objects.all()
-        self.assertEqual(qset.count(), 1)
+        self.assertEqual(qset.count(), len(fixtures.API_TIME_ENTRY_LIST))
 
         mocks.api_query_call([])
 
         synchronizer = sync.TimeEntrySynchronizer(full=True)
         synchronizer.sync()
+
+        qset = TimeEntry.objects.all()
         self.assertEqual(qset.count(), 0)
+
+    def test_batch_queries_creates_multiple_batches(self):
+        """
+        Verify that build batch query method returns multiple batches
+        ticket and task queries.
+        """
+        max_id_limit = 500
+        settings = DjautotaskSettings().get_settings()
+        batch_size = settings.get('time_entry_batch_size')
+
+        synchronizer = sync.TimeEntrySynchronizer()
+        ticket_sync_job = SyncJob.objects.filter(entity_name='Ticket')
+        task_sync_job = SyncJob.objects.filter(entity_name='Task')
+
+        # Simulate ticket IDs
+        object_ids = random.sample(range(1, max_id_limit), batch_size + 50)
+        _, _patch = mocks.create_mock_call(
+            'django.db.models.query.QuerySet.values_list', object_ids
+        )
+
+        ticket_query_list = synchronizer.build_batch_queries(
+            Ticket, 'TicketID', ticket_sync_job)
+        task_query_list = synchronizer.build_batch_queries(
+            Task, 'TaskID', task_sync_job)
+
+        # With a max batch size of 400, a set of 450 object IDs should result
+        # in 2 Query objects being returned in each list.
+        self.assertEqual(len(ticket_query_list), 2)
+        self.assertEqual(len(task_query_list), 2)
+
+        _patch.stop()
+
+    def test_batch_queries_returns_query_list(self):
+        """
+        Verify that an empty list is returned when no tickets or
+        tasks are present in the database.
+        """
+        _, _patch = mocks.create_mock_call(
+            'django.db.models.query.QuerySet.values_list', []
+        )
+        synchronizer = sync.TimeEntrySynchronizer()
+        ticket_sync_job = SyncJob.objects.filter(entity_name='Ticket')
+        task_sync_job = SyncJob.objects.filter(entity_name='Ticket')
+
+        ticket_query_list = synchronizer.build_batch_queries(
+            Ticket, 'TicketID', ticket_sync_job)
+        task_query_list = synchronizer.build_batch_queries(
+            Task, 'TaskID', task_sync_job)
+
+        self.assertEqual(len(ticket_query_list), 0)
+        self.assertEqual(len(task_query_list), 0)
+
+        _patch.stop()
