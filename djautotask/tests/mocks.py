@@ -1,4 +1,6 @@
 from mock import patch
+from atws.query import Query
+from djautotask.tests import fixtures
 
 
 WRAPPER_QUERY_METHOD = 'atws.wrapper.Wrapper.query'
@@ -46,3 +48,28 @@ def get_field_info_api_calls(side_effect=None):
     """
     _patch = patch(GET_FIELD_INFO_METHOD, side_effect=side_effect)
     _patch.start()
+
+
+def generate_time_entry_queries(model_class, id_field, sync_job):
+    query = Query('TimeEntry')
+    query.WHERE('id', query.GreaterThanorEquals, 0)
+
+    if id_field == 'TicketID':
+        fixture_id = fixtures.API_TIME_ENTRY_TICKET['id']
+    else:
+        fixture_id = fixtures.API_TIME_ENTRY_TASK['id']
+
+    query.open_bracket('AND')
+    query.OR(id_field, query.Equals, fixture_id)
+    query.close_bracket()
+    return [query]
+
+
+def build_batch_query(side_effect=None):
+
+    mock_call, _patch = create_mock_call(
+        'djautotask.sync.TimeEntrySynchronizer.build_batch_queries',
+        [],
+        side_effect=side_effect
+    )
+    return mock_call, _patch

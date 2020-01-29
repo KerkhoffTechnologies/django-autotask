@@ -585,7 +585,7 @@ API_TIME_ENTRY_TICKET = {
     'RoleID': 29683396,
     'CreateDateTime':
         datetime(2018, 1, 23, 9, 50, tzinfo=tzoffset(None, 3600)),
-    'ResourceID': API_RESOURCE['id'],
+    'ResourceID': 28,
     'CreatorUserID': 29683794,
     'LastModifiedUserID': 29683794,
     'LastModifiedDateTime':
@@ -614,7 +614,7 @@ API_TIME_ENTRY_TASK = {
     'RoleID': 29683396,
     'CreateDateTime':
         datetime(2018, 1, 23, 9, 50, tzinfo=tzoffset(None, 3600)),
-    'ResourceID': API_RESOURCE['id'],
+    'ResourceID': 28,
     'CreatorUserID': 29683794,
     'LastModifiedUserID': 29683794,
     'LastModifiedDateTime':
