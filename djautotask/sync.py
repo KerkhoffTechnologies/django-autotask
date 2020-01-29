@@ -130,14 +130,7 @@ class Synchronizer:
             )
         return set(ids)
 
-    def get(self, results):
-        """
-        Fetch records from the API. ATWS automatically makes multiple separate
-        queries if the request is over 500 records.
-        """
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
-        )
+    def build_base_query(self, sync_job_qset):
         query = Query(self.model_class.__name__)
 
         if sync_job_qset.exists() and self.last_updated_field \
@@ -148,6 +141,18 @@ class Synchronizer:
                         query.GreaterThanorEquals, last_sync_job_time)
         else:
             query.WHERE('id', query.GreaterThanorEquals, 0)
+
+        return query
+
+    def get(self, results):
+        """
+        Fetch records from the API. ATWS automatically makes multiple separate
+        queries if the request is over 500 records.
+        """
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
+        )
+        query = self.build_base_query(sync_job_qset)
 
         # Apply extra conditions if they exist, else nothing happens
         self._get_query_conditions(query)
@@ -160,7 +165,6 @@ class Synchronizer:
         return results
 
     def fetch_records(self, query, results):
-
         for record in self.at_api_client.query(query):
             self.persist_record(record, results)
 
@@ -725,44 +729,48 @@ class TimeEntrySynchronizer(Synchronizer):
 
         return instance
 
-    def _get_query_conditions(self, query):
+    def get(self, results):
+        """
+        Fetch records from the API only fetching time entry records if the
+        task/ticket is already in the database.
+        """
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
+        )
+        object_queries = \
+            self.build_batch_queries(models.Ticket, 'TicketID', sync_job_qset)
 
-        query.open_bracket('AND')
-        query.WHERE('TicketID', query.IsNotNull, '')
+        object_queries.extend(
+            self.build_batch_queries(models.Task, 'TaskID', sync_job_qset)
+        )
 
-        query.open_bracket('OR')
-        query.WHERE('TaskID', query.IsNotNull, '')
-        query.close_bracket()
+        logger.info(
+            'Fetching {} records.'.format(self.model_class)
+        )
+        for query in object_queries:
+            self.fetch_records(query, results)
 
-        query.close_bracket()
-        return query
+        return results
 
-    def fetch_records(self, query, results):
-        ticket_ids = models.Ticket.objects.values_list('id', flat=True)
-        task_ids = models.Task.objects.values_list('id', flat=True)
+    def build_batch_queries(self, model_class, object_id_field, sync_job_qset):
+        batch_query_list = []
+        settings = DjautotaskSettings().get_settings()
+        batch_size = settings.get('time_entry_batch_size')
 
-        for record in self.at_api_client.query(query):
-            ticket_id = getattr(record, 'TicketID', None)
-            task_id = getattr(record, 'TaskID', None)
+        object_ids = list(model_class.objects.values_list('id', flat=True))
 
-            # Only save time entries for tickets or tasks that are
-            # already in the DB
-            if ticket_id:
-                self.persist_time_entry(
-                    record, results, 'Ticket', ticket_id, ticket_ids)
-            if task_id:
-                self.persist_time_entry(
-                    record, results, 'Task', task_id, task_ids)
+        while object_ids:
+            query = self.build_base_query(sync_job_qset)
+            query.open_bracket('AND')
 
-    def persist_time_entry(self, record, results, entity,
-                           object_id, object_ids):
-        log_message = '{} {} is not in the local database. ' \
-                      'Skipping Time Entry: {}.'
+            batch = object_ids[:batch_size]
+            del object_ids[:batch_size]
 
-        # Only save time entries for tickets or tasks that are
-        # already in the DB
-        if object_ids and object_id not in object_ids:
-            entity_id = getattr(record, '{}ID'.format(entity))
-            logger.info(log_message.format(entity, entity_id, record.id))
-        else:
-            self.persist_record(record, results)
+            # Create queries from batches of tickets
+            for object_id in batch:
+                query.OR(object_id_field, query.Equals, object_id)
+
+            query.close_bracket()
+            batch_query_list.append(query)
+
+        return batch_query_list

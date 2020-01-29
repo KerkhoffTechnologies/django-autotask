@@ -2,12 +2,9 @@ from suds.client import Client
 from atws.wrapper import QueryCursor
 from atws import helpers
 from xml.etree import ElementTree
-from django.utils import timezone
-from djautotask.models import Ticket
 from djautotask import sync
 from djautotask.tests import mocks, fixtures
 from pathlib import Path
-from copy import deepcopy
 
 
 def init_api_client():
@@ -98,39 +95,22 @@ def manage_full_sync_return_data(value):
         'Task': fixtures.API_TASK_LIST,
         'Phase': fixtures.API_PHASE_LIST,
         'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
-        'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
 
+    if object_type == 'TimeEntry':
+        condition = xml_value.find('query').find('condition')
+
+        # Ensure that a time entry gets returned with either an associated
+        # task or ticket but not both.
+        if condition.find('condition')[0].text == 'TaskID':
+            fixture_dict['TimeEntry'] = [fixtures.API_TIME_ENTRY_TASK]
+        else:
+            fixture_dict['TimeEntry'] = [fixtures.API_TIME_ENTRY_TICKET]
+
     fixture = fixture_dict.get(object_type)
     return_value = generate_objects(object_type, fixture)
-
-    return return_value
-
-
-def handle_empty_full_sync_return_data(value):
-    """
-    Return no data except if the entity is Ticket or Resource.
-    When running a full ticket or resource sync, any associated time entries
-    will be removed. To ensure that our time entry does not get deleted
-    during full syncs for ticket or resource, just return a ticket and resource
-    that are associated with the time entry fixture.
-    """
-    xml_value = ElementTree.fromstring(value.get_query_xml())
-    object_type = xml_value.find('entity').text
-
-    if object_type == 'Ticket':
-        fixture = deepcopy(fixtures.API_TICKET)
-        fixture['id'] = fixtures.API_TIME_ENTRY['TicketID']
-        fixture['title'] = 'New Monthly Ticket'
-        return_value = generate_objects(object_type, [fixture])
-    elif object_type == 'Resource':
-        fixture = deepcopy(fixtures.API_RESOURCE)
-        fixture['id'] = fixtures.API_TIME_ENTRY['ResourceID']
-        return_value = generate_objects(object_type, [fixture])
-    else:
-        return_value = []
 
     return return_value
 
@@ -377,11 +357,6 @@ def init_task_secondary_resources():
 
 
 def init_time_entries():
-    ticket = Ticket()
-    ticket.id = fixtures.API_TIME_ENTRY['TicketID']
-    ticket.due_date_time = timezone.now()
-    ticket.save()
-
     sync_objects(
         'TimeEntry',
         fixtures.API_TIME_ENTRY_LIST,
