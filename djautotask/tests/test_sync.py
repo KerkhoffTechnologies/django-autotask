@@ -50,9 +50,9 @@ class TestTicketNoteSynchronizer(TestCase):
         self.synchronizer = sync.TicketNoteSynchronizer()
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_resources()
+        fixture_utils.init_tickets()
         fixture_utils.init_note_types()
         fixture_utils.init_ticket_notes()
-        fixture_utils.init_tickets()
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
@@ -100,9 +100,9 @@ class TestTaskNoteSynchronizer(TestCase):
         self.synchronizer = sync.TaskNoteSynchronizer()
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_resources()
+        fixture_utils.init_tasks()
         fixture_utils.init_note_types()
         fixture_utils.init_task_notes()
-        fixture_utils.init_tasks()
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
@@ -918,11 +918,10 @@ class TestTimeEntrySynchronizer(TestCase):
         """
         max_id_limit = 500
         settings = DjautotaskSettings().get_settings()
-        batch_size = settings.get('time_entry_batch_size')
+        batch_size = settings.get('batch_query_size')
 
         synchronizer = sync.TimeEntrySynchronizer()
-        ticket_sync_job = SyncJob.objects.filter(entity_name='Ticket')
-        task_sync_job = SyncJob.objects.filter(entity_name='Task')
+        sync_job = SyncJob.objects.filter(entity_name='TimeEntry')
 
         # Simulate ticket IDs
         object_ids = random.sample(range(1, max_id_limit), batch_size + 50)
@@ -930,15 +929,12 @@ class TestTimeEntrySynchronizer(TestCase):
             'django.db.models.query.QuerySet.values_list', object_ids
         )
 
-        ticket_query_list = synchronizer.build_batch_queries(
-            Ticket, 'TicketID', ticket_sync_job)
-        task_query_list = synchronizer.build_batch_queries(
-            Task, 'TaskID', task_sync_job)
+        batch_query_list = synchronizer.build_batch_queries(sync_job)
 
         # With a max batch size of 400, a set of 450 object IDs should result
-        # in 2 Query objects being returned in each list.
-        self.assertEqual(len(ticket_query_list), 2)
-        self.assertEqual(len(task_query_list), 2)
+        # in 4 Query objects being returned in the list. (2 for tickets, 2 for
+        # tasks)
+        self.assertEqual(len(batch_query_list), 4)
 
         _patch.stop()
 
@@ -951,15 +947,10 @@ class TestTimeEntrySynchronizer(TestCase):
             'django.db.models.query.QuerySet.values_list', []
         )
         synchronizer = sync.TimeEntrySynchronizer()
-        ticket_sync_job = SyncJob.objects.filter(entity_name='Ticket')
-        task_sync_job = SyncJob.objects.filter(entity_name='Ticket')
+        sync_job = SyncJob.objects.filter(entity_name='TimeEntry')
 
-        ticket_query_list = synchronizer.build_batch_queries(
-            Ticket, 'TicketID', ticket_sync_job)
-        task_query_list = synchronizer.build_batch_queries(
-            Task, 'TaskID', task_sync_job)
+        batch_query_list = synchronizer.build_batch_queries(sync_job)
 
-        self.assertEqual(len(ticket_query_list), 0)
-        self.assertEqual(len(task_query_list), 0)
+        self.assertEqual(len(batch_query_list), 0)
 
         _patch.stop()

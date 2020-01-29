@@ -41,10 +41,6 @@ class AbstractBaseSyncTest(object):
 
     def setUp(self):
         mocks.init_api_connection(Wrapper)
-        # We can't test if query conditions actualy return the correct objects
-        # so mock any Synchronizers with custom query conditions.
-        mocks.create_mock_call(
-            'djautotask.sync.TicketSynchronizer._get_query_conditions', None)
 
     def _title_for_at_object(self, at_object):
         return at_object.title().replace('_', ' ')
@@ -111,6 +107,10 @@ class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        # We can't test if query conditions actualy return the correct objects
+        # so mock any Synchronizers with custom query conditions.
+        mocks.create_mock_call(
+            'djautotask.sync.TicketSynchronizer._get_query_conditions', None)
         fixture_utils.init_statuses()
 
 
@@ -283,6 +283,7 @@ class TestSyncTicketNoteCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_tickets()
         fixture_utils.init_ticket_notes()
 
 
@@ -294,6 +295,7 @@ class TestSyncTaskNoteCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_tasks()
         fixture_utils.init_task_notes()
 
 
