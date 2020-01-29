@@ -306,7 +306,6 @@ class PicklistSynchronizer(Synchronizer):
         instance.label = object_data.get('Label')
         instance.is_default_value = object_data.get('IsDefaultValue')
         instance.sort_order = object_data.get('SortOrder')
-        instance.parent_value = object_data.get('parentValue')
         instance.is_active = object_data.get('IsActive')
         instance.is_system = object_data.get('IsSystem')
 
@@ -416,6 +415,17 @@ class IssueTypeSynchronizer(TicketPicklistSynchronizer):
 class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
     model_class = models.SubIssueType
     picklist_field = 'SubIssueType'
+
+    related_meta = {
+        'parentValue': (models.IssueType, 'parent_value'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+
+        self.set_relations(instance, object_data)
+        super()._assign_field_data(instance, object_data)
+
+        return instance
 
 
 class TicketTypeSynchronizer(TicketPicklistSynchronizer):
