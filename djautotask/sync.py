@@ -365,7 +365,7 @@ class BatchQueryMixin:
             'Fetching {} records.'.format(self.model_class)
         )
         for query in object_queries:
-            # Apply extra conditions if they exist, else run the query.
+            # Apply extra conditions if they exist, and then run the query.
             self._get_query_conditions(query)
             self.fetch_records(query, results)
 
