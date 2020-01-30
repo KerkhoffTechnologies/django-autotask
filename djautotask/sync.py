@@ -769,7 +769,19 @@ class TaskSecondaryResourceSynchronizer(Synchronizer):
         return instance
 
 
-class NoteQueryMixin:
+class NoteSynchronizer(Synchronizer):
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('Title')
+        instance.description = object_data.get('Description')
+        instance.create_date_time = object_data.get('CreateDateTime')
+        instance.last_activity_date = object_data.get('LastActivityDate')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
     def _get_query_conditions(self, query):
         query.open_bracket('AND')
         query.WHERE(
@@ -782,7 +794,9 @@ class NoteQueryMixin:
         return query
 
 
-class TicketNoteSynchronizer(BatchQueryMixin, NoteQueryMixin, Synchronizer):
+class TicketNoteSynchronizer(
+        BatchQueryMixin, NoteSynchronizer):
+
     model_class = models.TicketNote
     last_updated_field = 'LastActivityDate'
 
@@ -792,18 +806,6 @@ class TicketNoteSynchronizer(BatchQueryMixin, NoteQueryMixin, Synchronizer):
         'TicketID': (models.Ticket, 'ticket'),
     }
 
-    def _assign_field_data(self, instance, object_data):
-
-        instance.id = object_data['id']
-        instance.title = object_data.get('Title')
-        instance.description = object_data.get('Description')
-        instance.create_date_time = object_data.get('CreateDateTime')
-        instance.last_activity_date = object_data.get('LastActivityDate')
-
-        self.set_relations(instance, object_data)
-
-        return instance
-
     def build_batch_queries(self, sync_job_qset):
         batch_query_list = self._build_fk_batch(
             models.Ticket, 'TicketID', sync_job_qset)
@@ -811,7 +813,9 @@ class TicketNoteSynchronizer(BatchQueryMixin, NoteQueryMixin, Synchronizer):
         return batch_query_list
 
 
-class TaskNoteSynchronizer(BatchQueryMixin, NoteQueryMixin, Synchronizer):
+class TaskNoteSynchronizer(
+        BatchQueryMixin, NoteSynchronizer):
+
     model_class = models.TaskNote
     last_updated_field = 'LastActivityDate'
 
@@ -820,18 +824,6 @@ class TaskNoteSynchronizer(BatchQueryMixin, NoteQueryMixin, Synchronizer):
         'CreatorResourceID': (models.Resource, 'creator_resource'),
         'TaskID': (models.Task, 'task'),
     }
-
-    def _assign_field_data(self, instance, object_data):
-
-        instance.id = object_data['id']
-        instance.title = object_data.get('Title')
-        instance.description = object_data.get('Description')
-        instance.create_date_time = object_data.get('CreateDateTime')
-        instance.last_activity_date = object_data.get('LastActivityDate')
-
-        self.set_relations(instance, object_data)
-
-        return instance
 
     def build_batch_queries(self, sync_job_qset):
         batch_query_list = self._build_fk_batch(
