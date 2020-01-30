@@ -2,14 +2,13 @@ import io
 from atws.wrapper import Wrapper
 from django.core.management import call_command
 from django.test import TestCase
-from django.utils import timezone
 from djautotask.tests import fixtures, mocks, fixture_utils
 from djautotask import models
 
 
-def sync_summary(class_name, created_count):
-    return '{} Sync Summary - Created: {}, Updated: 0'.format(
-        class_name, created_count
+def sync_summary(class_name, created_count, updated_count=0):
+    return '{} Sync Summary - Created: {}, Updated: {}'.format(
+        class_name, created_count, updated_count
     )
 
 
@@ -282,6 +281,10 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
         'time_entry',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_tickets()
+
 
 class TestSyncAllCommand(TestCase):
 
@@ -301,14 +304,10 @@ class TestSyncAllCommand(TestCase):
         mocks.wrapper_query_api_calls(
             fixture_utils.manage_full_sync_return_data
         )
-        # Create ticket and associate with time entry fixture.
-        self.time_entry_ticket = models.Ticket()
-        self.time_entry_ticket.id = fixtures.API_TIME_ENTRY['TicketID']
-        self.time_entry_ticket.due_date_time = timezone.now()
-        self.time_entry_ticket.save()
 
         sync_test_cases = [
             TestSyncTicketCommand,
+            TestSyncTaskCommand,
             TestSyncStatusCommand,
             TestSyncResourceCommand,
             TestSyncPriorityCommand,
@@ -324,7 +323,6 @@ class TestSyncAllCommand(TestCase):
             TestSyncTicketTypeCommand,
             TestDisplayColorCommand,
             TestLicenseTypeCommand,
-            TestSyncTaskCommand,
             TestSyncTaskSecondaryResourceCommand,
             TestSyncPhaseCommand,
             TestSyncTimeEntryCommand,
@@ -346,8 +344,9 @@ class TestSyncAllCommand(TestCase):
             summary = sync_summary(slug_to_title(at_object), len(fixture))
             self.assertIn(summary, output.getvalue().strip())
 
-        ticket_list = [self.time_entry_ticket, fixtures.API_TICKET]
-        self.assertEqual(models.Ticket.objects.all().count(), len(ticket_list))
+        self.assertEqual(
+            models.Ticket.objects.all().count(), len(fixtures.API_TICKET_LIST)
+        )
 
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
@@ -377,26 +376,14 @@ class TestSyncAllCommand(TestCase):
         run_sync_command()
         pre_full_sync_counts = {}
 
-        # Except for ticket and resource, return no results to ensure
-        # objects get deleted during a full sync.
-        mocks.wrapper_query_api_calls(
-            fixture_utils.handle_empty_full_sync_return_data)
+        mocks.wrapper_query_api_calls()
         mocks.get_field_info_api_calls()
+        _, _patch = mocks.build_batch_query()
 
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
         output = run_sync_command(full_option=True)
-
-        # Verify ticket summary first. To handle the time entry sync case,
-        # one ticket will be updated while the rest are removed to ensure
-        # the time entry syncs successfully.
-        summary = full_sync_summary(
-            'Ticket', models.Ticket.objects.all().count(), updated_count=1
-        )
-        self.assertIn(summary, output.getvalue().strip())
-        # We've already tested the ticket summary so remove ticket args
-        self.test_args.pop(0)
 
         # Verify the rest of sync classes summaries.
         for fixture, at_object in self.test_args:
@@ -405,3 +392,5 @@ class TestSyncAllCommand(TestCase):
                 pre_full_sync_counts[at_object.lower()]
             )
             self.assertIn(summary, output.getvalue().strip())
+
+        _patch.stop()
