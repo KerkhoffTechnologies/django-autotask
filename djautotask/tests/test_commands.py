@@ -41,10 +41,6 @@ class AbstractBaseSyncTest(object):
 
     def setUp(self):
         mocks.init_api_connection(Wrapper)
-        # We can't test if query conditions actualy return the correct objects
-        # so mock any Synchronizers with custom query conditions.
-        mocks.create_mock_call(
-            'djautotask.sync.TicketSynchronizer._get_query_conditions', None)
 
     def _title_for_at_object(self, at_object):
         return at_object.title().replace('_', ' ')
@@ -111,6 +107,10 @@ class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        # We can't test if query conditions actualy return the correct objects
+        # so mock any Synchronizers with custom query conditions.
+        mocks.create_mock_call(
+            'djautotask.sync.TicketSynchronizer._get_query_conditions', None)
         fixture_utils.init_statuses()
 
 
@@ -275,6 +275,30 @@ class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncTicketNoteCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TICKET_NOTE_LIST,
+        'ticket_note',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_tickets()
+        fixture_utils.init_ticket_notes()
+
+
+class TestSyncTaskNoteCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TASK_NOTE_LIST,
+        'task_note',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_tasks()
+        fixture_utils.init_task_notes()
+
+
 class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
     args = (
         fixtures.API_TIME_ENTRY_LIST,
@@ -293,6 +317,14 @@ class TestSyncAllCommand(TestCase):
         mocks.init_api_connection(Wrapper)
         mocks.create_mock_call(
             'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
+        mocks.create_mock_call(
+            'djautotask.sync.TicketNoteSynchronizer._get_query_conditions',
+            None
+        )
+        mocks.create_mock_call(
+            'djautotask.sync.TaskNoteSynchronizer._get_query_conditions',
+            None
+        )
         mocks.create_mock_call(
             'djautotask.sync.QueryConditionMixin._get_query_conditions', None)
 
@@ -325,6 +357,8 @@ class TestSyncAllCommand(TestCase):
             TestLicenseTypeCommand,
             TestSyncTaskSecondaryResourceCommand,
             TestSyncPhaseCommand,
+            TestSyncTicketNoteCommand,
+            TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
         ]
 
@@ -371,6 +405,8 @@ class TestSyncAllCommand(TestCase):
             'task': models.Task,
             'task_secondary_resource': models.TaskSecondaryResource,
             'phase': models.Phase,
+            'ticket_note': models.TicketNote,
+            'task_note': models.TaskNote,
             'time_entry': models.TimeEntry,
         }
         run_sync_command()

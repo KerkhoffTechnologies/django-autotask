@@ -161,6 +161,23 @@ class PhaseTypeAdmin(admin.ModelAdmin):
     search_fields = ('id', 'title')
 
 
+@admin.register(models.NoteType)
+class NoteTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
+@admin.register(models.TicketNote)
+class TicketNoteAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'description', 'ticket')
+    search_fields = ('id', 'title')
+
+
+@admin.register(models.TaskNote)
+class TaskNoteAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'description', 'task')
+    search_fields = ('id', 'title')
+
+
 @admin.register(models.TimeEntry)
 class TimeEntryAdmin(admin.ModelAdmin):
     list_display = ('id', 'resource', 'ticket', 'task',
