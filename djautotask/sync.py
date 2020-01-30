@@ -361,14 +361,12 @@ class BatchQueryMixin:
         )
         object_queries = self.build_batch_queries(sync_job_qset)
 
-        # Apply extra conditions if they exist, else nothing happens
-        for query in object_queries:
-            self._get_query_conditions(query)
-
         logger.info(
             'Fetching {} records.'.format(self.model_class)
         )
         for query in object_queries:
+            # Apply extra conditions if they exist, else run the query.
+            self._get_query_conditions(query)
             self.fetch_records(query, results)
 
         return results
