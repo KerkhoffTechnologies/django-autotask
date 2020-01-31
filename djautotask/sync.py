@@ -523,6 +523,12 @@ class NoteTypeSynchronizer(PicklistSynchronizer):
     picklist_field = 'NoteType'
 
 
+class TaskTypeLinkSynchronizer(PicklistSynchronizer):
+    model_class = models.TaskTypeLink
+    entity_type = 'TimeEntry'
+    picklist_field = 'Type'
+
+
 class ResourceSynchronizer(Synchronizer):
     model_class = models.Resource
     last_updated_field = None
