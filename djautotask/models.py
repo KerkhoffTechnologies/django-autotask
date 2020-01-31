@@ -1,7 +1,10 @@
 from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
+from django.utils import timezone
 from djautotask import api
+
+OFFSET_TIMEZONE = 'America/New_York'
 
 
 class SyncJob(models.Model):
@@ -481,6 +484,30 @@ class TimeEntry(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'Time entries'
+        ordering = ('-start_date_time', 'id')
 
     def __str__(self):
         return str(self.id) or ''
+
+    def get_entered_time(self):
+        """
+        In Autotask, tickets are required to have start and end times.
+        Start and end times for project tasks can be optional.
+        In the case that a task has no start or end time, use the
+        date_worked field.
+        """
+        if self.end_date_time:
+            entered_time = self.end_date_time
+        else:
+            # Autotask gives us date_worked as a datetime, even though the
+            # time is always set to EST midnight (00:00:00).
+            est_offset = timezone.localtime(
+                timezone=timezone.pytz.timezone(OFFSET_TIMEZONE)).utcoffset()
+            local_offset = timezone.localtime().utcoffset()
+
+            # We want to end up with a UTC datetime that is midnight in the
+            # local timezone.
+            date_worked = self.date_worked + est_offset
+            entered_time = date_worked - local_offset
+
+        return entered_time
