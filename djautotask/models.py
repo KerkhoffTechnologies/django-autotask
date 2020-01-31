@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from django.utils import timezone
+from datetime import timedelta
 from djautotask import api
 
 OFFSET_TIMEZONE = 'America/New_York'
@@ -467,9 +468,13 @@ class TimeEntry(TimeStampedModel):
                 timezone=timezone.pytz.timezone(OFFSET_TIMEZONE)).utcoffset()
             local_offset = timezone.localtime().utcoffset()
 
+            date_worked = self.date_worked + est_offset
             # We want to end up with a UTC datetime that is midnight in the
             # local timezone.
-            offset_delta = est_offset - local_offset
-            entered_time = self.date_worked + offset_delta
+            if local_offset.days == -1:
+                entered_time = date_worked - local_offset
+            else:
+                hours = timedelta(hours=24) - local_offset
+                entered_time = date_worked + hours
 
         return entered_time
