@@ -7,7 +7,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, Priority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
-    TaskSecondaryResource, Phase, TimeEntry
+    TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -42,6 +42,106 @@ class TestAssignNullRelationMixin:
         model_object = self.model_class.objects.get(id=model_object.id)
         self.assertIsNone(model_object.assigned_resource)
         patch.stop()
+
+
+class TestTicketNoteSynchronizer(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.synchronizer = sync.TicketNoteSynchronizer()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_resources()
+        fixture_utils.init_tickets()
+        fixture_utils.init_note_types()
+        fixture_utils.init_ticket_notes()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.title, object_data['Title'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(
+            instance.create_date_time, object_data['CreateDateTime'])
+        self.assertEqual(
+            instance.last_activity_date, object_data['LastActivityDate'])
+        self.assertEqual(instance.ticket.id, object_data['TicketID'])
+        self.assertEqual(
+            instance.creator_resource.id, object_data['CreatorResourceID'])
+        self.assertEqual(instance.note_type.id, object_data['NoteType'])
+
+    def test_sync_ticket_note(self):
+        """
+        Test to ensure note synchronizer saves a TicketNote instance locally.
+        """
+        self.assertGreater(TicketNote.objects.all().count(), 0)
+
+        object_data = fixtures.API_TICKET_NOTE
+        instance = TicketNote.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TicketNote)
+
+    def test_delete_stale_ticket_notes(self):
+        """
+        Local notes should be deleted if not returned during a full sync
+        """
+        note_id = fixtures.API_TICKET_NOTE['id']
+        qs = TicketNote.objects.filter(id=note_id)
+        self.assertEqual(qs.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.TicketNoteSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(qs.count(), 0)
+
+
+class TestTaskNoteSynchronizer(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.synchronizer = sync.TaskNoteSynchronizer()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_resources()
+        fixture_utils.init_tasks()
+        fixture_utils.init_note_types()
+        fixture_utils.init_task_notes()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.title, object_data['Title'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(
+            instance.create_date_time, object_data['CreateDateTime'])
+        self.assertEqual(
+            instance.last_activity_date, object_data['LastActivityDate'])
+        self.assertEqual(instance.task.id, object_data['TaskID'])
+        self.assertEqual(
+            instance.creator_resource.id, object_data['CreatorResourceID'])
+        self.assertEqual(instance.note_type.id, object_data['NoteType'])
+
+    def test_sync_task_note(self):
+        """
+        Test to ensure note synchronizer saves a TaskNote instance locally.
+        """
+        self.assertGreater(TaskNote.objects.all().count(), 0)
+
+        object_data = fixtures.API_TASK_NOTE
+        instance = TaskNote.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TaskNote)
+
+    def test_delete_stale_task_notes(self):
+        """
+        Local notes should be deleted if not returned during a full sync
+        """
+        note_id = fixtures.API_TASK_NOTE['id']
+        qs = TaskNote.objects.filter(id=note_id)
+        self.assertEqual(qs.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.TaskNoteSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(qs.count(), 0)
 
 
 class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
@@ -818,11 +918,10 @@ class TestTimeEntrySynchronizer(TestCase):
         """
         max_id_limit = 500
         settings = DjautotaskSettings().get_settings()
-        batch_size = settings.get('time_entry_batch_size')
+        batch_size = settings.get('batch_query_size')
 
         synchronizer = sync.TimeEntrySynchronizer()
-        ticket_sync_job = SyncJob.objects.filter(entity_name='Ticket')
-        task_sync_job = SyncJob.objects.filter(entity_name='Task')
+        sync_job = SyncJob.objects.filter(entity_name='TimeEntry')
 
         # Simulate ticket IDs
         object_ids = random.sample(range(1, max_id_limit), batch_size + 50)
@@ -830,15 +929,12 @@ class TestTimeEntrySynchronizer(TestCase):
             'django.db.models.query.QuerySet.values_list', object_ids
         )
 
-        ticket_query_list = synchronizer.build_batch_queries(
-            Ticket, 'TicketID', ticket_sync_job)
-        task_query_list = synchronizer.build_batch_queries(
-            Task, 'TaskID', task_sync_job)
+        batch_query_list = synchronizer.build_batch_queries(sync_job)
 
         # With a max batch size of 400, a set of 450 object IDs should result
-        # in 2 Query objects being returned in each list.
-        self.assertEqual(len(ticket_query_list), 2)
-        self.assertEqual(len(task_query_list), 2)
+        # in 4 Query objects being returned in the list. (2 for tickets, 2 for
+        # tasks)
+        self.assertEqual(len(batch_query_list), 4)
 
         _patch.stop()
 
@@ -851,15 +947,10 @@ class TestTimeEntrySynchronizer(TestCase):
             'django.db.models.query.QuerySet.values_list', []
         )
         synchronizer = sync.TimeEntrySynchronizer()
-        ticket_sync_job = SyncJob.objects.filter(entity_name='Ticket')
-        task_sync_job = SyncJob.objects.filter(entity_name='Ticket')
+        sync_job = SyncJob.objects.filter(entity_name='TimeEntry')
 
-        ticket_query_list = synchronizer.build_batch_queries(
-            Ticket, 'TicketID', ticket_sync_job)
-        task_query_list = synchronizer.build_batch_queries(
-            Task, 'TaskID', task_sync_job)
+        batch_query_list = synchronizer.build_batch_queries(sync_job)
 
-        self.assertEqual(len(ticket_query_list), 0)
-        self.assertEqual(len(task_query_list), 0)
+        self.assertEqual(len(batch_query_list), 0)
 
         _patch.stop()

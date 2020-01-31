@@ -340,6 +340,64 @@ class QueryConditionMixin:
         return query
 
 
+class BatchQueryMixin:
+    """
+    Fetch records from the API only fetching records if the related model(s)
+    are already in the database.
+    """
+
+    def __init__(self, *args, **kwargs):
+        settings = DjautotaskSettings().get_settings()
+        self.batch_size = settings.get('batch_query_size')
+        super().__init__(*args, **kwargs)
+
+    def build_batch_queries(self, sync_job_qset):
+        raise NotImplementedError
+
+    def get(self, results):
+
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__
+        )
+        object_queries = self.build_batch_queries(sync_job_qset)
+
+        logger.info(
+            'Fetching {} records.'.format(self.model_class)
+        )
+        for query in object_queries:
+            # Apply extra conditions if they exist, and then run the query.
+            self._get_query_conditions(query)
+            self.fetch_records(query, results)
+
+        return results
+
+    def _build_fk_batch(
+            self, model_class, object_id_field, sync_job_qset):
+        """
+        Generic batching method for batching based off of the fk relation of
+        an object currently present in the local DB.
+        """
+
+        queries = []
+        object_ids = list(model_class.objects.values_list('id', flat=True))
+
+        while object_ids:
+            query = self.build_base_query(sync_job_qset)
+            query.open_bracket('AND')
+
+            batch = object_ids[:self.batch_size]
+            del object_ids[:self.batch_size]
+
+            # Create queries from batches of records
+            for object_id in batch:
+                query.OR(object_id_field, query.Equals, object_id)
+
+            query.close_bracket()
+            queries.append(query)
+
+        return queries
+
+
 class TicketSynchronizer(QueryConditionMixin, Synchronizer):
     model_class = models.Ticket
     last_updated_field = 'LastActivityDate'
@@ -455,6 +513,14 @@ class LicenseTypeSynchronizer(PicklistSynchronizer):
     model_class = models.LicenseType
     entity_type = 'Resource'
     picklist_field = 'LicenseType'
+
+
+class NoteTypeSynchronizer(PicklistSynchronizer):
+    # We are using ticket note to get the picklist, but like Ticket Status
+    # and Task Status both use one status type, so do Ticket and Task notes
+    model_class = models.NoteType
+    entity_type = 'TicketNote'
+    picklist_field = 'NoteType'
 
 
 class ResourceSynchronizer(Synchronizer):
@@ -703,7 +769,70 @@ class TaskSecondaryResourceSynchronizer(Synchronizer):
         return instance
 
 
-class TimeEntrySynchronizer(Synchronizer):
+class NoteSynchronizer(Synchronizer):
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('Title')
+        instance.description = object_data.get('Description')
+        instance.create_date_time = object_data.get('CreateDateTime')
+        instance.last_activity_date = object_data.get('LastActivityDate')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    def _get_query_conditions(self, query):
+        query.open_bracket('AND')
+        query.WHERE(
+            'NoteType',
+            query.NotEqual,
+            self.at_api_client.picklist
+            ['TicketNote']['NoteType']['Workflow Rule Note - Task']
+        )
+        query.close_bracket()
+        return query
+
+
+class TicketNoteSynchronizer(
+        BatchQueryMixin, NoteSynchronizer):
+
+    model_class = models.TicketNote
+    last_updated_field = 'LastActivityDate'
+
+    related_meta = {
+        'NoteType': (models.NoteType, 'note_type'),
+        'CreatorResourceID': (models.Resource, 'creator_resource'),
+        'TicketID': (models.Ticket, 'ticket'),
+    }
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.Ticket, 'TicketID', sync_job_qset)
+
+        return batch_query_list
+
+
+class TaskNoteSynchronizer(
+        BatchQueryMixin, NoteSynchronizer):
+
+    model_class = models.TaskNote
+    last_updated_field = 'LastActivityDate'
+
+    related_meta = {
+        'NoteType': (models.NoteType, 'note_type'),
+        'CreatorResourceID': (models.Resource, 'creator_resource'),
+        'TaskID': (models.Task, 'task'),
+    }
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.Task, 'TaskID', sync_job_qset)
+
+        return batch_query_list
+
+
+class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.TimeEntry
     last_updated_field = 'LastModifiedDateTime'
 
@@ -729,48 +858,14 @@ class TimeEntrySynchronizer(Synchronizer):
 
         return instance
 
-    def get(self, results):
-        """
-        Fetch records from the API only fetching time entry records if the
-        task/ticket is already in the database.
-        """
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
-        )
-        object_queries = \
-            self.build_batch_queries(models.Ticket, 'TicketID', sync_job_qset)
-
-        object_queries.extend(
-            self.build_batch_queries(models.Task, 'TaskID', sync_job_qset)
-        )
-
-        logger.info(
-            'Fetching {} records.'.format(self.model_class)
-        )
-        for query in object_queries:
-            self.fetch_records(query, results)
-
-        return results
-
-    def build_batch_queries(self, model_class, object_id_field, sync_job_qset):
+    def build_batch_queries(self, sync_job_qset):
         batch_query_list = []
-        settings = DjautotaskSettings().get_settings()
-        batch_size = settings.get('time_entry_batch_size')
 
-        object_ids = list(model_class.objects.values_list('id', flat=True))
-
-        while object_ids:
-            query = self.build_base_query(sync_job_qset)
-            query.open_bracket('AND')
-
-            batch = object_ids[:batch_size]
-            del object_ids[:batch_size]
-
-            # Create queries from batches of tickets
-            for object_id in batch:
-                query.OR(object_id_field, query.Equals, object_id)
-
-            query.close_bracket()
-            batch_query_list.append(query)
+        batch_query_list.extend(
+            self._build_fk_batch(
+                models.Ticket, 'TicketID', sync_job_qset))
+        batch_query_list.extend(
+            self._build_fk_batch(
+                models.Task, 'TaskID', sync_job_qset))
 
         return batch_query_list

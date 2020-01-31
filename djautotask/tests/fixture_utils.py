@@ -47,6 +47,9 @@ def generate_objects(object_type, fixture_objects):
     client = API_CLIENT
     object_list = []
 
+    if fixture_objects is None:
+        raise Exception(object_type)
+
     # Create test suds objects from the list of fixtures.
     for fixture in fixture_objects:
         suds_object = \
@@ -95,6 +98,9 @@ def manage_full_sync_return_data(value):
         'Task': fixtures.API_TASK_LIST,
         'Phase': fixtures.API_PHASE_LIST,
         'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
+        'TicketNote': fixtures.API_TICKET_NOTE_LIST,
+        'TaskNote': fixtures.API_TASK_NOTE_LIST,
+        'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -154,6 +160,9 @@ def manage_sync_picklist_return_data(wrapper, entity):
         },
         'Resource': {
             'LicenseType': fixtures.API_LICENSE_TYPE_LIST,
+        },
+        'TicketNote': {
+            'NoteType': fixtures.API_NOTE_TYPE_LIST,
         }
     }
     client = API_CLIENT
@@ -353,6 +362,36 @@ def init_task_secondary_resources():
         'TaskSecondaryResource',
         fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
         sync.TaskSecondaryResourceSynchronizer
+    )
+
+
+def init_ticket_notes():
+    mocks.create_mock_call(
+        'djautotask.sync.TicketNoteSynchronizer._get_query_conditions', None)
+
+    sync_objects(
+        'TicketNote',
+        fixtures.API_TICKET_NOTE_LIST,
+        sync.TicketNoteSynchronizer
+    )
+
+
+def init_task_notes():
+    mocks.create_mock_call(
+        'djautotask.sync.TaskNoteSynchronizer._get_query_conditions', None)
+
+    sync_objects(
+        'TaskNote',
+        fixtures.API_TASK_NOTE_LIST,
+        sync.TaskNoteSynchronizer
+    )
+
+
+def init_note_types():
+    sync_picklist_objects(
+        'NoteType',
+        fixtures.API_NOTE_TYPE_LIST,
+        sync.NoteTypeSynchronizer
     )
 
 

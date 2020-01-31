@@ -194,6 +194,10 @@ class LicenseType(Picklist):
     pass
 
 
+class NoteType(Picklist):
+    pass
+
+
 class RegularResourceManager(models.Manager):
     API_USER_LICENSE_ID = 7
 
@@ -246,6 +250,40 @@ class TicketSecondaryResource(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.ticket)
+
+
+class TicketNote(TimeStampedModel):
+    title = models.CharField(max_length=250)
+    description = models.CharField(max_length=3200)
+    create_date_time = models.DateTimeField(blank=True, null=True)
+    last_activity_date = models.DateTimeField(blank=True, null=True)
+
+    note_type = models.ForeignKey(
+        'NoteType', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    creator_resource = models.ForeignKey(
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    ticket = models.ForeignKey(
+        'Ticket', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
+
+class TaskNote(TimeStampedModel):
+    title = models.CharField(max_length=250)
+    description = models.CharField(max_length=3200)
+    create_date_time = models.DateTimeField(blank=True, null=True)
+    last_activity_date = models.DateTimeField(blank=True, null=True)
+
+    note_type = models.ForeignKey(
+        'NoteType', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    creator_resource = models.ForeignKey(
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    task = models.ForeignKey(
+        'Task', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
 
 class Account(TimeStampedModel):

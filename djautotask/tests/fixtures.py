@@ -547,7 +547,8 @@ API_TASK = {
     'ProjectID': 4,
     'PurchaseOrderNumber': None,
     'RemainingHours': 5.0,
-    'StartDateTime': datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
+    'StartDateTime':
+        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
     'Status': 11,
     'TaskIsBillable': False,
     'TaskNumber': 'T20120604.0012',
@@ -567,6 +568,57 @@ API_TASK_SECONDARY_RESOURCE = {
     'RoleID': 29683461,
 }
 API_TASK_SECONDARY_RESOURCE_LIST = [API_TASK_SECONDARY_RESOURCE]
+
+API_TICKET_NOTE = {
+    'id': 45,
+    'CreateDateTime':
+        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
+    'Description': "Note description",
+    'CreatorResourceID': 29683794,
+    'LastActivityDate':
+        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
+    'NoteType': 2,
+    'Publish': 1,
+    'TicketID': 7688,
+    'Title': "Note Title",
+}
+API_TICKET_NOTE_LIST = [API_TICKET_NOTE]
+
+API_TASK_NOTE = {
+    'id': 45,
+    'CreateDateTime':
+        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
+    'Description': "Note description",
+    'CreatorResourceID': 29683794,
+    'LastActivityDate':
+        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
+    'NoteType': 2,
+    'Publish': 1,
+    'TaskID': 7733,
+    'Title': "Note Title",
+}
+API_TASK_NOTE_LIST = [API_TASK_NOTE]
+
+API_NOTE_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Task Detail',
+        'SortOrder': 1,
+        'Value': 2,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'Client Portal Note',
+        'SortOrder': 1,
+        'Value': 18,
+        'ParentValue': None,
+    },
+]
 
 API_TIME_ENTRY_TICKET = {
     'id': 4,
