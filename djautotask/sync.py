@@ -846,6 +846,7 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
         'ResourceID': (models.Resource, 'resource'),
         'TicketID': (models.Ticket, 'ticket'),
         'TaskID': (models.Task, 'task'),
+        'Type': (models.TaskTypeLink, 'type'),
     }
 
     def _assign_field_data(self, instance, object_data):

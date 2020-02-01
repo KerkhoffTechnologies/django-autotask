@@ -7,7 +7,8 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TicketSecondaryResource, Priority, Queue, Account, Project, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
-    TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote
+    TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
+    TaskTypeLink
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -361,6 +362,16 @@ class TestLicenseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_license_types()
+
+
+class TestTaskTypeLinkSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = TaskTypeLink
+    fixture = fixtures.API_TASK_TYPE_LINK_LIST
+    synchronizer = sync.TaskTypeLinkSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_task_type_links()
 
 
 class TestTicketCategorySynchronizer(TestCase):

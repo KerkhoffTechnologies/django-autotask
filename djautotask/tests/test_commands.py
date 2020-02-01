@@ -214,6 +214,15 @@ class TestLicenseTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
+class TestSyncTaskTypeLinkCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'Type'
+
+    args = (
+        fixtures.API_TASK_TYPE_LINK_LIST,
+        'task_type_link',
+    )
+
+
 class TestSyncTicketCategoryCommand(AbstractBaseSyncTest, TestCase):
     args = (
         fixtures.API_TICKET_CATEGORY_LIST,
@@ -360,6 +369,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncTicketNoteCommand,
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
+            TestSyncTaskTypeLinkCommand,
         ]
 
         self.test_args = []
@@ -408,6 +418,7 @@ class TestSyncAllCommand(TestCase):
             'ticket_note': models.TicketNote,
             'task_note': models.TaskNote,
             'time_entry': models.TimeEntry,
+            'task_type_link': models.TaskTypeLink,
         }
         run_sync_command()
         pre_full_sync_counts = {}
