@@ -620,6 +620,27 @@ API_NOTE_TYPE_LIST = [
     },
 ]
 
+API_TASK_TYPE_LINK_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'ITServiceRequest',
+        'SortOrder': 1,
+        'Value': 19,
+        'ParentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': True,
+        'Label': 'ProjectTask',
+        'SortOrder': 2,
+        'Value': 20,
+        'ParentValue': None,
+    }
+]
+
 API_TIME_ENTRY_TICKET = {
     'id': 4,
     'UserDefinedFields': None,

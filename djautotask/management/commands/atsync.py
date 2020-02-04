@@ -53,6 +53,8 @@ class Command(BaseCommand):
             ('note_type', sync.NoteTypeSynchronizer, _('Note Type')),
             ('ticket_note', sync.TicketNoteSynchronizer, _('Ticket Note')),
             ('task_note', sync.TaskNoteSynchronizer, _('Task Note')),
+            ('task_type_link', sync.TaskTypeLinkSynchronizer,
+             _('Task Type Link')),
             ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
         )
         self.synchronizer_map = OrderedDict()
@@ -103,14 +105,6 @@ class Command(BaseCommand):
 
         failed_classes = 0
         error_messages = ''
-
-        num_synchronizers = len(self.synchronizer_map)
-        has_ticket_sync = 'ticket' in self.synchronizer_map
-        if full_option and num_synchronizers and has_ticket_sync:
-            sync_classes = list(sync_classes)
-            sync_classes.reverse()
-            # need to move ticket synchronizer to the tail of the list
-            sync_classes.append(sync_classes.pop(0))
 
         for sync_class, obj_name in sync_classes:
             error_msg = None

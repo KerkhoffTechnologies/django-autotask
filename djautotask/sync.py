@@ -523,6 +523,12 @@ class NoteTypeSynchronizer(PicklistSynchronizer):
     picklist_field = 'NoteType'
 
 
+class TaskTypeLinkSynchronizer(PicklistSynchronizer):
+    model_class = models.TaskTypeLink
+    entity_type = 'TimeEntry'
+    picklist_field = 'Type'
+
+
 class ResourceSynchronizer(Synchronizer):
     model_class = models.Resource
     last_updated_field = None
@@ -840,6 +846,7 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
         'ResourceID': (models.Resource, 'resource'),
         'TicketID': (models.Ticket, 'ticket'),
         'TaskID': (models.Task, 'task'),
+        'Type': (models.TaskTypeLink, 'type'),
     }
 
     def _assign_field_data(self, instance, object_data):

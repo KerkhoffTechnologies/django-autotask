@@ -189,3 +189,9 @@ class TimeEntryAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related('resource', 'ticket', 'task')
+
+
+@admin.register(models.TaskTypeLink)
+class TaskTypeLinkAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'is_active')
+    search_fields = ('id', 'label')
