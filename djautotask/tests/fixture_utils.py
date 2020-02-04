@@ -163,6 +163,9 @@ def manage_sync_picklist_return_data(wrapper, entity):
         },
         'TicketNote': {
             'NoteType': fixtures.API_NOTE_TYPE_LIST,
+        },
+        'TimeEntry': {
+            'Type': fixtures.API_TASK_TYPE_LINK_LIST,
         }
     }
     client = API_CLIENT
@@ -400,4 +403,12 @@ def init_time_entries():
         'TimeEntry',
         fixtures.API_TIME_ENTRY_LIST,
         sync.TimeEntrySynchronizer
+    )
+
+
+def init_task_type_links():
+    sync_picklist_objects(
+        'Type',
+        fixtures.API_TASK_TYPE_LINK_LIST,
+        sync.TaskTypeLinkSynchronizer
     )

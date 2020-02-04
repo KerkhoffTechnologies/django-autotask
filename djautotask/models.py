@@ -197,6 +197,10 @@ class NoteType(Picklist):
     pass
 
 
+class TaskTypeLink(Picklist):
+    pass
+
+
 class RegularResourceManager(models.Manager):
     API_USER_LICENSE_ID = 7
 
@@ -481,6 +485,9 @@ class TimeEntry(TimeStampedModel):
         'Ticket', blank=True, null=True, on_delete=models.CASCADE)
     task = models.ForeignKey(
         'Task', blank=True, null=True, on_delete=models.CASCADE)
+    type = models.ForeignKey(
+        'TaskTypeLink', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name_plural = 'Time entries'
