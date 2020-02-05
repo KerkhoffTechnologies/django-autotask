@@ -319,6 +319,13 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_tickets()
 
 
+class TestSyncRoleCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_ROLE_LIST,
+        'role',
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -370,6 +377,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
             TestSyncTaskTypeLinkCommand,
+            TestSyncRoleCommand
         ]
 
         self.test_args = []
@@ -419,6 +427,7 @@ class TestSyncAllCommand(TestCase):
             'task_note': models.TaskNote,
             'time_entry': models.TimeEntry,
             'task_type_link': models.TaskTypeLink,
+            'role': models.Role,
         }
         run_sync_command()
         pre_full_sync_counts = {}

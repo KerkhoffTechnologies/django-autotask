@@ -73,6 +73,7 @@ class SyncResults:
 
 class Synchronizer:
     lookup_key = 'id'
+    last_updated_field = None
 
     def __init__(self, full=False, *args, **kwargs):
         self.full = full
@@ -876,3 +877,17 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
                 models.Task, 'TaskID', sync_job_qset))
 
         return batch_query_list
+
+
+class RoleSynchronizer(Synchronizer):
+    model_class = models.Role
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.active = object_data.get('Active')
+        instance.name = object_data.get('Name')
+        instance.description = object_data.get('Description')
+        instance.hourly_factor = object_data.get('HourlyFactor')
+        instance.hourly_rate = object_data.get('HourlyRate')
+        instance.role_type = object_data.get('RoleType')
+        instance.system_role = object_data.get('SystemRole')

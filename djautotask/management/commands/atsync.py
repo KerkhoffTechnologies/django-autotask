@@ -56,6 +56,7 @@ class Command(BaseCommand):
             ('task_type_link', sync.TaskTypeLinkSynchronizer,
              _('Task Type Link')),
             ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
+            ('role', sync.RoleSynchronizer, _('Role')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
