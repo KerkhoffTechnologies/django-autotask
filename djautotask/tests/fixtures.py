@@ -699,3 +699,16 @@ API_TIME_ENTRY_TASK = {
     'BillingApprovalLevelMostRecent': 0,
 }
 API_TIME_ENTRY_LIST = [API_TIME_ENTRY_TICKET, API_TIME_ENTRY_TASK]
+
+API_ROLE = {
+    'id': 29683396,
+    'Name': "IT:Technician I",
+    'Description': "",
+    'CreatorResourceID': 29683794,
+    'Active': True,
+    'HourlyFactor': 1,
+    'HourlyRate': 100,
+    'RoleType': 0,
+    'SystemRole': False,
+}
+API_ROLE_LIST = [API_ROLE]

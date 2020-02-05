@@ -166,6 +166,12 @@ class NoteTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
+@admin.register(models.Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'description', 'hourly_rate')
+    search_fields = ('id', 'name', 'description')
+
+
 @admin.register(models.TicketNote)
 class TicketNoteAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'description', 'ticket')

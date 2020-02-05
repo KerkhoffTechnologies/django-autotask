@@ -490,6 +490,9 @@ class TimeEntry(TimeStampedModel):
     type = models.ForeignKey(
         'TaskTypeLink', blank=True, null=True, on_delete=models.SET_NULL
     )
+    role = models.ForeignKey(
+        'Role', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name_plural = 'Time entries'
@@ -520,3 +523,18 @@ class TimeEntry(TimeStampedModel):
             entered_time = date_worked - local_offset
 
         return entered_time
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=200)
+    active = models.BooleanField(default=True)
+    description = models.CharField(blank=True, null=True, max_length=200)
+    hourly_factor = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    hourly_rate = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    role_type = models.PositiveIntegerField(blank=True, null=True)
+    system_role = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name

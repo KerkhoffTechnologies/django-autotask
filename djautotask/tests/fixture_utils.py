@@ -101,6 +101,7 @@ def manage_full_sync_return_data(value):
         'TicketNote': fixtures.API_TICKET_NOTE_LIST,
         'TaskNote': fixtures.API_TASK_NOTE_LIST,
         'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
+        'Role': fixtures.API_ROLE_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -411,4 +412,12 @@ def init_task_type_links():
         'Type',
         fixtures.API_TASK_TYPE_LINK_LIST,
         sync.TaskTypeLinkSynchronizer
+    )
+
+
+def init_roles():
+    sync_objects(
+        'Role',
+        fixtures.API_ROLE_LIST,
+        sync.RoleSynchronizer
     )
