@@ -699,3 +699,38 @@ API_TIME_ENTRY_TASK = {
     'BillingApprovalLevelMostRecent': 0,
 }
 API_TIME_ENTRY_LIST = [API_TIME_ENTRY_TICKET, API_TIME_ENTRY_TASK]
+
+API_USE_TYPE_LIST = [
+    {
+        'Value': 1,
+        'Label': 'General Allocation Code',
+        'IsDefaultValue': False,
+        'SortOrder': 1,
+        'parentValue': None,
+        'IsActive': True,
+        'IsSystem': True,
+    },
+    {
+        'Value': 2,
+        'Label': 'Internal Allocation Code',
+        'IsDefaultValue': False,
+        'SortOrder': 1,
+        'parentValue': None,
+        'IsActive': True,
+        'IsSystem': True,
+    }
+]
+
+API_ALLOCATION_CODE = {
+    'id': 2,
+    'UserDefinedFields': None,
+    'Name': 'Finance',
+    'Type': 1,
+    'UseType': 2,
+    'Active': True,
+    'UnitCost': 0.0000,
+    'UnitPrice': 0.0000,
+    'ExternalNumber': 0,
+    'IsExcludedFromNewContracts': False,
+}
+API_ALLOCATION_CODE_LIST = [API_ALLOCATION_CODE]

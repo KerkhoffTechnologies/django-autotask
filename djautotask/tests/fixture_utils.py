@@ -101,6 +101,7 @@ def manage_full_sync_return_data(value):
         'TicketNote': fixtures.API_TICKET_NOTE_LIST,
         'TaskNote': fixtures.API_TASK_NOTE_LIST,
         'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
+        'AllocationCode': fixtures.API_ALLOCATION_CODE_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -166,6 +167,9 @@ def manage_sync_picklist_return_data(wrapper, entity):
         },
         'TimeEntry': {
             'Type': fixtures.API_TASK_TYPE_LINK_LIST,
+        },
+        'AllocationCode': {
+            'UseType': fixtures.API_USE_TYPE_LIST,
         }
     }
     client = API_CLIENT
@@ -292,6 +296,14 @@ def init_license_types():
     )
 
 
+def init_use_types():
+    sync_picklist_objects(
+        'UseType',
+        fixtures.API_USE_TYPE_LIST,
+        sync.UseTypeSynchronizer
+    )
+
+
 def init_ticket_categories():
     sync_objects(
         'TicketCategory',
@@ -411,4 +423,12 @@ def init_task_type_links():
         'Type',
         fixtures.API_TASK_TYPE_LINK_LIST,
         sync.TaskTypeLinkSynchronizer
+    )
+
+
+def init_allocation_codes():
+    sync_objects(
+        'AllocationCode',
+        fixtures.API_ALLOCATION_CODE_LIST,
+        sync.AllocationCodeSynchronizer
     )

@@ -223,6 +223,15 @@ class TestSyncTaskTypeLinkCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
+class TestUseTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'UseType'
+
+    args = (
+        fixtures.API_USE_TYPE_LIST,
+        'use_type',
+    )
+
+
 class TestSyncTicketCategoryCommand(AbstractBaseSyncTest, TestCase):
     args = (
         fixtures.API_TICKET_CATEGORY_LIST,
@@ -319,6 +328,16 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_tickets()
 
 
+class TestAllocationCodeCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_ALLOCATION_CODE_LIST,
+        'allocation_code',
+    )
+
+    def setUp(self):
+        super().setUp()
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -370,6 +389,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
             TestSyncTaskTypeLinkCommand,
+            TestUseTypeCommand,
+            TestAllocationCodeCommand,
         ]
 
         self.test_args = []
@@ -419,6 +440,8 @@ class TestSyncAllCommand(TestCase):
             'task_note': models.TaskNote,
             'time_entry': models.TimeEntry,
             'task_type_link': models.TaskTypeLink,
+            'use_type': models.UseType,
+            'allocation_code': models.AllocationCode,
         }
         run_sync_command()
         pre_full_sync_counts = {}
