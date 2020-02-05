@@ -403,8 +403,10 @@ class Task(TimeStampedModel):
     create_date = models.DateTimeField(blank=True, null=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
-    estimated_hours = models.PositiveIntegerField(default=0)
-    remaining_hours = models.PositiveIntegerField(default=0)
+    estimated_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
+    remaining_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=6)
     last_activity_date = models.DateTimeField(blank=True, null=True)
 
     assigned_resource = models.ForeignKey(
