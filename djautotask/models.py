@@ -490,6 +490,9 @@ class TimeEntry(TimeStampedModel):
     type = models.ForeignKey(
         'TaskTypeLink', blank=True, null=True, on_delete=models.SET_NULL
     )
+    role = models.ForeignKey(
+        'Role', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name_plural = 'Time entries'
@@ -533,8 +536,14 @@ class Role(models.Model):
     role_type = models.PositiveIntegerField(blank=True, null=True)
     system_role = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
 
 class Department(models.Model):
     name = models.TextField(blank=True, null=True, max_length=100)
     description = models.TextField(blank=True, null=True, max_length=1000)
     number = models.TextField(blank=True, null=True, max_length=50)
+
+    def __str__(self):
+        return self.name
