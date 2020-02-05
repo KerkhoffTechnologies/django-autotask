@@ -14,9 +14,9 @@ class Migration(migrations.Migration):
             name='Department',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.TextField(blank=True, max_length=100, null=True)),
+                ('name', models.CharField(blank=True, max_length=100, null=True)),
                 ('description', models.TextField(blank=True, max_length=1000, null=True)),
-                ('number', models.TextField(blank=True, max_length=50, null=True)),
+                ('number', models.CharField(blank=True, max_length=50, null=True)),
             ],
         ),
     ]
