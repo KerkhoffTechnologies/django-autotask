@@ -526,9 +526,9 @@ class TimeEntry(TimeStampedModel):
 
 
 class Role(models.Model):
-    name = models.TextField(blank=True, null=True, max_length=200)
+    name = models.CharField(blank=True, null=True, max_length=200)
     active = models.BooleanField(default=True)
-    description = models.TextField(blank=True, null=True, max_length=200)
+    description = models.CharField(blank=True, null=True, max_length=200)
     hourly_factor = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     hourly_rate = models.DecimalField(
