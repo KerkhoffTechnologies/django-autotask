@@ -201,6 +201,10 @@ class TaskTypeLink(Picklist):
     pass
 
 
+class UseType(Picklist):
+    pass
+
+
 class RegularResourceManager(models.Manager):
     API_USER_LICENSE_ID = 7
 
@@ -488,8 +492,9 @@ class TimeEntry(TimeStampedModel):
     task = models.ForeignKey(
         'Task', blank=True, null=True, on_delete=models.CASCADE)
     type = models.ForeignKey(
-        'TaskTypeLink', blank=True, null=True, on_delete=models.SET_NULL
-    )
+        'TaskTypeLink', blank=True, null=True, on_delete=models.SET_NULL)
+    allocation_code = models.ForeignKey(
+        'AllocationCode', blank=True, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name_plural = 'Time entries'
@@ -520,3 +525,16 @@ class TimeEntry(TimeStampedModel):
             entered_time = date_worked - local_offset
 
         return entered_time
+
+
+class AllocationCode(TimeStampedModel):
+    name = models.CharField(blank=True, null=True, max_length=200)
+    description = models.CharField(blank=True, null=True, max_length=500)
+    active = models.BooleanField(default=False)
+
+    use_type = models.ForeignKey(
+        'UseType', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return self.name if self.name else self.pk

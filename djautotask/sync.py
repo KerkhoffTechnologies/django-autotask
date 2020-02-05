@@ -529,6 +529,12 @@ class TaskTypeLinkSynchronizer(PicklistSynchronizer):
     picklist_field = 'Type'
 
 
+class UseTypeSynchronizer(PicklistSynchronizer):
+    model_class = models.UseType
+    entity_type = 'AllocationCode'
+    picklist_field = 'UseType'
+
+
 class ResourceSynchronizer(Synchronizer):
     model_class = models.Resource
     last_updated_field = None
@@ -847,6 +853,7 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
         'TicketID': (models.Ticket, 'ticket'),
         'TaskID': (models.Task, 'task'),
         'Type': (models.TaskTypeLink, 'type'),
+        'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -876,3 +883,22 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
                 models.Task, 'TaskID', sync_job_qset))
 
         return batch_query_list
+
+
+class AllocationCodeSynchronizer(Synchronizer):
+    model_class = models.AllocationCode
+    last_updated_field = None
+
+    related_meta = {
+        'UseType': (models.UseType, 'use_type')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('Name')
+        instance.description = object_data.get('Description')
+        instance.active = object_data.get('Active')
+
+        self.set_relations(instance, object_data)
+
+        return instance
