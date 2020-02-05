@@ -541,7 +541,7 @@ class Role(models.Model):
 
 
 class Department(models.Model):
-    name = models.CharField(blank=True, null=True, max_length=100)
+    name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True, max_length=1000)
     number = models.CharField(blank=True, null=True, max_length=50)
 
