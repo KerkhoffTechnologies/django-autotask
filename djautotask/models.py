@@ -532,3 +532,9 @@ class Role(models.Model):
         blank=True, null=True, decimal_places=2, max_digits=9)
     role_type = models.PositiveIntegerField(blank=True, null=True)
     system_role = models.BooleanField(default=False)
+
+
+class Department(models.Model):
+    name = models.TextField(blank=True, null=True, max_length=100)
+    description = models.TextField(blank=True, null=True, max_length=1000)
+    number = models.TextField(blank=True, null=True, max_length=50)

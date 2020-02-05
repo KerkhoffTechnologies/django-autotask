@@ -172,6 +172,12 @@ class RoleAdmin(admin.ModelAdmin):
     search_fields = ('id', 'name', 'description')
 
 
+@admin.register(models.Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'description')
+    search_fields = ('id', 'name', 'description')
+
+
 @admin.register(models.TicketNote)
 class TicketNoteAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'description', 'ticket')

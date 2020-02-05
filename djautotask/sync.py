@@ -891,3 +891,13 @@ class RoleSynchronizer(Synchronizer):
         instance.hourly_rate = object_data.get('HourlyRate')
         instance.role_type = object_data.get('RoleType')
         instance.system_role = object_data.get('SystemRole')
+
+
+class DepartmentSynchronizer(Synchronizer):
+    model_class = models.Department
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('Name')
+        instance.description = object_data.get('Description')
+        instance.number = object_data.get('Number')

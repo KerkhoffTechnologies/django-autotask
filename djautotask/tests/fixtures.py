@@ -704,7 +704,6 @@ API_ROLE = {
     'id': 29683396,
     'Name': "IT:Technician I",
     'Description': "",
-    'CreatorResourceID': 29683794,
     'Active': True,
     'HourlyFactor': 1,
     'HourlyRate': 100,
@@ -712,3 +711,11 @@ API_ROLE = {
     'SystemRole': False,
 }
 API_ROLE_LIST = [API_ROLE]
+
+API_DEPARTMENT = {
+    'id': 29683384,
+    'Name': "Finance",
+    'Description': "Finance Dept",
+    'Number': "",
+}
+API_DEPARTMENT_LIST = [API_DEPARTMENT]
