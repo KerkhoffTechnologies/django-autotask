@@ -15,9 +15,9 @@ class Migration(migrations.Migration):
             name='Role',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.TextField(blank=True, max_length=200, null=True)),
+                ('name', models.CharField(blank=True, max_length=200, null=True)),
                 ('active', models.BooleanField(default=True)),
-                ('description', models.TextField(blank=True, max_length=200, null=True)),
+                ('description', models.CharField(blank=True, max_length=200, null=True)),
                 ('hourly_factor', models.DecimalField(blank=True, decimal_places=2, max_digits=9, null=True)),
                 ('hourly_rate', models.DecimalField(blank=True, decimal_places=2, max_digits=9, null=True)),
                 ('role_type', models.PositiveIntegerField(blank=True, null=True)),
