@@ -61,6 +61,16 @@ class Command(BaseCommand):
             ('role', sync.RoleSynchronizer, _('Role')),
             ('department', sync.DepartmentSynchronizer, _('Department')),
             ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
+            (
+                'resource_role_department',
+                sync.ResourceRoleDepartmentSynchronizer,
+                _('Resource Role Department')
+            ),
+            (
+                'resource_service_desk_role',
+                sync.ResourceServiceDeskRoleSynchronizer,
+                _('Resource Service Desk Role')
+            ),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:

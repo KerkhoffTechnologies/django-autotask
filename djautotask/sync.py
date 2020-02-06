@@ -928,3 +928,41 @@ class DepartmentSynchronizer(Synchronizer):
         instance.name = object_data.get('Name')
         instance.description = object_data.get('Description')
         instance.number = object_data.get('Number')
+
+
+class ResourceRoleDepartmentSynchronizer(Synchronizer):
+    model_class = models.ResourceRoleDepartment
+
+    related_meta = {
+        'ResourceID': (models.Resource, 'resource'),
+        'RoleID': (models.Role, 'role'),
+        'DepartmentID': (models.Department, 'department'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.active = object_data.get('Active')
+        instance.default = object_data.get('Default')
+        instance.department_lead = object_data.get('DepartmentLead')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class ResourceServiceDeskRoleSynchronizer(Synchronizer):
+    model_class = models.ResourceServiceDeskRole
+
+    related_meta = {
+        'ResourceID': (models.Resource, 'resource'),
+        'RoleID': (models.Role, 'role'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.active = object_data.get('Active')
+        instance.default = object_data.get('Default')
+
+        self.set_relations(instance, object_data)
+
+        return instance

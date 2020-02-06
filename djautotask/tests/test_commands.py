@@ -349,6 +349,31 @@ class TestSyncDepartmentCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestResourceRoleDepartmentCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
+        'resource_role_department',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_departments()
+        fixture_utils.init_roles()
+        fixture_utils.init_resources()
+
+
+class TestResourceServiceDeskRoleCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
+        'resource_service_desk_role',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_roles()
+        fixture_utils.init_resources()
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -403,7 +428,9 @@ class TestSyncAllCommand(TestCase):
             TestUseTypeCommand,
             TestAllocationCodeCommand,
             TestSyncRoleCommand,
-            TestSyncDepartmentCommand
+            TestSyncDepartmentCommand,
+            TestResourceRoleDepartmentCommand,
+            TestResourceServiceDeskRoleCommand
         ]
 
         self.test_args = []
@@ -457,6 +484,8 @@ class TestSyncAllCommand(TestCase):
             'allocation_code': models.AllocationCode,
             'role': models.Role,
             'department': models.Department,
+            'resource_role_department': models.ResourceRoleDepartment,
+            'resource_service_desk_role': models.ResourceServiceDeskRole,
         }
         run_sync_command()
         pre_full_sync_counts = {}
@@ -472,9 +501,19 @@ class TestSyncAllCommand(TestCase):
 
         # Verify the rest of sync classes summaries.
         for fixture, at_object in self.test_args:
+            if at_object in (
+                    'resource_role_department',
+                    'resource_service_desk_role'
+            ):
+                # Assert that there were objects to get deleted, then change
+                # to zero to verify the output formats correctly.
+                # We are just testing the command, there are sync tests to
+                # verify that the syncronizers work correctly
+                self.assertGreater(pre_full_sync_counts[at_object], 0)
+                pre_full_sync_counts[at_object] = 0
             summary = full_sync_summary(
                 slug_to_title(at_object),
-                pre_full_sync_counts[at_object.lower()]
+                pre_full_sync_counts[at_object]
             )
             self.assertIn(summary, output.getvalue().strip())
 

@@ -104,6 +104,9 @@ def manage_full_sync_return_data(value):
         'AllocationCode': fixtures.API_ALLOCATION_CODE_LIST,
         'Role': fixtures.API_ROLE_LIST,
         'Department': fixtures.API_DEPARTMENT_LIST,
+        'ResourceRoleDepartment': fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
+        'ResourceServiceDeskRole':
+            fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -449,4 +452,20 @@ def init_departments():
         'Department',
         fixtures.API_DEPARTMENT_LIST,
         sync.DepartmentSynchronizer
+    )
+
+
+def init_resource_role_departments():
+    sync_objects(
+        'ResourceRoleDepartment',
+        fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
+        sync.ResourceRoleDepartmentSynchronizer
+    )
+
+
+def init_resource_service_desk_role():
+    sync_objects(
+        'ResourceServiceDeskRole',
+        fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
+        sync.ResourceServiceDeskRoleSynchronizer
     )

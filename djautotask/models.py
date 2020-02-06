@@ -565,3 +565,35 @@ class Department(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ResourceRoleDepartment(models.Model):
+    id = models.BigAutoField(primary_key=True, verbose_name='ID')
+    active = models.BooleanField(default=True)
+    default = models.BooleanField(default=False)
+    department_lead = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "{} - {} - {}".format(
+            self.resource, self.role, self.department)
+
+    department = models.ForeignKey(
+        'Department', on_delete=models.CASCADE)
+    role = models.ForeignKey(
+        'Role', on_delete=models.CASCADE)
+    resource = models.ForeignKey(
+        'Resource', on_delete=models.CASCADE)
+
+
+class ResourceServiceDeskRole(models.Model):
+    active = models.BooleanField(default=True)
+    default = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "{} - {}".format(
+            self.resource, self.role)
+
+    role = models.ForeignKey(
+        'Role', on_delete=models.CASCADE)
+    resource = models.ForeignKey(
+        'Resource', on_delete=models.CASCADE)

@@ -224,3 +224,21 @@ class AllocationCodeAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related('use_type')
+
+
+@admin.register(models.ResourceRoleDepartment)
+class ResourceRoleDepartmentAdmin(admin.ModelAdmin):
+    list_display = \
+        ('id', 'resource', 'role', 'department', 'active', 'default')
+    search_fields = (
+        'id',
+        'resource__first_name',
+        'role__name',
+        'department__name'
+    )
+
+
+@admin.register(models.ResourceServiceDeskRole)
+class ResourceServiceDeskRoleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'resource', 'role', 'active', 'default')
+    search_fields = ('id', 'resource__first_name')

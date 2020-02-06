@@ -8,7 +8,8 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
-    TaskTypeLink, UseType, AllocationCode, Role, Department
+    TaskTypeLink, UseType, AllocationCode, Role, Department, \
+    ResourceRoleDepartment, ResourceServiceDeskRole
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -1094,3 +1095,97 @@ class TestDepartmentSynchronizer(TestCase):
         synchronizer = sync.DepartmentSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(qs.count(), 0)
+
+
+class TestResourceRoleDepartmentSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_departments()
+        fixture_utils.init_roles()
+        fixture_utils.init_resources()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.active, object_data['Active'])
+        self.assertEqual(instance.default, object_data['Default'])
+        self.assertEqual(instance.department_lead,
+                         object_data['DepartmentLead'])
+        self.assertEqual(instance.resource.id, object_data['ResourceID'])
+        self.assertEqual(instance.role.id, object_data['RoleID'])
+        self.assertEqual(instance.department.id, object_data['DepartmentID'])
+
+    def test_sync_resource_role_department(self):
+        """
+        Test to ensure synchronizer saves an instance locally.
+        """
+        resource_role_department = fixture_utils.generate_objects(
+            'ResourceRoleDepartment',
+            fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST)
+        mocks.api_query_call(resource_role_department)
+        synchronizer = sync.ResourceRoleDepartmentSynchronizer()
+        synchronizer.sync()
+
+        self.assertGreater(ResourceRoleDepartment.objects.all().count(), 0)
+
+        object_data = fixtures.API_RESOURCE_ROLE_DEPARTMENT
+        instance = ResourceRoleDepartment.objects.get(id=object_data['id'])
+
+        role = Role.objects.first()
+        role.id = object_data['RoleID']
+        instance.role = role
+
+        resource = Resource.objects.first()
+        resource.id = object_data['ResourceID']
+        instance.resource = resource
+
+        department = Department.objects.first()
+        department.id = object_data['DepartmentID']
+        instance.department = department
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(ResourceRoleDepartment)
+
+
+class TestResourceServiceDeskRoleSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_roles()
+        fixture_utils.init_resources()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.active, object_data['Active'])
+        self.assertEqual(instance.default, object_data['Default'])
+        self.assertEqual(instance.resource.id, object_data['ResourceID'])
+        self.assertEqual(instance.role.id, object_data['RoleID'])
+
+    def test_sync_resource_service_desk_role(self):
+        """
+        Test to ensure synchronizer saves an instance locally.
+        """
+        resource_service_desk_role = fixture_utils.generate_objects(
+            'ResourceServiceDeskRole',
+            fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST)
+        mocks.api_query_call(resource_service_desk_role)
+        synchronizer = sync.ResourceServiceDeskRoleSynchronizer()
+        synchronizer.sync()
+
+        self.assertGreater(ResourceServiceDeskRole.objects.all().count(), 0)
+
+        object_data = fixtures.API_RESOURCE_SERVICE_DESK_ROLE
+        instance = ResourceServiceDeskRole.objects.get(id=object_data['id'])
+
+        role = Role.objects.first()
+        role.id = object_data['RoleID']
+        instance.role = role
+
+        resource = Resource.objects.first()
+        resource.id = object_data['ResourceID']
+        instance.resource = resource
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(ResourceServiceDeskRole)
