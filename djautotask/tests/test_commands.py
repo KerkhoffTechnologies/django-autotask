@@ -326,6 +326,13 @@ class TestSyncRoleCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncDepartmentCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_DEPARTMENT_LIST,
+        'department',
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -377,7 +384,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
             TestSyncTaskTypeLinkCommand,
-            TestSyncRoleCommand
+            TestSyncRoleCommand,
+            TestSyncDepartmentCommand
         ]
 
         self.test_args = []
@@ -428,6 +436,7 @@ class TestSyncAllCommand(TestCase):
             'time_entry': models.TimeEntry,
             'task_type_link': models.TaskTypeLink,
             'role': models.Role,
+            'department': models.Department,
         }
         run_sync_command()
         pre_full_sync_counts = {}

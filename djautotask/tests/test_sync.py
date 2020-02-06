@@ -8,7 +8,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
-    TaskTypeLink, Role
+    TaskTypeLink, Role, Department
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -1006,5 +1006,45 @@ class TestRoleSynchronizer(TestCase):
         mocks.api_query_call([])
 
         synchronizer = sync.RoleSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(qs.count(), 0)
+
+
+class TestDepartmentSynchronizer(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.synchronizer = sync.DepartmentSynchronizer()
+        fixture_utils.init_departments()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.name, object_data['Name'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(instance.number, object_data['Number'])
+
+    def test_sync_department(self):
+        """
+        Test to ensure department synchronizer saves a Department instance
+        locally.
+        """
+        self.assertGreater(Department.objects.all().count(), 0)
+
+        object_data = fixtures.API_DEPARTMENT
+        instance = Department.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(Department)
+
+    def test_delete_stale_departments(self):
+        """
+        Local Departments should be deleted if not returned during a full sync
+        """
+        department_id = fixtures.API_DEPARTMENT['id']
+        qs = Department.objects.filter(id=department_id)
+        self.assertEqual(qs.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.DepartmentSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(qs.count(), 0)
