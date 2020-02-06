@@ -754,3 +754,23 @@ API_DEPARTMENT = {
     'Number': "",
 }
 API_DEPARTMENT_LIST = [API_DEPARTMENT]
+
+API_RESOURCE_ROLE_DEPARTMENT = {
+    'id': 32,
+    'Default': True,
+    'DepartmentID': 29683384,
+    'Active': True,
+    'ResourceID': 29683794,
+    'RoleID': 29683396,
+    'DepartmentLead': True,
+}
+API_RESOURCE_ROLE_DEPARTMENT_LIST = [API_RESOURCE_ROLE_DEPARTMENT]
+
+API_RESOURCE_SERVICE_DESK_ROLE = {
+    'id': 32,
+    'Default': True,
+    'Active': True,
+    'ResourceID': 29683794,
+    'RoleID': 29683396,
+}
+API_RESOURCE_SERVICE_DESK_ROLE_LIST = [API_RESOURCE_SERVICE_DESK_ROLE]
