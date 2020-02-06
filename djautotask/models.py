@@ -495,6 +495,9 @@ class TimeEntry(TimeStampedModel):
         'TaskTypeLink', blank=True, null=True, on_delete=models.SET_NULL)
     allocation_code = models.ForeignKey(
         'AllocationCode', blank=True, null=True, on_delete=models.SET_NULL)
+    role = models.ForeignKey(
+        'Role', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name_plural = 'Time entries'
@@ -538,3 +541,27 @@ class AllocationCode(TimeStampedModel):
 
     def __str__(self):
         return self.name if self.name else self.pk
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=200)
+    active = models.BooleanField(default=True)
+    description = models.CharField(blank=True, null=True, max_length=200)
+    hourly_factor = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    hourly_rate = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
+    role_type = models.PositiveIntegerField(blank=True, null=True)
+    system_role = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
+class Department(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True, max_length=1000)
+    number = models.CharField(blank=True, null=True, max_length=50)
+
+    def __str__(self):
+        return self.name

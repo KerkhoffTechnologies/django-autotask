@@ -102,6 +102,8 @@ def manage_full_sync_return_data(value):
         'TaskNote': fixtures.API_TASK_NOTE_LIST,
         'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
         'AllocationCode': fixtures.API_ALLOCATION_CODE_LIST,
+        'Role': fixtures.API_ROLE_LIST,
+        'Department': fixtures.API_DEPARTMENT_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -431,4 +433,20 @@ def init_allocation_codes():
         'AllocationCode',
         fixtures.API_ALLOCATION_CODE_LIST,
         sync.AllocationCodeSynchronizer
+    )
+
+
+def init_roles():
+    sync_objects(
+        'Role',
+        fixtures.API_ROLE_LIST,
+        sync.RoleSynchronizer
+    )
+
+
+def init_departments():
+    sync_objects(
+        'Department',
+        fixtures.API_DEPARTMENT_LIST,
+        sync.DepartmentSynchronizer
     )

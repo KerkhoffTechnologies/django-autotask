@@ -334,8 +334,19 @@ class TestAllocationCodeCommand(AbstractBaseSyncTest, TestCase):
         'allocation_code',
     )
 
-    def setUp(self):
-        super().setUp()
+
+class TestSyncRoleCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_ROLE_LIST,
+        'role',
+    )
+
+
+class TestSyncDepartmentCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_DEPARTMENT_LIST,
+        'department',
+    )
 
 
 class TestSyncAllCommand(TestCase):
@@ -391,6 +402,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncTaskTypeLinkCommand,
             TestUseTypeCommand,
             TestAllocationCodeCommand,
+            TestSyncRoleCommand,
+            TestSyncDepartmentCommand
         ]
 
         self.test_args = []
@@ -442,6 +455,8 @@ class TestSyncAllCommand(TestCase):
             'task_type_link': models.TaskTypeLink,
             'use_type': models.UseType,
             'allocation_code': models.AllocationCode,
+            'role': models.Role,
+            'department': models.Department,
         }
         run_sync_command()
         pre_full_sync_counts = {}

@@ -58,6 +58,8 @@ class Command(BaseCommand):
             ('use_type', sync.UseTypeSynchronizer, _('Use Type')),
             ('allocation_code', sync.AllocationCodeSynchronizer,
              _('Allocation Code')),
+            ('role', sync.RoleSynchronizer, _('Role')),
+            ('department', sync.DepartmentSynchronizer, _('Department')),
             ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
         )
         self.synchronizer_map = OrderedDict()

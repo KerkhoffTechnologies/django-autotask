@@ -73,6 +73,7 @@ class SyncResults:
 
 class Synchronizer:
     lookup_key = 'id'
+    last_updated_field = None
 
     def __init__(self, full=False, *args, **kwargs):
         self.full = full
@@ -854,6 +855,7 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
         'TaskID': (models.Task, 'task'),
         'Type': (models.TaskTypeLink, 'type'),
         'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
+        'RoleID': (models.Role, 'role'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -902,3 +904,27 @@ class AllocationCodeSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+
+class RoleSynchronizer(Synchronizer):
+    model_class = models.Role
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.active = object_data.get('Active')
+        instance.name = object_data.get('Name')
+        instance.description = object_data.get('Description')
+        instance.hourly_factor = object_data.get('HourlyFactor')
+        instance.hourly_rate = object_data.get('HourlyRate')
+        instance.role_type = object_data.get('RoleType')
+        instance.system_role = object_data.get('SystemRole')
+
+
+class DepartmentSynchronizer(Synchronizer):
+    model_class = models.Department
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('Name')
+        instance.description = object_data.get('Description')
+        instance.number = object_data.get('Number')

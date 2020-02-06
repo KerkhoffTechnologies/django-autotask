@@ -734,3 +734,23 @@ API_ALLOCATION_CODE = {
     'IsExcludedFromNewContracts': False,
 }
 API_ALLOCATION_CODE_LIST = [API_ALLOCATION_CODE]
+
+API_ROLE = {
+    'id': 29683396,
+    'Name': "IT:Technician I",
+    'Description': "",
+    'Active': True,
+    'HourlyFactor': 1,
+    'HourlyRate': 100,
+    'RoleType': 0,
+    'SystemRole': False,
+}
+API_ROLE_LIST = [API_ROLE]
+
+API_DEPARTMENT = {
+    'id': 29683384,
+    'Name': "Finance",
+    'Description': "Finance Dept",
+    'Number': "",
+}
+API_DEPARTMENT_LIST = [API_DEPARTMENT]
