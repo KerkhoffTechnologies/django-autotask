@@ -8,7 +8,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     ProjectType, ProjectStatus, TicketCategory, Source, IssueType, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
-    TaskTypeLink, Role, Department
+    TaskTypeLink, UseType, AllocationCode, Role, Department
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -372,6 +372,16 @@ class TestTaskTypeLinkSynchronizer(AbstractPicklistSynchronizer, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_task_type_links()
+
+
+class TestUseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = UseType
+    fixture = fixtures.API_USE_TYPE_LIST
+    synchronizer = sync.UseTypeSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_use_types()
 
 
 class TestTicketCategorySynchronizer(TestCase):
@@ -965,6 +975,42 @@ class TestTimeEntrySynchronizer(TestCase):
         self.assertEqual(len(batch_query_list), 0)
 
         _patch.stop()
+
+
+class TestAllocationCodeSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_use_types()
+        fixture_utils.init_allocation_codes()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.name, object_data.get('Name'))
+        self.assertEqual(instance.description, object_data.get('Description'))
+        self.assertEqual(instance.active, object_data.get('Active'))
+        self.assertEqual(instance.use_type.id, object_data.get('UseType'))
+
+    def test_sync_allocation_code(self):
+
+        self.assertGreater(AllocationCode.objects.all().count(), 0)
+        object_data = fixtures.API_ALLOCATION_CODE
+        instance = AllocationCode.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(AllocationCode)
+
+    def test_delete_allocation_code(self):
+        allocation_code_qset = AllocationCode.objects.all()
+        self.assertEqual(allocation_code_qset.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.AllocationCodeSynchronizer(full=True)
+        synchronizer.sync()
+
+        self.assertEqual(allocation_code_qset.count(), 0)
 
 
 class TestRoleSynchronizer(TestCase):

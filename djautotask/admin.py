@@ -207,3 +207,20 @@ class TimeEntryAdmin(admin.ModelAdmin):
 class TaskTypeLinkAdmin(admin.ModelAdmin):
     list_display = ('id', 'label', 'is_active')
     search_fields = ('id', 'label')
+
+
+@admin.register(models.UseType)
+class UseTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'is_active')
+    search_fields = ('id', 'label')
+
+
+@admin.register(models.AllocationCode)
+class AllocationCodeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'active', 'use_type')
+    list_filter = ('use_type', )
+    search_fields = ('id', 'name')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('use_type')
