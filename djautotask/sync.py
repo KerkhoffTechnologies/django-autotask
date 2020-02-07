@@ -416,6 +416,7 @@ class TicketSynchronizer(QueryConditionMixin, Synchronizer):
         'Source': (models.Source, 'source'),
         'IssueType': (models.IssueType, 'issue_type'),
         'SubIssueType': (models.SubIssueType, 'sub_issue_type'),
+        'AssignedResourceRoleID': (models.Role, 'role'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -541,7 +542,8 @@ class ResourceSynchronizer(Synchronizer):
     last_updated_field = None
 
     related_meta = {
-        'LicenseType': (models.LicenseType, 'license_type')
+        'LicenseType': (models.LicenseType, 'license_type'),
+        'DefaultServiceDeskRoleID': (models.Role, 'default_service_desk_role'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -736,6 +738,7 @@ class TaskSynchronizer(QueryConditionMixin,
         'PhaseID': (models.Phase, 'phase'),
         'Status': (models.Status, 'status'),
         'PriorityLabel': (models.Priority, 'priority'),
+        'AssignedResourceRoleID': (models.Role, 'role'),
     }
 
     def get_active_ids(self):

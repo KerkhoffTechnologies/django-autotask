@@ -71,6 +71,9 @@ class Ticket(TimeStampedModel):
     type = models.ForeignKey(
         'TicketType', blank=True, null=True, on_delete=models.SET_NULL
     )
+    role = models.ForeignKey(
+        'Role', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -221,6 +224,9 @@ class Resource(TimeStampedModel):
     active = models.BooleanField(default=False)
     license_type = models.ForeignKey(
         'LicenseType', null=True, on_delete=models.SET_NULL
+    )
+    default_service_desk_role = models.ForeignKey(
+        'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
     objects = models.Manager()
     regular_objects = RegularResourceManager()
