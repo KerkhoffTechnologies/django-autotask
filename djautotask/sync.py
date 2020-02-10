@@ -417,6 +417,7 @@ class TicketSynchronizer(QueryConditionMixin, Synchronizer):
         'IssueType': (models.IssueType, 'issue_type'),
         'SubIssueType': (models.SubIssueType, 'sub_issue_type'),
         'AssignedResourceRoleID': (models.Role, 'role'),
+        'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -739,6 +740,7 @@ class TaskSynchronizer(QueryConditionMixin,
         'Status': (models.Status, 'status'),
         'PriorityLabel': (models.Priority, 'priority'),
         'AssignedResourceRoleID': (models.Role, 'role'),
+        'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
     }
 
     def get_active_ids(self):
@@ -888,6 +890,18 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
                 models.Task, 'TaskID', sync_job_qset))
 
         return batch_query_list
+
+    def create_new_entry(self, time_entry):
+        """
+        Accepts a time entry dictionary which is then used to create a
+        time entry Autotask object and created via the API.
+        """
+
+        # Create Autotask/Suds object
+
+        instance = api.create_object(time_entry)
+
+        return self.update_or_create_instance(instance)
 
 
 class AllocationCodeSynchronizer(Synchronizer):

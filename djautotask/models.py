@@ -74,6 +74,9 @@ class Ticket(TimeStampedModel):
     role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
+    allocation_code = models.ForeignKey(
+        'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -438,6 +441,9 @@ class Task(TimeStampedModel):
     phase = models.ForeignKey(
         'Phase', null=True,
         on_delete=models.SET_NULL
+    )
+    allocation_code = models.ForeignKey(
+        'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
     )
 
     objects = models.Manager()

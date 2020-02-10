@@ -202,3 +202,14 @@ def update_object(at_object, status):
 
     # Fetch one executes the update and returns the created object.
     return at.update([t]).fetch_one()
+
+
+def create_object(at_object):
+    """
+    Make a request to Autotask to create the given Autotask entity.
+    Returns the created object from the API.
+    https://atws.readthedocs.io/usage.html#creating-entities
+    """
+    at = init_api_connection()
+
+    return at.create(at_object).fetch_one()
