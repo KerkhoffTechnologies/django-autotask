@@ -891,15 +891,19 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
 
         return batch_query_list
 
-    def create_new_entry(self, time_entry):
+    def create_new_entry(self, entry_body):
         """
         Accepts a time entry dictionary which is then used to create a
         time entry Autotask object and created via the API.
         """
+        at = api.init_api_connection()
 
-        # Create Autotask/Suds object
+        # Use the form data to build the TimeEntry Autotask object
+        time_entry = at.new('TimeEntry')
+        for key, value in entry_body.items():
+            setattr(time_entry, key, value)
 
-        instance = api.create_object(time_entry)
+        instance = api.create_object(time_entry, at)
 
         return self.update_or_create_instance(instance)
 

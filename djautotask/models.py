@@ -491,11 +491,11 @@ class TimeEntry(TimeStampedModel):
     internal_notes = models.TextField(blank=True, null=True, max_length=8000)
     non_billable = models.BooleanField(default=False)
     hours_worked = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=9)
+        blank=True, null=True, decimal_places=4, max_digits=9)
     hours_to_bill = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=9)
+        blank=True, null=True, decimal_places=4, max_digits=9)
     offset_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=9)
+        blank=True, null=True, decimal_places=4, max_digits=9)
 
     resource = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.CASCADE)
