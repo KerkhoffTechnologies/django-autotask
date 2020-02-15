@@ -97,10 +97,10 @@ class Ticket(TimeStampedModel):
             self.update_at()
 
     def update_at(self):
-        """
-        Send ticket status updates to Autotask.
-        """
-        return api.update_object(self, self.status)
+        fields_to_update = {
+            'Status': self.status.id
+        }
+        return api.update_object('Ticket', self.id, fields_to_update)
 
 
 class AvailablePicklistManager(models.Manager):
@@ -465,10 +465,10 @@ class Task(TimeStampedModel):
             self.update_at()
 
     def update_at(self):
-        """
-        Send task status updates to Autotask.
-        """
-        return api.update_object(self, self.status)
+        fields_to_update = {
+            'Status': self.status.id, 'RemainingHours': self.remaining_hours
+        }
+        return api.update_object('Task', self.id, fields_to_update)
 
 
 class TaskSecondaryResource(TimeStampedModel):
