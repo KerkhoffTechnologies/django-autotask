@@ -98,9 +98,21 @@ class Ticket(TimeStampedModel):
 
     def update_at(self):
         """
-        Send ticket status updates to Autotask.
+        Send task status updates to Autotask. We need to query for the
+        object first, then alter it and execute it.
+        https://atws.readthedocs.io/usage.html#querying-for-entities
+
+        This is because we can not create a valid (enough) object to update
+        to autotask unless we sync EVERY non-readonly field. If you submit
+        the object with no values supplied for the readonly fields,
+        autotask will null them out.
         """
-        return api.update_object(self, self.status)
+        at = api.init_api_connection()
+        instance = api.fetch_object('Ticket', self.id, at)
+
+        instance.Status = self.status
+
+        return api.update_object(instance, at)
 
 
 class AvailablePicklistManager(models.Manager):
@@ -466,9 +478,22 @@ class Task(TimeStampedModel):
 
     def update_at(self):
         """
-        Send task status updates to Autotask.
+        Send task status updates to Autotask. We need to query for the
+        object first, then alter it and execute it.
+        https://atws.readthedocs.io/usage.html#querying-for-entities
+
+        This is because we can not create a valid (enough) object to update
+        to autotask unless we sync EVERY non-readonly field. If you submit
+        the object with no values supplied for the readonly fields,
+        autotask will null them out.
         """
-        return api.update_object(self, self.status)
+        at = api.init_api_connection()
+        instance = api.fetch_object('Task', self.id, at)
+
+        instance.Status = self.status.id
+        instance.RemainingHours = self.remaining_hours
+
+        return api.update_object(instance, at)
 
 
 class TaskSecondaryResource(TimeStampedModel):
