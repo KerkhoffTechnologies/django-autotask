@@ -793,6 +793,12 @@ class NoteSynchronizer(Synchronizer):
         instance.create_date_time = object_data.get('CreateDateTime')
         instance.last_activity_date = object_data.get('LastActivityDate')
 
+        if instance.description:
+            # Autotask docs say the max description length is 3200
+            # characters but we've seen descriptions that are longer than that.
+            # So truncate the field to 3200 characters just in case.
+            instance.description = instance.description[:3200]
+
         self.set_relations(instance, object_data)
 
         return instance
