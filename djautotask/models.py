@@ -23,7 +23,17 @@ class SyncJob(models.Model):
             return self.end_time - self.start_time
 
 
-class Ticket(TimeStampedModel):
+class ResourceAssignableModel:
+
+    def update_resource(self):
+        """
+        Send assigned resource updates to Autotask
+        """
+        return api.update_assigned_resource(
+            self, self.assigned_resource, self.assigned_resource_role)
+
+
+class Ticket(TimeStampedModel, ResourceAssignableModel):
     ticket_number = models.CharField(blank=True, null=True, max_length=50)
     completed_date = models.DateTimeField(blank=True, null=True)
     create_date = models.DateTimeField(blank=True, null=True)
@@ -70,6 +80,9 @@ class Ticket(TimeStampedModel):
     )
     type = models.ForeignKey(
         'TicketType', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    assigned_resource_role = models.ForeignKey(
+        'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     class Meta:
@@ -432,6 +445,9 @@ class Task(TimeStampedModel):
     phase = models.ForeignKey(
         'Phase', null=True,
         on_delete=models.SET_NULL
+    )
+    assigned_resource_role = models.ForeignKey(
+        'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     objects = models.Manager()
