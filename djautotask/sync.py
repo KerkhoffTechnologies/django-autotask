@@ -902,14 +902,7 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
         Accepts a time entry dictionary which is then used to create a
         time entry Autotask object and created via the API.
         """
-        at = api.init_api_connection()
-
-        # Use the form data to build the TimeEntry Autotask object
-        time_entry = at.new('TimeEntry')
-        for key, value in entry_body.items():
-            setattr(time_entry, key, value)
-
-        instance = api.create_object(time_entry, at)
+        instance = api.create_object('TimeEntry', entry_body)
 
         return self.update_or_create_instance(instance)
 

@@ -214,10 +214,16 @@ def update_object(entity_type, object_id, updated_fields):
     return at.update([instance]).fetch_one()
 
 
-def create_object(at_object, at):
+def create_object(entity_type, entity_fields):
     """
     Make a request to Autotask to create the given Autotask entity.
     Returns the created object from the API.
     https://atws.readthedocs.io/usage.html#creating-entities
     """
-    return at.create(at_object).fetch_one()
+    at = init_api_connection()
+    entity_object = at.new(entity_type)
+
+    for key, value in entity_fields.items():
+        setattr(entity_object, key, value)
+
+    return at.create(entity_object).fetch_one()
