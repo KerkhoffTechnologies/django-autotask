@@ -412,7 +412,7 @@ class AvailableTaskManager(models.Manager):
         )
 
 
-class Task(TimeStampedModel):
+class Task(TimeStampedModel, ResourceAssignableModel):
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
     description = models.CharField(blank=True, null=True, max_length=8000)
