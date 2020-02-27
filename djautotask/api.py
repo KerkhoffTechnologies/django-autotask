@@ -192,7 +192,7 @@ def update_object(at_object, status):
     # to autotask unless we sync EVERY non-readonly field. If you submit
     # the object with no values supplied for the readonly fields,
     # autotask will null them out.
-    entity = at_object.__class__.__name__
+    entity = at_object.type_name.capitalize()
     query = Query(entity)
     query.WHERE('id', query.Equals, at_object.id)
     at = init_api_connection()
