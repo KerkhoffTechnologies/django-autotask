@@ -227,3 +227,17 @@ def create_object(entity_type, entity_fields):
         setattr(entity_object, key, value)
 
     return at.create(entity_object).fetch_one()
+
+
+def update_assigned_resource(at_object, resource, role):
+    entity = at_object.__class__.__name__
+    query = Query(entity)
+    query.WHERE('id', query.Equals, at_object.id)
+    at = init_api_connection()
+
+    t = at.query(query).fetch_one()
+    t.AssignedResourceID = resource.id if resource else None
+    t.AssignedResourceRoleID = role.id if role else None
+
+    # Fetch one executes the update and returns the created object.
+    return at.update([t]).fetch_one()

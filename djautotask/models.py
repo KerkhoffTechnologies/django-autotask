@@ -23,7 +23,17 @@ class SyncJob(models.Model):
             return self.end_time - self.start_time
 
 
-class Ticket(TimeStampedModel):
+class ResourceAssignableModel:
+
+    def update_resource(self):
+        """
+        Send assigned resource updates to Autotask
+        """
+        return api.update_assigned_resource(
+            self, self.assigned_resource, self.assigned_resource_role)
+
+
+class Ticket(TimeStampedModel, ResourceAssignableModel):
     ticket_number = models.CharField(blank=True, null=True, max_length=50)
     completed_date = models.DateTimeField(blank=True, null=True)
     create_date = models.DateTimeField(blank=True, null=True)
@@ -71,7 +81,7 @@ class Ticket(TimeStampedModel):
     type = models.ForeignKey(
         'TicketType', blank=True, null=True, on_delete=models.SET_NULL
     )
-    role = models.ForeignKey(
+    assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
     allocation_code = models.ForeignKey(
@@ -408,7 +418,7 @@ class AvailableTaskManager(models.Manager):
         )
 
 
-class Task(TimeStampedModel):
+class Task(TimeStampedModel, ResourceAssignableModel):
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
     description = models.CharField(blank=True, null=True, max_length=8000)
@@ -444,6 +454,9 @@ class Task(TimeStampedModel):
     )
     allocation_code = models.ForeignKey(
         'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
+    )
+    assigned_resource_role = models.ForeignKey(
+        'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     objects = models.Manager()
