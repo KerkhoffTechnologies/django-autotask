@@ -402,22 +402,6 @@ class Phase(TimeStampedModel):
         return self.title
 
 
-class AvailableTaskManager(models.Manager):
-    """
-    Exclude tasks where the project is in a status that is inactive or
-    'Complete' or the project type is 'Template' or 'Baseline'.
-    """
-    def get_queryset(self):
-        qset = super().get_queryset()
-
-        return qset.exclude(
-            Q(project__status__is_active=False) |
-            Q(project__status__label=ProjectStatus.COMPLETE) |
-            Q(project__type__label=ProjectType.TEMPLATE) |
-            Q(project__type__label=ProjectType.BASELINE)
-        )
-
-
 class Task(TimeStampedModel, ResourceAssignableModel):
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
@@ -458,9 +442,6 @@ class Task(TimeStampedModel, ResourceAssignableModel):
     assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
-
-    objects = models.Manager()
-    available_objects = AvailableTaskManager()
 
     def __str__(self):
         return self.title
