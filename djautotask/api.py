@@ -184,24 +184,49 @@ class AutotaskRequestsTransport(transport.Transport):
         )
 
 
-def update_object(at_object, status):
-    # We need to query for the object first, then alter it and execute it.
-    # https://atws.readthedocs.io/usage.html#querying-for-entities
-
-    # This is because we can not create a valid (enough) object to update
-    # to autotask unless we sync EVERY non-readonly field. If you submit
-    # the object with no values supplied for the readonly fields,
-    # autotask will null them out.
-    entity = at_object.type_name.capitalize()
+def fetch_object(entity, object_id, at):
+    """
+    Fetch the give entity from the Autotask.
+    """
     query = Query(entity)
-    query.WHERE('id', query.Equals, at_object.id)
+    query.WHERE('id', query.Equals, object_id)
+
+    return at.query(query).fetch_one()
+
+
+def update_object(entity_type, object_id, updated_fields):
+    """
+    Send updates to Autotask. We need to query for the
+    object first, then alter it and execute it.
+    https://atws.readthedocs.io/usage.html#querying-for-entities
+
+    This is because we can not create a valid (enough) object to update
+    to autotask unless we sync EVERY non-readonly field. If you submit
+    the object with no values supplied for the readonly fields,
+    Autotask will null them out.
+    """
     at = init_api_connection()
+    instance = fetch_object(entity_type, object_id, at)
 
-    t = at.query(query).fetch_one()
-    t.Status = status.id
+    for key, value in updated_fields.items():
+        setattr(instance, key, value)
 
-    # Fetch one executes the update and returns the created object.
-    return at.update([t]).fetch_one()
+    return at.update([instance]).fetch_one()
+
+
+def create_object(entity_type, entity_fields):
+    """
+    Make a request to Autotask to create the given Autotask entity.
+    Returns the created object from the API.
+    https://atws.readthedocs.io/usage.html#creating-entities
+    """
+    at = init_api_connection()
+    entity_object = at.new(entity_type)
+
+    for key, value in entity_fields.items():
+        setattr(entity_object, key, value)
+
+    return at.create(entity_object).fetch_one()
 
 
 def update_assigned_resource(at_object, resource, role):

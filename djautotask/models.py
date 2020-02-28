@@ -84,6 +84,9 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
+    allocation_code = models.ForeignKey(
+        'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -104,10 +107,10 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
             self.update_at()
 
     def update_at(self):
-        """
-        Send ticket status updates to Autotask.
-        """
-        return api.update_object(self, self.status)
+        fields_to_update = {
+            'Status': self.status.id
+        }
+        return api.update_object('Ticket', self.id, fields_to_update)
 
 
 class AvailablePicklistManager(models.Manager):
@@ -234,6 +237,9 @@ class Resource(TimeStampedModel):
     active = models.BooleanField(default=False)
     license_type = models.ForeignKey(
         'LicenseType', null=True, on_delete=models.SET_NULL
+    )
+    default_service_desk_role = models.ForeignKey(
+        'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
     objects = models.Manager()
     regular_objects = RegularResourceManager()
@@ -430,6 +436,9 @@ class Task(TimeStampedModel, ResourceAssignableModel):
         'Phase', null=True,
         on_delete=models.SET_NULL
     )
+    allocation_code = models.ForeignKey(
+        'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
+    )
     assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
@@ -450,10 +459,10 @@ class Task(TimeStampedModel, ResourceAssignableModel):
             self.update_at()
 
     def update_at(self):
-        """
-        Send task status updates to Autotask.
-        """
-        return api.update_object(self, self.status)
+        fields_to_update = {
+            'Status': self.status.id, 'RemainingHours': self.remaining_hours
+        }
+        return api.update_object('Task', self.id, fields_to_update)
 
 
 class TaskSecondaryResource(TimeStampedModel):
@@ -476,11 +485,11 @@ class TimeEntry(TimeStampedModel):
     internal_notes = models.TextField(blank=True, null=True, max_length=8000)
     non_billable = models.BooleanField(default=False)
     hours_worked = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=9)
+        blank=True, null=True, decimal_places=4, max_digits=9)
     hours_to_bill = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=9)
+        blank=True, null=True, decimal_places=4, max_digits=9)
     offset_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=9)
+        blank=True, null=True, decimal_places=4, max_digits=9)
 
     resource = models.ForeignKey(
         'Resource', blank=True, null=True, on_delete=models.CASCADE)
