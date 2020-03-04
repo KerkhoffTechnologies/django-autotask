@@ -73,6 +73,7 @@ class SyncResults:
 
 class Synchronizer:
     lookup_key = 'id'
+    db_lookup_key = lookup_key
     last_updated_field = None
 
     def __init__(self, full=False, *args, **kwargs):
@@ -124,11 +125,12 @@ class Synchronizer:
 
     def _instance_ids(self, filter_params=None):
         if not filter_params:
-            ids = self.model_class.objects.all().values_list('id', flat=True)
+            ids = self.model_class.objects.all().order_by(self.db_lookup_key)\
+                .values_list('id', flat=True)
         else:
-            ids = self.model_class.objects.filter(filter_params).values_list(
-                'id', flat=True
-            )
+            ids = self.model_class.objects.filter(filter_params)\
+                .order_by(self.db_lookup_key)\
+                .values_list('id', flat=True)
         return set(ids)
 
     def build_base_query(self, sync_job_qset):
@@ -243,10 +245,10 @@ class Synchronizer:
 
         # Set of IDs of all records prior
         # to sync, to find stale records for deletion.
-        initial_ids = self._instance_ids()
         results = self.get(results)
 
         if self.full:
+            initial_ids = self._instance_ids()
             results.deleted_count = self.prune_stale_records(
                 initial_ids, results.synced_ids
             )
@@ -268,7 +270,6 @@ class PicklistSynchronizer(Synchronizer):
         """
         results = SyncResults()
         picklist_objects = None
-        initial_ids = self._instance_ids()
         self.at_api_client = api.init_api_connection()
 
         field_info = \
@@ -294,6 +295,7 @@ class PicklistSynchronizer(Synchronizer):
                 self.persist_record(record, results)
 
         if self.full:
+            initial_ids = self._instance_ids()
             results.deleted_count = self.prune_stale_records(
                 initial_ids, results.synced_ids
             )
@@ -380,7 +382,8 @@ class BatchQueryMixin:
         """
 
         queries = []
-        object_ids = list(model_class.objects.values_list('id', flat=True))
+        object_ids = list(model_class.objects.order_by(self.db_lookup_key)
+                          .values_list('id', flat=True))
 
         while object_ids:
             query = self.build_base_query(sync_job_qset)
@@ -643,7 +646,8 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
 
     def get_active_ids(self):
         active_project_statuses = models.ProjectStatus.objects.exclude(
-            is_active=False).values_list('id', flat=True)
+            is_active=False).values_list('id', flat=True).order_by(
+            self.db_lookup_key)
 
         return active_project_statuses
 
@@ -747,7 +751,7 @@ class TaskSynchronizer(QueryConditionMixin,
         active_projects = models.Project.objects.exclude(
             Q(status__is_active=False) |
             Q(status__label=models.ProjectStatus.COMPLETE)
-        ).values_list('id', flat=True)
+        ).values_list('id', flat=True).order_by(self.db_lookup_key)
 
         return active_projects
 
