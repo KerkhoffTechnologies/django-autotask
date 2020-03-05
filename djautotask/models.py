@@ -108,7 +108,8 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
 
     def update_at(self):
         fields_to_update = {
-            'Status': self.status.id
+            'Status': self.status.id,
+            'Priority': self.priority.id
         }
         return api.update_object('Ticket', self.id, fields_to_update)
 
