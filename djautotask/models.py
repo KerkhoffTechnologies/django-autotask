@@ -458,10 +458,16 @@ class Task(TimeStampedModel, ResourceAssignableModel):
         if update_at:
             self.update_at()
 
-    def update_at(self):
-        fields_to_update = {
-            'Status': self.status.id, 'RemainingHours': self.remaining_hours
-        }
+    def update_at(self, data=None):
+        if data:
+            fields_to_update = {}
+            for field, data in data.items():
+                fields_to_update[field] = data
+        else:
+            fields_to_update = {
+                'Status': self.status.id,
+            }
+
         return api.update_object('Task', self.id, fields_to_update)
 
 
