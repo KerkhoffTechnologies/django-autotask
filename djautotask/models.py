@@ -461,6 +461,7 @@ class Task(TimeStampedModel, ResourceAssignableModel):
 
     def update_at(self):
         fields_to_update = {
+            'Priority': self.priority.id,
             'Status': self.status.id, 'RemainingHours': self.remaining_hours
         }
         return api.update_object('Task', self.id, fields_to_update)
