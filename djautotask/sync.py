@@ -815,8 +815,7 @@ class NoteSynchronizer(Synchronizer):
         query.WHERE(
             'NoteType',
             query.NotEqual,
-            self.at_api_client.picklist
-            ['TicketNote']['NoteType']['Workflow Rule Note - Task']
+            models.NoteType.WORKFLOW_RULE_NOTE_ID
         )
         query.close_bracket()
         return query

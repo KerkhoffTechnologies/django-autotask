@@ -217,7 +217,9 @@ class LicenseType(Picklist):
 
 
 class NoteType(Picklist):
-    pass
+    # Workflow Rule Note - Task is an Autotask system note type that cannot
+    # be edited or deactivated.
+    WORKFLOW_RULE_NOTE_ID = 13
 
 
 class TaskTypeLink(Picklist):
