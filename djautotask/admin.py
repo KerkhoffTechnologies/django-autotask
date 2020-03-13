@@ -47,7 +47,7 @@ class SyncJobAdmin(admin.ModelAdmin):
 
 @admin.register(models.Status)
 class StatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'label')
+    list_display = ('id', 'label', 'is_active', 'is_system')
 
 
 @admin.register(models.Priority)

@@ -144,7 +144,9 @@ class Picklist(TimeStampedModel):
 
 
 class Status(Picklist):
-    pass
+    # Ticket/task statuses New, Waiting Customer, and Complete are
+    # system statuses in Autotask that cannot be edited or deactivated.
+    COMPLETE_ID = 5
 
     class Meta:
         ordering = ('label',)

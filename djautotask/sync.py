@@ -328,7 +328,7 @@ class QueryConditionMixin:
         query.WHERE(
             'Status',
             query.NotEqual,
-            self.at_api_client.picklist['Ticket']['Status']['Complete']
+            models.Status.COMPLETE_ID
         )
         query.open_bracket('OR')
         query.WHERE(
