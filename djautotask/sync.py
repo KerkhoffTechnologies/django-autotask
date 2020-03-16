@@ -870,6 +870,7 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
         'Type': (models.TaskTypeLink, 'type'),
         'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
         'RoleID': (models.Role, 'role'),
+        'ContractID': (models.Contract, 'contract'),
     }
 
     def _assign_field_data(self, instance, object_data):

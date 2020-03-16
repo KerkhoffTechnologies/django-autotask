@@ -519,6 +519,9 @@ class TimeEntry(TimeStampedModel):
     role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
+    contract = models.ForeignKey(
+        'Contract', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name_plural = 'Time entries'
