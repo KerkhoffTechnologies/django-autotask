@@ -9,7 +9,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
     TaskTypeLink, UseType, AllocationCode, Role, Department, \
-    ResourceRoleDepartment, ResourceServiceDeskRole
+    ResourceRoleDepartment, ResourceServiceDeskRole, Contract
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -1189,3 +1189,38 @@ class TestResourceServiceDeskRoleSynchronizer(TestCase):
 
         self._assert_sync(instance, object_data)
         assert_sync_job(ResourceServiceDeskRole)
+
+
+class TestContractSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_accounts()
+
+    def _assert_sync(self, instance, object_data):
+
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.name, object_data['ContractName'])
+        self.assertEqual(instance.number, object_data['ContractNumber'])
+        self.assertEqual(instance.status, str(object_data['Status']))
+        self.assertEqual(instance.account.id, object_data['AccountID'])
+
+    def test_sync_contract(self):
+        """
+        Test to ensure synchronizer saves a contract instance locally.
+        """
+        contract = fixture_utils.generate_objects(
+            'Contract', fixtures.API_CONTRACT_LIST
+        )
+        mocks.api_query_call(contract)
+        synchronizer = sync.ContractSynchronizer()
+        synchronizer.sync()
+
+        self.assertGreater((Contract.objects.count()), 0)
+
+        object_data = fixtures.API_CONTRACT
+        instance = Contract.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(Contract)

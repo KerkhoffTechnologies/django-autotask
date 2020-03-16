@@ -621,8 +621,14 @@ class ResourceServiceDeskRole(models.Model):
 
 
 class Contract(models.Model):
+    STATUS_CHOICES = (
+        (0, 'Inactive'),
+        (1, 'Active')
+    )
     name = models.CharField(max_length=250)
     number = models.CharField(blank=True, null=True, max_length=50)
+    status = models.CharField(
+        max_length=20, blank=True, null=True, choices=STATUS_CHOICES)
 
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL

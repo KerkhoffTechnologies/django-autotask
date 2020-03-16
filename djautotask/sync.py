@@ -1002,6 +1002,7 @@ class ContractSynchronizer(Synchronizer):
         instance.id = object_data['id']
         instance.name = object_data.get('ContractName')
         instance.number = object_data.get('ContractNumber')
+        instance.status = object_data.get('Status')
 
         self.set_relations(instance, object_data)
 

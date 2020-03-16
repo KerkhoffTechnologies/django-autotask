@@ -774,3 +774,29 @@ API_RESOURCE_SERVICE_DESK_ROLE = {
     'RoleID': 29683396,
 }
 API_RESOURCE_SERVICE_DESK_ROLE_LIST = [API_RESOURCE_SERVICE_DESK_ROLE]
+
+API_CONTRACT = {
+    'id': 29684183,
+    'UserDefinedFields': "",
+    'AccountID': 174,
+    'BillingPreference': 2,
+    'Compliance': True,
+    'ContractCategory': 15,
+    'ContractName': "Upstate Document Providers - Hosted SaaS",
+    'ContractNumber': "2343451",
+    'ContractPeriodType': "m",
+    'ContractType': 7,
+    'IsDefaultContract': True,
+    'EndDate': datetime(2020, 2, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
+    'EstimatedCost': 0.0000,
+    'EstimatedHours': 0.0000,
+    'EstimatedRevenue': 5795.00,
+    'SetupFee': 995.0000,
+    'StartDate': datetime(2020, 2, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
+    'Status': 1,
+    'TimeReportingRequiresStartAndStopTimes': 1,
+    'ServiceLevelAgreementID': 1,
+    'PurchaseOrderNumber': "",
+    'InternalCurrencySetupFee': 995.0000,
+}
+API_CONTRACT_LIST = [API_CONTRACT]
