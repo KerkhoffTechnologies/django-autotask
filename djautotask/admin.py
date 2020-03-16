@@ -242,3 +242,9 @@ class ResourceRoleDepartmentAdmin(admin.ModelAdmin):
 class ResourceServiceDeskRoleAdmin(admin.ModelAdmin):
     list_display = ('id', 'resource', 'role', 'active', 'default')
     search_fields = ('id', 'resource__first_name')
+
+
+@admin.register(models.Contract)
+class ContractAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'number', 'account')
+    search_fields = ('id', 'name', 'number')

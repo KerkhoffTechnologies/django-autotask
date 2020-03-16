@@ -989,3 +989,20 @@ class ResourceServiceDeskRoleSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+
+class ContractSynchronizer(Synchronizer):
+    model_class = models.Contract
+
+    related_meta = {
+        'AccountID': (models.Account, 'account')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('ContractName')
+        instance.number = object_data.get('ContractNumber')
+
+        self.set_relations(instance, object_data)
+
+        return instance

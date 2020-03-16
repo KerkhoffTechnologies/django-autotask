@@ -618,3 +618,15 @@ class ResourceServiceDeskRole(models.Model):
         'Role', on_delete=models.CASCADE)
     resource = models.ForeignKey(
         'Resource', on_delete=models.CASCADE)
+
+
+class Contract(models.Model):
+    name = models.CharField(max_length=250)
+    number = models.CharField(blank=True, null=True, max_length=50)
+
+    account = models.ForeignKey(
+        'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return '{} - {}'.format(self.id, self.name)
