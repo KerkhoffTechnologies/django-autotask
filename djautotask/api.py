@@ -37,19 +37,25 @@ def parse_autotaskprocessexception(e):
 
 
 def parse_autotaskapiexception(e):
-    return ', '.join(get_errors(e.response.errors))
+    return ', '.join(get_errors(e.response))
 
 
 def get_errors(response):
     errors = []
     try:
-        for item in response:
+        for item in response.errors:
             error = item.get('errors')
             message = error[0].get('message')
             errors.append(str(message))
-    except (IndexError, TypeError, AttributeError, KeyError):
-        # AutotaskAPIException, has given us something unexpected, log
-        # it and we can handle this new case.
+    except AttributeError:
+        error = "An Autotask API error occurred. The error was: {}".format(
+            response.errors[0]
+        )
+        errors.append(error)
+        logger.exception(error)
+    except (IndexError, TypeError, KeyError):
+        # AutotaskAPIException has given us something unexpected, and we don't
+        # know how to process it. Log it and we can handle this new case.
         logger.exception(str(response))
         errors.append("An unknown Autotask API error.")
 
@@ -229,15 +235,15 @@ def create_object(entity_type, entity_fields):
     return at.create(entity_object).fetch_one()
 
 
-def update_assigned_resource(at_object, resource, role):
-    entity = at_object.__class__.__name__
-    query = Query(entity)
-    query.WHERE('id', query.Equals, at_object.id)
+def delete_objects(entity_type, objects):
+    """
+    Make a request to Autotask to delete the given Autotask entities.
+    """
     at = init_api_connection()
+    rename_this_list = []
 
-    t = at.query(query).fetch_one()
-    t.AssignedResourceID = resource.id if resource else None
-    t.AssignedResourceRoleID = role.id if role else None
+    for instance in objects:
+        entity_object = fetch_object(entity_type, instance.id, at)
+        rename_this_list.append(entity_object)
 
-    # Fetch one executes the update and returns the created object.
-    return at.update([t]).fetch_one()
+    at.delete(rename_this_list).execute()

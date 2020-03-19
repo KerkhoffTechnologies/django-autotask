@@ -29,8 +29,13 @@ class ResourceAssignableModel:
         """
         Send assigned resource updates to Autotask
         """
-        return api.update_assigned_resource(
-            self, self.assigned_resource, self.assigned_resource_role)
+        return self.update_at(data={
+            'AssignedResourceID': self.assigned_resource.id
+            if self.assigned_resource else None,
+
+            'AssignedResourceRoleID': self.assigned_resource_role.id
+            if self.assigned_resource_role else None
+        })
 
 
 class Ticket(TimeStampedModel, ResourceAssignableModel):
@@ -282,6 +287,9 @@ class TicketSecondaryResource(TimeStampedModel):
     ticket = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.SET_NULL
     )
+    role = models.ForeignKey(
+        'Role', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.ticket)
@@ -486,6 +494,9 @@ class TaskSecondaryResource(TimeStampedModel):
     )
     task = models.ForeignKey(
         'Task', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    role = models.ForeignKey(
+        'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
 
     def __str__(self):
