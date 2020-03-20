@@ -870,6 +870,7 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
         'Type': (models.TaskTypeLink, 'type'),
         'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
         'RoleID': (models.Role, 'role'),
+        'ContractID': (models.Contract, 'contract'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -985,6 +986,24 @@ class ResourceServiceDeskRoleSynchronizer(Synchronizer):
         instance.id = object_data['id']
         instance.active = object_data.get('Active')
         instance.default = object_data.get('Default')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class ContractSynchronizer(Synchronizer):
+    model_class = models.Contract
+
+    related_meta = {
+        'AccountID': (models.Account, 'account')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('ContractName')
+        instance.number = object_data.get('ContractNumber')
+        instance.status = object_data.get('Status')
 
         self.set_relations(instance, object_data)
 

@@ -374,6 +374,13 @@ class TestResourceServiceDeskRoleCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_resources()
 
 
+class TestContractCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_CONTRACT_LIST,
+        'contract',
+    )
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -430,7 +437,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncRoleCommand,
             TestSyncDepartmentCommand,
             TestResourceRoleDepartmentCommand,
-            TestResourceServiceDeskRoleCommand
+            TestResourceServiceDeskRoleCommand,
+            TestContractCommand,
         ]
 
         self.test_args = []
@@ -486,6 +494,7 @@ class TestSyncAllCommand(TestCase):
             'department': models.Department,
             'resource_role_department': models.ResourceRoleDepartment,
             'resource_service_desk_role': models.ResourceServiceDeskRole,
+            'contract': models.Contract,
         }
         run_sync_command()
         pre_full_sync_counts = {}
