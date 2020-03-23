@@ -242,3 +242,13 @@ class ResourceRoleDepartmentAdmin(admin.ModelAdmin):
 class ResourceServiceDeskRoleAdmin(admin.ModelAdmin):
     list_display = ('id', 'resource', 'role', 'active', 'default')
     search_fields = ('id', 'resource__first_name')
+
+
+@admin.register(models.Contract)
+class ContractAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'number', 'account', 'status_name')
+    search_fields = ('id', 'name', 'number')
+    list_filter = ('status',)
+
+    def status_name(self, obj):
+        return obj.STATUS_CHOICES[int(obj.status)][1]

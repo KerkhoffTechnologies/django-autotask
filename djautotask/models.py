@@ -530,6 +530,9 @@ class TimeEntry(TimeStampedModel):
     role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
+    contract = models.ForeignKey(
+        'Contract', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name_plural = 'Time entries'
@@ -629,3 +632,21 @@ class ResourceServiceDeskRole(models.Model):
         'Role', on_delete=models.CASCADE)
     resource = models.ForeignKey(
         'Resource', on_delete=models.CASCADE)
+
+
+class Contract(models.Model):
+    STATUS_CHOICES = (
+        (0, 'Inactive'),
+        (1, 'Active')
+    )
+    name = models.CharField(max_length=250)
+    number = models.CharField(blank=True, null=True, max_length=50)
+    status = models.CharField(
+        max_length=20, blank=True, null=True, choices=STATUS_CHOICES)
+
+    account = models.ForeignKey(
+        'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return '{} - {}'.format(self.id, self.name)
