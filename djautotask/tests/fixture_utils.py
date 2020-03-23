@@ -107,6 +107,7 @@ def manage_full_sync_return_data(value):
         'ResourceRoleDepartment': fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
         'ResourceServiceDeskRole':
             fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
+        'Contract': fixtures.API_CONTRACT_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
