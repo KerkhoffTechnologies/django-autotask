@@ -240,10 +240,11 @@ def delete_objects(entity_type, objects):
     Make a request to Autotask to delete the given Autotask entities.
     """
     at = init_api_connection()
-    rename_this_list = []
+    objects_to_delete = []
 
     for instance in objects:
-        entity_object = fetch_object(entity_type, instance.id, at)
-        rename_this_list.append(entity_object)
+        objects_to_delete.append(
+            fetch_object(entity_type, instance.id, at)
+        )
 
-    at.delete(rename_this_list).execute()
+    at.delete(objects_to_delete).execute()
