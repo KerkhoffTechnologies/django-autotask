@@ -347,10 +347,10 @@ class ChildSynchronizer:
         return set(ids)
 
     def _child_query_condition(self, query, query_params):
-        parent_feild, parent_id = query_params
+        parent_field, parent_id = query_params
         query.open_bracket('AND')
         query.WHERE(
-            parent_feild, query.Equals, parent_id)
+            parent_field, query.Equals, parent_id)
         query.close_bracket()
 
         # Apply extra conditions if they exist, else nothing happens
