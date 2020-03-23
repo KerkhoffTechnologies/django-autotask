@@ -315,6 +315,78 @@ class PicklistSynchronizer(Synchronizer):
         return instance
 
 
+class ParentSynchronizer:
+
+    def sync_related(self):
+        raise NotImplementedError
+
+    def sync_children(self, *args):
+        for synchronizer, query_params in args:
+            created_count, updated_count, deleted_count = \
+                synchronizer.callback_sync(
+                    query_params
+                )
+            msg = '{} Child Sync - Created: {},' \
+                  ' Updated: {}, Deleted: {}'.format(
+                    synchronizer.model_class.__name__,
+                    created_count,
+                    updated_count,
+                    deleted_count
+                  )
+
+            logger.info(msg)
+
+
+class ChildSynchronizer:
+
+    def _child_instance_ids(self, query_params):
+        ids = self.model_class.objects.filter(
+            ticket__id=query_params[1]
+        ).order_by(self.db_lookup_key).values_list('id', flat=True)
+
+        return set(ids)
+
+    def _child_query_condition(self, query, query_params):
+        parent_feild, parent_id = query_params
+        query.open_bracket('AND')
+        query.WHERE(
+            parent_feild, query.Equals, parent_id)
+        query.close_bracket()
+
+        # Apply extra conditions if they exist, else nothing happens
+        self._get_query_conditions(query)
+
+    def _get_children(self, results, query_params):
+        sync_job_qset = models.SyncJob.objects.filter(
+            entity_name=self.model_class.__name__)
+
+        query = self.build_base_query(sync_job_qset)
+        self._child_query_condition(query, query_params)
+
+        logger.info('Fetching {} records.'.format(self.model_class))
+        self.fetch_records(query, results)
+
+        return results
+
+    def callback_sync(self, query_params):
+        results = SyncResults()
+        self.at_api_client = api.init_api_connection()
+
+        # Set of IDs of all records prior
+        # to sync, to find stale records for deletion.
+        initial_ids = self._child_instance_ids(query_params)
+
+        results = self._get_children(results, query_params)
+
+        results.deleted_count = self.prune_stale_records(
+            initial_ids,
+            results.synced_ids
+        )
+
+        return results.created_count, results.updated_count, \
+            results.deleted_count
+
+
 class QueryConditionMixin:
 
     def _get_query_conditions(self, query):
@@ -402,7 +474,8 @@ class BatchQueryMixin:
         return queries
 
 
-class TicketSynchronizer(QueryConditionMixin, Synchronizer):
+class TicketSynchronizer(
+        QueryConditionMixin, Synchronizer, ParentSynchronizer):
     model_class = models.Ticket
     last_updated_field = 'LastActivityDate'
     completed_date_field = 'CompletedDate'
@@ -444,7 +517,25 @@ class TicketSynchronizer(QueryConditionMixin, Synchronizer):
         query.WHERE('id', query.Equals, instance_id)
         ticket = self.at_api_client.query(query).fetch_one()
         instance, _ = self.update_or_create_instance(ticket)
+        if instance.status.id != models.Status.COMPLETE_ID:
+            self.sync_related(instance)
         return instance
+
+    def sync_related(self, instance):
+        sync_classes = []
+        query_params = ('TicketID', instance.id)
+
+        sync_classes.append(
+            (TicketNoteSynchronizer(), query_params)
+        )
+        sync_classes.append(
+            (TimeEntrySynchronizer(), query_params)
+        )
+        sync_classes.append(
+            (TicketSecondaryResourceSynchronizer(), query_params)
+        )
+
+        self.sync_children(*sync_classes)
 
 
 class TicketPicklistSynchronizer(PicklistSynchronizer):
@@ -581,7 +672,7 @@ class TicketCategorySynchronizer(Synchronizer):
         return instance
 
 
-class TicketSecondaryResourceSynchronizer(Synchronizer):
+class TicketSecondaryResourceSynchronizer(Synchronizer, ChildSynchronizer):
     model_class = models.TicketSecondaryResource
     last_updated_field = None
 
@@ -822,7 +913,7 @@ class NoteSynchronizer(Synchronizer):
 
 
 class TicketNoteSynchronizer(
-        BatchQueryMixin, NoteSynchronizer):
+        BatchQueryMixin, NoteSynchronizer, ChildSynchronizer):
 
     model_class = models.TicketNote
     last_updated_field = 'LastActivityDate'
@@ -859,7 +950,7 @@ class TaskNoteSynchronizer(
         return batch_query_list
 
 
-class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer):
+class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer, ChildSynchronizer):
     model_class = models.TimeEntry
     last_updated_field = 'LastModifiedDateTime'
 
