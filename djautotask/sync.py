@@ -421,6 +421,7 @@ class TicketSynchronizer(QueryConditionMixin, Synchronizer):
         'SubIssueType': (models.SubIssueType, 'sub_issue_type'),
         'AssignedResourceRoleID': (models.Role, 'assigned_resource_role'),
         'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
+        'ContractID': (models.Contract, 'contract'),
     }
 
     def _assign_field_data(self, instance, object_data):

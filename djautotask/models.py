@@ -87,6 +87,9 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     allocation_code = models.ForeignKey(
         'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
     )
+    contract = models.ForeignKey(
+        'Contract', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -638,4 +641,4 @@ class Contract(models.Model):
     )
 
     def __str__(self):
-        return '{} - {}'.format(self.id, self.name)
+        return self.name
