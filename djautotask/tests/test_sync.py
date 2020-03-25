@@ -9,7 +9,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
     TaskTypeLink, UseType, AllocationCode, Role, Department, \
-    ResourceRoleDepartment, ResourceServiceDeskRole, Contract
+    ResourceRoleDepartment, ResourceServiceDeskRole, Contract, AccountType
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -383,6 +383,16 @@ class TestUseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_use_types()
+
+
+class TestAccountTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = AccountType
+    fixture = fixtures.API_ACCOUNT_TYPE_LIST
+    synchronizer = sync.AccountTypeSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_account_types()
 
 
 class TestTicketCategorySynchronizer(TestCase):

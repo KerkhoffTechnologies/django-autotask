@@ -286,6 +286,14 @@ def init_ticket_types():
     )
 
 
+def init_account_types():
+    sync_picklist_objects(
+        'AccountType',
+        fixtures.API_ACCOUNT_TYPE_LIST,
+        sync.AccountTypeSynchronizer
+    )
+
+
 def init_display_colors():
     sync_picklist_objects(
         'DisplayColorRGB',

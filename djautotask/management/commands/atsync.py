@@ -30,6 +30,7 @@ class Command(BaseCommand):
              _('Ticket Secondary Resource')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('queue', sync.QueueSynchronizer, _('Queue')),
+            ('account_type', sync.AccountTypeSynchronizer, _('Account Type')),
             ('account', sync.AccountSynchronizer, _('Account')),
             ('contract', sync.ContractSynchronizer, _('Contract')),
             ('project_status',

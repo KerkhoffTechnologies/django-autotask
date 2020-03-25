@@ -196,6 +196,15 @@ class TestSyncTicketTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
+class TestSyncAccountTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
+    field_name = 'AccountType'
+
+    args = (
+        fixtures.API_ACCOUNT_TYPE_LIST,
+        'account_type',
+    )
+
+
 class TestDisplayColorCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'DisplayColorRGB'
 

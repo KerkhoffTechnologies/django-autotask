@@ -541,6 +541,12 @@ class UseTypeSynchronizer(PicklistSynchronizer):
     picklist_field = 'UseType'
 
 
+class AccountTypeSynchronizer(PicklistSynchronizer):
+    model_class = models.AccountType
+    entity_type = 'Account'
+    picklist_field = 'AccountType'
+
+
 class ResourceSynchronizer(Synchronizer):
     model_class = models.Resource
     last_updated_field = None
@@ -630,12 +636,17 @@ class AccountSynchronizer(Synchronizer):
     model_class = models.Account
     last_updated_field = 'LastActivityDate'
 
+    related_meta = {
+        'AccountType': (models.AccountType, 'type'),
+    }
+
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
         instance.name = object_data.get('AccountName')
         instance.number = object_data.get('AccountNumber')
         instance.active = object_data.get('Active')
         instance.last_activity_date = object_data.get('LastActivityDate')
+        self.set_relations(instance, object_data)
 
         return instance
 
