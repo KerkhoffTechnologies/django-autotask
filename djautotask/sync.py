@@ -582,13 +582,42 @@ class TicketCategorySynchronizer(Synchronizer):
         return instance
 
 
-class TicketSecondaryResourceSynchronizer(Synchronizer):
-    model_class = models.TicketSecondaryResource
+class SecondaryResourceSyncronizer(Synchronizer):
+    def create(self, resource, role, entity):
+        """
+        Make a request to Autotask to create a SecondaryResource.
+        """
+
+        body = {
+            'ResourceID': resource,
+            'RoleID': role,
+            self.id_type: entity
+        }
+        instance = api.create_object(self.model_name, body)
+
+        return self.update_or_create_instance(instance)
+
+    def delete(self, instances):
+        """
+        Takes a queryset of instances and deletes them from the remote
+        Autotask instance and the local database.
+        """
+
+        api.delete_objects(self.model_name, instances)
+
+        instances.delete()
+
+
+class TicketSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     last_updated_field = None
+    model_class = models.TicketSecondaryResource
+    model_name = 'TicketSecondaryResource'
+    id_type = 'TicketID'
 
     related_meta = {
         'ResourceID': (models.Resource, 'resource'),
         'TicketID': (models.Ticket, 'ticket'),
+        'RoleID': (models.Role, 'role'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -775,13 +804,16 @@ class TaskSynchronizer(QueryConditionMixin,
         return instance
 
 
-class TaskSecondaryResourceSynchronizer(Synchronizer):
-    model_class = models.TaskSecondaryResource
+class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     last_updated_field = None
+    model_class = models.TaskSecondaryResource
+    model_name = 'TaskSecondaryResource'
+    id_type = 'TaskID'
 
     related_meta = {
         'ResourceID': (models.Resource, 'resource'),
         'TaskID': (models.Task, 'task'),
+        'RoleID': (models.Role, 'role'),
     }
 
     def _assign_field_data(self, instance, object_data):
