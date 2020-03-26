@@ -672,6 +672,7 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
         'AccountID': (models.Account, 'account'),
         'Status': (models.ProjectStatus, 'status'),
         'Type': (models.ProjectType, 'type'),
+        'ContractID': (models.Contract, 'contract'),
     }
 
     def get_active_ids(self):

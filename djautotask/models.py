@@ -385,6 +385,9 @@ class Project(TimeStampedModel):
     type = models.ForeignKey(
         'ProjectType', null=True, on_delete=models.SET_NULL
     )
+    contract = models.ForeignKey(
+        'Contract', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()
