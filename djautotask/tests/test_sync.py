@@ -9,7 +9,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
     TaskTypeLink, UseType, AllocationCode, Role, Department, \
-    ResourceRoleDepartment, ResourceServiceDeskRole, Contract
+    ResourceRoleDepartment, ResourceServiceDeskRole, Contract, AccountType
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -209,6 +209,36 @@ class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
         self._assert_sync(result, fixtures.API_TICKET)
         patch.stop()
 
+    def test_sync_ticket_related_records(self):
+        """
+        Test to ensure that a ticket will sync related objects,
+        in its case notes, and time entries, and secondary resources
+        """
+        synchronizer = self.sync_class()
+
+        ticket = Ticket.objects.first()
+        ticket.status = Status.objects.first()
+        time_mock, time_patch = mocks.create_mock_call(
+            'djautotask.sync.TimeEntrySynchronizer.fetch_records',
+            None
+        )
+        note_mock, note_patch = mocks.create_mock_call(
+            'djautotask.sync.TicketNoteSynchronizer.fetch_records', None)
+        resource_mock, resource_patch = mocks.create_mock_call(
+            'djautotask.sync.TicketSecondaryResourceSynchronizer.'
+            'fetch_records',
+            None
+        )
+
+        synchronizer.sync_related(ticket)
+
+        self.assertEqual(time_mock.call_count, 1)
+        self.assertEqual(note_mock.call_count, 1)
+        self.assertEqual(resource_mock.call_count, 1)
+        time_patch.stop()
+        note_patch.stop()
+        resource_patch.stop()
+
 
 class AbstractPicklistSynchronizer(object):
 
@@ -383,6 +413,16 @@ class TestUseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_use_types()
+
+
+class TestAccountTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    model_class = AccountType
+    fixture = fixtures.API_ACCOUNT_TYPE_LIST
+    synchronizer = sync.AccountTypeSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_account_types()
 
 
 class TestTicketCategorySynchronizer(TestCase):

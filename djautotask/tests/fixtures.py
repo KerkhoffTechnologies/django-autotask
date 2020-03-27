@@ -454,6 +454,27 @@ API_LICENSE_TYPE_LIST = [
     },
 ]
 
+API_ACCOUNT_TYPE_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Customer',
+        'SortOrder': 5,
+        'Value': 3,
+        'parentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Vendor',
+        'SortOrder': 6,
+        'Value': 2,
+        'parentValue': None,
+    },
+]
+
 API_TICKET = {
     'AccountID': 29683561,
     'AllocationCodeID': 29683407,

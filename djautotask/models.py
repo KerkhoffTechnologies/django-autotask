@@ -224,6 +224,10 @@ class LicenseType(Picklist):
     pass
 
 
+class AccountType(Picklist):
+    pass
+
+
 class NoteType(Picklist):
     # Workflow Rule Note - Task is an Autotask system note type that cannot
     # be edited or deactivated.
@@ -337,6 +341,9 @@ class Account(TimeStampedModel):
     number = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
+    type = models.ForeignKey(
+        'AccountType', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         ordering = ('name',)

@@ -95,6 +95,11 @@ class TicketTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
+@admin.register(models.AccountType)
+class AccountTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
 @admin.register(models.DisplayColor)
 class DisplayColorAdmin(admin.ModelAdmin):
     list_display = ('id', 'label', 'is_active')
@@ -124,7 +129,7 @@ class TicketSecondaryResourceAdmin(admin.ModelAdmin):
 
 @admin.register(models.Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'number', 'active')
+    list_display = ('id', 'name', 'type', 'number', 'active')
     search_fields = ('id', 'name', 'number')
 
 

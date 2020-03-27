@@ -35,6 +35,7 @@ class TestCallBackView(TestCase):
     def test_add(self):
         self.assertEqual(Ticket.objects.count(), 0)
 
+        fixture_utils.init_statuses()
         test_instance = fixture_utils.generate_objects(
             'Ticket', fixtures.API_TICKET_LIST)
         _, patch = mocks.create_mock_call(
@@ -44,6 +45,7 @@ class TestCallBackView(TestCase):
         patch.stop()
 
     def test_update(self):
+        fixture_utils.init_statuses()
         fixture_utils.init_tickets()
 
         self.assertEqual(Ticket.objects.count(), 1)
