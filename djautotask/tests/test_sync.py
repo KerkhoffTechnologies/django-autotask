@@ -154,6 +154,7 @@ class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
         super().setUp()
         self.synchronizer = sync.TicketSynchronizer()
 
+        fixture_utils.init_contracts()
         fixture_utils.init_statuses()
         fixture_utils.init_resources()
         fixture_utils.init_tickets()
@@ -173,6 +174,7 @@ class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
         self.assertEqual(instance.status.id, object_data['Status'])
         self.assertEqual(instance.assigned_resource.id,
                          object_data['AssignedResourceID'])
+        self.assertEqual(instance.contract.id, object_data['ContractID'])
 
     def test_sync_ticket(self):
         """
@@ -593,6 +595,7 @@ class TestProjectSynchronizer(FilterProjectTestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_contracts()
         fixture_utils.init_resources()
         fixture_utils.init_accounts()
         fixture_utils.init_project_statuses()
@@ -622,6 +625,7 @@ class TestProjectSynchronizer(FilterProjectTestCase):
         self.assertEqual(instance.account.id, object_data['AccountID'])
         self.assertEqual(instance.status.id, object_data['Status'])
         self.assertEqual(instance.type.id, object_data['Type'])
+        self.assertEqual(instance.contract.id, object_data['ContractID'])
 
     def test_sync_project(self):
         self.assertGreater(Project.objects.all().count(), 0)
