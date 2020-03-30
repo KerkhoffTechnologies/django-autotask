@@ -648,9 +648,11 @@ class ResourceServiceDeskRole(models.Model):
 
 
 class Contract(models.Model):
+    INACTIVE = 0
+    ACTIVE = 1
     STATUS_CHOICES = (
-        (0, 'Inactive'),
-        (1, 'Active')
+        (INACTIVE, 'Inactive'),
+        (ACTIVE, 'Active')
     )
     name = models.CharField(max_length=250)
     number = models.CharField(blank=True, null=True, max_length=50)
