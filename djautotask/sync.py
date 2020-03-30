@@ -494,6 +494,7 @@ class TicketSynchronizer(
         'SubIssueType': (models.SubIssueType, 'sub_issue_type'),
         'AssignedResourceRoleID': (models.Role, 'assigned_resource_role'),
         'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
+        'ContractID': (models.Contract, 'contract'),
     }
 
     def _assign_field_data(self, instance, object_data):
@@ -774,6 +775,7 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
         'AccountID': (models.Account, 'account'),
         'Status': (models.ProjectStatus, 'status'),
         'Type': (models.ProjectType, 'type'),
+        'ContractID': (models.Contract, 'contract'),
     }
 
     def get_active_ids(self):

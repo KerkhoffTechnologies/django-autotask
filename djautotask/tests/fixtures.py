@@ -115,6 +115,7 @@ API_PROJECT_LIST = [
         'ExtPNumber': '',
         'ProjectNumber': 'P20120604.0001',
         'Description': '',
+        'ContractID': 29684183,
         'CreateDateTime':
             datetime(2012, 6, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
         'CreatorResourceID': 4,
@@ -489,6 +490,7 @@ API_TICKET = {
     'CompletedDate':
         datetime(2019, 9, 5, 8, 23, tzinfo=tzoffset(None, 3600)),
     'ContactID': 29683586,
+    'ContractID': 29684183,
     'CreateDate':
         datetime(2019, 8, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
     'CreatorResourceID': 4,

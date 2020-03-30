@@ -478,3 +478,11 @@ def init_resource_service_desk_role():
         fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
         sync.ResourceServiceDeskRoleSynchronizer
     )
+
+
+def init_contracts():
+    sync_objects(
+        'Contract',
+        fixtures.API_CONTRACT_LIST,
+        sync.ContractSynchronizer
+    )

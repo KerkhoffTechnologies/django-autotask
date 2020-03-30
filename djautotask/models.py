@@ -92,6 +92,9 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     allocation_code = models.ForeignKey(
         'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
     )
+    contract = models.ForeignKey(
+        'Contract', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         verbose_name = 'Ticket'
@@ -389,6 +392,9 @@ class Project(TimeStampedModel):
     type = models.ForeignKey(
         'ProjectType', null=True, on_delete=models.SET_NULL
     )
+    contract = models.ForeignKey(
+        'Contract', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()
@@ -642,9 +648,11 @@ class ResourceServiceDeskRole(models.Model):
 
 
 class Contract(models.Model):
+    INACTIVE = 0
+    ACTIVE = 1
     STATUS_CHOICES = (
-        (0, 'Inactive'),
-        (1, 'Active')
+        (INACTIVE, 'Inactive'),
+        (ACTIVE, 'Active')
     )
     name = models.CharField(max_length=250)
     number = models.CharField(blank=True, null=True, max_length=50)
@@ -656,4 +664,4 @@ class Contract(models.Model):
     )
 
     def __str__(self):
-        return '{} - {}'.format(self.id, self.name)
+        return self.name
