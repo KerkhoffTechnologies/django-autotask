@@ -957,12 +957,30 @@ class NoteSynchronizer(Synchronizer):
         query.close_bracket()
         return query
 
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a Note.
+        """
+
+        body = {
+            'Title': kwargs['title'],
+            'Description': kwargs['description'],
+            'NoteType': kwargs['note_type'],
+            'Publish': kwargs['publish'],
+            self.related_model_field: kwargs['object_id'],
+        }
+        instance = api.create_object(self.model_name, body)
+
+        return self.update_or_create_instance(instance)
+
 
 class TicketNoteSynchronizer(
         BatchQueryMixin, NoteSynchronizer, ChildSynchronizer):
 
     model_class = models.TicketNote
     last_updated_field = 'LastActivityDate'
+    related_model_field = 'TicketID'
+    model_name = 'TicketNote'
 
     related_meta = {
         'NoteType': (models.NoteType, 'note_type'),
@@ -982,6 +1000,8 @@ class TaskNoteSynchronizer(
 
     model_class = models.TaskNote
     last_updated_field = 'LastActivityDate'
+    related_model_field = 'TaskID'
+    model_name = 'TaskNote'
 
     related_meta = {
         'NoteType': (models.NoteType, 'note_type'),
