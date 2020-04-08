@@ -229,6 +229,9 @@ class AccountType(Picklist):
 
 
 class NoteType(Picklist):
+    SUMMARY = 1
+    DETAIL = 2
+    NOTES = 3
     # Workflow Rule Note - Task is an Autotask system note type that cannot
     # be edited or deactivated.
     WORKFLOW_RULE_NOTE_ID = 13
@@ -302,35 +305,49 @@ class TicketSecondaryResource(TimeStampedModel):
         return '{} {}'.format(self.resource, self.ticket)
 
 
-class TicketNote(TimeStampedModel):
+class Note:
+    ALL_USERS = 1
+    INTERNAL_USERS = 2
+    PUBLISH_CHOICES = ((ALL_USERS, 'All Autotask Users'),
+                       (INTERNAL_USERS, 'Internal Users'))
+
+
+class TicketNote(TimeStampedModel, Note):
     title = models.CharField(max_length=250)
     description = models.CharField(max_length=3200)
     create_date_time = models.DateTimeField(blank=True, null=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
 
     note_type = models.ForeignKey(
-        'NoteType', blank=True, null=True, on_delete=models.SET_NULL
-    )
+        'NoteType', blank=True, null=True, on_delete=models.SET_NULL)
     creator_resource = models.ForeignKey(
-        'Resource', blank=True, null=True, on_delete=models.SET_NULL
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL)
+    publish = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=Note.PUBLISH_CHOICES
     )
     ticket = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.SET_NULL
     )
 
 
-class TaskNote(TimeStampedModel):
+class TaskNote(TimeStampedModel, Note):
     title = models.CharField(max_length=250)
     description = models.CharField(max_length=3200)
     create_date_time = models.DateTimeField(blank=True, null=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
 
     note_type = models.ForeignKey(
-        'NoteType', blank=True, null=True, on_delete=models.SET_NULL
-    )
+        'NoteType', blank=True, null=True, on_delete=models.SET_NULL)
     creator_resource = models.ForeignKey(
-        'Resource', blank=True, null=True, on_delete=models.SET_NULL
-    )
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL)
+    publish = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=Note.PUBLISH_CHOICES)
     task = models.ForeignKey(
         'Task', blank=True, null=True, on_delete=models.SET_NULL
     )
