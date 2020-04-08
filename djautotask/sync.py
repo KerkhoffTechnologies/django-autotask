@@ -962,9 +962,15 @@ class NoteSynchronizer(Synchronizer):
         Make a request to Autotask to create a Note.
         """
 
+        description = "{}\n\nNote was added by {} {}.".format(
+            kwargs['description'],
+            kwargs['resource'].first_name,
+            kwargs['resource'].last_name
+        )
+
         body = {
             'Title': kwargs['title'],
-            'Description': kwargs['description'],
+            'Description': description,
             'NoteType': kwargs['note_type'],
             'Publish': kwargs['publish'],
             self.related_model_field: kwargs['object_id'],
