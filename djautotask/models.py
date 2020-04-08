@@ -309,7 +309,7 @@ class Note:
     ALL_USERS = 1
     INTERNAL_USERS = 2
     PUBLISH_CHOICES = ((ALL_USERS, 'All Autotask Users'),
-                       (INTERNAL_USERS, 'Internal Project Team'))
+                       (INTERNAL_USERS, 'Internal Users'))
 
 
 class TicketNote(TimeStampedModel, Note):
