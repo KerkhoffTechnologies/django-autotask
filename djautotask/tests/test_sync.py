@@ -9,7 +9,8 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     SubIssueType, TicketType, DisplayColor, LicenseType, Task, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
     TaskTypeLink, UseType, AllocationCode, Role, Department, \
-    ResourceRoleDepartment, ResourceServiceDeskRole, Contract, AccountType
+    ResourceRoleDepartment, ResourceServiceDeskRole, Contract, AccountType, \
+    ServiceCall, ServiceCallStatus
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -415,6 +416,17 @@ class TestUseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_use_types()
+
+
+class TestServiceCallStatusSynchronizer(AbstractPicklistSynchronizer,
+                                        TestCase):
+    model_class = ServiceCallStatus
+    fixture = fixtures.API_SERVICE_CALL_STATUS_LIST
+    synchronizer = sync.ServiceCallStatusSynchronizer
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_service_call_statuses()
 
 
 class TestAccountTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
@@ -1268,3 +1280,59 @@ class TestContractSynchronizer(TestCase):
 
         self._assert_sync(instance, object_data)
         assert_sync_job(Contract)
+
+
+class TestServiceCallSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_service_call_statuses()
+        fixture_utils.init_resources()
+        fixture_utils.init_account_types()
+        fixture_utils.init_accounts()
+
+    def _assert_sync(self, instance, object_data):
+
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(instance.duration, object_data['Duration'])
+        self.assertEqual(instance.complete, object_data['Complete'])
+        self.assertEqual(
+            instance.create_date_time, object_data['CreateDateTime'])
+        self.assertEqual(
+            instance.start_date_time, object_data['StartDateTime'])
+        self.assertEqual(instance.end_date_time, object_data['EndDateTime'])
+        self.assertEqual(
+            instance.canceled_date_time, object_data['CanceledDateTime'])
+        self.assertEqual(
+            instance.last_modified_date_time,
+            object_data['LastModifiedDateTime']
+        )
+        self.assertEqual(instance.status.id, object_data['Status'])
+        self.assertEqual(instance.account.id, object_data['AccountID'])
+        self.assertEqual(
+            instance.creator_resource.id, object_data['CreatorResourceID'])
+        self.assertEqual(
+            instance.canceled_by_resource.id,
+            object_data['CanceledByResource']
+        )
+
+    def test_sync_service_call(self):
+        """
+        Test to ensure synchronizer saves a service call instance locally.
+        """
+        service_call = fixture_utils.generate_objects(
+            'ServiceCall', fixtures.API_SERVICE_CALL_LIST
+        )
+        mocks.api_query_call(service_call)
+        synchronizer = sync.ServiceCallSynchronizer()
+        synchronizer.sync()
+
+        self.assertGreater((ServiceCall.objects.count()), 0)
+
+        object_data = fixtures.API_SERVICE_CALL
+        instance = ServiceCall.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(ServiceCall)

@@ -476,6 +476,27 @@ API_ACCOUNT_TYPE_LIST = [
     },
 ]
 
+API_SERVICE_CALL_STATUS_LIST = [
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'New',
+        'SortOrder': 5,
+        'Value': 3,
+        'parentValue': None,
+    },
+    {
+        'IsActive': True,
+        'IsDefaultValue': False,
+        'IsSystem': False,
+        'Label': 'Complete',
+        'SortOrder': 6,
+        'Value': 2,
+        'parentValue': None,
+    },
+]
+
 API_TICKET = {
     'AccountID': 29683561,
     'AllocationCodeID': 29683407,
@@ -823,3 +844,49 @@ API_CONTRACT = {
     'InternalCurrencySetupFee': 995.0000,
 }
 API_CONTRACT_LIST = [API_CONTRACT]
+
+API_SERVICE_CALL = {
+    'id': 2,
+    'Description': 'Email just in, printer is down.',
+    'Complete': False,
+    'Duration': 1,
+    'CreateDateTime': datetime(
+        2020, 1, 22, 13, 0, tzinfo=tzoffset(None, 3600)),
+    'StartDateTime': datetime(2020, 2, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
+    'EndDateTime': datetime(2020, 3, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
+    'CanceledDateTime': None,
+    'LastModifiedDateTime': None,
+    'AccountID': 174,
+    'Status': 2,
+    'CreatorResourceID': 29683794,
+    'CanceledByResource': 29683794,
+}
+API_SERVICE_CALL_LIST = [API_SERVICE_CALL]
+
+API_SERVICE_CALL_TICKET = {
+    'id': 4,
+    'ServiceCallID': 2,
+    'TicketID': 7688,
+}
+API_SERVICE_CALL_TICKET_LIST = [API_SERVICE_CALL_TICKET]
+
+API_SERVICE_CALL_TASK = {
+    'id': 4,
+    'ServiceCallID': 2,
+    'TaskID': 7733,
+}
+API_SERVICE_CALL_TASK_LIST = [API_SERVICE_CALL_TASK]
+
+API_SERVICE_CALL_TICKET_RESOURCE = {
+    'id': 4,
+    'ServiceCallTicketID': 4,
+    'ResourceID': 29683794,
+}
+API_SERVICE_CALL_TICKET_RESOURCE_LIST = [API_SERVICE_CALL_TICKET_RESOURCE]
+
+API_SERVICE_CALL_TASK_RESOURCE = {
+    'id': 4,
+    'ServiceCallTaskID': 4,
+    'ResourceID': 29683794,
+}
+API_SERVICE_CALL_TASK_RESOURCE_LIST = [API_SERVICE_CALL_TASK_RESOURCE]

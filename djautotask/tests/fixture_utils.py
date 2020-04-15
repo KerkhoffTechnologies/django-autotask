@@ -108,6 +108,13 @@ def manage_full_sync_return_data(value):
         'ResourceServiceDeskRole':
             fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
         'Contract': fixtures.API_CONTRACT_LIST,
+        'ServiceCall': fixtures.API_SERVICE_CALL_LIST,
+        'ServiceCallTicket': fixtures.API_SERVICE_CALL_TICKET_LIST,
+        'ServiceCallTask': fixtures.API_SERVICE_CALL_TASK_LIST,
+        'ServiceCallTicketResource':
+            fixtures.API_SERVICE_CALL_TICKET_RESOURCE_LIST,
+        'ServiceCallTaskResource':
+            fixtures.API_SERVICE_CALL_TASK_RESOURCE_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -176,6 +183,9 @@ def manage_sync_picklist_return_data(wrapper, entity):
         },
         'AllocationCode': {
             'UseType': fixtures.API_USE_TYPE_LIST,
+        },
+        'ServiceCall': {
+            'Status': fixtures.API_SERVICE_CALL_STATUS_LIST,
         }
     }
     client = API_CLIENT
@@ -315,6 +325,14 @@ def init_use_types():
         'UseType',
         fixtures.API_USE_TYPE_LIST,
         sync.UseTypeSynchronizer
+    )
+
+
+def init_service_call_statuses():
+    sync_picklist_objects(
+        'Status',
+        fixtures.API_SERVICE_CALL_STATUS_LIST,
+        sync.ServiceCallStatusSynchronizer
     )
 
 
@@ -485,4 +503,28 @@ def init_contracts():
         'Contract',
         fixtures.API_CONTRACT_LIST,
         sync.ContractSynchronizer
+    )
+
+
+def init_service_calls():
+    sync_objects(
+        'ServiceCall',
+        fixtures.API_SERVICE_CALL_LIST,
+        sync.ServiceCallSynchronizer
+    )
+
+
+def init_service_call_tickets():
+    sync_objects(
+        'ServiceCallTicket',
+        fixtures.API_SERVICE_CALL_TICKET_LIST,
+        sync.ServiceCallTicketSynchronizer
+    )
+
+
+def init_service_call_tasks():
+    sync_objects(
+        'ServiceCallTask',
+        fixtures.API_SERVICE_CALL_TASK_LIST,
+        sync.ServiceCallTaskSynchronizer
     )
