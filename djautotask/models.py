@@ -246,7 +246,9 @@ class UseType(Picklist):
 
 
 class ServiceCallStatus(Picklist):
-    pass
+    class Meta:
+        ordering = ('label',)
+        verbose_name_plural = 'Service call statuses'
 
 
 class RegularResourceManager(models.Manager):
