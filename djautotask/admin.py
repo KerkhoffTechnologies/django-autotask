@@ -110,6 +110,11 @@ class LicenseTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
+@admin.register(models.ServiceCallStatus)
+class ServiceCallStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
 @admin.register(models.Resource)
 class ResourceAdmin(admin.ModelAdmin):
     list_display = (
