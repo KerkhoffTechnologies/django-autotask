@@ -1249,7 +1249,6 @@ class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
         return batch_query_list
 
 
-
 class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTicketResource
 
