@@ -1207,7 +1207,7 @@ class ServiceCallSynchronizer(Synchronizer):
         return instance
 
 
-class ServiceCallTicketSynchronizer(Synchronizer):
+class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTicket
 
     related_meta = {
@@ -1221,8 +1221,14 @@ class ServiceCallTicketSynchronizer(Synchronizer):
 
         return instance
 
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.Ticket, 'TicketID', sync_job_qset)
 
-class ServiceCallTaskSynchronizer(Synchronizer):
+        return batch_query_list
+
+
+class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTask
 
     related_meta = {
@@ -1236,8 +1242,15 @@ class ServiceCallTaskSynchronizer(Synchronizer):
 
         return instance
 
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.Task, 'TaskID', sync_job_qset)
 
-class ServiceCallTicketResourceSynchronizer(Synchronizer):
+        return batch_query_list
+
+
+
+class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTicketResource
 
     related_meta = {
@@ -1252,8 +1265,14 @@ class ServiceCallTicketResourceSynchronizer(Synchronizer):
 
         return instance
 
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.ServiceCallTicket, 'ServiceCallTicketID', sync_job_qset)
 
-class ServiceCallTaskResourceSynchronizer(Synchronizer):
+        return batch_query_list
+
+
+class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTaskResource
 
     related_meta = {
@@ -1267,3 +1286,9 @@ class ServiceCallTaskResourceSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.ServiceCallTask, 'ServiceCallTaskID', sync_job_qset)
+
+        return batch_query_list
