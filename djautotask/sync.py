@@ -639,6 +639,12 @@ class AccountTypeSynchronizer(PicklistSynchronizer):
     picklist_field = 'AccountType'
 
 
+class ServiceCallStatusSynchronizer(PicklistSynchronizer):
+    model_class = models.ServiceCallStatus
+    entity_type = 'ServiceCall'
+    picklist_field = 'Status'
+
+
 class ResourceSynchronizer(Synchronizer):
     model_class = models.Resource
     last_updated_field = None
@@ -1171,3 +1177,117 @@ class ContractSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+
+class ServiceCallSynchronizer(Synchronizer):
+    model_class = models.ServiceCall
+    last_updated_field = 'LastModifiedDateTime'
+
+    related_meta = {
+        'AccountID': (models.Account, 'account'),
+        'Status': (models.ServiceCallStatus, 'status'),
+        'CreatorResourceID': (models.Resource, 'creator_resource'),
+        'CanceledByResource': (models.Resource, 'canceled_by_resource')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.description = object_data.get('Description')
+        instance.duration = object_data.get('Duration')
+        instance.complete = object_data.get('Complete')
+        instance.create_date_time = object_data.get('CreateDateTime')
+        instance.start_date_time = object_data.get('StartDateTime')
+        instance.end_date_time = object_data.get('EndDateTime')
+        instance.canceled_date_time = object_data.get('CanceledDateTime')
+        instance.last_modified_date_time = \
+            object_data.get('LastModifiedDateTime')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
+    model_class = models.ServiceCallTicket
+
+    related_meta = {
+        'ServiceCallID': (models.ServiceCall, 'service_call'),
+        'TicketID': (models.Ticket, 'ticket')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.Ticket, 'TicketID', sync_job_qset)
+
+        return batch_query_list
+
+
+class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
+    model_class = models.ServiceCallTask
+
+    related_meta = {
+        'ServiceCallID': (models.ServiceCall, 'service_call'),
+        'TaskID': (models.Task, 'task')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.Task, 'TaskID', sync_job_qset)
+
+        return batch_query_list
+
+
+class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
+    model_class = models.ServiceCallTicketResource
+
+    related_meta = {
+        'ServiceCallTicketID':
+            (models.ServiceCallTicket, 'service_call_ticket'),
+        'ResourceID': (models.Resource, 'resource')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.ServiceCallTicket, 'ServiceCallTicketID', sync_job_qset)
+
+        return batch_query_list
+
+
+class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
+    model_class = models.ServiceCallTaskResource
+
+    related_meta = {
+        'ServiceCallTaskID':
+            (models.ServiceCallTask, 'service_call_task'),
+        'ResourceID': (models.Resource, 'resource')
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.ServiceCallTask, 'ServiceCallTaskID', sync_job_qset)
+
+        return batch_query_list

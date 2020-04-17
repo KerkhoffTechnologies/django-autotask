@@ -205,6 +205,16 @@ class TestSyncAccountTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
+class TestSyncServiceCallStatusCommand(AbstractPicklistSyncCommandTest,
+                                       TestCase):
+    field_name = 'Status'
+
+    args = (
+        fixtures.API_SERVICE_CALL_STATUS_LIST,
+        'service_call_status',
+    )
+
+
 class TestDisplayColorCommand(AbstractPicklistSyncCommandTest, TestCase):
     field_name = 'DisplayColorRGB'
 
@@ -390,6 +400,89 @@ class TestContractCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncServiceCallCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_SERVICE_CALL_LIST,
+        'service_call',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_service_call_statuses()
+        fixture_utils.init_resources()
+        fixture_utils.init_account_types()
+        fixture_utils.init_accounts()
+
+
+class TestSyncServiceCallTicketCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_SERVICE_CALL_TICKET_LIST,
+        'service_call_ticket',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_service_call_statuses()
+        fixture_utils.init_resources()
+        fixture_utils.init_account_types()
+        fixture_utils.init_accounts()
+        fixture_utils.init_service_calls()
+        fixture_utils.init_statuses()
+        fixture_utils.init_tickets()
+
+
+class TestSyncServiceCallTaskCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_SERVICE_CALL_TASK_LIST,
+        'service_call_task',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_service_call_statuses()
+        fixture_utils.init_account_types()
+        fixture_utils.init_accounts()
+        fixture_utils.init_service_calls()
+        fixture_utils.init_statuses()
+        fixture_utils.init_tasks()
+
+
+class TestSyncServiceCallTicketResourceCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_SERVICE_CALL_TICKET_RESOURCE_LIST,
+        'service_call_ticket_resource',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_service_call_statuses()
+        fixture_utils.init_resources()
+        fixture_utils.init_account_types()
+        fixture_utils.init_accounts()
+        fixture_utils.init_service_calls()
+        fixture_utils.init_statuses()
+        fixture_utils.init_tickets()
+        fixture_utils.init_service_call_tickets()
+
+
+class TestSyncServiceCallTaskResourceCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_SERVICE_CALL_TASK_RESOURCE_LIST,
+        'service_call_task_resource',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_service_call_statuses()
+        fixture_utils.init_resources()
+        fixture_utils.init_account_types()
+        fixture_utils.init_accounts()
+        fixture_utils.init_service_calls()
+        fixture_utils.init_statuses()
+        fixture_utils.init_tasks()
+        fixture_utils.init_service_call_tasks()
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -448,6 +541,12 @@ class TestSyncAllCommand(TestCase):
             TestResourceRoleDepartmentCommand,
             TestResourceServiceDeskRoleCommand,
             TestContractCommand,
+            TestSyncServiceCallStatusCommand,
+            TestSyncServiceCallCommand,
+            TestSyncServiceCallTicketCommand,
+            TestSyncServiceCallTaskCommand,
+            TestSyncServiceCallTicketResourceCommand,
+            TestSyncServiceCallTaskResourceCommand,
         ]
 
         self.test_args = []
@@ -504,6 +603,12 @@ class TestSyncAllCommand(TestCase):
             'resource_role_department': models.ResourceRoleDepartment,
             'resource_service_desk_role': models.ResourceServiceDeskRole,
             'contract': models.Contract,
+            'service_call_status': models.ServiceCallStatus,
+            'service_call': models.ServiceCall,
+            'service_call_ticket': models.ServiceCallTicket,
+            'service_call_task': models.ServiceCallTask,
+            'service_call_ticket_resource': models.ServiceCallTicketResource,
+            'service_call_task_resource': models.ServiceCallTaskResource,
         }
         run_sync_command()
         pre_full_sync_counts = {}
@@ -521,7 +626,12 @@ class TestSyncAllCommand(TestCase):
         for fixture, at_object in self.test_args:
             if at_object in (
                     'resource_role_department',
-                    'resource_service_desk_role'
+                    'resource_service_desk_role',
+                    'service_call',
+                    'service_call_ticket',
+                    'service_call_task',
+                    'service_call_ticket_resource',
+                    'service_call_task_resource',
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.

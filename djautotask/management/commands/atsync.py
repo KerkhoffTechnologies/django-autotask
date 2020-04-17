@@ -73,6 +73,36 @@ class Command(BaseCommand):
                 sync.ResourceServiceDeskRoleSynchronizer,
                 _('Resource Service Desk Role')
             ),
+            (
+                'service_call_status',
+                sync.ServiceCallStatusSynchronizer,
+                _('Service Call Status')
+            ),
+            (
+                'service_call',
+                sync.ServiceCallSynchronizer,
+                _('Service Call')
+            ),
+            (
+                'service_call_ticket',
+                sync.ServiceCallTicketSynchronizer,
+                _('Service Call Ticket')
+            ),
+            (
+                'service_call_task',
+                sync.ServiceCallTaskSynchronizer,
+                _('Service Call Task')
+            ),
+            (
+                'service_call_ticket_resource',
+                sync.ServiceCallTicketResourceSynchronizer,
+                _('Service Call Ticket Resource')
+            ),
+            (
+                'service_call_task_resource',
+                sync.ServiceCallTaskResourceSynchronizer,
+                _('Service Call Task Resource')
+            ),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:

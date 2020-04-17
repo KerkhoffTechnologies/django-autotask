@@ -245,6 +245,12 @@ class UseType(Picklist):
     pass
 
 
+class ServiceCallStatus(Picklist):
+    class Meta:
+        ordering = ('label',)
+        verbose_name_plural = 'Service call statuses'
+
+
 class RegularResourceManager(models.Manager):
     API_USER_LICENSE_ID = 7
 
@@ -682,3 +688,87 @@ class Contract(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ServiceCall(TimeStampedModel):
+    description = models.TextField(blank=True, null=True, max_length=2000)
+    duration = models.BigIntegerField(null=True)
+    complete = models.BooleanField(default=False)
+    create_date_time = models.DateTimeField(blank=True, null=True)
+    start_date_time = models.DateTimeField()
+    end_date_time = models.DateTimeField()
+    canceled_date_time = models.DateTimeField(blank=True, null=True)
+    last_modified_date_time = models.DateTimeField(blank=True, null=True)
+
+    account = models.ForeignKey(
+        'Account', on_delete=models.CASCADE)
+    status = models.ForeignKey(
+        'ServiceCallStatus', on_delete=models.CASCADE)
+    creator_resource = models.ForeignKey(
+        'Resource',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='created_service_calls'
+    )
+    canceled_by_resource = models.ForeignKey(
+        'Resource',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='cancelled_service_calls'
+    )
+
+    tickets = models.ManyToManyField(
+        'Ticket', through='ServiceCallTicket',
+        related_name='ticket_service_calls'
+    )
+    tasks = models.ManyToManyField(
+        'Task', through='ServiceCallTask',
+        related_name='task_service_calls'
+    )
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ServiceCallTicket(TimeStampedModel):
+    service_call = models.ForeignKey('ServiceCall', on_delete=models.CASCADE)
+    ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE)
+    resources = models.ManyToManyField(
+        'Resource', through='ServiceCallTicketResource',
+        related_name='resource_service_call_ticket'
+    )
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ServiceCallTask(TimeStampedModel):
+    service_call = models.ForeignKey('ServiceCall', on_delete=models.CASCADE)
+    task = models.ForeignKey('Task', on_delete=models.CASCADE)
+    resources = models.ManyToManyField(
+        'Resource', through='ServiceCallTaskResource',
+        related_name='resource_service_call_task'
+    )
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ServiceCallTicketResource(TimeStampedModel):
+    service_call_ticket = models.ForeignKey(
+        'ServiceCallTicket', on_delete=models.CASCADE)
+    resource = models.ForeignKey('Resource', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.id)
+
+
+class ServiceCallTaskResource(TimeStampedModel):
+    service_call_task = models.ForeignKey(
+        'ServiceCallTask', on_delete=models.CASCADE)
+    resource = models.ForeignKey('Resource', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.id)

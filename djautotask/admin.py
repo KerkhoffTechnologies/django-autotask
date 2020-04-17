@@ -110,6 +110,11 @@ class LicenseTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
+@admin.register(models.ServiceCallStatus)
+class ServiceCallStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')
+
+
 @admin.register(models.Resource)
 class ResourceAdmin(admin.ModelAdmin):
     list_display = (
@@ -257,3 +262,58 @@ class ContractAdmin(admin.ModelAdmin):
 
     def status_name(self, obj):
         return obj.STATUS_CHOICES[int(obj.status)][1]
+
+
+@admin.register(models.ServiceCall)
+class ServiceCallAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'description',
+        'creator_resource',
+        'status',
+        'duration',
+        'start_date_time',
+        'end_date_time',
+    )
+    search_fields = ('id', 'description')
+    list_filter = ('status', 'creator_resource')
+
+
+@admin.register(models.ServiceCallTicket)
+class ServiceCallTicketAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'service_call',
+        'ticket',
+    )
+    search_fields = ('id', 'service_call__description')
+
+
+@admin.register(models.ServiceCallTask)
+class ServiceCallTaskAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'service_call',
+        'task',
+    )
+    search_fields = ('id', 'service_call__description')
+
+
+@admin.register(models.ServiceCallTicketResource)
+class ServiceCallTicketResourceAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'service_call_ticket',
+        'resource',
+    )
+    search_fields = ('id', 'resource__first_name', 'resource__last_name')
+
+
+@admin.register(models.ServiceCallTaskResource)
+class ServiceCallTaskResourceAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'service_call_task',
+        'resource',
+    )
+    search_fields = ('id', 'resource__first_name', 'resource__last_name')
