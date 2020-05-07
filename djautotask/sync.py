@@ -885,6 +885,7 @@ class TaskSynchronizer(QueryConditionMixin,
         'PriorityLabel': (models.Priority, 'priority'),
         'AssignedResourceRoleID': (models.Role, 'assigned_resource_role'),
         'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
+        'DepartmentID': (models.Department, 'department'),
     }
 
     def get_active_ids(self):

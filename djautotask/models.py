@@ -495,6 +495,9 @@ class Task(TimeStampedModel, ResourceAssignableModel):
     assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
+    department = models.ForeignKey(
+        'Department', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     def __str__(self):
         return self.title
@@ -602,6 +605,10 @@ class TimeEntry(TimeStampedModel):
 
 
 class AllocationCode(TimeStampedModel):
+    # AllocationCodes with use type General Allocation Code (with ID = 1)
+    # are for setting a ticket's work type in the UI. See API docs for details.
+    # https://ww4.autotask.net/help/Content/AdminSetup/2ExtensionsIntegrations/APIs/WSAPI/Entities/AllocationCodeEntity.htm # noqa
+    GENERAL_ALLOCATION_CODE_ID = 1
     name = models.CharField(blank=True, null=True, max_length=200)
     description = models.CharField(blank=True, null=True, max_length=500)
     active = models.BooleanField(default=False)
