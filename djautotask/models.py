@@ -375,6 +375,21 @@ class Account(TimeStampedModel):
         return self.name
 
 
+class AccountPhysicalLocation(models.Model):
+    name = models.CharField(max_length=100)
+    active = models.BooleanField(default=True)
+
+    account = models.ForeignKey(
+        'Account', on_delete=models.CASCADE
+    )
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+
+
 class AvailableProjectManager(models.Manager):
     """
     Exclude projects whose type is 'Template' or 'Baseline'. Neither of these

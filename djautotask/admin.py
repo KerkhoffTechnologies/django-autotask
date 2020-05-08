@@ -138,6 +138,13 @@ class AccountAdmin(admin.ModelAdmin):
     search_fields = ('id', 'name', 'number')
 
 
+@admin.register(models.AccountPhysicalLocation)
+class AccountPhysicalLocationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'account', 'active')
+    search_fields = ('id', 'name', 'account')
+    list_filter = ('active',)
+
+
 @admin.register(models.Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'number', 'type', 'status')

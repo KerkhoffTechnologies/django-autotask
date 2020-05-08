@@ -10,7 +10,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
     TaskTypeLink, UseType, AllocationCode, Role, Department, \
     ResourceRoleDepartment, ResourceServiceDeskRole, Contract, AccountType, \
-    ServiceCall, ServiceCallStatus
+    ServiceCall, ServiceCallStatus, AccountPhysicalLocation
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -587,6 +587,38 @@ class TestAccountSynchronizer(TestCase):
         mocks.api_query_call([])
 
         synchronizer = sync.AccountSynchronizer(full=True)
+        synchronizer.sync()
+        self.assertEqual(account_qset.count(), 0)
+
+
+class TestAccountPhysicalLocationSynchronizer(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_accounts()
+        fixture_utils.init_account_physical_locations()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.account.id, object_data['AccountID'])
+        self.assertEqual(instance.name, object_data['Name'])
+        self.assertEqual(instance.active, object_data['Active'])
+
+    def test_sync_account_location(self):
+        self.assertGreater(AccountPhysicalLocation.objects.all().count(), 0)
+        object_data = fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST[0]
+        instance = AccountPhysicalLocation.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(Account)
+
+    def test_delete_stale_account_location(self):
+        account_qset = AccountPhysicalLocation.objects.all()
+        self.assertEqual(account_qset.count(), 1)
+
+        mocks.api_query_call([])
+
+        synchronizer = sync.AccountPhysicalLocationSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(account_qset.count(), 0)
 

@@ -93,6 +93,7 @@ def manage_full_sync_return_data(value):
         'Resource': fixtures.API_RESOURCE_LIST,
         'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST,
         'Account': fixtures.API_ACCOUNT_LIST,
+        'AccountPhysicalLocation': fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST,
         'Project': fixtures.API_PROJECT_LIST,
         'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
         'Task': fixtures.API_TASK_LIST,
@@ -375,6 +376,14 @@ def init_accounts():
         'Account',
         fixtures.API_ACCOUNT_LIST,
         sync.AccountSynchronizer
+    )
+
+
+def init_account_physical_locations():
+    sync_objects(
+        'AccountPhysicalLocation',
+        fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST,
+        sync.AccountPhysicalLocationSynchronizer
     )
 
 
