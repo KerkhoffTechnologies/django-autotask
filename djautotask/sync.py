@@ -750,6 +750,22 @@ class AccountSynchronizer(Synchronizer):
         return instance
 
 
+class AccountPhysicalLocationSynchronizer(Synchronizer):
+    model_class = models.AccountPhysicalLocation
+
+    related_meta = {
+        'AccountID': (models.Account, 'account'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('Name')
+        instance.active = object_data.get('Active')
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
 class FilterProjectStatusMixin:
 
     def fetch_records(self, query, results):

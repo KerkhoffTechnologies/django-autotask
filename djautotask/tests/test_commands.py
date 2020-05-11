@@ -279,6 +279,17 @@ class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
+class TestSyncAccountLocationCommand(AbstractBaseSyncTest, TestCase):
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_accounts()
+
+    args = (
+        fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST,
+        'account_physical_location',
+    )
+
+
 class TestSyncProjectCommand(AbstractBaseSyncTest, TestCase):
     args = (
         fixtures.API_PROJECT_LIST,
@@ -547,6 +558,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncServiceCallTaskCommand,
             TestSyncServiceCallTicketResourceCommand,
             TestSyncServiceCallTaskResourceCommand,
+            TestSyncAccountLocationCommand,
         ]
 
         self.test_args = []
@@ -579,6 +591,7 @@ class TestSyncAllCommand(TestCase):
             'priority': models.Priority,
             'queue': models.Queue,
             'account': models.Account,
+            'account_physical_location': models.AccountPhysicalLocation,
             'project': models.Project,
             'project_status': models.ProjectStatus,
             'project_type': models.ProjectType,
@@ -632,6 +645,7 @@ class TestSyncAllCommand(TestCase):
                     'service_call_task',
                     'service_call_ticket_resource',
                     'service_call_task_resource',
+                    'account_physical_location',
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.

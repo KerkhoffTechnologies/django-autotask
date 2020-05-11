@@ -54,6 +54,15 @@ API_ACCOUNT_LIST = [
     }
 ]
 
+API_ACCOUNT_PHYSICAL_LOCATION = {
+    'id': 55,
+    'Name': 'Primary Location',
+    'AccountID': 174,
+    'Active': True
+}
+
+API_ACCOUNT_PHYSICAL_LOCATION_LIST = [API_ACCOUNT_PHYSICAL_LOCATION]
+
 API_PROJECT_STATUS_LIST = [
     {
         'IsActive': True,

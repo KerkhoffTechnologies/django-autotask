@@ -32,6 +32,11 @@ class Command(BaseCommand):
             ('queue', sync.QueueSynchronizer, _('Queue')),
             ('account_type', sync.AccountTypeSynchronizer, _('Account Type')),
             ('account', sync.AccountSynchronizer, _('Account')),
+            (
+                'account_physical_location',
+                sync.AccountPhysicalLocationSynchronizer,
+                _('Account Physical Location')
+            ),
             ('contract', sync.ContractSynchronizer, _('Contract')),
             ('project_status',
              sync.ProjectStatusSynchronizer, _('Project Status')),
