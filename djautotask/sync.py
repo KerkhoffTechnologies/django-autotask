@@ -508,6 +508,18 @@ class TicketSynchronizer(
         instance.due_date_time = object_data.get('DueDateTime')
         instance.estimated_hours = object_data.get('EstimatedHours')
         instance.last_activity_date = object_data.get('LastActivityDate')
+        instance.first_response_date_time = \
+            object_data.get('FirstResponseDateTime')
+        instance.first_response_due_date_time = \
+            object_data.get('FirstResponseDueDateTime')
+        instance.resolution_plan_date_time = \
+            object_data.get('ResolutionPlanDateTime')
+        instance.resolution_plan_due_date_time = \
+            object_data.get('ResolutionPlanDueDateTime')
+        instance.resolved_date_time = \
+            object_data.get('ResolvedDateTime')
+        instance.resolved_due_date_time = \
+            object_data.get('ResolvedDueDateTime')
 
         self.set_relations(instance, object_data)
         return instance

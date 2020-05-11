@@ -48,6 +48,12 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
         blank=True, null=True, decimal_places=2, max_digits=6)
     last_activity_date = models.DateTimeField(blank=True, null=True)
     title = models.CharField(blank=True, null=True, max_length=255)
+    first_response_date_time = models.DateTimeField(blank=True, null=True)
+    first_response_due_date_time = models.DateTimeField(blank=True, null=True)
+    resolution_plan_date_time = models.DateTimeField(blank=True, null=True)
+    resolution_plan_due_date_time = models.DateTimeField(blank=True, null=True)
+    resolved_date_time = models.DateTimeField(blank=True, null=True)
+    resolved_due_date_time = models.DateTimeField(blank=True, null=True)
 
     status = models.ForeignKey(
         'Status', blank=True, null=True, on_delete=models.SET_NULL
