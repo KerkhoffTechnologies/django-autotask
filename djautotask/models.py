@@ -45,7 +45,7 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     description = models.TextField(blank=True, null=True, max_length=8000)
     due_date_time = models.DateTimeField(null=False)
     estimated_hours = models.DecimalField(
-        blank=True, null=True, decimal_places=2, max_digits=6)
+        blank=True, null=True, decimal_places=2, max_digits=9)
     last_activity_date = models.DateTimeField(blank=True, null=True)
     title = models.CharField(blank=True, null=True, max_length=255)
     first_response_date_time = models.DateTimeField(blank=True, null=True)
