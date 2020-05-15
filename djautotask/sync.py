@@ -1202,6 +1202,8 @@ class ServiceCallSynchronizer(Synchronizer):
 
     related_meta = {
         'AccountID': (models.Account, 'account'),
+        'AccountPhysicalLocationID':
+            (models.AccountPhysicalLocation, 'location'),
         'Status': (models.ServiceCallStatus, 'status'),
         'CreatorResourceID': (models.Resource, 'creator_resource'),
         'CanceledByResource': (models.Resource, 'canceled_by_resource')
@@ -1222,6 +1224,24 @@ class ServiceCallSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a ServiceCall.
+        """
+
+        body = {
+            'AccountID': kwargs['account'].id,
+            'AccountPhysicalLocationID': kwargs['location'].id,
+            'StartDateTime': kwargs['start_date_time'],
+            'EndDateTime': kwargs['end_date_time'],
+            'Status': kwargs['status'].id,
+            'Description': kwargs['description'],
+            'Duration': kwargs['duration'],
+        }
+        instance = api.create_object(self.model_class.__name__, body)
+
+        return self.update_or_create_instance(instance)
 
 
 class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
@@ -1244,6 +1264,19 @@ class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
 
         return batch_query_list
 
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a ServiceCallTicket.
+        """
+
+        body = {
+            'ServiceCallID': kwargs['service_call'].id,
+            'TicketID': kwargs['ticket'].id,
+        }
+        instance = api.create_object(self.model_class.__name__, body)
+
+        return self.update_or_create_instance(instance)
+
 
 class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTask
@@ -1264,6 +1297,19 @@ class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
             models.Task, 'TaskID', sync_job_qset)
 
         return batch_query_list
+
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a ServiceCallTask.
+        """
+
+        body = {
+            'ServiceCallID': kwargs['service_call'].id,
+            'TaskID': kwargs['task'].id,
+        }
+        instance = api.create_object(self.model_class.__name__, body)
+
+        return self.update_or_create_instance(instance)
 
 
 class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
@@ -1287,6 +1333,19 @@ class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
 
         return batch_query_list
 
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a ServiceCallTicketResource.
+        """
+
+        body = {
+            'ServiceCallTicketID': kwargs['service_call_ticket'].id,
+            'ResourceID': kwargs['resource'].id,
+        }
+        instance = api.create_object(self.model_class.__name__, body)
+
+        return self.update_or_create_instance(instance)
+
 
 class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTaskResource
@@ -1308,3 +1367,16 @@ class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
             models.ServiceCallTask, 'ServiceCallTaskID', sync_job_qset)
 
         return batch_query_list
+
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a ServiceCallTaskResource.
+        """
+
+        body = {
+            'ServiceCallTaskID': kwargs['service_call_task'].id,
+            'ResourceID': kwargs['resource'].id,
+        }
+        instance = api.create_object(self.model_class.__name__, body)
+
+        return self.update_or_create_instance(instance)

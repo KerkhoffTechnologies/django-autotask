@@ -724,6 +724,12 @@ class ServiceCall(TimeStampedModel):
 
     account = models.ForeignKey(
         'Account', on_delete=models.CASCADE)
+    location = models.ForeignKey(
+        'AccountPhysicalLocation',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
     status = models.ForeignKey(
         'ServiceCallStatus', on_delete=models.CASCADE)
     creator_resource = models.ForeignKey(
