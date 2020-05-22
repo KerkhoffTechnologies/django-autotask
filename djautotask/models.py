@@ -54,6 +54,10 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     resolution_plan_due_date_time = models.DateTimeField(blank=True, null=True)
     resolved_date_time = models.DateTimeField(blank=True, null=True)
     resolved_due_date_time = models.DateTimeField(blank=True, null=True)
+    service_level_agreement = models.IntegerField(blank=True, null=True)
+    service_level_agreement_has_been_met = models.BooleanField(default=False)
+    service_level_agreement_paused_next_event_hours = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
 
     status = models.ForeignKey(
         'Status', blank=True, null=True, on_delete=models.SET_NULL

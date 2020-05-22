@@ -520,6 +520,12 @@ class TicketSynchronizer(
             object_data.get('ResolvedDateTime')
         instance.resolved_due_date_time = \
             object_data.get('ResolvedDueDateTime')
+        instance.service_level_agreement = \
+            object_data.get('ServiceLevelAgreementID')
+        instance.service_level_agreement_has_been_met = \
+            bool(object_data.get('ServiceLevelAgreementHasBeenMet'))
+        instance.service_level_agreement_paused_next_event_hours = \
+            object_data.get('ServiceLevelAgreementPausedNextEventHours')
 
         self.set_relations(instance, object_data)
         return instance
