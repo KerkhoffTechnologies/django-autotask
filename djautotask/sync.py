@@ -768,7 +768,7 @@ class AccountSynchronizer(Synchronizer):
         return instance
 
 
-class AccountPhysicalLocationSynchronizer(Synchronizer):
+class AccountPhysicalLocationSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.AccountPhysicalLocation
 
     related_meta = {
@@ -782,6 +782,12 @@ class AccountPhysicalLocationSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.Account, 'AccountID', sync_job_qset)
+
+        return batch_query_list
 
 
 class FilterProjectStatusMixin:
@@ -1214,7 +1220,7 @@ class ContractSynchronizer(Synchronizer):
         return instance
 
 
-class ServiceCallSynchronizer(Synchronizer):
+class ServiceCallSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCall
     last_updated_field = 'LastModifiedDateTime'
 
@@ -1242,6 +1248,12 @@ class ServiceCallSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+    def build_batch_queries(self, sync_job_qset):
+        batch_query_list = self._build_fk_batch(
+            models.Account, 'AccountID', sync_job_qset)
+
+        return batch_query_list
 
     def create(self, **kwargs):
         """
