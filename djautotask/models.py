@@ -771,7 +771,12 @@ class ServiceCall(TimeStampedModel):
 
 
 class ServiceCallTicket(TimeStampedModel):
-    service_call = models.ForeignKey('ServiceCall', on_delete=models.CASCADE)
+    service_call = models.ForeignKey(
+        'ServiceCall',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
     ticket = models.ForeignKey('Ticket', on_delete=models.CASCADE)
     resources = models.ManyToManyField(
         'Resource', through='ServiceCallTicketResource',
@@ -783,7 +788,12 @@ class ServiceCallTicket(TimeStampedModel):
 
 
 class ServiceCallTask(TimeStampedModel):
-    service_call = models.ForeignKey('ServiceCall', on_delete=models.CASCADE)
+    service_call = models.ForeignKey(
+        'ServiceCall',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
     task = models.ForeignKey('Task', on_delete=models.CASCADE)
     resources = models.ManyToManyField(
         'Resource', through='ServiceCallTaskResource',
