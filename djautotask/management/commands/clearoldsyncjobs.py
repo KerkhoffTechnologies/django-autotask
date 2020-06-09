@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import DatabaseError
 from django.utils.translation import ugettext_lazy as _
-from datetime import datetime, timedelta
+from django.utils import timezone
 import logging
 
 from djautotask.models import SyncJob
@@ -30,7 +30,7 @@ class Command(BaseCommand):
         elif verbosity == 2:
             logger.setLevel(logging.INFO)
 
-        cutoff_date = datetime.now() - timedelta(days=days_option)
+        cutoff_date = timezone.now() - timezone.timedelta(days=days_option)
         old_entries = SyncJob.objects.exclude(start_time__gt=cutoff_date)
 
         count = old_entries.count()
