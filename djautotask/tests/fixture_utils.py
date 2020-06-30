@@ -75,6 +75,11 @@ def generate_picklist_objects(object_type, fixture_objects):
         picklist_object = set_attributes(pick_list_value, fixture)
         object_list.append(picklist_object)
 
+    # suds-community does not normally initialize the ArrayOfPickListValue
+    # field because it is an optional field. We force it to by modifying the
+    # test wsdl file for the "Field"'s PicklistValues, chagining its minOccurs
+    # to "1", so it initializes it for us.
+    
     field.Name = object_type
     field.IsPickList = True
     field.PicklistValues.PickListValue = object_list

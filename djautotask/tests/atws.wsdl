@@ -108,7 +108,7 @@
 					<s:element minOccurs="1" maxOccurs="1" name="IsReference" type="s:boolean"/>
 					<s:element minOccurs="0" maxOccurs="1" name="ReferenceEntityType" type="s:string"/>
 					<s:element minOccurs="1" maxOccurs="1" name="IsPickList" type="s:boolean"/>
-					<s:element minOccurs="0" maxOccurs="1" name="PicklistValues" type="tns:ArrayOfPickListValue"/>
+					<s:element minOccurs="1" maxOccurs="1" name="PicklistValues" type="tns:ArrayOfPickListValue"/>
 					<s:element minOccurs="0" maxOccurs="1" name="PicklistParentValueField" type="s:string"/>
 					<s:element minOccurs="0" maxOccurs="1" name="DefaultValue" type="s:string"/>
 				</s:sequence>
