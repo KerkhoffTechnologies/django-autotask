@@ -180,7 +180,7 @@ class Priority(Picklist):
 
 
 class Queue(Picklist):
-    pass
+    label = models.CharField(blank=True, null=True, max_length=100)
 
     class Meta:
         ordering = ('label',)
