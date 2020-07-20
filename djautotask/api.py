@@ -22,6 +22,14 @@ class AtwsTransportError(Exception):
     pass
 
 
+class AutotaskRecordNotFoundError(Exception):
+    """
+    If the object does not exist (e.g. it was deleted in Autotask),
+    the API won't return an error message, just a null value.
+    """
+    pass
+
+
 def parse_autotaskprocessexception(e):
     """
     AutotaskProcessException could have any exception wrapped inside of it,
@@ -213,6 +221,12 @@ def update_object(entity_type, object_id, updated_fields):
     """
     at = init_api_connection()
     instance = fetch_object(entity_type, object_id, at)
+
+    if instance is None:
+        raise AutotaskRecordNotFoundError(
+            '{} {} not found. It was not returned '
+            'from the Autotask API.'.format(entity_type, object_id)
+        )
 
     for key, value in updated_fields.items():
         setattr(instance, key, value)
