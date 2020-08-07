@@ -189,6 +189,7 @@ class Queue(Picklist):
 
 class ProjectStatus(Picklist):
     COMPLETE = 'Complete'
+    COMPLETE_ID = 5
 
     class Meta:
         ordering = ('label',)
@@ -427,6 +428,7 @@ class Project(TimeStampedModel):
         null=True, decimal_places=2, max_digits=9
     )
     last_activity_date_time = models.DateTimeField(null=True)
+    status_detail = models.CharField(max_length=2000, blank=True, null=True)
 
     project_lead_resource = models.ForeignKey(
         'Resource', null=True, on_delete=models.SET_NULL
