@@ -626,9 +626,6 @@ class TestAccountPhysicalLocationSynchronizer(TestCase):
 class FilterProjectTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        # Label ok for unit tests, COMPLETE_ID not needed
-        cls.complete_status = ProjectStatus.objects.create(
-            label='Complete', is_active=True)
         cls.inactive_status = ProjectStatus.objects.create(
             label='New (Inactive)', is_active=False)
         cls.inactive_project = Project.objects.create(name='Inactive Project')
@@ -723,7 +720,8 @@ class TestProjectSynchronizer(FilterProjectTestCase):
         project_in_complete_status = fixtures.API_PROJECT_LIST[0]
         project_fixture = deepcopy(project_in_complete_status)
         project_fixture['id'] = '6'
-        project_fixture['Status'] = self.complete_status.id
+        # 5 Is the Autotask system complete status
+        project_fixture['Status'] = 5
 
         project_instance = fixture_utils.generate_objects(
             'Project', [project_fixture, fixtures.API_PROJECT_LIST[0]]
@@ -753,6 +751,7 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin,
         fixture_utils.init_resources()
         fixture_utils.init_statuses()
         fixture_utils.init_priorities()
+        fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
         fixture_utils.init_tasks()
 
@@ -832,7 +831,7 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin,
         Test to ensure that sync does not persist tasks on a complete project.
         """
         project = Project.objects.create(name='Complete Project')
-        project.status = self.complete_status
+        project.status = ProjectStatus.objects.get(id=5)
         project.save()
 
         task_fixture = deepcopy(fixtures.API_TASK)
