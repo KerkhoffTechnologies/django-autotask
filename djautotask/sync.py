@@ -862,6 +862,7 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
         instance.completed_percentage = object_data.get('CompletedPercentage')
         instance.duration = object_data.get('Duration')
         instance.estimated_time = object_data.get('EstimatedTime')
+        instance.status_detail = object_data.get('StatusDetail')
         instance.last_activity_date_time = \
             object_data.get('LastActivityDateTime')
 
