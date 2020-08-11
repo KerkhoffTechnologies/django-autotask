@@ -626,8 +626,9 @@ class TestAccountPhysicalLocationSynchronizer(TestCase):
 class FilterProjectTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
+        # Label ok for unit tests, COMPLETE_ID not needed
         cls.complete_status = ProjectStatus.objects.create(
-            label=ProjectStatus.COMPLETE, is_active=True)
+            label='Complete', is_active=True)
         cls.inactive_status = ProjectStatus.objects.create(
             label='New (Inactive)', is_active=False)
         cls.inactive_project = Project.objects.create(name='Inactive Project')
