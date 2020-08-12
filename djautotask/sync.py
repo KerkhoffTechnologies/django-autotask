@@ -832,19 +832,10 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
         return active_project_statuses
 
     def _get_query_conditions(self, query):
-
-        try:
-            status = models.ProjectStatus.objects.get(
-                label=models.ProjectStatus.COMPLETE)
-            query.open_bracket('AND')
-            query.WHERE('Status', query.NotEqual, status.id)
-            query.close_bracket()
-
-        except models.ProjectStatus.DoesNotExist as e:
-            logger.warning(
-                'Failed to find project status - {}. {}'.format(
-                    models.ProjectStatus.COMPLETE, e)
-            )
+        query.open_bracket('AND')
+        query.WHERE(
+            'Status', query.NotEqual, models.ProjectStatus.COMPLETE_ID)
+        query.close_bracket()
 
         return query
 
@@ -932,7 +923,7 @@ class TaskSynchronizer(QueryConditionMixin,
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
             Q(status__is_active=False) |
-            Q(status__label=models.ProjectStatus.COMPLETE)
+            Q(status__id=models.ProjectStatus.COMPLETE_ID)
         ).values_list('id', flat=True).order_by(self.db_lookup_key)
 
         return active_projects

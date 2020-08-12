@@ -188,7 +188,6 @@ class Queue(Picklist):
 
 
 class ProjectStatus(Picklist):
-    COMPLETE = 'Complete'
     COMPLETE_ID = 5
 
     class Meta:
