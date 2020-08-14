@@ -377,6 +377,9 @@ class Account(TimeStampedModel):
     type = models.ForeignKey(
         'AccountType', blank=True, null=True, on_delete=models.SET_NULL
     )
+    parent_account = models.ForeignKey(
+        'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         ordering = ('name',)

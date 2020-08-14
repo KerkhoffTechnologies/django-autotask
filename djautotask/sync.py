@@ -755,6 +755,7 @@ class AccountSynchronizer(Synchronizer):
 
     related_meta = {
         'AccountType': (models.AccountType, 'type'),
+        'ParentAccountID': (models.Account, 'parent_account'),
     }
 
     def _assign_field_data(self, instance, object_data):
