@@ -134,8 +134,9 @@ class TicketSecondaryResourceAdmin(admin.ModelAdmin):
 
 @admin.register(models.Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'type', 'number', 'active')
-    search_fields = ('id', 'name', 'number')
+    list_display = ('id', 'name', 'type', 'number', 'active', 'parent_account')
+    search_fields = ('id', 'name', 'number', 'parent_account__name')
+    list_filter = ('active', 'type')
 
 
 @admin.register(models.AccountPhysicalLocation)
