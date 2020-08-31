@@ -18,7 +18,7 @@ API_ACCOUNT_LIST = [
             datetime(2012, 6, 18, 13, 15, 47, tzinfo=tzoffset(None, 3600)),
         'MarketSegmentID': 29683456,
         'AccountName': 'Autotask Corporation',
-        'AccountNumber': 289843,
+        'AccountNumber': "289843",
         'OwnerResourceID': 29682885,
         'Phone': '555-555-5566',
         'PostalCode': 12061,

@@ -47,7 +47,37 @@ class TestAssignNullRelationMixin:
         patch.stop()
 
 
-class TestTicketNoteSynchronizer(TestCase):
+class SynchronizerTestMixin:
+    model_class = None
+    synchronizer = None
+    fixture = None
+    update_field = None
+
+    def _sync(self, return_data):
+        query_generator = \
+            fixture_utils.generate_objects(
+                self.model_class.__name__, [return_data])
+        _, patch = mocks.api_query_call(query_generator)
+        return self.synchronizer.sync()
+
+    def test_skips(self):
+        updated_instance = deepcopy(self.fixture)
+        updated_instance[self.update_field] = 'New Data'
+
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(updated_count, 1)
+        self.assertEqual(skipped_count, 0)
+
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
+
+class TestTicketNoteSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = TicketNote
+    fixture = fixtures.API_TICKET_NOTE
+    update_field = 'Title'
+
     def setUp(self):
         super().setUp()
         self.synchronizer = sync.TicketNoteSynchronizer()
@@ -97,7 +127,11 @@ class TestTicketNoteSynchronizer(TestCase):
         self.assertEqual(qs.count(), 0)
 
 
-class TestTaskNoteSynchronizer(TestCase):
+class TestTaskNoteSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = TaskNote
+    fixture = fixtures.API_TASK_NOTE
+    update_field = 'Title'
+
     def setUp(self):
         super().setUp()
         self.synchronizer = sync.TaskNoteSynchronizer()
@@ -147,13 +181,16 @@ class TestTaskNoteSynchronizer(TestCase):
         self.assertEqual(qs.count(), 0)
 
 
-class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
+class TestTicketSynchronizer(
+        TestAssignNullRelationMixin, SynchronizerTestMixin, TestCase):
     model_class = Ticket
+    fixture = fixtures.API_TICKET
     sync_class = sync.TicketSynchronizer
+    update_field = 'Title'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.TicketSynchronizer()
+        self.synchronizer = self.sync_class()
 
         fixture_utils.init_contracts()
         fixture_utils.init_statuses()
@@ -217,8 +254,6 @@ class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
         Test to ensure that a ticket will sync related objects,
         in its case notes, and time entries, and secondary resources
         """
-        synchronizer = self.sync_class()
-
         ticket = Ticket.objects.first()
         ticket.status = Status.objects.first()
         time_mock, time_patch = mocks.create_mock_call(
@@ -233,7 +268,7 @@ class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
             None
         )
 
-        synchronizer.sync_related(ticket)
+        self.synchronizer.sync_related(ticket)
 
         self.assertEqual(time_mock.call_count, 1)
         self.assertEqual(note_mock.call_count, 1)
@@ -243,7 +278,7 @@ class TestTicketSynchronizer(TestAssignNullRelationMixin, TestCase):
         resource_patch.stop()
 
 
-class AbstractPicklistSynchronizer(object):
+class PicklistSynchronizerTestMixin:
 
     def setUp(self):
         mocks.init_api_connection(Wrapper)
@@ -287,8 +322,30 @@ class AbstractPicklistSynchronizer(object):
         synchronizer.sync()
         self.assertEqual(qset.count(), 0)
 
+    def _sync(self, return_data):
+        picklist_field = self.synchronizer.picklist_field \
+            if hasattr(self.synchronizer, 'picklist_field') \
+            else self.model_class.__name__
+        query_generator = \
+            fixture_utils.generate_picklist_objects(
+                picklist_field, [return_data])
+        _, patch = mocks.api_picklist_call(query_generator)
+        return self.synchronizer().sync()
 
-class TestStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
+    def test_skips(self):
+        updated_instance = deepcopy(self.fixture[0])
+        updated_instance['Label'] = 'New Data'
+
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(updated_count, 1)
+        self.assertEqual(skipped_count, 0)
+
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
+
+class TestStatusSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = Status
     fixture = fixtures.API_STATUS_LIST
     synchronizer = sync.StatusSynchronizer
@@ -298,7 +355,7 @@ class TestStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_statuses()
 
 
-class TestPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestPrioritySynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = Priority
     fixture = fixtures.API_PRIORITY_LIST
     synchronizer = sync.PrioritySynchronizer
@@ -308,7 +365,7 @@ class TestPrioritySynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_priorities()
 
 
-class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestQueueSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = Queue
     fixture = fixtures.API_QUEUE_LIST
     synchronizer = sync.QueueSynchronizer
@@ -318,7 +375,7 @@ class TestQueueSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_queues()
 
 
-class TestProjectStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestProjectStatusSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = ProjectStatus
     fixture = fixtures.API_PROJECT_STATUS_LIST
     synchronizer = sync.ProjectStatusSynchronizer
@@ -327,8 +384,20 @@ class TestProjectStatusSynchronizer(AbstractPicklistSynchronizer, TestCase):
         super().setUp()
         fixture_utils.init_project_statuses()
 
+    def test_skips(self):
+        updated_instance = deepcopy(self.fixture[1])
+        updated_instance['Label'] = 'New Data'
 
-class TestProjectTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+        a, updated_count, skipped_count, d = self._sync(updated_instance)
+        self.assertEqual(updated_count, 1)
+        self.assertEqual(skipped_count, 0)
+
+        a, updated_count, skipped_count, d = self._sync(updated_instance)
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
+
+class TestProjectTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = ProjectType
     fixture = fixtures.API_PROJECT_TYPE_LIST
     synchronizer = sync.ProjectTypeSynchronizer
@@ -338,7 +407,7 @@ class TestProjectTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_project_types()
 
 
-class TestSourceSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestSourceSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = Source
     fixture = fixtures.API_SOURCE_LIST
     synchronizer = sync.SourceSynchronizer
@@ -348,7 +417,7 @@ class TestSourceSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_sources()
 
 
-class TestIssueTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestIssueTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = IssueType
     fixture = fixtures.API_ISSUE_TYPE_LIST
     synchronizer = sync.IssueTypeSynchronizer
@@ -358,7 +427,7 @@ class TestIssueTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_issue_types()
 
 
-class TestSubIssueTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestSubIssueTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = SubIssueType
     fixture = fixtures.API_SUB_ISSUE_TYPE_LIST
     synchronizer = sync.SubIssueTypeSynchronizer
@@ -368,7 +437,7 @@ class TestSubIssueTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_sub_issue_types()
 
 
-class TestTicketTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestTicketTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = TicketType
     fixture = fixtures.API_TICKET_TYPE_LIST
     synchronizer = sync.TicketTypeSynchronizer
@@ -378,7 +447,7 @@ class TestTicketTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_ticket_types()
 
 
-class TestDisplayColorSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestDisplayColorSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = DisplayColor
     fixture = fixtures.API_DISPLAY_COLOR_LIST
     synchronizer = sync.DisplayColorSynchronizer
@@ -388,7 +457,7 @@ class TestDisplayColorSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_display_colors()
 
 
-class TestLicenseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestLicenseTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = LicenseType
     fixture = fixtures.API_LICENSE_TYPE_LIST
     synchronizer = sync.LicenseTypeSynchronizer
@@ -398,7 +467,7 @@ class TestLicenseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_license_types()
 
 
-class TestTaskTypeLinkSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestTaskTypeLinkSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = TaskTypeLink
     fixture = fixtures.API_TASK_TYPE_LINK_LIST
     synchronizer = sync.TaskTypeLinkSynchronizer
@@ -408,7 +477,7 @@ class TestTaskTypeLinkSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_task_type_links()
 
 
-class TestUseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestUseTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = UseType
     fixture = fixtures.API_USE_TYPE_LIST
     synchronizer = sync.UseTypeSynchronizer
@@ -418,7 +487,7 @@ class TestUseTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_use_types()
 
 
-class TestServiceCallStatusSynchronizer(AbstractPicklistSynchronizer,
+class TestServiceCallStatusSynchronizer(PicklistSynchronizerTestMixin,
                                         TestCase):
     model_class = ServiceCallStatus
     fixture = fixtures.API_SERVICE_CALL_STATUS_LIST
@@ -429,7 +498,7 @@ class TestServiceCallStatusSynchronizer(AbstractPicklistSynchronizer,
         fixture_utils.init_service_call_statuses()
 
 
-class TestAccountTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
+class TestAccountTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
     model_class = AccountType
     fixture = fixtures.API_ACCOUNT_TYPE_LIST
     synchronizer = sync.AccountTypeSynchronizer
@@ -439,13 +508,14 @@ class TestAccountTypeSynchronizer(AbstractPicklistSynchronizer, TestCase):
         fixture_utils.init_account_types()
 
 
-class TestTicketCategorySynchronizer(TestCase):
+class TestTicketCategorySynchronizer(SynchronizerTestMixin, TestCase):
     model_class = TicketCategory
-    fixture = fixtures.API_TICKET_CATEGORY_LIST
-    synchronizer = sync.TicketCategorySynchronizer
+    fixture = fixtures.API_TICKET_CATEGORY_LIST[0]
+    update_field = 'Name'
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.TicketCategorySynchronizer()
         fixture_utils.init_display_colors()
         fixture_utils.init_ticket_categories()
 
@@ -463,10 +533,9 @@ class TestTicketCategorySynchronizer(TestCase):
         """
         self.assertGreater(TicketCategory.objects.all().count(), 0)
 
-        object_data = fixtures.API_TICKET_CATEGORY_LIST[0]
-        instance = TicketCategory.objects.get(id=object_data['id'])
+        instance = TicketCategory.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(TicketCategory)
 
     def test_delete_stale_ticket_category(self):
@@ -484,11 +553,15 @@ class TestTicketCategorySynchronizer(TestCase):
         self.assertEqual(ticket_category_qset.count(), 0)
 
 
-class TestResourceSynchronizer(TestCase):
+class TestResourceSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = Resource
+    fixture = fixtures.API_RESOURCE
+    update_field = 'LastName'
 
     def setUp(self):
         super().setUp()
         fixture_utils.init_resources()
+        self.synchronizer = sync.ResourceSynchronizer()
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
@@ -526,10 +599,13 @@ class TestResourceSynchronizer(TestCase):
         self.assertEqual(resource_qset.count(), 0)
 
 
-class TestTicketSecondaryResourceSynchronizer(TestCase):
+class TestTicketSecondaryResourceSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = TicketSecondaryResource
+    fixture = fixtures.API_SECONDARY_RESOURCE_LIST[0]
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.TicketSecondaryResourceSynchronizer()
         fixture_utils.init_resources()
         fixture_utils.init_tickets()
         fixture_utils.init_secondary_resources()
@@ -541,10 +617,9 @@ class TestTicketSecondaryResourceSynchronizer(TestCase):
 
     def test_sync_ticket_secondary_resource(self):
         self.assertGreater(TicketSecondaryResource.objects.all().count(), 0)
-        object_data = fixtures.API_SECONDARY_RESOURCE_LIST[0]
-        instance = TicketSecondaryResource.objects.get(id=object_data['id'])
+        instance = TicketSecondaryResource.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(TicketSecondaryResource)
 
     def test_delete_ticket_secondary_resource(self):
@@ -557,11 +632,20 @@ class TestTicketSecondaryResourceSynchronizer(TestCase):
         synchronizer.sync()
         self.assertEqual(secondary_resources_qset.count(), 0)
 
+    def test_skips(self):
+        _, updated_count, skipped_count, _ = self._sync(self.fixture)
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
 
-class TestAccountSynchronizer(TestCase):
+
+class TestAccountSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = Account
+    fixture = fixtures.API_ACCOUNT_LIST[0]
+    update_field = "AccountName"
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.AccountSynchronizer()
         fixture_utils.init_accounts()
 
     def _assert_sync(self, instance, object_data):
@@ -591,10 +675,14 @@ class TestAccountSynchronizer(TestCase):
         self.assertEqual(account_qset.count(), 0)
 
 
-class TestAccountPhysicalLocationSynchronizer(TestCase):
+class TestAccountPhysicalLocationSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = AccountPhysicalLocation
+    fixture = fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST[0]
+    update_field = "Name"
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.AccountPhysicalLocationSynchronizer()
         fixture_utils.init_accounts()
         fixture_utils.init_account_physical_locations()
 
@@ -606,10 +694,9 @@ class TestAccountPhysicalLocationSynchronizer(TestCase):
 
     def test_sync_account_location(self):
         self.assertGreater(AccountPhysicalLocation.objects.all().count(), 0)
-        object_data = fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST[0]
-        instance = AccountPhysicalLocation.objects.get(id=object_data['id'])
+        instance = AccountPhysicalLocation.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(Account)
 
     def test_delete_stale_account_location(self):
@@ -633,10 +720,15 @@ class FilterProjectTestCase(TestCase):
         cls.inactive_project.save()
 
 
-class TestProjectSynchronizer(FilterProjectTestCase):
+class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerTestMixin,
+                              TestCase):
+    model_class = Project
+    fixture = fixtures.API_PROJECT_LIST[0]
+    update_field = 'ProjectName'
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.ProjectSynchronizer()
         fixture_utils.init_contracts()
         fixture_utils.init_resources()
         fixture_utils.init_accounts()
@@ -671,10 +763,9 @@ class TestProjectSynchronizer(FilterProjectTestCase):
 
     def test_sync_project(self):
         self.assertGreater(Project.objects.all().count(), 0)
-        object_data = fixtures.API_PROJECT_LIST[0]
-        instance = Project.objects.get(id=object_data['id'])
+        instance = Project.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(Project)
 
     def test_delete_stale_project(self):
@@ -739,15 +830,17 @@ class TestProjectSynchronizer(FilterProjectTestCase):
         patch.stop()
 
 
-class TestTaskSynchronizer(TestAssignNullRelationMixin,
+class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
                            FilterProjectTestCase):
     model_class = Task
     sync_class = sync.TaskSynchronizer
+    fixture = fixtures.API_TASK
+    update_field = "Title"
 
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
-
+        self.synchronizer = self.sync_class()
         fixture_utils.init_resources()
         fixture_utils.init_statuses()
         fixture_utils.init_priorities()
@@ -783,10 +876,9 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin,
         """
         self.assertGreater(Task.objects.all().count(), 0)
 
-        object_data = fixtures.API_TASK
-        instance = Task.objects.get(id=object_data['id'])
+        instance = Task.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(Task)
 
     def test_delete_stale_tasks(self):
@@ -854,10 +946,13 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin,
         patch.stop()
 
 
-class TestTaskSecondaryResourceSynchronizer(TestCase):
+class TestTaskSecondaryResourceSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = TaskSecondaryResource
+    fixture = fixtures.API_TASK_SECONDARY_RESOURCE
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.TaskSecondaryResourceSynchronizer()
         fixture_utils.init_resources()
         fixture_utils.init_tasks()
         fixture_utils.init_task_secondary_resources()
@@ -869,10 +964,9 @@ class TestTaskSecondaryResourceSynchronizer(TestCase):
 
     def test_sync_task_secondary_resource(self):
         self.assertGreater(TaskSecondaryResource.objects.all().count(), 0)
-        object_data = fixtures.API_TASK_SECONDARY_RESOURCE
-        instance = TaskSecondaryResource.objects.get(id=object_data['id'])
+        instance = TaskSecondaryResource.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(TaskSecondaryResource)
 
     def test_delete_task_secondary_resource(self):
@@ -885,12 +979,21 @@ class TestTaskSecondaryResourceSynchronizer(TestCase):
         synchronizer.sync()
         self.assertEqual(secondary_resources_qset.count(), 0)
 
+    def test_skips(self):
+        _, updated_count, skipped_count, _ = self._sync(self.fixture)
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
 
-class TestPhaseSynchronizer(TestCase):
+
+class TestPhaseSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = Phase
+    fixture = fixtures.API_PHASE
+    update_field = "Title"
 
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
+        self.synchronizer = sync.PhaseSynchronizer()
 
         fixture_utils.init_projects()
         fixture_utils.init_phases()
@@ -913,10 +1016,9 @@ class TestPhaseSynchronizer(TestCase):
         """
         self.assertGreater(Phase.objects.all().count(), 0)
 
-        object_data = fixtures.API_PHASE
-        instance = Phase.objects.get(id=object_data['id'])
+        instance = Phase.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(Phase)
 
     def test_delete_stale_phases(self):
@@ -933,10 +1035,14 @@ class TestPhaseSynchronizer(TestCase):
         self.assertEqual(qset.count(), 0)
 
 
-class TestTimeEntrySynchronizer(TestCase):
+class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = TimeEntry
+    fixture = fixtures.API_TIME_ENTRY_TICKET
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.TimeEntrySynchronizer()
+
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_resources()
         fixture_utils.init_tickets()
@@ -968,21 +1074,20 @@ class TestTimeEntrySynchronizer(TestCase):
 
         self.assertGreater(TimeEntry.objects.all().count(), 0)
 
-        object_data = fixtures.API_TIME_ENTRY_TICKET
-        instance = TimeEntry.objects.get(id=object_data['id'])
+        instance = TimeEntry.objects.get(id=self.fixture['id'])
 
         ticket = Ticket.objects.first()
-        ticket.id = object_data['TicketID']
+        ticket.id = self.fixture['TicketID']
         instance.ticket = ticket
 
         resource = Resource.objects.first()
-        resource.id = object_data['ResourceID']
+        resource.id = self.fixture['ResourceID']
         instance.resource = resource
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(TimeEntry)
 
-    def test_sync_time_entry_skipped(self):
+    def test_sync_time_entry_dropped(self):
         """
         Verify that a time entry does not get saved locally if its ticket
         does not already exist in the local database.
@@ -1065,11 +1170,29 @@ class TestTimeEntrySynchronizer(TestCase):
 
         _patch.stop()
 
+    def test_skips(self):
+        self._sync(self.fixture)
 
-class TestAllocationCodeSynchronizer(TestCase):
+        updated_instance = deepcopy(self.fixture)
+        updated_instance["HoursWorked"] = 3.000
+
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(updated_count, 1)
+        self.assertEqual(skipped_count, 0)
+
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
+
+class TestAllocationCodeSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = AllocationCode
+    fixture = fixtures.API_ALLOCATION_CODE
+    update_field = "Name"
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.AllocationCodeSynchronizer()
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_use_types()
         fixture_utils.init_allocation_codes()
@@ -1084,10 +1207,9 @@ class TestAllocationCodeSynchronizer(TestCase):
     def test_sync_allocation_code(self):
 
         self.assertGreater(AllocationCode.objects.all().count(), 0)
-        object_data = fixtures.API_ALLOCATION_CODE
-        instance = AllocationCode.objects.get(id=object_data['id'])
+        instance = AllocationCode.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(AllocationCode)
 
     def test_delete_allocation_code(self):
@@ -1102,7 +1224,11 @@ class TestAllocationCodeSynchronizer(TestCase):
         self.assertEqual(allocation_code_qset.count(), 0)
 
 
-class TestRoleSynchronizer(TestCase):
+class TestRoleSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = Role
+    fixture = fixtures.API_ROLE
+    update_field = "Name"
+
     def setUp(self):
         super().setUp()
         self.synchronizer = sync.RoleSynchronizer()
@@ -1124,10 +1250,9 @@ class TestRoleSynchronizer(TestCase):
         """
         self.assertGreater(Role.objects.all().count(), 0)
 
-        object_data = fixtures.API_ROLE
-        instance = Role.objects.get(id=object_data['id'])
+        instance = Role.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(Role)
 
     def test_delete_stale_roles(self):
@@ -1145,7 +1270,11 @@ class TestRoleSynchronizer(TestCase):
         self.assertEqual(qs.count(), 0)
 
 
-class TestDepartmentSynchronizer(TestCase):
+class TestDepartmentSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = Department
+    fixture = fixtures.API_DEPARTMENT
+    update_field = "Name"
+
     def setUp(self):
         super().setUp()
         self.synchronizer = sync.DepartmentSynchronizer()
@@ -1164,10 +1293,9 @@ class TestDepartmentSynchronizer(TestCase):
         """
         self.assertGreater(Department.objects.all().count(), 0)
 
-        object_data = fixtures.API_DEPARTMENT
-        instance = Department.objects.get(id=object_data['id'])
+        instance = Department.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(Department)
 
     def test_delete_stale_departments(self):
@@ -1185,14 +1313,18 @@ class TestDepartmentSynchronizer(TestCase):
         self.assertEqual(qs.count(), 0)
 
 
-class TestResourceRoleDepartmentSynchronizer(TestCase):
+class TestResourceRoleDepartmentSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = ResourceRoleDepartment
+    fixture = fixtures.API_RESOURCE_ROLE_DEPARTMENT
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.ResourceRoleDepartmentSynchronizer()
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_departments()
         fixture_utils.init_roles()
         fixture_utils.init_resources()
+        fixture_utils.init_resource_role_departments()
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
@@ -1208,41 +1340,38 @@ class TestResourceRoleDepartmentSynchronizer(TestCase):
         """
         Test to ensure synchronizer saves an instance locally.
         """
-        resource_role_department = fixture_utils.generate_objects(
-            'ResourceRoleDepartment',
-            fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST)
-        mocks.api_query_call(resource_role_department)
-        synchronizer = sync.ResourceRoleDepartmentSynchronizer()
-        synchronizer.sync()
-
         self.assertGreater(ResourceRoleDepartment.objects.all().count(), 0)
 
-        object_data = fixtures.API_RESOURCE_ROLE_DEPARTMENT
-        instance = ResourceRoleDepartment.objects.get(id=object_data['id'])
+        instance = ResourceRoleDepartment.objects.get(id=self.fixture['id'])
 
-        role = Role.objects.first()
-        role.id = object_data['RoleID']
-        instance.role = role
-
-        resource = Resource.objects.first()
-        resource.id = object_data['ResourceID']
-        instance.resource = resource
-
-        department = Department.objects.first()
-        department.id = object_data['DepartmentID']
-        instance.department = department
-
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(ResourceRoleDepartment)
 
+    def test_skips(self):
+        updated_instance = deepcopy(self.fixture)
+        updated_instance['Active'] = False
 
-class TestResourceServiceDeskRoleSynchronizer(TestCase):
+        a, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(updated_count, 1)
+        self.assertEqual(skipped_count, 0)
+
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
+
+class TestResourceServiceDeskRoleSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = ResourceServiceDeskRole
+    fixture = fixtures.API_RESOURCE_SERVICE_DESK_ROLE
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.ResourceServiceDeskRoleSynchronizer()
+
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_roles()
         fixture_utils.init_resources()
+        fixture_utils.init_resource_service_desk_role()
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
@@ -1255,36 +1384,37 @@ class TestResourceServiceDeskRoleSynchronizer(TestCase):
         """
         Test to ensure synchronizer saves an instance locally.
         """
-        resource_service_desk_role = fixture_utils.generate_objects(
-            'ResourceServiceDeskRole',
-            fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST)
-        mocks.api_query_call(resource_service_desk_role)
-        synchronizer = sync.ResourceServiceDeskRoleSynchronizer()
-        synchronizer.sync()
-
         self.assertGreater(ResourceServiceDeskRole.objects.all().count(), 0)
 
-        object_data = fixtures.API_RESOURCE_SERVICE_DESK_ROLE
-        instance = ResourceServiceDeskRole.objects.get(id=object_data['id'])
+        instance = ResourceServiceDeskRole.objects.get(id=self.fixture['id'])
 
-        role = Role.objects.first()
-        role.id = object_data['RoleID']
-        instance.role = role
-
-        resource = Resource.objects.first()
-        resource.id = object_data['ResourceID']
-        instance.resource = resource
-
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(ResourceServiceDeskRole)
 
+    def test_skips(self):
+        updated_instance = deepcopy(self.fixture)
+        updated_instance['Active'] = False
 
-class TestContractSynchronizer(TestCase):
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(updated_count, 1)
+        self.assertEqual(skipped_count, 0)
+
+        _, updated_count, skipped_count, _ = self._sync(updated_instance)
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
+
+class TestContractSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = Contract
+    synchronizer = sync.ContractSynchronizer()
+    fixture = fixtures.API_CONTRACT
+    update_field = "ContractName"
 
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_accounts()
+        fixture_utils.init_contracts()
 
     def _assert_sync(self, instance, object_data):
 
@@ -1298,31 +1428,29 @@ class TestContractSynchronizer(TestCase):
         """
         Test to ensure synchronizer saves a contract instance locally.
         """
-        contract = fixture_utils.generate_objects(
-            'Contract', fixtures.API_CONTRACT_LIST
-        )
-        mocks.api_query_call(contract)
-        synchronizer = sync.ContractSynchronizer()
-        synchronizer.sync()
-
         self.assertGreater((Contract.objects.count()), 0)
 
-        object_data = fixtures.API_CONTRACT
-        instance = Contract.objects.get(id=object_data['id'])
+        instance = Contract.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(Contract)
 
 
-class TestServiceCallSynchronizer(TestCase):
+class TestServiceCallSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = ServiceCall
+    fixture = fixtures.API_SERVICE_CALL
+    update_field = 'Description'
 
     def setUp(self):
         super().setUp()
+        self.synchronizer = sync.ServiceCallSynchronizer()
+
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_service_call_statuses()
         fixture_utils.init_resources()
         fixture_utils.init_account_types()
         fixture_utils.init_accounts()
+        fixture_utils.init_service_calls()
 
     def _assert_sync(self, instance, object_data):
 
@@ -1354,17 +1482,9 @@ class TestServiceCallSynchronizer(TestCase):
         """
         Test to ensure synchronizer saves a service call instance locally.
         """
-        service_call = fixture_utils.generate_objects(
-            'ServiceCall', fixtures.API_SERVICE_CALL_LIST
-        )
-        mocks.api_query_call(service_call)
-        synchronizer = sync.ServiceCallSynchronizer()
-        synchronizer.sync()
-
         self.assertGreater((ServiceCall.objects.count()), 0)
 
-        object_data = fixtures.API_SERVICE_CALL
-        instance = ServiceCall.objects.get(id=object_data['id'])
+        instance = ServiceCall.objects.get(id=self.fixture['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_sync(instance, self.fixture)
         assert_sync_job(ServiceCall)

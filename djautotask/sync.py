@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from suds.client import Client
 from atws.wrapper import AutotaskProcessException, AutotaskAPIException
@@ -9,6 +10,10 @@ from django.utils import timezone
 from djautotask.utils import DjautotaskSettings
 
 from djautotask import api, models
+
+CREATED = 1
+UPDATED = 2
+SKIPPED = 3
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +30,7 @@ class InvalidObjectException(Exception):
 def log_sync_job(f):
     def wrapper(*args, **kwargs):
         sync_instance = args[0]
-        created_count = updated_count = deleted_count = 0
+        created_count = updated_count = deleted_count = skipped_count = 0
         sync_job = models.SyncJob()
         sync_job.start_time = timezone.now()
         if sync_instance.full:
@@ -34,7 +39,8 @@ def log_sync_job(f):
             sync_job.sync_type = 'partial'
 
         try:
-            created_count, updated_count, deleted_count = f(*args, **kwargs)
+            created_count, updated_count, skipped_count, deleted_count = \
+                f(*args, **kwargs)
             sync_job.success = True
         except AutotaskProcessException as e:
             sync_job.message = api.parse_autotaskprocessexception(e)
@@ -53,10 +59,11 @@ def log_sync_job(f):
             sync_job.entity_name = sync_instance.model_class.__name__
             sync_job.added = created_count
             sync_job.updated = updated_count
+            sync_job.skipped = skipped_count
             sync_job.deleted = deleted_count
             sync_job.save()
 
-        return created_count, updated_count, deleted_count
+        return created_count, updated_count, skipped_count, deleted_count
 
     return wrapper
 
@@ -67,6 +74,7 @@ class SyncResults:
     def __init__(self):
         self.created_count = 0
         self.updated_count = 0
+        self.skipped_count = 0
         self.deleted_count = 0
         self.synced_ids = set()
 
@@ -175,11 +183,13 @@ class Synchronizer:
         """Persist each record to the DB."""
         try:
             with transaction.atomic():
-                _, created = self.update_or_create_instance(record)
-            if created:
+                _, result = self.update_or_create_instance(record)
+            if result == CREATED:
                 results.created_count += 1
-            else:
+            elif result == UPDATED:
                 results.updated_count += 1
+            else:
+                results.skipped_count += 1
         except InvalidObjectException as e:
             logger.warning('{}'.format(e))
 
@@ -189,7 +199,7 @@ class Synchronizer:
 
     def update_or_create_instance(self, record):
         """Creates and returns an instance if it does not already exist."""
-        created = False
+        result = None
         api_instance = Client.dict(record)
 
         try:
@@ -197,26 +207,44 @@ class Synchronizer:
             instance = self.model_class.objects.get(pk=instance_pk)
         except self.model_class.DoesNotExist:
             instance = self.model_class()
-            created = True
+            result = CREATED
 
         try:
             self._assign_field_data(instance, api_instance)
-            instance.save()
+
+            # This will return the created instance, the updated instance, or
+            # if the instance is skipped an unsaved copy of the instance.
+            if result == CREATED:
+                if self.model_class is models.Ticket:
+                    instance.save(force_insert=True)
+                else:
+                    instance.save()
+            elif instance.tracker.changed():
+                instance.save()
+                result = UPDATED
+            else:
+                result = SKIPPED
+
         except IntegrityError as e:
             msg = "IntegrityError while attempting to create {}." \
                   " Error: {}".format(self.model_class, e)
             logger.error(msg)
             raise InvalidObjectException(msg)
 
-        logger.info(
-            '{}: {} {}'.format(
-                'Created' if created else 'Updated',
-                self.model_class.__name__,
-                instance
-            )
-        )
+        if result == CREATED:
+            result_log = 'Created'
+        elif result == UPDATED:
+            result_log = 'Updated'
+        else:
+            result_log = 'Skipped'
 
-        return instance, created
+        logger.info('{}: {} {}'.format(
+            result_log,
+            self.model_class.__name__,
+            instance
+        ))
+
+        return instance, result
 
     def prune_stale_records(self, initial_ids, synced_ids):
         """
@@ -254,7 +282,8 @@ class Synchronizer:
             )
 
         return \
-            results.created_count, results.updated_count, results.deleted_count
+            results.created_count, results.updated_count, \
+            results.skipped_count, results.deleted_count
 
     def _get_query_conditions(self, query):
         pass
@@ -300,12 +329,12 @@ class PicklistSynchronizer(Synchronizer):
                 initial_ids, results.synced_ids
             )
 
-        return \
-            results.created_count, results.updated_count, results.deleted_count
+        return results.created_count, results.updated_count, \
+            results.skipped_count, results.deleted_count
 
     def _assign_field_data(self, instance, object_data):
 
-        instance.id = object_data.get('Value')
+        instance.id = int(object_data.get('Value'))
         instance.label = object_data.get('Label')
         instance.is_default_value = object_data.get('IsDefaultValue')
         instance.sort_order = object_data.get('SortOrder')
@@ -322,15 +351,16 @@ class ParentSynchronizer:
 
     def sync_children(self, *args):
         for synchronizer, query_params in args:
-            created_count, updated_count, deleted_count = \
+            created_count, updated_count, skipped_count, deleted_count = \
                 synchronizer.callback_sync(
                     query_params
                 )
             msg = '{} Child Sync - Created: {},' \
-                  ' Updated: {}, Deleted: {}'.format(
+                  ' Updated: {}, Skipped: {}, Deleted: {}'.format(
                     synchronizer.model_class.__name__,
                     created_count,
                     updated_count,
+                    skipped_count,
                     deleted_count
                   )
 
@@ -384,7 +414,7 @@ class ChildSynchronizer:
         )
 
         return results.created_count, results.updated_count, \
-            results.deleted_count
+            results.skipped_count, results.deleted_count
 
 
 class QueryConditionMixin:
@@ -524,8 +554,15 @@ class TicketSynchronizer(
             object_data.get('ServiceLevelAgreementID')
         instance.service_level_agreement_has_been_met = \
             bool(object_data.get('ServiceLevelAgreementHasBeenMet'))
-        instance.service_level_agreement_paused_next_event_hours = \
+        sla_paused = \
             object_data.get('ServiceLevelAgreementPausedNextEventHours')
+
+        if sla_paused:
+            instance.service_level_agreement_paused_next_event_hours = \
+                Decimal(str(round(sla_paused, 2)))
+        if instance.estimated_hours:
+            instance.estimated_hours = \
+                Decimal(str(round(instance.estimated_hours, 2)))
 
         self.set_relations(instance, object_data)
         return instance
@@ -858,6 +895,13 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
         instance.last_activity_date_time = \
             object_data.get('LastActivityDateTime')
 
+        if instance.estimated_time:
+            instance.estimated_time = \
+                Decimal(str(round(instance.estimated_time, 2)))
+        if instance.actual_hours:
+            instance.actual_hours = \
+                Decimal(str(round(instance.actual_hours, 2)))
+
         if instance.description:
             # Autotask docs say the max description length is 2000
             # characters but we've seen descriptions that are longer than that.
@@ -944,6 +988,13 @@ class TaskSynchronizer(QueryConditionMixin,
         instance.last_activity_date = object_data.get('LastActivityDateTime')
 
         self.set_relations(instance, object_data)
+
+        if instance.estimated_hours:
+            instance.estimated_hours = \
+                Decimal(str(round(instance.estimated_hours, 2)))
+        if instance.remaining_hours:
+            instance.remaining_hours = \
+                Decimal(str(round(instance.remaining_hours, 2)))
 
         return instance
 
@@ -1146,6 +1197,15 @@ class RoleSynchronizer(Synchronizer):
         instance.role_type = object_data.get('RoleType')
         instance.system_role = object_data.get('SystemRole')
 
+        if instance.hourly_factor:
+            instance.hourly_factor = \
+                Decimal(str(round(instance.hourly_factor, 2)))
+        if instance.hourly_rate:
+            instance.hourly_rate = \
+                Decimal(str(round(instance.hourly_rate, 2)))
+
+        return instance
+
 
 class DepartmentSynchronizer(Synchronizer):
     model_class = models.Department
@@ -1155,6 +1215,8 @@ class DepartmentSynchronizer(Synchronizer):
         instance.name = object_data.get('Name')
         instance.description = object_data.get('Description')
         instance.number = object_data.get('Number')
+
+        return instance
 
 
 class ResourceRoleDepartmentSynchronizer(Synchronizer):
@@ -1206,7 +1268,7 @@ class ContractSynchronizer(Synchronizer):
         instance.id = object_data['id']
         instance.name = object_data.get('ContractName')
         instance.number = object_data.get('ContractNumber')
-        instance.status = object_data.get('Status')
+        instance.status = str(object_data.get('Status'))
 
         self.set_relations(instance, object_data)
 

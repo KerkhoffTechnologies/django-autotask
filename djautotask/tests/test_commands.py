@@ -7,15 +7,14 @@ from djautotask import models
 
 
 def sync_summary(class_name, created_count, updated_count=0):
-    return '{} Sync Summary - Created: {}, Updated: {}'.format(
+    return '{} Sync Summary - Created: {}, Updated: {}, Skipped: 0'.format(
         class_name, created_count, updated_count
     )
 
 
 def full_sync_summary(class_name, deleted_count, updated_count=0):
-    return '{} Sync Summary - Created: 0, Updated: {}, Deleted: {}'.format(
-        class_name, updated_count, deleted_count
-    )
+    return '{} Sync Summary - Created: 0, Updated: {}, Skipped: 0, ' \
+        'Deleted: {}'.format(class_name, updated_count, deleted_count)
 
 
 def slug_to_title(slug):
@@ -78,7 +77,8 @@ class AbstractBaseSyncTest(object):
         out = self.init_sync_command(*args, full_option=True)
 
         obj_label = self._title_for_at_object(at_object)
-        msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Deleted: {}'
+        msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Skipped: 0, ' \
+                   'Deleted: {}'
 
         value_count = len(fixture_list)
 
