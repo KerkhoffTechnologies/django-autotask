@@ -262,4 +262,5 @@ def delete_objects(entity_type, objects):
         if at_object:
             objects_to_delete.append(at_object)
 
-    at.delete(objects_to_delete).execute()
+    if objects_to_delete:
+        at.delete(objects_to_delete).execute()
