@@ -257,8 +257,10 @@ def delete_objects(entity_type, objects):
     objects_to_delete = []
 
     for instance in objects:
-        objects_to_delete.append(
-            fetch_object(entity_type, instance.id, at)
-        )
+        at_object = fetch_object(entity_type, instance.id, at)
+        # If nothing is returned the object is already deleted, continue
+        if at_object:
+            objects_to_delete.append(at_object)
 
-    at.delete(objects_to_delete).execute()
+    if objects_to_delete:
+        at.delete(objects_to_delete).execute()
