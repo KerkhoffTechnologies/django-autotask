@@ -147,10 +147,13 @@ class Synchronizer:
     def build_base_query(self, sync_job_qset):
         query = Query(self.model_class.__name__)
 
-        if sync_job_qset.exists() and self.last_updated_field \
+        # Since the job is created before it begins, make sure to exclude
+        # itself, and at least one other sync job exists.
+        if sync_job_qset.count() > 1 and self.last_updated_field \
                 and not self.full:
 
-            last_sync_job_time = sync_job_qset.last().start_time
+            last_sync_job_time = sync_job_qset.exclude(
+                id=sync_job_qset.last().id).last().start_time
             query.WHERE(self.last_updated_field,
                         query.GreaterThanorEquals, last_sync_job_time)
         else:
