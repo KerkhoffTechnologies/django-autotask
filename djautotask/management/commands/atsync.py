@@ -108,6 +108,8 @@ class Command(BaseCommand):
                 sync.ServiceCallTaskResourceSynchronizer,
                 _('Service Call Task Resource')
             ),
+            ('task_predecessor', sync.TaskPredecessorSynchronizer,
+             _('Task Predecessor')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:

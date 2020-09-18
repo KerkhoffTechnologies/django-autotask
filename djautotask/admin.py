@@ -336,3 +336,11 @@ class ServiceCallTaskResourceAdmin(admin.ModelAdmin):
         'resource',
     )
     search_fields = ('id', 'resource__first_name', 'resource__last_name')
+
+
+@admin.register(models.TaskPredecessor)
+class TaskPredecessorAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'predecessor_task', 'successor_task', 'lag_days'
+    )
+    search_fields = ('id', 'predecessor_task__title', 'successor_task__title')
