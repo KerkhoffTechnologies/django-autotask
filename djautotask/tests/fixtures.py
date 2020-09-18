@@ -899,3 +899,12 @@ API_SERVICE_CALL_TASK_RESOURCE = {
     'ResourceID': 29683794,
 }
 API_SERVICE_CALL_TASK_RESOURCE_LIST = [API_SERVICE_CALL_TASK_RESOURCE]
+
+API_TASK_PREDECESSOR = {
+    'id': 1,
+    'UserDefinedFields': None,
+    'LagDays': 0,
+    'PredecessorTaskID': API_TASK['id'],
+    'SuccessorTaskID': 7755,
+}
+API_TASK_PREDECESSOR_LIST = [API_TASK_PREDECESSOR]

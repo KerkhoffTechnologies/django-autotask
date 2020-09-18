@@ -494,6 +494,17 @@ class TestSyncServiceCallTaskResourceCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_service_call_tasks()
 
 
+class TestSyncTaskPredecessor(AbstractBaseSyncTest, TestCase):
+    args = (
+        fixtures.API_TASK_PREDECESSOR_LIST,
+        'task_predecessor',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_tasks()
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -559,6 +570,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncServiceCallTicketResourceCommand,
             TestSyncServiceCallTaskResourceCommand,
             TestSyncAccountLocationCommand,
+            TestSyncTaskPredecessor,
         ]
 
         self.test_args = []
@@ -622,6 +634,7 @@ class TestSyncAllCommand(TestCase):
             'service_call_task': models.ServiceCallTask,
             'service_call_ticket_resource': models.ServiceCallTicketResource,
             'service_call_task_resource': models.ServiceCallTaskResource,
+            'task_predecessor': models.TaskPredecessor,
         }
         run_sync_command()
         pre_full_sync_counts = {}
@@ -646,6 +659,7 @@ class TestSyncAllCommand(TestCase):
                     'service_call_ticket_resource',
                     'service_call_task_resource',
                     'account_physical_location',
+                    'task_predecessor',
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.
