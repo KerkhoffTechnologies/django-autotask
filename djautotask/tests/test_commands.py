@@ -659,7 +659,6 @@ class TestSyncAllCommand(TestCase):
                     'service_call_ticket_resource',
                     'service_call_task_resource',
                     'account_physical_location',
-                    'task_predecessor',
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.

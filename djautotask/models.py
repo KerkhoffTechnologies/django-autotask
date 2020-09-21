@@ -877,10 +877,10 @@ class TaskPredecessor(TimeStampedModel):
     lag_days = models.IntegerField(blank=True, null=True)
     predecessor_task = models.ForeignKey('Task', blank=True, null=True,
                                          related_name='predecessor_task',
-                                         on_delete=models.CASCADE)
+                                         on_delete=models.SET_NULL)
     successor_task = models.ForeignKey('Task', blank=True, null=True,
                                        related_name='successor_task',
-                                       on_delete=models.CASCADE)
+                                       on_delete=models.SET_NULL)
     tracker = FieldTracker()
 
     def __str__(self):
