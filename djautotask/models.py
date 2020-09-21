@@ -871,3 +871,17 @@ class ServiceCallTaskResource(TimeStampedModel):
 
     def __str__(self):
         return str(self.id)
+
+
+class TaskPredecessor(TimeStampedModel):
+    lag_days = models.IntegerField(blank=True, null=True)
+    predecessor_task = models.ForeignKey('Task', blank=True, null=True,
+                                         related_name='predecessor_task',
+                                         on_delete=models.CASCADE)
+    successor_task = models.ForeignKey('Task', blank=True, null=True,
+                                       related_name='successor_task',
+                                       on_delete=models.CASCADE)
+    tracker = FieldTracker()
+
+    def __str__(self):
+        return str(self.id)

@@ -120,6 +120,7 @@ def manage_full_sync_return_data(value):
             fixtures.API_SERVICE_CALL_TICKET_RESOURCE_LIST,
         'ServiceCallTaskResource':
             fixtures.API_SERVICE_CALL_TASK_RESOURCE_LIST,
+        'TaskPredecessor': fixtures.API_TASK_PREDECESSOR_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text

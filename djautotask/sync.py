@@ -483,7 +483,7 @@ class BatchQueryMixin:
         return results
 
     def _build_fk_batch(
-            self, model_class, object_id_field, sync_job_qset):
+            self, model_class, object_id_fields, sync_job_qset):
         """
         Generic batching method for batching based off of the fk relation of
         an object currently present in the local DB.
@@ -500,14 +500,17 @@ class BatchQueryMixin:
             batch = object_ids[:self.batch_size]
             del object_ids[:self.batch_size]
 
-            # Create queries from batches of records
-            for object_id in batch:
-                query.OR(object_id_field, query.Equals, object_id)
+            self._set_or_conditions(batch, object_id_fields, query)
 
             query.close_bracket()
             queries.append(query)
 
         return queries
+
+    def _set_or_conditions(self, batch, object_id_field, query):
+        # Create queries from batches of records
+        for object_id in batch:
+            query.OR(object_id_field, query.Equals, object_id)
 
 
 class TicketSynchronizer(
@@ -1471,3 +1474,34 @@ class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
         instance = api.create_object(self.model_class.__name__, body)
 
         return self.update_or_create_instance(instance)
+
+
+class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
+    model_class = models.TaskPredecessor
+
+    related_meta = {
+        'PredecessorTaskID': (models.Task, 'predecessor_task'),
+        'SuccessorTaskID': (models.Task, 'successor_task'),
+    }
+
+    def build_batch_queries(self, sync_job_qset):
+        object_id_fields = ['PredecessorTaskID', 'SuccessorTaskID']
+
+        batch_query_list = self._build_fk_batch(
+            models.Task, object_id_fields, sync_job_qset)
+
+        return batch_query_list
+
+    def _set_or_conditions(self, batch, object_id_fields, query):
+        # Create queries from batches of records
+        for object_id in batch:
+            query.OR(object_id_fields[0], query.Equals, object_id)
+            query.OR(object_id_fields[1], query.Equals, object_id)
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.lag_days = object_data.get('LagDays')
+
+        self.set_relations(instance, object_data)
+
+        return instance
