@@ -411,7 +411,7 @@ class AccountPhysicalLocation(models.Model):
     active = models.BooleanField(default=True)
 
     account = models.ForeignKey(
-        'Account', on_delete=models.CASCADE
+        'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
     tracker = FieldTracker()
 
@@ -779,7 +779,7 @@ class ServiceCall(TimeStampedModel):
     last_modified_date_time = models.DateTimeField(blank=True, null=True)
 
     account = models.ForeignKey(
-        'Account', on_delete=models.CASCADE)
+        'Account', blank=True, null=True, on_delete=models.SET_NULL)
     location = models.ForeignKey(
         'AccountPhysicalLocation',
         blank=True,
