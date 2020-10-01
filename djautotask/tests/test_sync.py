@@ -10,7 +10,7 @@ from djautotask.models import Ticket, Status, Resource, SyncJob, \
     TaskSecondaryResource, Phase, TimeEntry, TicketNote, TaskNote, \
     TaskTypeLink, UseType, AllocationCode, Role, Department, \
     ResourceRoleDepartment, ResourceServiceDeskRole, Contract, AccountType, \
-    ServiceCall, ServiceCallStatus, AccountPhysicalLocation
+    ServiceCall, ServiceCallStatus, AccountPhysicalLocation, TaskPredecessor
 from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -53,6 +53,9 @@ class SynchronizerTestMixin:
     fixture = None
     update_field = None
 
+    def setUp(self):
+        self.updated_data = 'New Data'
+
     def _sync(self, return_data):
         query_generator = \
             fixture_utils.generate_objects(
@@ -62,7 +65,7 @@ class SynchronizerTestMixin:
 
     def test_skips(self):
         updated_instance = deepcopy(self.fixture)
-        updated_instance[self.update_field] = 'New Data'
+        updated_instance[self.update_field] = self.updated_data
 
         _, updated_count, skipped_count, _ = self._sync(updated_instance)
         self.assertEqual(updated_count, 1)
@@ -1488,3 +1491,69 @@ class TestServiceCallSynchronizer(SynchronizerTestMixin, TestCase):
 
         self._assert_sync(instance, self.fixture)
         assert_sync_job(ServiceCall)
+
+
+class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):
+    model_class = TaskPredecessor
+    fixture = fixtures.API_TASK_PREDECESSOR
+    update_field = 'LagDays'
+
+    def setUp(self):
+        super().setUp()
+        self.updated_data = 2
+        self.synchronizer = sync.TaskPredecessorSynchronizer()
+
+        mocks.init_api_connection(Wrapper)
+        Task.objects.create(
+            id=fixtures.API_TASK_PREDECESSOR['SuccessorTaskID'],
+            title='Successor Task')
+        fixture_utils.init_tasks()
+        fixture_utils.init_task_predecessors()
+
+    def _assert_sync(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.lag_days, object_data['LagDays'])
+        self.assertEqual(instance.predecessor_task.id,
+                         object_data['PredecessorTaskID'])
+        self.assertEqual(instance.successor_task.id,
+                         object_data['SuccessorTaskID'])
+
+    def test_sync_task_predecessor(self):
+        self.assertGreater(TaskPredecessor.objects.count(), 0)
+
+        object_data = fixtures.API_TASK_PREDECESSOR
+        instance = TaskPredecessor.objects.get(id=object_data['id'])
+
+        self._assert_sync(instance, object_data)
+        assert_sync_job(TaskPredecessor)
+
+    def test_batch_queries_creates_multiple_batches(self):
+        """
+        Verify that the build batch query method returns multiple batches
+        of task predecessor queries.
+        """
+        max_id_limit = 500
+        settings = DjautotaskSettings().get_settings()
+        batch_size = settings.get('batch_query_size')
+
+        synchronizer = sync.TaskPredecessorSynchronizer()
+        sync_job = SyncJob.objects.filter(entity_name='TaskPredecessor')
+
+        # Create some fake task IDs
+        task_ids = random.sample(range(1, max_id_limit), batch_size + 50)
+        _, _patch = mocks.create_mock_call(
+            'django.db.models.query.QuerySet.values_list', task_ids
+        )
+
+        batch_query_list = synchronizer.build_batch_queries(sync_job)
+
+        # With a batch size of 400 and 450 task IDs in the database, a list
+        # of 3 Query objects should be returned with each object
+        # having a maximum of approximately 400 conditions.
+        self.assertEqual(len(batch_query_list), 3)
+        for query in batch_query_list:
+            # Count number of condition tags in the XML.
+            # Since each condition has 2 condition tags, divide by 2.
+            condition_count = int(query.get_query_xml().count('condition') / 2)
+            self.assertLessEqual(condition_count, batch_size + 1)
+        _patch.stop()

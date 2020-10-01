@@ -542,3 +542,11 @@ def init_service_call_tasks():
         fixtures.API_SERVICE_CALL_TASK_LIST,
         sync.ServiceCallTaskSynchronizer
     )
+
+
+def init_task_predecessors():
+    sync_objects(
+        'TaskPredecessor',
+        fixtures.API_TASK_PREDECESSOR_LIST,
+        sync.TaskPredecessorSynchronizer
+    )

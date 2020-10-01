@@ -482,13 +482,11 @@ class BatchQueryMixin:
 
         return results
 
-    def _build_fk_batch(
-            self, model_class, object_id_fields, sync_job_qset):
+    def _build_fk_batch(self, model_class, object_id_fields, sync_job_qset):
         """
         Generic batching method for batching based off of the fk relation of
         an object currently present in the local DB.
         """
-
         queries = []
         object_ids = list(model_class.objects.order_by(self.db_lookup_key)
                           .values_list('id', flat=True))
@@ -497,8 +495,9 @@ class BatchQueryMixin:
             query = self.build_base_query(sync_job_qset)
             query.open_bracket('AND')
 
-            batch = object_ids[:self.batch_size]
-            del object_ids[:self.batch_size]
+            batch_size = self.get_batch_size()
+            batch = object_ids[:batch_size]
+            del object_ids[:batch_size]
 
             self._set_or_conditions(batch, object_id_fields, query)
 
@@ -506,6 +505,9 @@ class BatchQueryMixin:
             queries.append(query)
 
         return queries
+
+    def get_batch_size(self):
+        return self.batch_size
 
     def _set_or_conditions(self, batch, object_id_field, query):
         # Create queries from batches of records
@@ -1491,6 +1493,15 @@ class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
             models.Task, object_id_fields, sync_job_qset)
 
         return batch_query_list
+
+    def get_batch_size(self):
+        # We limit the amount of query conditions on each query to 400
+        # by default. Autotask says they won't support any more than
+        # 500 conditions but we've observed queries fail with 470
+        # conditions. Since we are applying two OR conditions we need
+        # to half the size of our regular batch size that only applies
+        # one OR condition.
+        return int(self.batch_size / 2)
 
     def _set_or_conditions(self, batch, object_id_fields, query):
         # Create queries from batches of records
