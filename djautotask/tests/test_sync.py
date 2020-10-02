@@ -52,9 +52,7 @@ class SynchronizerTestMixin:
     synchronizer = None
     fixture = None
     update_field = None
-
-    def setUp(self):
-        self.updated_data = 'New Data'
+    updated_data = 'New Data'
 
     def _sync(self, return_data):
         query_generator = \
@@ -1497,10 +1495,10 @@ class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):
     model_class = TaskPredecessor
     fixture = fixtures.API_TASK_PREDECESSOR
     update_field = 'LagDays'
+    updated_data = 2
 
     def setUp(self):
         super().setUp()
-        self.updated_data = 2
         self.synchronizer = sync.TaskPredecessorSynchronizer()
 
         mocks.init_api_connection(Wrapper)
