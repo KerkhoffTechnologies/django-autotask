@@ -16,7 +16,7 @@ class SyncJob(models.Model):
     updated = models.PositiveIntegerField(null=True)
     skipped = models.PositiveIntegerField(null=True)
     deleted = models.PositiveIntegerField(null=True)
-    success = models.NullBooleanField()
+    success = models.BooleanField(null=True)
     message = models.TextField(blank=True, null=True)
     sync_type = models.CharField(max_length=32, default='full')
 
