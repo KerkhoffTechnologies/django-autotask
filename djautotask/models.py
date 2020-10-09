@@ -888,3 +888,331 @@ class TaskPredecessor(TimeStampedModel):
 
     def __str__(self):
         return str(self.id)
+
+
+class TicketTracker(Ticket):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_ticket'
+
+
+class StatusTracker(Status):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_status'
+
+
+class PriorityTracker(Priority):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_priority'
+
+
+class QueueTracker(Queue):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_queue'
+
+
+class ProjectStatusTracker(ProjectStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_projectstatus'
+
+
+class DisplayColorTracker(DisplayColor):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_displaycolor'
+
+
+class ProjectTypeTracker(ProjectType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_projecttype'
+
+
+class SourceTracker(Source):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_source'
+
+
+class IssueTypeTracker(IssueType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_issuetype'
+
+
+class TicketTypeTracker(TicketType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_tickettype'
+
+
+class SubIssueTypeTracker(SubIssueType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_subissuetype'
+
+
+class LicenseTypeTracker(LicenseType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_licensetype'
+
+
+class AccountTypeTracker(AccountType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_accounttype'
+
+
+class NoteTypeTracker(NoteType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_notetype'
+
+
+class TaskTypeLinkTracker(TaskTypeLink):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_tasktypelink'
+
+
+class UseTypeTracker(UseType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_usetype'
+
+
+class ServiceCallStatusTracker(ServiceCallStatus):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_servicecallstatus'
+
+
+class ResourceTracker(Resource):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_resource'
+
+
+class TicketCategoryTracker(TicketCategory):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_ticketcategory'
+
+
+class TicketSecondaryResourceTracker(TicketSecondaryResource):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_ticketsecondaryresource'
+
+
+class TicketNoteTracker(TicketNote):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_ticketnote'
+
+
+class TaskNoteTracker(TaskNote):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_tasknote'
+
+
+class AccountTracker(Account):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_account'
+
+
+class AccountPhysicalLocationTracker(AccountPhysicalLocation):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_accountphysicallocation'
+
+
+class ProjectTracker(Project):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_project'
+
+
+class PhaseTracker(Phase):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_phase'
+
+
+class TaskTracker(Task):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_task'
+
+
+class TaskSecondaryResourceTracker(TaskSecondaryResource):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_tasksecondaryresource'
+
+
+class TimeEntryTracker(TimeEntry):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_timeentry'
+
+
+class AllocationCodeTracker(AllocationCode):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_allocationcode'
+
+
+class RoleTracker(Role):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_role'
+
+
+class DepartmentTracker(Department):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_department'
+
+
+class ResourceRoleDepartmentTracker(ResourceRoleDepartment):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_resourceroledepartment'
+
+
+class ResourceServiceDeskRoleTracker(ResourceServiceDeskRole):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_resourceservicedeskrole'
+
+
+class ContractTracker(Contract):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contract'
+
+
+class ServiceCallTracker(ServiceCall):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_servicecall'
+
+
+class ServiceCallTicketTracker(ServiceCallTicket):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_servicecallticket'
+
+
+class ServiceCallTaskTracker(ServiceCallTask):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_servicecalltask'
+
+
+class ServiceCallTicketResourceTracker(ServiceCallTicketResource):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_servicecallticketresource'
+
+
+class ServiceCallTaskResourceTracker(ServiceCallTaskResource):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_servicecalltaskresource'
+
+
+class TaskPredecessorTracker(TaskPredecessor):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_taskpredecessor'

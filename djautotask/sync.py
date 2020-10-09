@@ -33,7 +33,7 @@ def log_sync_job(f):
         created_count = updated_count = deleted_count = skipped_count = 0
         sync_job = models.SyncJob()
         sync_job.start_time = timezone.now()
-        sync_job.entity_name = sync_instance.model_class.__name__
+        sync_job.entity_name = sync_instance.model_class.__bases__[0].__name__
 
         if sync_instance.full:
             sync_job.sync_type = 'full'
@@ -145,7 +145,7 @@ class Synchronizer:
         return set(ids)
 
     def build_base_query(self, sync_job_qset):
-        query = Query(self.model_class.__name__)
+        query = Query(self.model_class.__bases__[0].__name__)
 
         # Since the job is created before it begins, make sure to exclude
         # itself, and at least one other sync job exists.
@@ -167,7 +167,7 @@ class Synchronizer:
         queries if the request is over 500 records.
         """
         sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
+            entity_name=self.model_class.__bases__[0].__name__
         )
         query = self.build_base_query(sync_job_qset)
 
@@ -175,7 +175,8 @@ class Synchronizer:
         self._get_query_conditions(query)
 
         logger.info(
-            'Fetching {} records.'.format(self.model_class)
+            'Fetching {} records.'.format(
+                self.model_class.__bases__[0].__name__)
         )
         self.fetch_records(query, results)
 
@@ -246,7 +247,7 @@ class Synchronizer:
 
         logger.info('{}: {} {}'.format(
             result_log,
-            self.model_class.__name__,
+            self.model_class.__bases__[0].__name__,
             instance
         ))
 
@@ -363,7 +364,7 @@ class ParentSynchronizer:
                 )
             msg = '{} Child Sync - Created: {},' \
                   ' Updated: {}, Skipped: {}, Deleted: {}'.format(
-                    synchronizer.model_class.__name__,
+                    synchronizer.model_class.__bases__[0].__name__,
                     created_count,
                     updated_count,
                     skipped_count,
@@ -394,12 +395,13 @@ class ChildSynchronizer:
 
     def _get_children(self, results, query_params):
         sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__)
+            entity_name=self.model_class.__bases__[0].__name__)
 
         query = self.build_base_query(sync_job_qset)
         self._child_query_condition(query, query_params)
 
-        logger.info('Fetching {} records.'.format(self.model_class))
+        logger.info('Fetching {} records.'.format(
+            self.model_class.__bases__[0].__name__))
         self.fetch_records(query, results)
 
         return results
@@ -468,7 +470,7 @@ class BatchQueryMixin:
     def get(self, results):
 
         sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__name__
+            entity_name=self.model_class.__bases__[0].__name__
         )
         object_queries = self.build_batch_queries(sync_job_qset)
 
@@ -517,7 +519,7 @@ class BatchQueryMixin:
 
 class TicketSynchronizer(
         QueryConditionMixin, Synchronizer, ParentSynchronizer):
-    model_class = models.Ticket
+    model_class = models.TicketTracker
     last_updated_field = 'LastActivityDate'
     completed_date_field = 'CompletedDate'
 
@@ -580,7 +582,7 @@ class TicketSynchronizer(
 
     def fetch_sync_by_id(self, instance_id):
         self.at_api_client = api.init_api_connection()
-        query = Query(self.model_class.__name__)
+        query = Query(self.model_class.__bases__[0].__name__)
         query.WHERE('id', query.Equals, instance_id)
         ticket = self.at_api_client.query(query).fetch_one()
         instance, _ = self.update_or_create_instance(ticket)
@@ -610,32 +612,32 @@ class TicketPicklistSynchronizer(PicklistSynchronizer):
 
 
 class StatusSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.Status
+    model_class = models.StatusTracker
     picklist_field = 'Status'
 
 
 class PrioritySynchronizer(TicketPicklistSynchronizer):
-    model_class = models.Priority
+    model_class = models.PriorityTracker
     picklist_field = 'Priority'
 
 
 class QueueSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.Queue
+    model_class = models.QueueTracker
     picklist_field = 'QueueID'
 
 
 class SourceSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.Source
+    model_class = models.SourceTracker
     picklist_field = 'Source'
 
 
 class IssueTypeSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.IssueType
+    model_class = models.IssueTypeTracker
     picklist_field = 'IssueType'
 
 
 class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.SubIssueType
+    model_class = models.SubIssueTypeTracker
     picklist_field = 'SubIssueType'
 
     related_meta = {
@@ -651,30 +653,30 @@ class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
 
 
 class TicketTypeSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.TicketType
+    model_class = models.TicketTypeTracker
     picklist_field = 'TicketType'
 
 
 class ProjectStatusSynchronizer(PicklistSynchronizer):
-    model_class = models.ProjectStatus
+    model_class = models.ProjectStatusTracker
     entity_type = 'Project'
     picklist_field = 'Status'
 
 
 class ProjectTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.ProjectType
+    model_class = models.ProjectTypeTracker
     entity_type = 'Project'
     picklist_field = 'Type'
 
 
 class DisplayColorSynchronizer(PicklistSynchronizer):
-    model_class = models.DisplayColor
+    model_class = models.DisplayColorTracker
     entity_type = 'TicketCategory'
     picklist_field = 'DisplayColorRGB'
 
 
 class LicenseTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.LicenseType
+    model_class = models.LicenseTypeTracker
     entity_type = 'Resource'
     picklist_field = 'LicenseType'
 
@@ -682,37 +684,37 @@ class LicenseTypeSynchronizer(PicklistSynchronizer):
 class NoteTypeSynchronizer(PicklistSynchronizer):
     # We are using ticket note to get the picklist, but like Ticket Status
     # and Task Status both use one status type, so do Ticket and Task notes
-    model_class = models.NoteType
+    model_class = models.NoteTypeTracker
     entity_type = 'TicketNote'
     picklist_field = 'NoteType'
 
 
 class TaskTypeLinkSynchronizer(PicklistSynchronizer):
-    model_class = models.TaskTypeLink
+    model_class = models.TaskTypeLinkTracker
     entity_type = 'TimeEntry'
     picklist_field = 'Type'
 
 
 class UseTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.UseType
+    model_class = models.UseTypeTracker
     entity_type = 'AllocationCode'
     picklist_field = 'UseType'
 
 
 class AccountTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.AccountType
+    model_class = models.AccountTypeTracker
     entity_type = 'Account'
     picklist_field = 'AccountType'
 
 
 class ServiceCallStatusSynchronizer(PicklistSynchronizer):
-    model_class = models.ServiceCallStatus
+    model_class = models.ServiceCallStatusTracker
     entity_type = 'ServiceCall'
     picklist_field = 'Status'
 
 
 class ResourceSynchronizer(Synchronizer):
-    model_class = models.Resource
+    model_class = models.ResourceTracker
     last_updated_field = None
 
     related_meta = {
@@ -734,7 +736,7 @@ class ResourceSynchronizer(Synchronizer):
 
 
 class TicketCategorySynchronizer(Synchronizer):
-    model_class = models.TicketCategory
+    model_class = models.TicketCategoryTracker
     last_updated_field = None
 
     related_meta = {
@@ -780,7 +782,7 @@ class SecondaryResourceSyncronizer(Synchronizer):
 class TicketSecondaryResourceSynchronizer(
         SecondaryResourceSyncronizer, ChildSynchronizer):
     last_updated_field = None
-    model_class = models.TicketSecondaryResource
+    model_class = models.TicketSecondaryResourceTracker
     model_name = 'TicketSecondaryResource'
     id_type = 'TicketID'
 
@@ -798,7 +800,7 @@ class TicketSecondaryResourceSynchronizer(
 
 
 class AccountSynchronizer(Synchronizer):
-    model_class = models.Account
+    model_class = models.AccountTracker
     last_updated_field = 'LastActivityDate'
 
     related_meta = {
@@ -818,7 +820,7 @@ class AccountSynchronizer(Synchronizer):
 
 
 class AccountPhysicalLocationSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.AccountPhysicalLocation
+    model_class = models.AccountPhysicalLocationTracker
 
     related_meta = {
         'AccountID': (models.Account, 'account'),
@@ -853,7 +855,7 @@ class FilterProjectStatusMixin:
                     logger.info(
                         'Project with ID: {} is set to an inactive status. '
                         'Skipping this {}.'.format(
-                            object_id, self.model_class.__name__)
+                            object_id, self.model_class.__bases__[0].__name__)
                     )
                     continue
 
@@ -861,7 +863,7 @@ class FilterProjectStatusMixin:
 
 
 class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
-    model_class = models.Project
+    model_class = models.ProjectTracker
     last_updated_field = 'LastActivityDateTime'
     object_filter_field = 'Status'
 
@@ -934,7 +936,7 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
 
 
 class PhaseSynchronizer(Synchronizer):
-    model_class = models.Phase
+    model_class = models.PhaseTracker
     last_updated_field = 'LastActivityDateTime'
 
     related_meta = {
@@ -960,7 +962,7 @@ class PhaseSynchronizer(Synchronizer):
 
 class TaskSynchronizer(QueryConditionMixin,
                        FilterProjectStatusMixin, Synchronizer):
-    model_class = models.Task
+    model_class = models.TaskTracker
     last_updated_field = 'LastActivityDateTime'
     object_filter_field = 'ProjectID'
     completed_date_field = 'CompletedDateTime'
@@ -1012,7 +1014,7 @@ class TaskSynchronizer(QueryConditionMixin,
 
 class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     last_updated_field = None
-    model_class = models.TaskSecondaryResource
+    model_class = models.TaskSecondaryResourceTracker
     model_name = 'TaskSecondaryResource'
     id_type = 'TaskID'
 
@@ -1085,7 +1087,7 @@ class NoteSynchronizer(Synchronizer):
 class TicketNoteSynchronizer(
         BatchQueryMixin, NoteSynchronizer, ChildSynchronizer):
 
-    model_class = models.TicketNote
+    model_class = models.TicketNoteTracker
     last_updated_field = 'LastActivityDate'
     related_model_field = 'TicketID'
     model_name = 'TicketNote'
@@ -1106,7 +1108,7 @@ class TicketNoteSynchronizer(
 class TaskNoteSynchronizer(
         BatchQueryMixin, NoteSynchronizer):
 
-    model_class = models.TaskNote
+    model_class = models.TaskNoteTracker
     last_updated_field = 'LastActivityDate'
     related_model_field = 'TaskID'
     model_name = 'TaskNote'
@@ -1125,7 +1127,7 @@ class TaskNoteSynchronizer(
 
 
 class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer, ChildSynchronizer):
-    model_class = models.TimeEntry
+    model_class = models.TimeEntryTracker
     last_updated_field = 'LastModifiedDateTime'
 
     related_meta = {
@@ -1177,7 +1179,7 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer, ChildSynchronizer):
 
 
 class AllocationCodeSynchronizer(Synchronizer):
-    model_class = models.AllocationCode
+    model_class = models.AllocationCodeTracker
     last_updated_field = None
 
     related_meta = {
@@ -1196,7 +1198,7 @@ class AllocationCodeSynchronizer(Synchronizer):
 
 
 class RoleSynchronizer(Synchronizer):
-    model_class = models.Role
+    model_class = models.RoleTracker
 
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
@@ -1219,7 +1221,7 @@ class RoleSynchronizer(Synchronizer):
 
 
 class DepartmentSynchronizer(Synchronizer):
-    model_class = models.Department
+    model_class = models.DepartmentTracker
 
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
@@ -1231,7 +1233,7 @@ class DepartmentSynchronizer(Synchronizer):
 
 
 class ResourceRoleDepartmentSynchronizer(Synchronizer):
-    model_class = models.ResourceRoleDepartment
+    model_class = models.ResourceRoleDepartmentTracker
 
     related_meta = {
         'ResourceID': (models.Resource, 'resource'),
@@ -1251,7 +1253,7 @@ class ResourceRoleDepartmentSynchronizer(Synchronizer):
 
 
 class ResourceServiceDeskRoleSynchronizer(Synchronizer):
-    model_class = models.ResourceServiceDeskRole
+    model_class = models.ResourceServiceDeskRoleTracker
 
     related_meta = {
         'ResourceID': (models.Resource, 'resource'),
@@ -1269,7 +1271,7 @@ class ResourceServiceDeskRoleSynchronizer(Synchronizer):
 
 
 class ContractSynchronizer(Synchronizer):
-    model_class = models.Contract
+    model_class = models.ContractTracker
 
     related_meta = {
         'AccountID': (models.Account, 'account')
@@ -1287,7 +1289,7 @@ class ContractSynchronizer(Synchronizer):
 
 
 class ServiceCallSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.ServiceCall
+    model_class = models.ServiceCallTracker
     last_updated_field = 'LastModifiedDateTime'
 
     related_meta = {
@@ -1335,13 +1337,14 @@ class ServiceCallSynchronizer(BatchQueryMixin, Synchronizer):
             'Description': kwargs['description'],
             'Duration': kwargs['duration'],
         }
-        instance = api.create_object(self.model_class.__name__, body)
+        instance = api.create_object(
+            self.model_class.__bases__[0].__name__, body)
 
         return self.update_or_create_instance(instance)
 
 
 class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.ServiceCallTicket
+    model_class = models.ServiceCallTicketTracker
 
     related_meta = {
         'ServiceCallID': (models.ServiceCall, 'service_call'),
@@ -1369,13 +1372,14 @@ class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
             'ServiceCallID': kwargs['service_call'].id,
             'TicketID': kwargs['ticket'].id,
         }
-        instance = api.create_object(self.model_class.__name__, body)
+        instance = api.create_object(
+            self.model_class.__bases__[0].__name__, body)
 
         return self.update_or_create_instance(instance)
 
 
 class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.ServiceCallTask
+    model_class = models.ServiceCallTaskTracker
 
     related_meta = {
         'ServiceCallID': (models.ServiceCall, 'service_call'),
@@ -1403,13 +1407,14 @@ class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
             'ServiceCallID': kwargs['service_call'].id,
             'TaskID': kwargs['task'].id,
         }
-        instance = api.create_object(self.model_class.__name__, body)
+        instance = api.create_object(
+            self.model_class.__bases__[0].__name__, body)
 
         return self.update_or_create_instance(instance)
 
 
 class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.ServiceCallTicketResource
+    model_class = models.ServiceCallTicketResourceTracker
 
     related_meta = {
         'ServiceCallTicketID':
@@ -1438,13 +1443,14 @@ class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
             'ServiceCallTicketID': kwargs['service_call_ticket'].id,
             'ResourceID': kwargs['resource'].id,
         }
-        instance = api.create_object(self.model_class.__name__, body)
+        instance = api.create_object(
+            self.model_class.__bases__[0].__name__, body)
 
         return self.update_or_create_instance(instance)
 
 
 class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.ServiceCallTaskResource
+    model_class = models.ServiceCallTaskResourceTracker
 
     related_meta = {
         'ServiceCallTaskID':
@@ -1473,13 +1479,14 @@ class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
             'ServiceCallTaskID': kwargs['service_call_task'].id,
             'ResourceID': kwargs['resource'].id,
         }
-        instance = api.create_object(self.model_class.__name__, body)
+        instance = api.create_object(
+            self.model_class.__bases__[0].__name__, body)
 
         return self.update_or_create_instance(instance)
 
 
 class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.TaskPredecessor
+    model_class = models.TaskPredecessorTracker
 
     related_meta = {
         'PredecessorTaskID': (models.Task, 'predecessor_task'),
