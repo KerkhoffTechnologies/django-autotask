@@ -107,7 +107,6 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     contract = models.ForeignKey(
         'Contract', null=True, blank=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name = 'Ticket'
@@ -168,7 +167,6 @@ class Status(Picklist):
     # Ticket/task statuses New, Waiting Customer, and Complete are
     # system statuses in Autotask that cannot be edited or deactivated.
     COMPLETE_ID = 5
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('label',)
@@ -176,7 +174,6 @@ class Status(Picklist):
 
 
 class Priority(Picklist):
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('sort_order',)
@@ -185,7 +182,6 @@ class Priority(Picklist):
 
 class Queue(Picklist):
     label = models.CharField(blank=True, null=True, max_length=100)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('label',)
@@ -194,7 +190,6 @@ class Queue(Picklist):
 
 class ProjectStatus(Picklist):
     COMPLETE_ID = 5
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('label',)
@@ -202,7 +197,6 @@ class ProjectStatus(Picklist):
 
 
 class DisplayColor(Picklist):
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('label',)
@@ -212,26 +206,24 @@ class DisplayColor(Picklist):
 class ProjectType(Picklist):
     TEMPLATE = 'Template'
     BASELINE = 'Baseline'
-    tracker = FieldTracker()
 
 
 class Source(Picklist):
-    tracker = FieldTracker()
+    pass
 
 
 class IssueType(Picklist):
-    tracker = FieldTracker()
+    pass
 
 
 class TicketType(Picklist):
-    tracker = FieldTracker()
+    pass
 
 
 class SubIssueType(Picklist):
     parent_value = models.ForeignKey(
         'IssueType', blank=True, null=True, on_delete=models.CASCADE
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return "{}/{}".format(self.parent_value, self.label) \
@@ -239,11 +231,11 @@ class SubIssueType(Picklist):
 
 
 class LicenseType(Picklist):
-    tracker = FieldTracker()
+    pass
 
 
 class AccountType(Picklist):
-    tracker = FieldTracker()
+    pass
 
 
 class NoteType(Picklist):
@@ -253,19 +245,17 @@ class NoteType(Picklist):
     # Workflow Rule Note - Task is an Autotask system note type that cannot
     # be edited or deactivated.
     WORKFLOW_RULE_NOTE_ID = 13
-    tracker = FieldTracker()
 
 
 class TaskTypeLink(Picklist):
-    tracker = FieldTracker()
+    pass
 
 
 class UseType(Picklist):
-    tracker = FieldTracker()
+    pass
 
 
 class ServiceCallStatus(Picklist):
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('label',)
@@ -292,7 +282,6 @@ class Resource(TimeStampedModel):
     default_service_desk_role = models.ForeignKey(
         'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     objects = models.Manager()
     regular_objects = RegularResourceManager()
@@ -310,7 +299,6 @@ class TicketCategory(TimeStampedModel):
     display_color = models.ForeignKey(
         'DisplayColor', null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name',)
@@ -330,7 +318,6 @@ class TicketSecondaryResource(TimeStampedModel):
     role = models.ForeignKey(
         'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.ticket)
@@ -362,7 +349,6 @@ class TicketNote(TimeStampedModel, Note):
     ticket = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
 
 class TaskNote(TimeStampedModel, Note):
@@ -383,7 +369,6 @@ class TaskNote(TimeStampedModel, Note):
     task = models.ForeignKey(
         'Task', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
 
 class Account(TimeStampedModel):
@@ -397,7 +382,6 @@ class Account(TimeStampedModel):
     parent_account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name',)
@@ -413,7 +397,6 @@ class AccountPhysicalLocation(models.Model):
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('name',)
@@ -466,7 +449,6 @@ class Project(TimeStampedModel):
     contract = models.ForeignKey(
         'Contract', null=True, blank=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()
@@ -507,7 +489,6 @@ class Phase(TimeStampedModel):
     project = models.ForeignKey(
         'Project', null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('title',)
@@ -559,7 +540,6 @@ class Task(TimeStampedModel, ResourceAssignableModel):
     department = models.ForeignKey(
         'Department', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.title
@@ -599,7 +579,6 @@ class TaskSecondaryResource(TimeStampedModel):
     role = models.ForeignKey(
         'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.task)
@@ -635,7 +614,6 @@ class TimeEntry(TimeStampedModel):
     contract = models.ForeignKey(
         'Contract', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = 'Time entries'
@@ -680,7 +658,6 @@ class AllocationCode(TimeStampedModel):
     use_type = models.ForeignKey(
         'UseType', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.name if self.name else self.pk
@@ -696,7 +673,6 @@ class Role(models.Model):
         blank=True, null=True, decimal_places=2, max_digits=9)
     role_type = models.PositiveIntegerField(blank=True, null=True)
     system_role = models.BooleanField(default=False)
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.name
@@ -706,7 +682,6 @@ class Department(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True, max_length=1000)
     number = models.CharField(blank=True, null=True, max_length=50)
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.name
@@ -717,7 +692,6 @@ class ResourceRoleDepartment(models.Model):
     active = models.BooleanField(default=True)
     default = models.BooleanField(default=False)
     department_lead = models.BooleanField(default=False)
-    tracker = FieldTracker()
 
     def __str__(self):
         return "{} - {} - {}".format(
@@ -734,7 +708,6 @@ class ResourceRoleDepartment(models.Model):
 class ResourceServiceDeskRole(models.Model):
     active = models.BooleanField(default=True)
     default = models.BooleanField(default=False)
-    tracker = FieldTracker()
 
     def __str__(self):
         return "{} - {}".format(
@@ -761,7 +734,6 @@ class Contract(models.Model):
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return self.name
@@ -811,7 +783,6 @@ class ServiceCall(TimeStampedModel):
         'Task', through='ServiceCallTask',
         related_name='task_service_calls'
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return str(self.id)
@@ -829,7 +800,6 @@ class ServiceCallTicket(TimeStampedModel):
         'Resource', through='ServiceCallTicketResource',
         related_name='resource_service_call_ticket'
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return str(self.id)
@@ -847,7 +817,6 @@ class ServiceCallTask(TimeStampedModel):
         'Resource', through='ServiceCallTaskResource',
         related_name='resource_service_call_task'
     )
-    tracker = FieldTracker()
 
     def __str__(self):
         return str(self.id)
@@ -857,7 +826,6 @@ class ServiceCallTicketResource(TimeStampedModel):
     service_call_ticket = models.ForeignKey(
         'ServiceCallTicket', on_delete=models.CASCADE)
     resource = models.ForeignKey('Resource', on_delete=models.CASCADE)
-    tracker = FieldTracker()
 
     def __str__(self):
         return str(self.id)
@@ -867,7 +835,6 @@ class ServiceCallTaskResource(TimeStampedModel):
     service_call_task = models.ForeignKey(
         'ServiceCallTask', on_delete=models.CASCADE)
     resource = models.ForeignKey('Resource', on_delete=models.CASCADE)
-    tracker = FieldTracker()
 
     def __str__(self):
         return str(self.id)
@@ -881,7 +848,6 @@ class TaskPredecessor(TimeStampedModel):
     successor_task = models.ForeignKey('Task', blank=True, null=True,
                                        related_name='successor_task_set',
                                        on_delete=models.CASCADE)
-    tracker = FieldTracker()
 
     class Meta:
         ordering = ('predecessor_task__title', )
