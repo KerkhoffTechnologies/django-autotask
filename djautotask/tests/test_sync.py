@@ -736,6 +736,7 @@ class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerTestMixin,
         fixture_utils.init_contracts()
         fixture_utils.init_resources()
         fixture_utils.init_accounts()
+        fixture_utils.init_departments()
         fixture_utils.init_project_statuses()
         fixture_utils.init_project_types()
         fixture_utils.init_projects()
@@ -764,6 +765,7 @@ class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerTestMixin,
         self.assertEqual(instance.status.id, object_data['Status'])
         self.assertEqual(instance.type.id, object_data['Type'])
         self.assertEqual(instance.contract.id, object_data['ContractID'])
+        self.assertEqual(instance.department.id, object_data['Department'])
 
     def test_sync_project(self):
         self.assertGreater(models.Project.objects.all().count(), 0)

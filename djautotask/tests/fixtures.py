@@ -124,6 +124,7 @@ API_PROJECT_LIST = [
         'ExtPNumber': '',
         'ProjectNumber': 'P20120604.0001',
         'Description': '',
+        'Department': 29683384,
         'ContractID': 29684183,
         'CreateDateTime':
             datetime(2012, 6, 18, 5, 0, tzinfo=tzoffset(None, 3600)),

@@ -449,6 +449,9 @@ class Project(TimeStampedModel):
     contract = models.ForeignKey(
         'Contract', null=True, blank=True, on_delete=models.SET_NULL
     )
+    department = models.ForeignKey(
+        'Department', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()

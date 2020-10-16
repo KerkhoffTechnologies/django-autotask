@@ -873,6 +873,7 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
         'Status': (models.ProjectStatus, 'status'),
         'Type': (models.ProjectType, 'type'),
         'ContractID': (models.Contract, 'contract'),
+        'Department': (models.Department, 'department'),
     }
 
     def get_active_ids(self):
