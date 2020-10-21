@@ -190,7 +190,7 @@ class Synchronizer:
         """Persist each record to the DB."""
         try:
             with transaction.atomic():
-                _, result = self.update_or_create_instance(record)
+                instance, result = self.update_or_create_instance(record)
             if result == CREATED:
                 results.created_count += 1
             elif result == UPDATED:
@@ -200,7 +200,7 @@ class Synchronizer:
         except InvalidObjectException as e:
             logger.warning('{}'.format(e))
 
-        results.synced_ids.add(int(record[self.lookup_key]))
+        results.synced_ids.add(instance.id)
 
         return results
 
@@ -211,7 +211,11 @@ class Synchronizer:
 
         try:
             instance_pk = api_instance[self.lookup_key]
-            instance = self.model_class.objects.get(pk=instance_pk)
+            instance = self.model_class.objects.get(
+                **{
+                    self.db_lookup_key: instance_pk
+                }
+            )
         except self.model_class.DoesNotExist:
             instance = self.model_class()
             result = CREATED
@@ -294,6 +298,102 @@ class Synchronizer:
 
     def _get_query_conditions(self, query):
         pass
+
+
+class SyncRecordUDFMixin:
+
+    def _assign_udf_data(self, instance, udfs):
+        for item in udfs[0]:
+            try:
+                name = getattr(item, 'Name', None)
+                value = getattr(item, 'Value', None)
+
+                udf = self.udf_class.objects.get(
+                    name=name
+                )
+
+                instance.udf[str(udf.id)] = {
+                    'name': name,
+                    'value': value,
+                    'label': udf.label,
+                    'type': udf.type,
+                    'is_picklist': udf.is_picklist
+                }
+
+                if value and udf.is_picklist:
+                    # On a picklist item, the label is different from
+                    # the name.
+                    instance.udf[str(udf.id)]['label'] = \
+                        udf.picklist[value]['label']
+
+            except self.udf_class.MultipleObjectsReturned as e:
+                # Shouldn't ever happen but just in case, log and continue
+                logger.error(
+                    'Multiple UDF records returned for 1 Name: {}'.format(e))
+            except self.udf_class.DoesNotExist as e:
+                # Can happen if sync not 100% up to date, debug log and
+                # continue
+                logger.debug(
+                    'No UDF records returned for Name: {}'.format(e))
+
+
+class UDFSynchronizer(Synchronizer):
+    lookup_key = 'Name'
+    db_lookup_key = lookup_key.lower()
+    entity_type = None
+    model_class = None
+
+    @log_sync_job
+    def sync(self):
+        """
+        Fetch udf for a record type from the API and persist in the database.
+        """
+        results = SyncResults()
+        self.at_api_client = api.init_api_connection()
+
+        udf_records = self.at_api_client.get_udf_info(self.entity_type)
+
+        if udf_records:
+            logger.info(
+                'Fetching {} records.'.format(self.model_class)
+            )
+            for record in udf_records[0]:
+                self.persist_record(record, results)
+
+        if self.full:
+            initial_ids = self._instance_ids()
+            results.deleted_count = self.prune_stale_records(
+                initial_ids, results.synced_ids
+            )
+
+        return results.created_count, results.updated_count, \
+            results.skipped_count, results.deleted_count
+
+    def _instance_ids(self, filter_params=None):
+        ids = self.model_class.objects.all().order_by(self.db_lookup_key)\
+            .values_list('id', flat=True)
+        return set(ids)
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.name = object_data.get('Name')
+        instance.label = object_data.get('Label')
+        instance.type = object_data.get('Type')
+        instance.is_picklist = object_data.get('IsPickList')
+
+        if instance.is_picklist:
+            # Clear picklist to eliminate stale items
+            instance.picklist = {}
+            for item in object_data.get('PicklistValues')[0]:
+                instance.picklist[item.Value] = {
+                    'label': item.Label,
+                    'is_default_value': item.IsDefaultValue,
+                    'sort_order': item.SortOrder,
+                    'is_active': item.IsActive,
+                    'is_system': item.IsSystem,
+                }
+
+        return instance
 
 
 class PicklistSynchronizer(Synchronizer):
@@ -517,9 +617,10 @@ class BatchQueryMixin:
             query.OR(object_id_field, query.Equals, object_id)
 
 
-class TicketSynchronizer(
-        QueryConditionMixin, Synchronizer, ParentSynchronizer):
+class TicketSynchronizer(SyncRecordUDFMixin, QueryConditionMixin, Synchronizer,
+                         ParentSynchronizer):
     model_class = models.TicketTracker
+    udf_class = models.TicketUDF
     last_updated_field = 'LastActivityDate'
     completed_date_field = 'CompletedDate'
 
@@ -569,6 +670,14 @@ class TicketSynchronizer(
             bool(object_data.get('ServiceLevelAgreementHasBeenMet'))
         sla_paused = \
             object_data.get('ServiceLevelAgreementPausedNextEventHours')
+
+        udfs = object_data.get('UserDefinedFields')
+
+        # Refresh udf field to eliminate stale udfs
+        instance.udf = dict()
+
+        if len(udfs):
+            self._assign_udf_data(instance, udfs)
 
         if sla_paused:
             instance.service_level_agreement_paused_next_event_hours = \
@@ -862,8 +971,10 @@ class FilterProjectStatusMixin:
             self.persist_record(record, results)
 
 
-class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
+class ProjectSynchronizer(
+        SyncRecordUDFMixin, FilterProjectStatusMixin, Synchronizer):
     model_class = models.ProjectTracker
+    udf_class = models.ProjectUDF
     last_updated_field = 'LastActivityDateTime'
     object_filter_field = 'Status'
 
@@ -908,6 +1019,14 @@ class ProjectSynchronizer(FilterProjectStatusMixin, Synchronizer):
         instance.status_detail = object_data.get('StatusDetail')
         instance.last_activity_date_time = \
             object_data.get('LastActivityDateTime')
+
+        udfs = object_data.get('UserDefinedFields')
+
+        # Refresh udf field to eliminate stale udfs
+        instance.udf = dict()
+
+        if len(udfs):
+            self._assign_udf_data(instance, udfs)
 
         if instance.estimated_time:
             instance.estimated_time = \
@@ -961,9 +1080,10 @@ class PhaseSynchronizer(Synchronizer):
         return instance
 
 
-class TaskSynchronizer(QueryConditionMixin,
+class TaskSynchronizer(SyncRecordUDFMixin, QueryConditionMixin,
                        FilterProjectStatusMixin, Synchronizer):
     model_class = models.TaskTracker
+    udf_class = models.TaskUDF
     last_updated_field = 'LastActivityDateTime'
     object_filter_field = 'ProjectID'
     completed_date_field = 'CompletedDateTime'
@@ -1000,6 +1120,14 @@ class TaskSynchronizer(QueryConditionMixin,
         instance.estimated_hours = object_data.get('EstimatedHours')
         instance.remaining_hours = object_data.get('RemainingHours')
         instance.last_activity_date = object_data.get('LastActivityDateTime')
+
+        udfs = object_data.get('UserDefinedFields')
+
+        # Refresh udf field to eliminate stale udfs
+        instance.udf = dict()
+
+        if len(udfs):
+            self._assign_udf_data(instance, udfs)
 
         self.set_relations(instance, object_data)
 
@@ -1524,3 +1652,18 @@ class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+
+class TicketUDFSynchronizer(UDFSynchronizer):
+    entity_type = 'Ticket'
+    model_class = models.TicketUDFTracker
+
+
+class TaskUDFSynchronizer(UDFSynchronizer):
+    entity_type = 'Task'
+    model_class = models.TaskUDFTracker
+
+
+class ProjectUDFSynchronizer(UDFSynchronizer):
+    entity_type = 'Project'
+    model_class = models.ProjectUDFTracker

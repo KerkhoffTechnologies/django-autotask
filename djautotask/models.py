@@ -107,6 +107,7 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     contract = models.ForeignKey(
         'Contract', null=True, blank=True, on_delete=models.SET_NULL
     )
+    udf = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
         verbose_name = 'Ticket'
@@ -859,6 +860,32 @@ class TaskPredecessor(TimeStampedModel):
         return str(self.id)
 
 
+class BaseUDF(TimeStampedModel):
+    name = models.CharField(max_length=50, unique=True)
+    label = models.CharField(max_length=50, blank=True, null=True)
+    type = models.CharField(max_length=50, blank=True, null=True)
+    is_picklist = models.BooleanField(default=False)
+    picklist = models.JSONField(default=dict)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class TicketUDF(BaseUDF):
+    pass
+
+
+class TaskUDF(BaseUDF):
+    pass
+
+
+class ProjectUDF(BaseUDF):
+    pass
+
+
 class TicketTracker(Ticket):
     tracker = FieldTracker()
 
@@ -1185,3 +1212,27 @@ class TaskPredecessorTracker(TaskPredecessor):
     class Meta:
         proxy = True
         db_table = 'djautotask_taskpredecessor'
+
+
+class TicketUDFTracker(TicketUDF):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_ticketudf'
+
+
+class TaskUDFTracker(TaskUDF):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_taskudf'
+
+
+class ProjectUDFTracker(ProjectUDF):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_projectudf'

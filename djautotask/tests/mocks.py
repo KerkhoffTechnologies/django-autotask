@@ -5,6 +5,7 @@ from djautotask.tests import fixtures
 
 WRAPPER_QUERY_METHOD = 'atws.wrapper.Wrapper.query'
 GET_FIELD_INFO_METHOD = 'atws.helpers.get_field_info'
+GET_UDF_INFO_METHOD = 'atws.wrapper.Wrapper.get_udf_info'
 
 
 def create_mock_call(method_name, return_value, side_effect=None):
@@ -30,6 +31,10 @@ def api_query_call(return_value):
 
 def api_picklist_call(return_value):
     return create_mock_call(GET_FIELD_INFO_METHOD, return_value)
+
+
+def api_udf_call(return_value):
+    return create_mock_call(GET_UDF_INFO_METHOD, return_value)
 
 
 def wrapper_query_api_calls(side_effect=None):

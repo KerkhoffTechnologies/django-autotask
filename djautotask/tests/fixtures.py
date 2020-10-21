@@ -117,7 +117,6 @@ API_PROJECT_TYPE_LIST = [
 API_PROJECT_LIST = [
     {
         'id': 4,
-        'UserDefinedFields': '',
         'ProjectName': 'Software Project',
         'AccountID': 174,
         'Type': 5,
@@ -162,6 +161,7 @@ API_PROJECT_LIST = [
         'LastActivityDateTime':
             datetime(2012, 6, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
         'LastActivityPersonType': 1,
+        'UserDefinedFields': {},
     }
 ]
 
@@ -550,7 +550,7 @@ API_TICKET = {
     'TicketNumber': 'T20120604.0002.005',
     'TicketType': 1,
     'Title': 'Monthy Services Checkup*',
-    'UserDefinedFields': '',
+    'UserDefinedFields': {},
     'id': 7688
 }
 
@@ -577,7 +577,6 @@ API_PHASE_LIST = [API_PHASE]
 
 API_TASK = {
     'id': 7733,
-    'UserDefinedFields': None,
     'AllocationCodeID': 29683415,
     'AssignedResourceID': 29683794,
     'AssignedResourceRoleID': 29682834,
@@ -611,6 +610,7 @@ API_TASK = {
     'CreatorType': 1,
     'LastActivityResourceID': 29683968,
     'LastActivityPersonType': 1,
+    'UserDefinedFields': {}
 }
 API_TASK_LIST = [API_TASK]
 
@@ -909,3 +909,32 @@ API_TASK_PREDECESSOR = {
     'SuccessorTaskID': 7755,
 }
 API_TASK_PREDECESSOR_LIST = [API_TASK_PREDECESSOR]
+
+API_UDF_LIST = [
+    {
+        'Name': "Test UDF",
+        'Label': "Test UDF",
+        'Type': "String",
+        'Length': 8000,
+        'IsPickList': False,
+    },
+    {
+        'Name': "Test UDF",
+        'Label': "Test UDF",
+        'Type': "String",
+        'Length': 8000,
+        'IsPickList': True,
+        'PicklistValues': [
+            {
+                 'Value': "1",
+                 'Label': "One",
+                 'IsDefaultValue': False,
+                 'SortOrder': 0,
+                 'parentValue': None,
+                 'IsActive': True,
+                 'IsSystem': False
+            }
+        ]
+    },
+
+]

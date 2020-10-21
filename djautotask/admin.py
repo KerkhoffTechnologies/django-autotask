@@ -344,3 +344,21 @@ class TaskPredecessorAdmin(admin.ModelAdmin):
         'id', 'predecessor_task', 'successor_task', 'lag_days'
     )
     search_fields = ('id', 'predecessor_task__title', 'successor_task__title')
+
+
+@admin.register(models.TicketUDF)
+class TicketUDFAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'type', 'is_picklist')
+    search_fields = ['name', 'type']
+
+
+@admin.register(models.TaskUDF)
+class TaskUDFAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'type', 'is_picklist')
+    search_fields = ['name', 'type']
+
+
+@admin.register(models.ProjectUDF)
+class ProjectUDFAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'type', 'is_picklist')
+    search_fields = ['name', 'type']

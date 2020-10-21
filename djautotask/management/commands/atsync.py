@@ -110,6 +110,9 @@ class Command(BaseCommand):
             ),
             ('task_predecessor', sync.TaskPredecessorSynchronizer,
              _('Task Predecessor')),
+            ('ticket_udf', sync.TicketUDFSynchronizer, _('Ticket UDF')),
+            ('task_udf', sync.TaskUDFSynchronizer, _('Task UDF')),
+            ('project_udf', sync.ProjectUDFSynchronizer, _('Project UDF')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
