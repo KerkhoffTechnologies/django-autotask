@@ -88,6 +88,43 @@ def generate_picklist_objects(object_type, fixture_objects):
     return array_of_field
 
 
+def generate_udf_objects(fixture_objects):
+    """
+    Generate a mock ArrayOfField object that simulates an entity returned
+    from the API with a picklist of objects.
+    """
+    client = API_CLIENT
+    array_of_field = client.factory.create('ArrayOfField')
+
+    for fixture in fixture_objects:
+        field = client.factory.create('Field')
+        field.Name = fixture['Name']
+        field.Label = fixture['Label']
+        field.Type = fixture['Type']
+        field.Length = fixture['Length']
+        field.IsPickList = fixture['IsPickList']
+
+        if field.IsPickList:
+            object_list = []
+            for values in fixture['PicklistValues']:
+                pick_list_value = client.factory.create('PickListValue')
+                picklist_object = set_attributes(pick_list_value, values)
+                object_list.append(picklist_object)
+            field.PicklistValues.PickListValue = object_list
+
+        # suds-community does not normally initialize the ArrayOfPickListValue
+        # field because it is an optionalfield. We force it to by modifying the
+        # test wsdl file forthe "Field"'sPicklistValues,chagining its minOccurs
+        # to "1", so it initializes it for us.
+
+        # field.Name = object_type
+        # field.IsPickList = True
+
+        array_of_field[0].append(field)
+
+    return array_of_field
+
+
 def manage_full_sync_return_data(value):
     """
     Generate and return objects based on the entity specified in the query.
@@ -228,6 +265,11 @@ def sync_picklist_objects(entity_type, fixture, sync_class):
     synchronizer = sync_class()
 
     return synchronizer.sync()
+
+
+def mock_udfs():
+    field_info = generate_udf_objects(fixtures.API_UDF_LIST)
+    mocks.api_udf_call(field_info)
 
 
 def init_statuses():

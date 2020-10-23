@@ -522,6 +522,7 @@ class TestSyncAllCommand(TestCase):
         )
         mocks.create_mock_call(
             'djautotask.sync.QueryConditionMixin._get_query_conditions', None)
+        fixture_utils.mock_udfs()
 
         # Mock API calls to return values based on what entity
         # is being requested
