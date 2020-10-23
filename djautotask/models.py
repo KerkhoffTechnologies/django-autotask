@@ -453,6 +453,7 @@ class Project(TimeStampedModel):
     department = models.ForeignKey(
         'Department', null=True, blank=True, on_delete=models.SET_NULL
     )
+    udf = models.JSONField(blank=True, null=True, default=dict)
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()
@@ -544,6 +545,7 @@ class Task(TimeStampedModel, ResourceAssignableModel):
     department = models.ForeignKey(
         'Department', blank=True, null=True, on_delete=models.SET_NULL
     )
+    udf = models.JSONField(blank=True, null=True, default=dict)
 
     def __str__(self):
         return self.title
