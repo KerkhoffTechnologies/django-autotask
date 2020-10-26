@@ -203,7 +203,11 @@ class Synchronizer:
 
             results.synced_ids.add(instance.id)
         except InvalidObjectException as e:
-            results.synced_ids.add(self.get_record_id(record))
+            record_id = self.get_record_id(record)
+            # If record ID exists in db, don't delete the stale record we have
+            # on InvalidObjectException
+            if record_id:
+                results.synced_ids.add(record_id)
             logger.warning('{}'.format(e))
 
         return results
