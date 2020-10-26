@@ -116,6 +116,9 @@ class Synchronizer:
                 format(model_field, instance)
             )
 
+    def get_record_id(self, record):
+        return int(record[self.lookup_key])
+
     def _assign_relation(self, instance, object_data,
                          object_field, model_class, field_name):
 
@@ -197,10 +200,15 @@ class Synchronizer:
                 results.updated_count += 1
             else:
                 results.skipped_count += 1
-        except InvalidObjectException as e:
-            logger.warning('{}'.format(e))
 
-        results.synced_ids.add(instance.id)
+            results.synced_ids.add(instance.id)
+        except InvalidObjectException as e:
+            record_id = self.get_record_id(record)
+            # If record ID exists in db, don't delete the stale record we have
+            # on InvalidObjectException
+            if record_id:
+                results.synced_ids.add(record_id)
+            logger.warning('{}'.format(e))
 
         return results
 
@@ -342,6 +350,12 @@ class UDFSynchronizer(Synchronizer):
     db_lookup_key = lookup_key.lower()
     entity_type = None
     model_class = None
+
+    def get_record_id(self, record):
+        try:
+            return self.model_class.objects.get(name=record["Name"]).id
+        except self.model_class.DoesNotExist:
+            return None
 
     @log_sync_job
     def sync(self):
