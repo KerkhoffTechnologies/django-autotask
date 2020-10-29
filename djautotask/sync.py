@@ -343,6 +343,13 @@ class SyncRecordUDFMixin:
                 # continue
                 logger.debug(
                     'No UDF records returned for Name: {}'.format(e))
+            except KeyError as e:
+                # UDF has likely been updated but we don't have the
+                # updated changes locally until the UDF class has been synced.
+                logger.warning(
+                    'KeyError when trying to access UDF '
+                    'picklist label. {}'.format(e)
+                )
 
 
 class UDFSynchronizer(Synchronizer):
