@@ -1,11 +1,11 @@
-from django.conf.urls import url
+from django.urls import re_path
 from djautotask import views
 
 app_name = 'djautotask'
 
 urlpatterns = [
-    url(
-        regex=r'^callback/$',
+    re_path(
+        r'^callback/$',
         view=views.CallBackView.as_view(),
         name='callback'
     ),

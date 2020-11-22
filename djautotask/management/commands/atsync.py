@@ -3,7 +3,7 @@ from atws.wrapper import AutotaskProcessException, AutotaskAPIException
 from xml.sax._exceptions import SAXParseException
 
 from django.core.management.base import BaseCommand, CommandError
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from djautotask import sync, api
 
 OPTION_NAME = 'autotask_object'

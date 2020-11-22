@@ -1,7 +1,7 @@
 ## django-autotask
 
 Django app for working with Autotask. Defines models (tickets,
-members, companies, etc.).
+resources, accounts, etc.).
 
 ## Requirements
 
@@ -26,7 +26,6 @@ From source:
     INSTALLED_APPS = [
         ...
         'djautotask',
-        'easy_thumbnails'  # Used for managing user pictures
         ...
     ]
     ```
