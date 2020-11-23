@@ -1,7 +1,5 @@
-from django.conf.urls import url, include
+from django.urls import re_path, include
 
 urlpatterns = [
-    url(r'^callback/', include(
-        'djautotask.urls', namespace='djautotask')
-        ),
+    re_path(r'^callback/', include('djautotask.urls', namespace='djautotask')),
 ]
