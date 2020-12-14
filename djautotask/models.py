@@ -77,6 +77,9 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     queue = models.ForeignKey(
         'Queue', blank=True, null=True, on_delete=models.SET_NULL
     )
+    contact = models.ForeignKey(
+        'Contact', blank=True, null=True, on_delete=models.SET_NULL
+    )
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
@@ -372,6 +375,32 @@ class TaskNote(TimeStampedModel, Note):
     )
 
 
+class Contact(TimeStampedModel):
+
+    first_name = models.TextField(blank=True, null=True, max_length=20)
+    last_name = models.TextField(blank=True, null=True, max_length=20)
+    middle_initial = models.TextField(blank=True, null=True, max_length=50)
+    additional_address_information = models.CharField(blank=True, null=True,
+                                                      max_length=100)
+    address_line = models.CharField(blank=True, null=True, max_length=128)
+    address_line1 = models.CharField(blank=True, null=True, max_length=128)
+    city = models.CharField(blank=True, null=True, max_length=32)
+    state = models.CharField(blank=True, null=True, max_length=40)
+    zip_code = models.CharField(blank=True, null=True, max_length=16)
+    email_address = models.CharField(blank=True, null=True, max_length=50)
+    email_address2 = models.CharField(blank=True, null=True, max_length=50)
+    email_address3 = models.CharField(blank=True, null=True, max_length=50)
+    primary_contact = models.BooleanField(null=True)
+    receives_email_notifications = models.BooleanField(null=True)
+    account = models.ForeignKey(
+        'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
+
+    def __str__(self):
+        return '{} {}'.format(self.first_name,
+                              self.last_name if self.last_name else '')
+
+
 class Account(TimeStampedModel):
     name = models.CharField(max_length=100)
     number = models.CharField(max_length=50)
@@ -437,6 +466,9 @@ class Project(TimeStampedModel):
 
     project_lead_resource = models.ForeignKey(
         'Resource', null=True, on_delete=models.SET_NULL
+    )
+    contact = models.ForeignKey(
+        'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
     account = models.ForeignKey(
         'Account', null=True, on_delete=models.SET_NULL
@@ -1062,6 +1094,14 @@ class TaskNoteTracker(TaskNote):
     class Meta:
         proxy = True
         db_table = 'djautotask_tasknote'
+
+
+class ContactTracker(Contact):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contact'
 
 
 class AccountTracker(Account):
