@@ -386,22 +386,10 @@ class ContactSynchronizer(Synchronizer):
         self.api_conditions = ['inactiveFlag=False']
 
     def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
         instance.first_name = json_data.get('firstName')
         instance.last_name = json_data.get('lastName')
-        instance.middle_initial = json_data.get('middleInitial')
-        instance.additional_address_information = json_data.\
-            get('additionalAddressInformation')
-        instance.address_line = json_data.get('addressLine')
-        instance.address_line1 = json_data.get('addressLine1')
-        instance.city = json_data.get('city')
-        instance.state = json_data.get('state')
-        instance.zip_code = json_data.get('zipCode')
         instance.email_address = json_data.get('emailAddress')
-        instance.email_address2 = json_data.get('emailAddress2')
-        instance.email_address3 = json_data.get('emailAddress3')
-        instance.primary_contact = json_data.get('primaryContact')
-        instance.receives_email_notifications = json_data.\
-            get('receivesEmailNotifications')
         self.set_relations(instance, json_data)
 
         return instance

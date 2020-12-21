@@ -379,19 +379,7 @@ class Contact(TimeStampedModel):
 
     first_name = models.TextField(blank=True, null=True, max_length=20)
     last_name = models.TextField(blank=True, null=True, max_length=20)
-    middle_initial = models.TextField(blank=True, null=True, max_length=50)
-    additional_address_information = models.CharField(blank=True, null=True,
-                                                      max_length=100)
-    address_line = models.CharField(blank=True, null=True, max_length=128)
-    address_line1 = models.CharField(blank=True, null=True, max_length=128)
-    city = models.CharField(blank=True, null=True, max_length=32)
-    state = models.CharField(blank=True, null=True, max_length=40)
-    zip_code = models.CharField(blank=True, null=True, max_length=16)
     email_address = models.CharField(blank=True, null=True, max_length=50)
-    email_address2 = models.CharField(blank=True, null=True, max_length=50)
-    email_address3 = models.CharField(blank=True, null=True, max_length=50)
-    primary_contact = models.BooleanField(null=True)
-    receives_email_notifications = models.BooleanField(null=True)
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
