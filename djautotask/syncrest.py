@@ -330,41 +330,6 @@ class Synchronizer:
         return results.created_count, results.updated_count, \
             results.skipped_count, results.deleted_count
 
-    def callback_sync(self, filter_params):
-
-        results = SyncResults()
-
-        # Set of IDs of all records related to the parent object
-        # to sync, to find stale records for deletion, need to be careful
-        # to get the correct filter on the objects you want, or you will
-        # be deleting records you didn't intend to, and they wont be restored
-        # until their next scheduled sync
-        initial_ids = self._instance_ids(filter_params=filter_params)
-        results = self.get(results)
-
-        # This should always be a full sync (unless something changes in
-        # the future and it doesn't need to delete anything)
-        results.deleted_count = self.prune_stale_records(
-            initial_ids, results.synced_ids
-        )
-
-        return results.created_count, results.updated_count, \
-            results.skipped_count, results.deleted_count
-
-    def sync_children(self, *args):
-        for synchronizer, filter_params in args:
-            created_count, updated_count, skipped_count, deleted_count \
-                = synchronizer.callback_sync(filter_params)
-            msg = '{} Child Sync - Created: {},'\
-                ' Updated: {}, Skipped: {},Deleted: {}'.format(
-                    synchronizer.model_class.__bases__[0].__name__,
-                    created_count,
-                    updated_count,
-                    skipped_count,
-                    deleted_count
-                )
-            logger.info(msg)
-
     def remove_null_characters(self, json_data):
         for value in json_data:
             if isinstance(json_data.get(value), str):

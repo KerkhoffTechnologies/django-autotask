@@ -14,11 +14,6 @@ CW_RESPONSE_MAX_RECORDS = 500  # The greatest number of records Autotask
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
 # wait before retrying a request.
 RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
-# before retrying a request.
-AT_DEFAULT_PAGE = 1  # CW Pagination is 1-indexed
-CONTENT_DISPOSITION_RE = re.compile(
-    '^attachment; filename=\"{0,1}(.*?)\"{0,1}$'
-)
 
 logger = logging.getLogger(__name__)
 
