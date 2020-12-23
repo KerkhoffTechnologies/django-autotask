@@ -305,15 +305,12 @@ class Synchronizer:
 
     @log_sync_job
     def sync(self):
-        sync_job_qset = self.get_sync_job_qset()
+        sync_job_qset = self.get_sync_job_qset().filter(success=True)
 
-        # Since the job is created before it begins, make sure to exclude
-        # itself, and at least one other sync job exists.
         if sync_job_qset.count() > 1 and not self.full:
-            last_sync_job_time = sync_job_qset.exclude(
-                id=sync_job_qset.last().id).last().start_time.isoformat()
+            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
             self.api_conditions.append(
-                "lastUpdated>[{0}]".format(last_sync_job_time)
+                "lastActivityDate,{0},gt".format(last_sync_job_time)
             )
         results = SyncResults()
         results = self.get(results)
@@ -348,7 +345,7 @@ class ContactSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions = ['inactiveFlag=False']
+        self.api_conditions = ['IsActive,true']
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']

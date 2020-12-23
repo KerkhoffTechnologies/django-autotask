@@ -119,8 +119,9 @@ def get_zone_info(username):
 
 class AutotaskAPIClient(object):
     API = None
-    QUERY = 'query?search='
-    QUERY_COUNT = 'query/count'
+    GET_QUERY = 'query?search='
+    POST_QUERY = 'query'
+    filter_array = []
 
     def __init__(
         self,
@@ -180,7 +181,7 @@ class AutotaskAPIClient(object):
             if error.get('errors'):
                 for error_message in error.get('errors'):
                     messages.append(
-                        '{}.'.format(error_message.get('message').rstrip('.'))
+                        '{}.'.format(error_message.rstrip('.'))
                     )
 
             messages = ' The error was: '.join(messages)
@@ -216,12 +217,17 @@ class AutotaskAPIClient(object):
 
         return headers
 
-    def build_query_str(self, field, value, op='op'):
-        filter_obj = {"op": op, "field": field, "value": value}
-        query_obj = {'filter': [filter_obj]}
-        return json.dumps(query_obj)
+    def build_filter(self, **kwargs):
+        for condition in kwargs['conditions']:
+            condition_arr = condition.split(",")
+            filter_obj = self._build_filter_obj(*condition_arr)
+            self.filter_array.append(filter_obj)
 
-    def fetch_resource(self, endpoint_url, full_next_url=False,
+    def _build_filter_obj(self, field, value, op='eq'):
+        filter_obj = {"op": op, "field": field, "value": value}
+        return filter_obj
+
+    def fetch_resource(self, endpoint_url, payload, full_next_url=False,
                        retry_counter=None,
                        *args, **kwargs):
         """
@@ -234,7 +240,7 @@ class AutotaskAPIClient(object):
                wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
                wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
                retry_on_exception=retry_if_api_error)
-        def _fetch_resource(endpoint_url, full_next_url=False,
+        def _fetch_resource(endpoint_url, payload, full_next_url=False,
                             retry_counter=None, *args, **kwargs):
             if not retry_counter:
                 retry_counter = {'count': 0}
@@ -244,18 +250,20 @@ class AutotaskAPIClient(object):
                 if full_next_url:
                     endpoint = endpoint_url
                 else:
-                    endpoint = self._endpoint(endpoint_url)
+                    endpoint = self._endpoint(self.POST_QUERY)
 
-                logger.debug('Making GET request to {}'.format(endpoint))
-                response = requests.get(
+                logger.debug('Making POST request to {} with {}'.format(
+                    endpoint, payload))
+                response = requests.post(
                     endpoint,
+                    payload,
                     timeout=self.timeout,
                     headers=self.get_headers(),
                 )
-                logger.debug(" URL: {}".format(response.url))
 
             except requests.RequestException as e:
-                logger.error('Request failed: GET {}: {}'.format(endpoint, e))
+                logger.error('Request failed: POST {} with {}: {}'.format(
+                    endpoint, payload, e))
                 raise AutotaskAPIError('{}'.format(e))
 
             if 200 <= response.status_code < 300:
@@ -265,7 +273,7 @@ class AutotaskAPIClient(object):
 
                 if next_url:
                     retry_counter['count'] = 0
-                    _fetch_resource(next_url, full_next_url=True,
+                    _fetch_resource(next_url, payload, full_next_url=True,
                                     retry_counter=retry_counter,
                                     *args, **kwargs)
 
@@ -286,7 +294,7 @@ class AutotaskAPIClient(object):
         if not retry_counter:
             retry_counter = {'count': 0}
 
-        _fetch_resource(endpoint_url, full_next_url=full_next_url,
+        _fetch_resource(endpoint_url, payload, full_next_url=full_next_url,
                         retry_counter=retry_counter, *args, **kwargs)
 
         return return_items
@@ -345,10 +353,8 @@ class ContactsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(endpoint_url)
 
     def get_contacts(self, *args, **kwargs):
-        # TODO
-        # for key, val in kwargs['conditions']:
-        #     query_str = ''.join(self.build_query_str(key, val))
-        query_str = self.build_query_str('IsActive', True, 'eq')
-        endpoint_url = self.QUERY + query_str
-        return self.fetch_resource(endpoint_url, full_next_url=False,
-                                   *args, **kwargs)
+        self.build_filter(**kwargs)
+        query_obj = {'filter': self.filter_array}
+        payload = json.dumps(query_obj)
+        return self.fetch_resource(self.POST_QUERY, payload,
+                                   full_next_url=False, *args, **kwargs)
