@@ -5,7 +5,6 @@ from django.utils import timezone
 
 from djautotask import api_rest as api
 from djautotask import models
-from djautotask.utils import DjautotaskSettings
 
 CREATED = 1
 UPDATED = 2
@@ -144,14 +143,19 @@ class Synchronizer:
 
     def fetch_records(self, results):
         """
-        For all pages of results, save the results to the DB.
+        For all pages of results, save each page of results to the DB.
         """
-        logger.info(
-            'Fetching {} records'.format(
-                self.model_class.__bases__[0].__name__)
-        )
-        total_pages = self.get_total_pages()
-        self.persist_page(total_pages, results)
+        next_url = None
+        while True:
+            logger.info(
+                'Fetching {} records'.format(
+                    self.model_class.__bases__[0].__name__)
+            )
+            page, next_url = self.get_page(next_url)
+            self.persist_page(page, results)
+
+            if not next_url:
+                break
 
         return results
 
@@ -174,7 +178,7 @@ class Synchronizer:
 
         return results
 
-    def get_total_pages(self, *args, **kwargs):
+    def get_page(self, *args, **kwargs):
         raise NotImplementedError
 
     def get_single(self, *args, **kwargs):
@@ -356,7 +360,7 @@ class ContactSynchronizer(Synchronizer):
 
         return instance
 
-    def get_total_pages(self, *args, **kwargs):
+    def get_page(self, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_contacts(*args, **kwargs)
 

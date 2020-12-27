@@ -121,7 +121,7 @@ class AutotaskAPIClient(object):
     API = None
     GET_QUERY = 'query?search='
     POST_QUERY = 'query'
-    filter_array = []
+    PAYLOAD = None
 
     def __init__(
         self,
@@ -217,21 +217,26 @@ class AutotaskAPIClient(object):
 
         return headers
 
-    def build_filter(self, **kwargs):
+    def build_payload(self, **kwargs):
+        filter_array = self._build_filter(**kwargs)
+        query_obj = {'filter': filter_array}
+        self.PAYLOAD = json.dumps(query_obj)
+
+    def _build_filter(self, **kwargs):
+        filter_array = []
         for condition in kwargs['conditions']:
             condition_arr = condition.split(",")
             filter_obj = self._build_filter_obj(*condition_arr)
-            self.filter_array.append(filter_obj)
+            filter_array.append(filter_obj)
+        return filter_array
 
     def _build_filter_obj(self, field, value, op='eq'):
         filter_obj = {"op": op, "field": field, "value": value}
         return filter_obj
 
-    def fetch_resource(self, endpoint_url, payload, full_next_url=False,
-                       retry_counter=None,
-                       *args, **kwargs):
+    def fetch_resource(self, *args, **kwargs):
         """
-        Issue a GET request to the specified REST endpoint.
+        Issue a POST request to the specified REST endpoint.
 
         retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
@@ -240,43 +245,32 @@ class AutotaskAPIClient(object):
                wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
                wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
                retry_on_exception=retry_if_api_error)
-        def _fetch_resource(endpoint_url, payload, full_next_url=False,
-                            retry_counter=None, *args, **kwargs):
+        def _fetch_resource(endpoint, retry_counter=None, **kwargs):
             if not retry_counter:
                 retry_counter = {'count': 0}
             retry_counter['count'] += 1
+            return_items = []
 
             try:
-                if full_next_url:
-                    endpoint = endpoint_url
-                else:
-                    endpoint = self._endpoint(self.POST_QUERY)
-
                 logger.debug('Making POST request to {} with {}'.format(
-                    endpoint, payload))
+                    endpoint, self.PAYLOAD))
                 response = requests.post(
                     endpoint,
-                    payload,
+                    self.PAYLOAD,
                     timeout=self.timeout,
                     headers=self.get_headers(),
                 )
 
             except requests.RequestException as e:
                 logger.error('Request failed: POST {} with {}: {}'.format(
-                    endpoint, payload, e))
+                    endpoint, self.PAYLOAD, e))
                 raise AutotaskAPIError('{}'.format(e))
 
             if 200 <= response.status_code < 300:
                 rslt_items = response.json()
                 return_items.append(rslt_items.get("items"))
                 next_url = rslt_items.get("pageDetails").get("nextPageUrl")
-
-                if next_url:
-                    retry_counter['count'] = 0
-                    _fetch_resource(next_url, payload, full_next_url=True,
-                                    retry_counter=retry_counter,
-                                    *args, **kwargs)
-
+                return return_items, next_url
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
                 raise AutotaskAPIClientError(
@@ -290,14 +284,17 @@ class AutotaskAPIClient(object):
                 raise AutotaskAPIError(
                     self._prepare_error_response(response))
 
-        return_items = []
-        if not retry_counter:
-            retry_counter = {'count': 0}
+        # PAYLOAD should be the same through the all the requests of any page
+        if not self.PAYLOAD:
+            self.build_payload(**kwargs)
 
-        _fetch_resource(endpoint_url, payload, full_next_url=full_next_url,
-                        retry_counter=retry_counter, *args, **kwargs)
+        next_url = args[0]
+        if next_url:
+            endpoint = next_url
+        else:
+            endpoint = self._endpoint(self.POST_QUERY)
 
-        return return_items
+        return _fetch_resource(endpoint, retry_counter=None, **kwargs)
 
     def request(self, method, endpoint_url, body=None):
         """
@@ -349,12 +346,8 @@ class ContactsAPIClient(AutotaskAPIClient):
     API = 'contacts'
 
     def by_id(self, contact_id):
-        endpoint_url = '{}'.format(contact_id)
-        return self.fetch_resource(endpoint_url)
+        conditions = ['id,{}'.format(contact_id)]
+        return self.fetch_resource(None, conditions=conditions)
 
     def get_contacts(self, *args, **kwargs):
-        self.build_filter(**kwargs)
-        query_obj = {'filter': self.filter_array}
-        payload = json.dumps(query_obj)
-        return self.fetch_resource(self.POST_QUERY, payload,
-                                   full_next_url=False, *args, **kwargs)
+        return self.fetch_resource(*args, **kwargs)

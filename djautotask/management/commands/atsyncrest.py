@@ -9,7 +9,7 @@ OPTION_NAME = 'autotask_object'
 
 
 class Command(BaseCommand):
-    help = str(_('Synchronize the specified object with the Connectwise API'))
+    help = str(_('Synchronize the specified object with the Autotask API'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
