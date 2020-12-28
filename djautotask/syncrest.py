@@ -363,6 +363,3 @@ class ContactSynchronizer(Synchronizer):
     def get_page(self, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_contacts(*args, **kwargs)
-
-    def get_single(self, contact_id):
-        return self.client.by_id(contact_id)

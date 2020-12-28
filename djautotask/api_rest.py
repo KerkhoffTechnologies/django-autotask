@@ -1,6 +1,5 @@
 import json
 import logging
-import re
 
 import requests
 from django.conf import settings
@@ -344,10 +343,6 @@ class AutotaskAPIClient(object):
 
 class ContactsAPIClient(AutotaskAPIClient):
     API = 'contacts'
-
-    def by_id(self, contact_id):
-        conditions = ['id,{}'.format(contact_id)]
-        return self.fetch_resource(None, conditions=conditions)
 
     def get_contacts(self, *args, **kwargs):
         return self.fetch_resource(*args, **kwargs)
