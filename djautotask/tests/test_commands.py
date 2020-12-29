@@ -36,6 +36,59 @@ def run_sync_command(full_option=False, command_name=None):
     return out
 
 
+class AbstractBaseSyncRestTest(object):
+
+    def _test_sync(self, mock_call, return_value, at_object,
+                   full_option=False):
+        mock_call(return_value)
+        out = io.StringIO()
+
+        args = ['atsync', at_object]
+        if full_option:
+            args.append('--full')
+        call_command(*args, stdout=out)
+        return out
+
+    def _title_for_at_object(self, at_object):
+        return at_object.title().replace('_', ' ')
+
+    def test_sync(self):
+        out = self._test_sync(*self.args)
+        obj_title = self._title_for_at_object(self.args[-1])
+        self.assertIn(obj_title, out.getvalue().strip())
+
+    def test_full_sync(self):
+        self.test_sync()
+        mock_call, return_value, at_object = self.args
+        args = [
+            mock_call,
+            {
+                "items": [],
+                "pageDetails": fixtures.API_PAGE_DETAILS
+            },
+            at_object
+        ]
+
+        out = self._test_sync(*args, full_option=True)
+        obj_label = self._title_for_at_object(at_object)
+        msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Skipped: 0, ' \
+                   'Deleted: {}'
+        msg = msg_tmpl.format(obj_label, len(return_value.get('items')))
+        self.assertEqual(msg, out.getvalue().strip())
+
+
+class TestSyncContactCommand(AbstractBaseSyncRestTest, TestCase):
+    args = (
+        mocks.service_api_get_contacts_call,
+        fixtures.API_CONTACT,
+        'contact',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_contacts()
+
+
 class AbstractBaseSyncTest(object):
 
     def setUp(self):
@@ -510,6 +563,7 @@ class TestSyncAllCommand(TestCase):
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
+        mocks.init_api_rest_connection(return_value='TestURL')
         mocks.create_mock_call(
             'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
         mocks.create_mock_call(
@@ -523,7 +577,7 @@ class TestSyncAllCommand(TestCase):
         mocks.create_mock_call(
             'djautotask.sync.QueryConditionMixin._get_query_conditions', None)
         fixture_utils.mock_udfs()
-
+        mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
         # Mock API calls to return values based on what entity
         # is being requested
         mocks.get_field_info_api_calls(
@@ -572,12 +626,19 @@ class TestSyncAllCommand(TestCase):
             TestSyncServiceCallTaskResourceCommand,
             TestSyncAccountLocationCommand,
             TestSyncTaskPredecessor,
+            TestSyncContactCommand,
         ]
 
         self.test_args = []
 
         for test_case in sync_test_cases:
-            self.test_args.append(test_case.args)
+            # for REST API
+            if len(test_case.args) == 3:
+                self.test_args.append(test_case.args)
+            # for SOAP API
+            else:
+                new_test_case = [None, *test_case.args]
+                self.test_args.append(new_test_case)
 
     def test_partial_sync(self):
         """
@@ -586,8 +647,12 @@ class TestSyncAllCommand(TestCase):
         """
         output = run_sync_command()
 
-        for fixture, at_object in self.test_args:
-            summary = sync_summary(slug_to_title(at_object), len(fixture))
+        for mock_call, fixture, at_object in self.test_args:
+            if mock_call:
+                fixture_len = len(fixture.get('items'))
+            else:
+                fixture_len = len(fixture)
+            summary = sync_summary(slug_to_title(at_object), fixture_len)
             self.assertIn(summary, output.getvalue().strip())
 
         self.assertEqual(
@@ -636,6 +701,7 @@ class TestSyncAllCommand(TestCase):
             'service_call_ticket_resource': models.ServiceCallTicketResource,
             'service_call_task_resource': models.ServiceCallTaskResource,
             'task_predecessor': models.TaskPredecessor,
+            'contact': models.Contact,
         }
         run_sync_command()
         pre_full_sync_counts = {}
@@ -647,10 +713,15 @@ class TestSyncAllCommand(TestCase):
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
+        mocks.service_api_get_contacts_call({
+                "items": [],
+                "pageDetails": fixtures.API_PAGE_DETAILS
+            })
+
         output = run_sync_command(full_option=True)
 
         # Verify the rest of sync classes summaries.
-        for fixture, at_object in self.test_args:
+        for mock_call, fixture, at_object in self.test_args:
             if at_object in (
                     'resource_role_department',
                     'resource_service_desk_role',

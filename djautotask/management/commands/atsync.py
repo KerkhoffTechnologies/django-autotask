@@ -5,7 +5,8 @@ from xml.sax._exceptions import SAXParseException
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import gettext_lazy as _
 from djautotask import sync, api
-from djautotask import syncrest as syncrest
+from djautotask import sync_rest as syncrest
+from djautotask import api_rest as apirest
 
 OPTION_NAME = 'autotask_object'
 ERROR_MESSAGE_TEMPLATE = 'Failed to sync {}. Autotask API returned an ' \
@@ -185,6 +186,9 @@ class Command(BaseCommand):
             except SAXParseException as e:
                 error_msg = 'Failed to connect to Autotask API. ' \
                       'The error was: {}'.format(e)
+
+            except apirest.AutotaskAPIError as e:
+                error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
 
             finally:
                 if error_msg:

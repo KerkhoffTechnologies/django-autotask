@@ -151,7 +151,9 @@ class Synchronizer:
                 'Fetching {} records'.format(
                     self.model_class.__bases__[0].__name__)
             )
-            page, next_url = self.get_page(next_url)
+            api_return = self.get_page(next_url)
+            page = api_return.get("items")
+            next_url = api_return.get("pageDetails").get("nextPageUrl")
             self.persist_page(page, results)
 
             if not next_url:
@@ -161,7 +163,7 @@ class Synchronizer:
 
     def persist_page(self, records, results):
         """Persist one page of records to DB."""
-        for record in records[0]:
+        for record in records:
             try:
                 with transaction.atomic():
                     instance, result = self.update_or_create_instance(record)

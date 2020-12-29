@@ -8,8 +8,6 @@ from django.core.cache import cache
 
 from djautotask.utils import DjautotaskSettings
 
-CW_RESPONSE_MAX_RECORDS = 500  # The greatest number of records Autotask
-# will send us in one response.
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
 # wait before retrying a request.
 RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
@@ -248,7 +246,6 @@ class AutotaskAPIClient(object):
             if not retry_counter:
                 retry_counter = {'count': 0}
             retry_counter['count'] += 1
-            return_items = []
 
             try:
                 logger.debug('Making POST request to {} with {}'.format(
@@ -266,10 +263,7 @@ class AutotaskAPIClient(object):
                 raise AutotaskAPIError('{}'.format(e))
 
             if 200 <= response.status_code < 300:
-                rslt_items = response.json()
-                return_items.append(rslt_items.get("items"))
-                next_url = rslt_items.get("pageDetails").get("nextPageUrl")
-                return return_items, next_url
+                return response.json()
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
                 raise AutotaskAPIClientError(

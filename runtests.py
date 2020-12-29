@@ -26,6 +26,9 @@ settings.configure(
     AUTOTASK_CREDENTIALS={
         'username': '',
         'password': '',
+        'integration_code': '',
+        'rest_api_version': '',
+        'server_url': '',
     },
     DATABASES={
         'default': {
@@ -95,7 +98,8 @@ def suite():
 
 if __name__ == '__main__':
     _setup()
-    call_command('test')
+    # call_command('test')
     # To run specific tests, try something such as:
-    # call_command('test', 'djautotask.tests.test_commands.TestSyncAllCommand')  # noqa: E501
+    call_command('test', 'djautotask.tests.test_commands.TestSyncContactCommand')  # noqa: E501
+    # call_command('test', 'djautotask.tests.test_sync.TestContactSynchronizer')  # noqa: E501
     exit_on_failure(flake8_main())

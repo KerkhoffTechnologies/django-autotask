@@ -78,3 +78,14 @@ def build_batch_query(side_effect=None):
         side_effect=side_effect
     )
     return mock_call, _patch
+
+
+def init_api_rest_connection(return_value=None):
+    method_name = 'djautotask.api_rest.get_api_connection_url'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_contacts_call(return_value):
+    init_api_rest_connection(return_value='TestURL')
+    method_name = 'djautotask.api_rest.ContactsAPIClient.get_contacts'
+    return create_mock_call(method_name, return_value)

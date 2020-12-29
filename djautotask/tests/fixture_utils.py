@@ -6,6 +6,16 @@ from djautotask import sync
 from djautotask.tests import mocks, fixtures
 from pathlib import Path
 
+from djautotask import models
+from djautotask import sync_rest as syncrest
+
+
+def init_contacts():
+    models.Contact.objects.all().delete()
+    mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
+    synchronizer = syncrest.ContactSynchronizer()
+    return synchronizer.sync()
+
 
 def init_api_client():
     # Access the Autotask API's WSDL file from the tests directory
