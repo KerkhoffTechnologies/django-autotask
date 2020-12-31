@@ -118,7 +118,7 @@ class AutotaskAPIClient(object):
     API = None
     GET_QUERY = 'query?search='
     POST_QUERY = 'query'
-    PAYLOAD = None
+    QUERYSTR = None
 
     def __init__(
         self,
@@ -156,8 +156,10 @@ class AutotaskAPIClient(object):
         self.api_base_url = None
         self.build_api_base_url()
 
-    def _endpoint(self, path):
-        return '{0}{1}'.format(self.api_base_url, path)
+    def _endpoint(self):
+        return '{0}{1}{2}'.format(self.api_base_url,
+                                  self.GET_QUERY,
+                                  self.QUERYSTR)
 
     def _log_failed(self, response):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
@@ -214,10 +216,10 @@ class AutotaskAPIClient(object):
 
         return headers
 
-    def build_payload(self, **kwargs):
+    def build_query_string(self, **kwargs):
         filter_array = self._build_filter(**kwargs)
         query_obj = {'filter': filter_array}
-        self.PAYLOAD = json.dumps(query_obj)
+        self.QUERYSTR = json.dumps(query_obj)
 
     def _build_filter(self, **kwargs):
         filter_array = []
@@ -231,7 +233,7 @@ class AutotaskAPIClient(object):
         filter_obj = {"op": op, "field": field, "value": value}
         return filter_obj
 
-    def fetch_resource(self, *args, **kwargs):
+    def fetch_resource(self, next_url=None, *args, **kwargs):
         """
         Issue a POST request to the specified REST endpoint.
 
@@ -248,18 +250,15 @@ class AutotaskAPIClient(object):
             retry_counter['count'] += 1
 
             try:
-                logger.debug('Making POST request to {} with {}'.format(
-                    endpoint, self.PAYLOAD))
-                response = requests.post(
+                logger.debug('Making GET request to {}'.format(endpoint))
+                response = requests.get(
                     endpoint,
-                    self.PAYLOAD,
                     timeout=self.timeout,
                     headers=self.get_headers(),
                 )
 
             except requests.RequestException as e:
-                logger.error('Request failed: POST {} with {}: {}'.format(
-                    endpoint, self.PAYLOAD, e))
+                logger.error('Request failed: GET {}: {}'.format(endpoint, e))
                 raise AutotaskAPIError('{}'.format(e))
 
             if 200 <= response.status_code < 300:
@@ -278,14 +277,13 @@ class AutotaskAPIClient(object):
                     self._prepare_error_response(response))
 
         # PAYLOAD should be the same through the all the requests of any page
-        if not self.PAYLOAD:
-            self.build_payload(**kwargs)
+        if not self.QUERYSTR:
+            self.build_query_string(**kwargs)
 
-        next_url = args[0]
         if next_url:
             endpoint = next_url
         else:
-            endpoint = self._endpoint(self.POST_QUERY)
+            endpoint = self._endpoint()
 
         return _fetch_resource(endpoint, retry_counter=None, **kwargs)
 
@@ -338,5 +336,5 @@ class AutotaskAPIClient(object):
 class ContactsAPIClient(AutotaskAPIClient):
     API = 'contacts'
 
-    def get_contacts(self, *args, **kwargs):
-        return self.fetch_resource(*args, **kwargs)
+    def get_contacts(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)

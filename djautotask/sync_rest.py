@@ -1,72 +1,16 @@
 import logging
 
 from django.db import transaction, IntegrityError
-from django.utils import timezone
 
 from djautotask import api_rest as api
 from djautotask import models
+from .sync import InvalidObjectException, SyncResults, log_sync_job
 
 CREATED = 1
 UPDATED = 2
 SKIPPED = 3
 
 logger = logging.getLogger(__name__)
-
-
-class InvalidObjectException(Exception):
-    """
-    If for any reason an object can't be created (for example, it references
-    an unknown foreign object, or is missing a required field), raise this
-    so that the synchronizer can catch it and continue with other records.
-    """
-    pass
-
-
-def log_sync_job(f):
-    def wrapper(*args, **kwargs):
-        sync_instance = args[0]
-        created_count = updated_count = deleted_count = skipped_count = 0
-        sync_job = models.SyncJob()
-        sync_job.start_time = timezone.now()
-        sync_job.entity_name = sync_instance.model_class.__bases__[0].__name__
-        sync_job.synchronizer_class = \
-            sync_instance.__class__.__name__
-
-        if sync_instance.full:
-            sync_job.sync_type = 'full'
-        else:
-            sync_job.sync_type = 'partial'
-
-        sync_job.save()
-
-        try:
-            created_count, updated_count, skipped_count, deleted_count = \
-                f(*args, **kwargs)
-            sync_job.success = True
-        except Exception as e:
-            sync_job.message = str(e.args[0])
-            sync_job.success = False
-            raise
-        finally:
-            sync_job.end_time = timezone.now()
-            sync_job.added = created_count
-            sync_job.updated = updated_count
-            sync_job.skipped = skipped_count
-            sync_job.deleted = deleted_count
-            sync_job.save()
-
-        return created_count, updated_count, skipped_count, deleted_count
-    return wrapper
-
-
-class SyncResults:
-    """Track results of a sync job."""
-    def __init__(self):
-        self.created_count = 0
-        self.updated_count = 0
-        self.skipped_count = 0
-        self.deleted_count = 0
-        self.synced_ids = set()
 
 
 class Synchronizer:
@@ -76,10 +20,6 @@ class Synchronizer:
         self.api_conditions = []
         self.client = self.client_class()
         self.full = full
-
-        self.pre_delete_callback = kwargs.pop('pre_delete_callback', None)
-        self.pre_delete_args = kwargs.pop('pre_delete_args', None)
-        self.post_delete_callback = kwargs.pop('post_delete_callback', None)
 
     def set_relations(self, instance, json_data):
         for json_field, value in self.related_meta.items():
@@ -189,40 +129,6 @@ class Synchronizer:
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
 
-    def fetch_sync_by_id(self, instance_id, sync_config={}):
-        api_instance = self.get_single(instance_id)
-        instance, created = self.update_or_create_instance(api_instance)
-        return instance
-
-    def fetch_delete_by_id(self, instance_id, pre_delete_callback=None,
-                           pre_delete_args=None,
-                           post_delete_callback=None):
-        try:
-            self.get_single(instance_id)
-            logger.warning(
-                'Autotask API returned {} {} even though it was expected '
-                'to be deleted.'.format(
-                    self.model_class.__bases__[0].__name__, instance_id)
-            )
-
-        except api.AutotaskRecordNotFoundError:
-            # This is what we expect to happen. Since it's gone in AT, we
-            # are safe to delete it from here.
-            pre_delete_result = None
-            try:
-                if pre_delete_callback:
-                    pre_delete_result = pre_delete_callback(*pre_delete_args)
-                self.model_class.objects.filter(pk=instance_id).delete()
-            finally:
-                if post_delete_callback:
-                    post_delete_callback(pre_delete_result)
-            logger.info(
-                'Deleted {} {} (if it existed).'.format(
-                    self.model_class.__bases__[0].__name__,
-                    instance_id
-                )
-            )
-
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
@@ -285,19 +191,12 @@ class Synchronizer:
             delete_qset = self.get_delete_qset(stale_ids)
             deleted_count = delete_qset.count()
 
-            pre_delete_result = None
-            if self.pre_delete_callback:
-                pre_delete_result = self.pre_delete_callback(
-                    *self.pre_delete_args
-                )
             logger.info(
                 'Removing {} stale records for model: {}'.format(
                     len(stale_ids), self.model_class.__bases__[0].__name__,
                 )
             )
             delete_qset.delete()
-            if self.post_delete_callback:
-                self.post_delete_callback(pre_delete_result)
 
         return deleted_count
 
@@ -314,7 +213,8 @@ class Synchronizer:
         sync_job_qset = self.get_sync_job_qset().filter(success=True)
 
         if sync_job_qset.count() > 1 and not self.full:
-            last_sync_job_time = sync_job_qset.last().start_time.isoformat()
+            last_sync_job_time = sync_job_qset.last().start_time.strftime(
+                '%Y-%m-%dT%H:%M:%S.%fZ')
             self.api_conditions.append(
                 "lastActivityDate,{0},gt".format(last_sync_job_time)
             )
@@ -362,6 +262,6 @@ class ContactSynchronizer(Synchronizer):
 
         return instance
 
-    def get_page(self, *args, **kwargs):
+    def get_page(self, next_url=None, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
-        return self.client.get_contacts(*args, **kwargs)
+        return self.client.get_contacts(next_url, *args, **kwargs)
