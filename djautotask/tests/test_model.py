@@ -70,7 +70,7 @@ class TestTimeEntry(TestCase):
     # TODO: (debug) These tests depend on the testing day, and the issue will
     # be registered. For now, it is commented out temporarily
     # for the pass of this ticket.
-    # 
+    #
     # @override_settings(TIME_ZONE='Australia/Sydney')
     # def test_get_entered_time_date_worked_australia(self):
     #
