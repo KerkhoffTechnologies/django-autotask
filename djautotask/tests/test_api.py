@@ -5,12 +5,10 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 
-from . import fixtures
 from . import mocks as mk
 
 from .. import api_rest as api
-from ..api_rest import AutotaskAPIError, AutotaskAPIClientError, \
-    AutotaskRecordNotFoundError
+from ..api_rest import AutotaskAPIError, AutotaskAPIClientError
 
 
 class TestAutotaskAPIClient(TestCase):
@@ -21,7 +19,8 @@ class TestAutotaskAPIClient(TestCase):
         self.client = api.ContactsAPIClient()  # Must use a real client as
         # AutotaskAPIClient is effectively abstract
 
-    def test_build_query_string_single(self, **kwargs):
+    def test_build_query_string_single(self):
+        kwargs = {}
         kwargs['conditions'] = [
             'IsActive,true',
         ]
@@ -30,13 +29,14 @@ class TestAutotaskAPIClient(TestCase):
             '{"filter": [{"op": "eq", "field": "IsActive", "value": "true"}'
         )
 
-    def test_build_query_string_multiple(self, **kwargs):
+    def test_build_query_string_multiple(self):
         test_datetime = timezone.datetime(2019, 6, 22, 2, 0, 0,
                                           tzinfo=timezone.utc)
 
+        kwargs = {}
         kwargs['conditions'] = [
-            'IsActive,true',
-            "lastActivityDate,{0},gt".format(test_datetime)
+            ['IsActive', 'true'],
+            ['lastActivityDate', test_datetime, 'gt']
         ]
         self.assertEqual(
             self.client.build_query_string(**kwargs),
@@ -142,6 +142,7 @@ class TestAPISettings(TestCase):
     @responses.activate
     def test_no_retry_attempts_in_400_range(self):
         client = api.ContactsAPIClient()
+        client.build_query_string(**{})
         endpoint = client._endpoint()
 
         tested_status_codes = []
@@ -160,22 +161,3 @@ class TestAPISettings(TestCase):
                 tested_status_codes.append(status_code)
 
         self.assertEqual(tested_status_codes, http_400_range)
-
-    @responses.activate
-    def test_no_retry_attempts_404(self):
-        """
-        Request should not be retried if a 404 is thrown
-        """
-        client = api.ContactsAPIClient()
-        mock_get_call, _patch = \
-            mk.service_api_get_contacts_call(fixtures.API_CONTACT)
-        endpoint = client._endpoint()
-
-        retry_counter = {'count': 0}
-        mk.get(endpoint, {}, status=404)
-
-        with self.assertRaises(AutotaskRecordNotFoundError):
-            client.fetch_resource(None, retry_counter=retry_counter)
-
-        self.assertEqual(retry_counter['count'], 1)
-        _patch.stop()

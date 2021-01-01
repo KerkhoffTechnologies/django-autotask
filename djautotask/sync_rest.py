@@ -251,7 +251,7 @@ class ContactSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions = ['IsActive,true']
+        self.api_conditions = [{'IsActive': 'true'}]
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']

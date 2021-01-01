@@ -225,8 +225,7 @@ class AutotaskAPIClient(object):
         filter_array = []
         if 'conditions' in kwargs:
             for condition in kwargs['conditions']:
-                condition_arr = condition.split(",")
-                filter_obj = self._build_filter_obj(*condition_arr)
+                filter_obj = self._build_filter_obj(*condition)
                 filter_array.append(filter_obj)
         return filter_array
 
@@ -278,7 +277,7 @@ class AutotaskAPIClient(object):
                 raise AutotaskAPIError(
                     self._prepare_error_response(response))
 
-        # PAYLOAD should be the same through the all the requests of any page
+        # QUERYSTR should be the same through the all the requests of any page
         if not self.QUERYSTR:
             self.build_query_string(**kwargs)
 
