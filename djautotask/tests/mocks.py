@@ -3,6 +3,7 @@ from atws.query import Query
 from djautotask.tests import fixtures
 import json
 import responses
+from django.core.cache import cache
 
 
 WRAPPER_QUERY_METHOD = 'atws.wrapper.Wrapper.query'
@@ -84,11 +85,12 @@ def build_batch_query(side_effect=None):
 
 def init_api_rest_connection(return_value=None):
     method_name = 'djautotask.api_rest.get_api_connection_url'
+    cache.set('zone_info_url', return_value)
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_contacts_call(return_value):
-    init_api_rest_connection(return_value='TestURL')
+    init_api_rest_connection(return_value='https://localhost/')
     method_name = 'djautotask.api_rest.ContactsAPIClient.get_contacts'
     return create_mock_call(method_name, return_value)
 

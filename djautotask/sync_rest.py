@@ -216,7 +216,7 @@ class Synchronizer:
             last_sync_job_time = sync_job_qset.last().start_time.strftime(
                 '%Y-%m-%dT%H:%M:%S.%fZ')
             self.api_conditions.append(
-                "lastActivityDate,{0},gt".format(last_sync_job_time)
+                ["lastActivityDate", last_sync_job_time, "gt"]
             )
         results = SyncResults()
         results = self.get(results)
@@ -251,7 +251,7 @@ class ContactSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions = [{'IsActive': 'true'}]
+        self.api_conditions = [['IsActive', 'true']]
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']

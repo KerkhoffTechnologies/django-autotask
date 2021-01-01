@@ -22,11 +22,12 @@ class TestAutotaskAPIClient(TestCase):
     def test_build_query_string_single(self):
         kwargs = {}
         kwargs['conditions'] = [
-            'IsActive,true',
+            ['IsActive', 'true']
         ]
+        self.client.build_query_string(**kwargs)
         self.assertEqual(
-            self.client.build_query_string(**kwargs),
-            '{"filter": [{"op": "eq", "field": "IsActive", "value": "true"}'
+            self.client.QUERYSTR,
+            '{"filter": [{"op": "eq", "field": "IsActive", "value": "true"}]}'
         )
 
     def test_build_query_string_multiple(self):
@@ -36,14 +37,14 @@ class TestAutotaskAPIClient(TestCase):
         kwargs = {}
         kwargs['conditions'] = [
             ['IsActive', 'true'],
-            ['lastActivityDate', test_datetime, 'gt']
+            ['lastActivityDate', test_datetime.strftime(
+                '%Y-%m-%dT%H:%M:%S.%fZ'), 'gt']
         ]
-        self.assertEqual(
-            self.client.build_query_string(**kwargs),
-            '{"filter": [{"op": "eq", "field": "IsActive", "value": "true"}, '
-            '{"op": "gt", "field": "lastActivityDate", '
-            '"value": "2019-06-22T02:00:00.000000Z"}]'
-        )
+        self.client.build_query_string(**kwargs)
+        str_built = '{"filter": [{"op": "eq", "field": "IsActive", "value": ' \
+                    '"true"}, {"op": "gt", "field": "lastActivityDate", ' \
+                    '"value": "2019-06-22T02:00:00.000000Z"}]}'
+        self.assertEqual(self.client.QUERYSTR, str_built)
 
     @responses.activate
     def test_request(self):
@@ -82,10 +83,9 @@ class TestFetchAPIUrl(TestCase):
         API url should be fetched to the cache after request,
         when zone info is not found in the cache
         """
-        # get api url from remote during __init__
         cache.clear()
-        api.ContactsAPIClient()
-        self.assertNotEqual(cache.get('zone_info_url'), None)
+        mk.init_api_rest_connection(return_value=self.API_URL)
+        self.assertIsNotNone(api.get_cached_url('zone_info_url'))
 
     def test_fetch_api_url_from_warm_cache(self):
         """
@@ -94,7 +94,7 @@ class TestFetchAPIUrl(TestCase):
         # get api url from cache during __init__
         cache.set('zone_info_url', 'some api url')
         api.ContactsAPIClient()
-        self.assertNotEqual(cache.get('zone_info_url'), 'some api url')
+        self.assertEqual(api.get_cached_url('zone_info_url'), 'some api url')
 
     def test_get_specific_api_connection_url(self):
         mk.init_api_rest_connection(return_value=self.API_URL)
@@ -134,7 +134,7 @@ class TestAPISettings(TestCase):
         with self.assertRaises(AutotaskAPIError):
             retry_counter = {'count': 0}
             client = api.ContactsAPIClient()
-            client.fetch_resource('localhost/some-bad-url',
+            client.fetch_resource('http://localhost/some-bad-url',
                                   retry_counter=retry_counter)
             self.assertEqual(retry_counter['count'],
                              client.request_settings['max_attempts'])
@@ -147,8 +147,6 @@ class TestAPISettings(TestCase):
 
         tested_status_codes = []
         http_400_range = list(range(400, 499))
-        # remove 404 code
-        http_400_range.pop(4)
 
         for status_code in http_400_range:
 

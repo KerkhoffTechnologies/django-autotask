@@ -563,7 +563,6 @@ class TestSyncAllCommand(TestCase):
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
-        mocks.init_api_rest_connection(return_value='TestURL')
         mocks.create_mock_call(
             'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
         mocks.create_mock_call(

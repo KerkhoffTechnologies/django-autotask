@@ -285,9 +285,7 @@ class AutotaskAPIClient(object):
             endpoint = next_url
         else:
             endpoint = self._endpoint()
-        #
-        # if not retry_counter:
-        #     retry_counter = {'count': 0}
+
         return _fetch_resource(endpoint, retry_counter=retry_counter, **kwargs)
 
     def request(self, method, endpoint_url, body=None):
