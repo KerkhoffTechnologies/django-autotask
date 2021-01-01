@@ -223,17 +223,19 @@ class AutotaskAPIClient(object):
 
     def _build_filter(self, **kwargs):
         filter_array = []
-        for condition in kwargs['conditions']:
-            condition_arr = condition.split(",")
-            filter_obj = self._build_filter_obj(*condition_arr)
-            filter_array.append(filter_obj)
+        if 'conditions' in kwargs:
+            for condition in kwargs['conditions']:
+                condition_arr = condition.split(",")
+                filter_obj = self._build_filter_obj(*condition_arr)
+                filter_array.append(filter_obj)
         return filter_array
 
     def _build_filter_obj(self, field, value, op='eq'):
         filter_obj = {"op": op, "field": field, "value": value}
         return filter_obj
 
-    def fetch_resource(self, next_url=None, *args, **kwargs):
+    def fetch_resource(self, next_url=None, retry_counter=None, *args,
+                       **kwargs):
         """
         Issue a POST request to the specified REST endpoint.
 
@@ -284,8 +286,10 @@ class AutotaskAPIClient(object):
             endpoint = next_url
         else:
             endpoint = self._endpoint()
-
-        return _fetch_resource(endpoint, retry_counter=None, **kwargs)
+        #
+        # if not retry_counter:
+        #     retry_counter = {'count': 0}
+        return _fetch_resource(endpoint, retry_counter=retry_counter, **kwargs)
 
     def request(self, method, endpoint_url, body=None):
         """

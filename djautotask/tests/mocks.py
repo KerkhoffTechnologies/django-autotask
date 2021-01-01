@@ -1,6 +1,8 @@
 from mock import patch
 from atws.query import Query
 from djautotask.tests import fixtures
+import json
+import responses
 
 
 WRAPPER_QUERY_METHOD = 'atws.wrapper.Wrapper.query'
@@ -89,3 +91,21 @@ def service_api_get_contacts_call(return_value):
     init_api_rest_connection(return_value='TestURL')
     method_name = 'djautotask.api_rest.ContactsAPIClient.get_contacts'
     return create_mock_call(method_name, return_value)
+
+
+def get(url, data, headers=None, status=200):
+    """Set up requests mock for given URL and JSON-serializable data."""
+    get_raw(url, json.dumps(data), "application/json", headers, status=status)
+
+
+def get_raw(url, data, content_type="application/octet-stream", headers=None,
+            status=200):
+    """Set up requests mock for given URL."""
+    responses.add(
+        responses.GET,
+        url,
+        body=data,
+        status=status,
+        content_type=content_type,
+        adding_headers=headers,
+    )
