@@ -111,6 +111,20 @@ class AccountTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
+@admin.register(models.Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('id', 'full_name')
+    search_fields = ('id', 'first_name', 'last_name')
+    list_filter = ('account__name', )
+
+    def full_name(self, obj):
+        return str(obj)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('account')
+
+
 @admin.register(models.DisplayColor)
 class DisplayColorAdmin(admin.ModelAdmin):
     list_display = ('id', 'label', 'is_active')

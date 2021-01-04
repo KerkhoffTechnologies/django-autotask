@@ -5,6 +5,8 @@ from xml.sax._exceptions import SAXParseException
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import gettext_lazy as _
 from djautotask import sync, api
+from djautotask import sync_rest as syncrest
+from djautotask import api_rest as apirest
 
 OPTION_NAME = 'autotask_object'
 ERROR_MESSAGE_TEMPLATE = 'Failed to sync {}. Autotask API returned an ' \
@@ -113,6 +115,7 @@ class Command(BaseCommand):
             ('ticket_udf', sync.TicketUDFSynchronizer, _('Ticket UDF')),
             ('task_udf', sync.TaskUDFSynchronizer, _('Task UDF')),
             ('project_udf', sync.ProjectUDFSynchronizer, _('Project UDF')),
+            ('contact', syncrest.ContactSynchronizer, _('Contact')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
@@ -183,6 +186,9 @@ class Command(BaseCommand):
             except SAXParseException as e:
                 error_msg = 'Failed to connect to Autotask API. ' \
                       'The error was: {}'.format(e)
+
+            except apirest.AutotaskAPIError as e:
+                error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
 
             finally:
                 if error_msg:

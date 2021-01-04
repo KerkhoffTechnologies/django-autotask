@@ -8,6 +8,124 @@ from djautotask import sync
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
 
+from djautotask import sync_rest as syncrest
+
+
+class AssertSyncMixin:
+
+    def assert_sync_job(self):
+        qset = \
+            models.SyncJob.objects.filter(
+                entity_name=self.model_class.__bases__[0].__name__
+            )
+        assert qset.exists()
+
+
+class SynchronizerRestTestMixin(AssertSyncMixin):
+    synchronizer_class = None
+    model_class = None
+    fixture = None
+
+    def call_api(self, return_data):
+        raise NotImplementedError
+
+    def _assert_fields(self, instance, json_data):
+        raise NotImplementedError
+
+    def _sync(self, return_data):
+        _, get_patch = self.call_api(return_data)
+        self.synchronizer = self.synchronizer_class()
+        self.synchronizer.sync()
+        return _, get_patch
+
+    def _sync_with_results(self, return_data):
+        _, get_patch = self.call_api(return_data)
+        self.synchronizer = self.synchronizer_class()
+        self.synchronizer.sync()
+        return self.synchronizer.sync()
+
+    def test_sync(self):
+        self._sync(self.fixture)
+        instance_dict = {c['id']: c for c in self.fixture["items"]}
+
+        for instance in self.model_class.objects.all():
+            json_data = instance_dict[instance.id]
+            self._assert_fields(instance, json_data)
+
+        self.assert_sync_job()
+
+    def test_sync_update(self):
+        raise NotImplementedError()
+
+    def test_sync_skips(self):
+        raise NotImplementedError()
+
+
+class TestContactSynchronizer(TestCase, SynchronizerRestTestMixin):
+    synchronizer_class = syncrest.ContactSynchronizer
+    model_class = models.ContactTracker
+    fixture = fixtures.API_CONTACT
+
+    def setUp(self):
+        super().setUp()
+        # fixture_utils.init_account_types()
+        mocks.init_api_connection(Wrapper)
+        fixture_utils.init_accounts()
+
+    def call_api(self, return_data):
+        return mocks.service_api_get_contacts_call(return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.first_name, json_data['firstName'])
+        self.assertEqual(instance.last_name, json_data['lastName'])
+        self.assertEqual(instance.email_address, json_data['emailAddress'])
+        self.assertEqual(instance.account_id, json_data['companyID'])
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture["items"][0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        name = 'Some New Name'
+        new_json = deepcopy(self.fixture["items"][0])
+        new_json['firstName'] = name
+        new_json_list = [new_json]
+
+        return_value = {
+            "items": new_json_list,
+            "pageDetails": fixtures.API_PAGE_DETAILS
+        }
+        self._sync(return_value)
+
+        changed = self.model_class.objects.get(id=instance_id)
+
+        self.assertNotEqual(original.first_name, name)
+        self._assert_fields(changed, new_json)
+
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        name = 'Some New Name'
+        new_json = deepcopy(self.fixture["items"][0])
+        new_json['firstName'] = name
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        return_value = {
+            "items": new_json_list,
+            "pageDetails": fixtures.API_PAGE_DETAILS
+        }
+        self._sync(return_value)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(return_value)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
 
 class TestAssignNullRelationMixin:
     def test_sync_assigns_null_relation(self):

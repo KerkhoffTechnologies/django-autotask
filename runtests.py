@@ -26,6 +26,9 @@ settings.configure(
     AUTOTASK_CREDENTIALS={
         'username': '',
         'password': '',
+        'integration_code': '',
+        'rest_api_version': '',
+        'server_url': '',
     },
     DATABASES={
         'default': {

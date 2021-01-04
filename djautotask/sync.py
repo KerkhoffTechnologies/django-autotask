@@ -34,6 +34,7 @@ def log_sync_job(f):
         sync_job = models.SyncJob()
         sync_job.start_time = timezone.now()
         sync_job.entity_name = sync_instance.model_class.__bases__[0].__name__
+        sync_job.synchronizer_class = sync_instance.__class__.__name__
 
         if sync_instance.full:
             sync_job.sync_type = 'full'

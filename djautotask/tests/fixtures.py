@@ -938,3 +938,27 @@ API_UDF_LIST = [
     },
 
 ]
+
+API_PAGE_DETAILS = {
+        "count": 1,
+        "requestCount": 500,
+        "prevPageUrl": None,
+        "nextPageUrl": None
+    }
+
+API_CONTACT_ITEMS = [
+        {
+            "id": 29683589,
+            "companyID": 174,
+            "emailAddress": "",
+            "firstName": "Mary",
+            "isActive": 1,
+            "lastActivityDate": "2012-05-25T15:14:29.033Z",
+            "lastModifiedDate": "2015-06-10T13:22:29.877Z",
+            "lastName": "Smith",
+        }
+    ]
+API_CONTACT = {
+    "items": API_CONTACT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
