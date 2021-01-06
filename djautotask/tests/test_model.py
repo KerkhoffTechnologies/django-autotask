@@ -4,6 +4,8 @@ from django.test import override_settings
 from datetime import timedelta
 from atws.wrapper import Wrapper
 import pytz
+from freezegun import freeze_time
+
 from djautotask.tests import mocks
 from djautotask.models import TimeEntry, OFFSET_TIMEZONE
 
@@ -38,6 +40,7 @@ class TestTimeEntry(TestCase):
         midnight_est = timezone.localtime(
             timezone=pytz.timezone(OFFSET_TIMEZONE)
         ).replace(
+            year=local_midnight.year,
             month=local_midnight.month, day=local_midnight.day,
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -51,10 +54,6 @@ class TestTimeEntry(TestCase):
         local_midnight_utc = local_midnight.astimezone(pytz.utc)
         self.assertEqual(time_entry.get_entered_time(), local_midnight_utc)
 
-    # TODO: (debug) These tests depend on the testing day, and the issue will
-    # be registered. For now, it is commented out temporarily
-    # for the pass of this ticket.
-    #
     @override_settings(TIME_ZONE='America/Vancouver')
     def test_get_entered_time_date_worked_pst(self):
 
@@ -71,6 +70,8 @@ class TestTimeEntry(TestCase):
 
         self.assert_get_entered_time_date_worked(local_midnight)
 
+    # This is a test for specific time, new year eve
+    # @freeze_time("2020-12-31 15:00:00")
     @override_settings(TIME_ZONE='Australia/Sydney')
     def test_get_entered_time_date_worked_australia(self):
 
