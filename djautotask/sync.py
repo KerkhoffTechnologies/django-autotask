@@ -661,7 +661,6 @@ class TicketSynchronizer(SyncRecordUDFMixin, QueryConditionMixin, Synchronizer,
         'AssignedResourceRoleID': (models.Role, 'assigned_resource_role'),
         'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
         'ContractID': (models.Contract, 'contract'),
-        'ContactID': (models.Contact, 'contact'),
     }
 
     def _assign_field_data(self, instance, object_data):
