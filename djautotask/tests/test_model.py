@@ -4,7 +4,6 @@ from django.test import override_settings
 from datetime import timedelta
 from atws.wrapper import Wrapper
 import pytz
-from freezegun import freeze_time
 
 from djautotask.tests import mocks
 from djautotask.models import TimeEntry, OFFSET_TIMEZONE
