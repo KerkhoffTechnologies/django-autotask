@@ -258,7 +258,12 @@ class ContactSynchronizer(Synchronizer):
         instance.first_name = json_data.get('firstName')
         instance.last_name = json_data.get('lastName')
         instance.email_address = json_data.get('emailAddress')
+        instance.email_address2 = json_data.get('emailAddress2')
+        instance.email_address3 = json_data.get('emailAddress3')
         instance.phone = json_data.get('phone')
+        instance.alternate_phone = json_data.get('alternatePhone')
+        instance.mobile_phone = json_data.get('mobilePhone')
+
         self.set_relations(instance, json_data)
 
         return instance
