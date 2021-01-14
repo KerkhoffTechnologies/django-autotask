@@ -152,7 +152,7 @@ class AvailablePicklistManager(models.Manager):
 class Picklist(TimeStampedModel):
     label = models.CharField(blank=True, null=True, max_length=50)
     is_default_value = models.BooleanField(default=False)
-    sort_order = models.PositiveSmallIntegerField(blank=True, null=True)
+    sort_order = models.PositiveIntegerField(blank=True, null=True)
     is_active = models.BooleanField(default=False)
     is_system = models.BooleanField(default=False)
 
