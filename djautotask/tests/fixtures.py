@@ -950,12 +950,17 @@ API_CONTACT_ITEMS = [
         {
             "id": 29683589,
             "companyID": 174,
-            "emailAddress": "",
+            "emailAddress": "brobertson@autotaskdemo.com",
+            "emailAddress2": "brobertson2@autotaskdemo.com",
+            "emailAddress3": "brobertson3@autotaskdemo.com",
             "firstName": "Mary",
             "isActive": 1,
             "lastActivityDate": "2012-05-25T15:14:29.033Z",
             "lastModifiedDate": "2015-06-10T13:22:29.877Z",
             "lastName": "Smith",
+            "phone": "551-555-5513",
+            "alternatePhone": "551-555-5522",
+            "mobilePhone": "551-555-3502",
         }
     ]
 API_CONTACT = {

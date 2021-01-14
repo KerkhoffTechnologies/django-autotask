@@ -380,6 +380,11 @@ class Contact(TimeStampedModel):
     first_name = models.CharField(blank=True, null=True, max_length=20)
     last_name = models.CharField(blank=True, null=True, max_length=20)
     email_address = models.CharField(blank=True, null=True, max_length=50)
+    email_address2 = models.CharField(blank=True, null=True, max_length=50)
+    email_address3 = models.CharField(blank=True, null=True, max_length=50)
+    phone = models.CharField(blank=True, null=True, max_length=25)
+    alternate_phone = models.CharField(blank=True, null=True, max_length=32)
+    mobile_phone = models.CharField(blank=True, null=True, max_length=25)
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )

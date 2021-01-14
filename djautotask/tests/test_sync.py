@@ -80,7 +80,12 @@ class TestContactSynchronizer(TestCase, SynchronizerRestTestMixin):
         self.assertEqual(instance.first_name, json_data['firstName'])
         self.assertEqual(instance.last_name, json_data['lastName'])
         self.assertEqual(instance.email_address, json_data['emailAddress'])
+        self.assertEqual(instance.email_address2, json_data['emailAddress2'])
+        self.assertEqual(instance.email_address3, json_data['emailAddress3'])
         self.assertEqual(instance.account_id, json_data['companyID'])
+        self.assertEqual(instance.phone, json_data['phone'])
+        self.assertEqual(instance.alternate_phone, json_data['alternatePhone'])
+        self.assertEqual(instance.mobile_phone, json_data['mobilePhone'])
 
     def test_sync_update(self):
         self._sync(self.fixture)
