@@ -249,6 +249,7 @@ class NoteType(Picklist):
     # Workflow Rule Note - Task is an Autotask system note type that cannot
     # be edited or deactivated.
     WORKFLOW_RULE_NOTE_ID = 13
+    RMM_NOTE = 99
 
 
 class TaskTypeLink(Picklist):
