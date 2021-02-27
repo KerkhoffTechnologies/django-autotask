@@ -27,17 +27,22 @@ class SyncJob(models.Model):
 
 class ResourceAssignableModel:
 
-    def update_resource(self):
+    def update_resource(self, extra=None):
         """
         Send assigned resource updates to Autotask
         """
-        return self.update_at(data={
-            'AssignedResourceID': self.assigned_resource.id
-            if self.assigned_resource else None,
+        data = {
+            'AssignedResourceID':
+                self.assigned_resource.id
+                if self.assigned_resource else None,
 
-            'AssignedResourceRoleID': self.assigned_resource_role.id
-            if self.assigned_resource_role else None
-        })
+            'AssignedResourceRoleID':
+                self.assigned_resource_role.id
+                if self.assigned_resource_role else None
+        }
+        if extra:
+            data.update(extra)
+        return self.update_at(data)
 
 
 class Ticket(TimeStampedModel, ResourceAssignableModel):
