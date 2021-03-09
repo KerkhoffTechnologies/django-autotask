@@ -654,7 +654,7 @@ class TimeEntry(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = 'Time entries'
-        ordering = ('-start_date_time', '-date_worked', 'id')
+        ordering = ('-start_date_time', '-date_worked', '-id')
 
     def __str__(self):
         return str(self.id) or ''
