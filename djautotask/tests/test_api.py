@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 
-from . import mocks as mk
+from kanban.board.tests import mocks as mk
 
 from .. import api_rest as api
 from ..api_rest import AutotaskAPIError, AutotaskAPIClientError

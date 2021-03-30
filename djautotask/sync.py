@@ -444,6 +444,12 @@ class PicklistSynchronizer(Synchronizer):
                     self.picklist_field, e
                 )
             )
+        except IndexError as e:
+            logger.warning(
+                'Failed to find PicklistValues index at {}. {}'.format(
+                    self.picklist_field, e
+                )
+            )
 
         if picklist_objects:
             logger.info(
