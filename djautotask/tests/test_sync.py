@@ -1,14 +1,15 @@
+from datetime import datetime
+from dateutil.parser import parse
+
 from django.test import TestCase
 from atws.wrapper import Wrapper
 
 import random
 from copy import deepcopy
 from djautotask import models
-from djautotask import sync
+from djautotask import sync, sync_rest
 from djautotask.utils import DjautotaskSettings
 from djautotask.tests import fixtures, mocks, fixture_utils
-
-from djautotask import sync_rest as syncrest
 
 
 class AssertSyncMixin:
@@ -41,7 +42,6 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
     def _sync_with_results(self, return_data):
         _, get_patch = self.call_api(return_data)
         self.synchronizer = self.synchronizer_class()
-        self.synchronizer.sync()
         return self.synchronizer.sync()
 
     def test_sync(self):
@@ -55,16 +55,55 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         self.assert_sync_job()
 
     def test_sync_update(self):
-        raise NotImplementedError()
+        self._sync(self.fixture)
+
+        json_data = self.fixture["items"][0]
+
+        instance_id = json_data['id']
+        original = self.model_class.objects.get(id=instance_id)
+
+        new_val = 'Some New Value'
+        new_json = deepcopy(self.fixture["items"][0])
+        new_json[self.update_field] = new_val
+        new_json_list = [new_json]
+
+        return_value = {
+            "items": new_json_list,
+            "pageDetails": fixtures.API_PAGE_DETAILS
+        }
+        self._sync(return_value)
+
+        changed = self.model_class.objects.get(id=instance_id)
+
+        self.assertNotEqual(getattr(original, self.update_field), new_val)
+        self._assert_fields(changed, new_json)
 
     def test_sync_skips(self):
-        raise NotImplementedError()
+        self._sync(self.fixture)
+
+        new_val = 'Some New Value'
+        new_json = deepcopy(self.fixture["items"][0])
+        new_json[self.update_field] = new_val
+        new_json_list = [new_json]
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        return_value = {
+            "items": new_json_list,
+            "pageDetails": fixtures.API_PAGE_DETAILS
+        }
+        self._sync(return_value)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(return_value)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
 
 
-class TestContactSynchronizer(TestCase, SynchronizerRestTestMixin):
-    synchronizer_class = syncrest.ContactSynchronizer
+class TestContactSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.ContactSynchronizer
     model_class = models.ContactTracker
     fixture = fixtures.API_CONTACT
+    update_field = 'phone'
 
     def setUp(self):
         super().setUp()
@@ -87,50 +126,6 @@ class TestContactSynchronizer(TestCase, SynchronizerRestTestMixin):
         self.assertEqual(instance.alternate_phone, json_data['alternatePhone'])
         self.assertEqual(instance.mobile_phone, json_data['mobilePhone'])
 
-    def test_sync_update(self):
-        self._sync(self.fixture)
-
-        json_data = self.fixture["items"][0]
-
-        instance_id = json_data['id']
-        original = self.model_class.objects.get(id=instance_id)
-
-        name = 'Some New Name'
-        new_json = deepcopy(self.fixture["items"][0])
-        new_json['firstName'] = name
-        new_json_list = [new_json]
-
-        return_value = {
-            "items": new_json_list,
-            "pageDetails": fixtures.API_PAGE_DETAILS
-        }
-        self._sync(return_value)
-
-        changed = self.model_class.objects.get(id=instance_id)
-
-        self.assertNotEqual(original.first_name, name)
-        self._assert_fields(changed, new_json)
-
-    def test_sync_skips(self):
-        self._sync(self.fixture)
-
-        name = 'Some New Name'
-        new_json = deepcopy(self.fixture["items"][0])
-        new_json['firstName'] = name
-        new_json_list = [new_json]
-
-        # Sync it twice to be sure that the data will be updated, then ignored
-        return_value = {
-            "items": new_json_list,
-            "pageDetails": fixtures.API_PAGE_DETAILS
-        }
-        self._sync(return_value)
-        _, updated_count, skipped_count, _ = \
-            self._sync_with_results(return_value)
-
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
-
 
 class TestAssignNullRelationMixin:
     def test_sync_assigns_null_relation(self):
@@ -142,7 +137,12 @@ class TestAssignNullRelationMixin:
         fixture_instance = deepcopy(
             getattr(fixtures, 'API_{}'.format(model_type.upper()))
         )
-        fixture_instance.pop('AssignedResourceID')
+        try:
+            # Task using SOAP API
+            fixture_instance.pop(self.assign_null_relation_field)
+        except KeyError:
+            # Ticket using REST API
+            fixture_instance.items[0].pop(self.assign_null_relation_field)
 
         object_instance = fixture_utils.generate_objects(
             model_type, [fixture_instance]
@@ -299,37 +299,43 @@ class TestTaskNoteSynchronizer(SynchronizerTestMixin, TestCase):
 
 
 class TestTicketSynchronizer(
-        TestAssignNullRelationMixin, SynchronizerTestMixin, TestCase):
+        TestAssignNullRelationMixin, SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.TicketSynchronizer
     model_class = models.TicketTracker
     fixture = fixtures.API_TICKET
-    sync_class = sync.TicketSynchronizer
-    update_field = 'Title'
+    update_field = 'title'
+    assign_null_relation_field = 'assignedResourceID'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = self.sync_class()
+        mocks.init_api_rest_connection(return_value='https://localhost/')
 
         fixture_utils.init_contracts()
         fixture_utils.init_statuses()
         fixture_utils.init_resources()
-        fixture_utils.init_tickets()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def call_api(self, return_data):
+        return mocks.service_api_get_tickets_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.title, object_data['Title'])
-        self.assertEqual(instance.ticket_number, object_data['TicketNumber'])
-        self.assertEqual(instance.completed_date, object_data['CompletedDate'])
-        self.assertEqual(instance.create_date, object_data['CreateDate'])
-        self.assertEqual(instance.description, object_data['Description'])
-        self.assertEqual(instance.due_date_time, object_data['DueDateTime'])
+        self.assertEqual(instance.title, object_data['title'])
+        self.assertEqual(instance.ticket_number, object_data['ticketNumber'])
+        self.assertEqual(instance.completed_date,
+                         parse(object_data['completedDate']))
+        self.assertEqual(instance.create_date, parse(object_data['createDate']))
+        self.assertEqual(instance.description, object_data['description'])
+        self.assertEqual(instance.due_date_time,
+                         parse(object_data['dueDateTime']))
         self.assertEqual(instance.estimated_hours,
-                         object_data['EstimatedHours'])
+                         object_data['estimatedHours'])
         self.assertEqual(instance.last_activity_date,
-                         object_data['LastActivityDate'])
-        self.assertEqual(instance.status.id, object_data['Status'])
+                         parse(object_data['lastActivityDate']))
+        self.assertEqual(instance.status.id, object_data['status'])
         self.assertEqual(instance.assigned_resource.id,
-                         object_data['AssignedResourceID'])
-        self.assertEqual(instance.contract.id, object_data['ContractID'])
+                         object_data['assignedResourceID'])
+        self.assertEqual(instance.contract.id, object_data['contractID'])
 
     def test_sync_ticket(self):
         """
@@ -337,33 +343,32 @@ class TestTicketSynchronizer(
         """
         self.assertGreater(models.Ticket.objects.all().count(), 0)
 
-        object_data = fixtures.API_TICKET
+        object_data = self.fixture["items"][0]
         instance = models.Ticket.objects.get(id=object_data['id'])
 
-        self._assert_sync(instance, object_data)
+        self._assert_fields(instance, object_data)
         self.assert_sync_job()
 
     def test_delete_stale_tickets(self):
         """
         Local ticket should be deleted if not returned during a full sync
         """
-        ticket_id = fixtures.API_TICKET['id']
+        ticket_id = self.fixture["items"][0]['id']
         ticket_qset = models.Ticket.objects.filter(id=ticket_id)
         self.assertEqual(ticket_qset.count(), 1)
 
-        mocks.api_query_call([])
+        _, patch = mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
 
-        synchronizer = sync.TicketSynchronizer(full=True)
+        synchronizer = sync_rest.TicketSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(ticket_qset.count(), 0)
+        patch.stop()
 
     def test_fetch_sync_by_id(self):
-        test_instance = fixture_utils.generate_objects(
-            'Ticket', fixtures.API_TICKET_LIST)
-        _, patch = mocks.create_mock_call(
-            mocks.WRAPPER_QUERY_METHOD, test_instance)
-        result = self.synchronizer.fetch_sync_by_id(fixtures.API_TICKET['id'])
-        self._assert_sync(result, fixtures.API_TICKET)
+        _, patch = mocks.service_api_get_ticket_call(self.fixture)
+        result = self.synchronizer.fetch_sync_by_id(
+            self.fixture["items"][0]['id'])
+        self._assert_fields(result, self.fixture["items"][0])
         patch.stop()
 
     def test_sync_ticket_related_records(self):
@@ -967,6 +972,7 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
     sync_class = sync.TaskSynchronizer
     fixture = fixtures.API_TASK
     update_field = "Title"
+    assign_null_relation_field = 'AssignedResourceID'
 
     def setUp(self):
         super().setUp()

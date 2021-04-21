@@ -90,8 +90,17 @@ def init_api_rest_connection(return_value=None):
 
 
 def service_api_get_contacts_call(return_value):
-    init_api_rest_connection(return_value='https://localhost/')
     method_name = 'djautotask.api_rest.ContactsAPIClient.get_contacts'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_tickets_call(return_value):
+    method_name = 'djautotask.api_rest.TicketsAPIClient.get_tickets'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_ticket_call(return_value):
+    method_name = 'djautotask.api_rest.TicketsAPIClient.get_ticket'
     return create_mock_call(method_name, return_value)
 
 

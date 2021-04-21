@@ -152,19 +152,16 @@ class AbstractPicklistSyncCommandTest(AbstractBaseSyncTest):
         return mocks.api_picklist_call
 
 
-class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncTicketCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_TICKET_LIST,
+        mocks.service_api_get_tickets_call,
+        fixtures.API_TICKET,
         'ticket',
     )
 
     def setUp(self):
         super().setUp()
-        # We can't test if query conditions actualy return the correct objects
-        # so mock any Synchronizers with custom query conditions.
-        mocks.create_mock_call(
-            'djautotask.sync.TicketSynchronizer._get_query_conditions', None)
-        fixture_utils.init_statuses()
+        fixture_utils.init_tickets()
 
 
 class TestSyncStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
@@ -655,7 +652,8 @@ class TestSyncAllCommand(TestCase):
             self.assertIn(summary, output.getvalue().strip())
 
         self.assertEqual(
-            models.Ticket.objects.all().count(), len(fixtures.API_TICKET_LIST)
+            models.Ticket.objects.all().count(),
+            len(fixtures.API_TICKET['itmes'])
         )
 
     def test_full_sync(self):

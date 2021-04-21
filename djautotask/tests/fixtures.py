@@ -507,55 +507,6 @@ API_SERVICE_CALL_STATUS_LIST = [
     },
 ]
 
-API_TICKET = {
-    'AccountID': 29683561,
-    'AllocationCodeID': 29683407,
-    'AssignedResourceID': 29683794,
-    'AssignedResourceRoleID': 29683396,
-    'ChangeInfoField1': '',
-    'ChangeInfoField2': '',
-    'ChangeInfoField3': '',
-    'ChangeInfoField4': '',
-    'ChangeInfoField5': '',
-    'CompletedByResourceID': 29682885,
-    'CompletedDate':
-        datetime(2019, 9, 5, 8, 23, tzinfo=tzoffset(None, 3600)),
-    'ContactID': 29683586,
-    'ContractID': 29684183,
-    'CreateDate':
-        datetime(2019, 8, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
-    'CreatorResourceID': 4,
-    'CreatorType': 1,
-    'Description': 'Monthy Services Checkup',
-    'DueDateTime':
-        datetime(2012, 9, 7, 1, 0, tzinfo=tzoffset(None, 3600)),
-    'EstimatedHours': 2.0,
-    'ExternalID': '',
-    'FirstResponseDateTime':
-        datetime(2012, 6, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
-    'HoursToBeScheduled': 0.0,
-    'IssueType': 10,
-    'LastActivityDate':
-        datetime(2019, 9, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'LastActivityPersonType': 1,
-    'LastActivityResourceID': 4,
-    'Priority': 3,
-    'PurchaseOrderNumber': '',
-    'QueueID': 29682833,
-    'Resolution': '',
-    'Source': 6,
-    'Status': 10,
-    'SubIssueType': 136,
-    'TicketCategory': 3,
-    'TicketNumber': 'T20120604.0002.005',
-    'TicketType': 1,
-    'Title': 'Monthy Services Checkup*',
-    'UserDefinedFields': {},
-    'id': 7688
-}
-
-API_TICKET_LIST = [API_TICKET]
-
 API_PHASE = {
     'EstimatedHours': 23.0,
     'StartDate': datetime(2012, 8, 27, 5, 0, tzinfo=tzoffset(None, 3600)),
@@ -946,24 +897,84 @@ API_PAGE_DETAILS = {
         "nextPageUrl": None
     }
 
+API_EMPTY = {
+    "items": [],
+    "pageDetails": {
+        "count": 0,
+        "requestCount": 500,
+        "prevPageUrl": None,
+        "nextPageUrl": None
+    }
+}
+
 API_CONTACT_ITEMS = [
-        {
-            "id": 29683589,
-            "companyID": 174,
-            "emailAddress": "brobertson@autotaskdemo.com",
-            "emailAddress2": "brobertson2@autotaskdemo.com",
-            "emailAddress3": "brobertson3@autotaskdemo.com",
-            "firstName": "Mary",
-            "isActive": 1,
-            "lastActivityDate": "2012-05-25T15:14:29.033Z",
-            "lastModifiedDate": "2015-06-10T13:22:29.877Z",
-            "lastName": "Smith",
-            "phone": "551-555-5513",
-            "alternatePhone": "551-555-5522",
-            "mobilePhone": "551-555-3502",
-        }
-    ]
+    {
+        "id": 29683589,
+        "companyID": 174,
+        "emailAddress": "brobertson@autotaskdemo.com",
+        "emailAddress2": "brobertson2@autotaskdemo.com",
+        "emailAddress3": "brobertson3@autotaskdemo.com",
+        "firstName": "Mary",
+        "isActive": 1,
+        "lastActivityDate": "2012-05-25T15:14:29.033Z",
+        "lastModifiedDate": "2015-06-10T13:22:29.877Z",
+        "lastName": "Smith",
+        "phone": "551-555-5513",
+        "alternatePhone": "551-555-5522",
+        "mobilePhone": "551-555-3502",
+    }
+]
 API_CONTACT = {
     "items": API_CONTACT_ITEMS,
     "pageDetails": API_PAGE_DETAILS
 }
+
+API_TICKET_ITEMS = [
+    {
+        'companyID': 29683561,
+        'billingCodeID': 29683407,
+        'assignedResourceID': 29683794,
+        'assignedResourceRoleID': 29683396,
+        'changeInfoField1': '',
+        'changeInfoField2': '',
+        'changeInfoField3': '',
+        'changeInfoField4': '',
+        'changeInfoField5': '',
+        'completedByResourceID': 29682885,
+        'completedDate': '2019-09-05T08:23:00.000Z',
+        'contactID': 29683586,
+        'contractID': 29684183,
+        'createDate': '2019-08-18T01:00:00.000Z',
+        'creatorResourceID': 4,
+        'creatorType': 1,
+        'description': 'Monthy Services Checkup',
+        'dueDateTime': '2012-09-07T01:00:00.000Z',
+        'estimatedHours': 2.0,
+        'externalID': '',
+        'firstResponseDateTime': '2012-06-18T01:00:00.000Z',
+        'hoursToBeScheduled': 0.0,
+        'issueType': 10,
+        'lastActivityDate': '2019-09-23T11:00:00.000Z',
+        'lastActivityPersonType': 1,
+        'lastActivityResourceID': 4,
+        'priority': 3,
+        'purchaseOrderNumber': '',
+        'queueID': 29682833,
+        'resolution': '',
+        'source': 6,
+        'status': 10,
+        'subIssueType': 136,
+        'ticketCategory': 3,
+        'ticketNumber': 'T20120604.0002.005',
+        'ticketType': 1,
+        'title': 'Monthy Services Checkup*',
+        'userDefinedFields': {},
+        'id': 7688
+    }
+]
+API_TICKET = {
+    "items": API_TICKET_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
+
+API_TICKET_LIST = API_TICKET

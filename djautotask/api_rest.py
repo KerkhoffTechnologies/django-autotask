@@ -227,6 +227,21 @@ class AutotaskAPIClient(object):
             for condition in kwargs['conditions']:
                 filter_obj = self._build_filter_obj(*condition)
                 filter_array.append(filter_obj)
+        elif 'or_items' in kwargs:
+            sub_kwargs = {'conditions': kwargs['or_items']}
+            filter_obj = {
+                "op": "or",
+                "items": self._build_filter(**sub_kwargs)
+            }
+            filter_array.append(filter_obj)
+        elif 'and_items' in kwargs:
+            sub_kwargs = {'conditions': kwargs['or_items']}
+            filter_obj = {
+                "op": "and",
+                "items": self._build_filter(**sub_kwargs)
+            }
+            filter_array.append(filter_obj)
+
         return filter_array
 
     def _build_filter_obj(self, field, value, op='eq'):
@@ -236,8 +251,6 @@ class AutotaskAPIClient(object):
     def fetch_resource(self, next_url=None, retry_counter=None, *args,
                        **kwargs):
         """
-        Issue a POST request to the specified REST endpoint.
-
         retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
         """
@@ -335,7 +348,18 @@ class AutotaskAPIClient(object):
 
 
 class ContactsAPIClient(AutotaskAPIClient):
-    API = 'contacts'
+    API = 'Contacts'
 
     def get_contacts(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+
+class TicketsAPIClient(AutotaskAPIClient):
+    API = 'Tickets'
+
+    def get_ticket(self, ticket_id):
+        endpoint_url = '{}/{}'.format(self.API, ticket_id)
+        return self.fetch_resource(endpoint_url)
+
+    def get_tickets(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
