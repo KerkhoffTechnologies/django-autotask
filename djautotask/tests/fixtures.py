@@ -976,5 +976,3 @@ API_TICKET = {
     "items": API_TICKET_ITEMS,
     "pageDetails": API_PAGE_DETAILS
 }
-
-API_TICKET_LIST = API_TICKET

@@ -1,4 +1,3 @@
-from datetime import datetime
 from dateutil.parser import parse
 
 from django.test import TestCase
@@ -27,20 +26,20 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
     model_class = None
     fixture = None
 
-    def call_api(self, return_data):
+    def _call_api(self, return_data):
         raise NotImplementedError
 
     def _assert_fields(self, instance, json_data):
         raise NotImplementedError
 
     def _sync(self, return_data):
-        _, get_patch = self.call_api(return_data)
+        _, get_patch = self._call_api(return_data)
         self.synchronizer = self.synchronizer_class()
         self.synchronizer.sync()
         return _, get_patch
 
     def _sync_with_results(self, return_data):
-        _, get_patch = self.call_api(return_data)
+        _, get_patch = self._call_api(return_data)
         self.synchronizer = self.synchronizer_class()
         return self.synchronizer.sync()
 
@@ -107,11 +106,9 @@ class TestContactSynchronizer(SynchronizerRestTestMixin, TestCase):
 
     def setUp(self):
         super().setUp()
-        # fixture_utils.init_account_types()
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_accounts()
 
-    def call_api(self, return_data):
+    def _call_api(self, return_data):
         return mocks.service_api_get_contacts_call(return_data)
 
     def _assert_fields(self, instance, json_data):
@@ -137,20 +134,22 @@ class TestAssignNullRelationMixin:
         fixture_instance = deepcopy(
             getattr(fixtures, 'API_{}'.format(model_type.upper()))
         )
+
         try:
             # Task using SOAP API
             fixture_instance.pop(self.assign_null_relation_field)
+            object_instance = fixture_utils.generate_objects(
+                model_type, [fixture_instance]
+            )
+            _, patch = mocks.create_mock_call(
+                mocks.WRAPPER_QUERY_METHOD, object_instance
+            )
         except KeyError:
             # Ticket using REST API
-            fixture_instance.items[0].pop(self.assign_null_relation_field)
+            fixture_instance['items'][0].pop(self.assign_null_relation_field)
+            _, patch = mocks.service_api_get_tickets_call(fixture_instance)
 
-        object_instance = fixture_utils.generate_objects(
-            model_type, [fixture_instance]
-        )
-        _, patch = mocks.create_mock_call(
-            mocks.WRAPPER_QUERY_METHOD, object_instance
-        )
-        synchronizer = self.sync_class(full=True)
+        synchronizer = self.synchronizer_class(full=True)
         synchronizer.sync()
 
         model_object = self.model_class.objects.get(id=model_object.id)
@@ -299,7 +298,7 @@ class TestTaskNoteSynchronizer(SynchronizerTestMixin, TestCase):
 
 
 class TestTicketSynchronizer(
-        TestAssignNullRelationMixin, SynchronizerRestTestMixin, TestCase):
+        SynchronizerRestTestMixin, TestAssignNullRelationMixin, TestCase):
     synchronizer_class = sync_rest.TicketSynchronizer
     model_class = models.TicketTracker
     fixture = fixtures.API_TICKET
@@ -308,14 +307,12 @@ class TestTicketSynchronizer(
 
     def setUp(self):
         super().setUp()
-        mocks.init_api_rest_connection(return_value='https://localhost/')
-
         fixture_utils.init_contracts()
         fixture_utils.init_statuses()
         fixture_utils.init_resources()
         self._sync(self.fixture)
 
-    def call_api(self, return_data):
+    def _call_api(self, return_data):
         return mocks.service_api_get_tickets_call(return_data)
 
     def _assert_fields(self, instance, object_data):
@@ -324,7 +321,8 @@ class TestTicketSynchronizer(
         self.assertEqual(instance.ticket_number, object_data['ticketNumber'])
         self.assertEqual(instance.completed_date,
                          parse(object_data['completedDate']))
-        self.assertEqual(instance.create_date, parse(object_data['createDate']))
+        self.assertEqual(instance.create_date,
+                         parse(object_data['createDate']))
         self.assertEqual(instance.description, object_data['description'])
         self.assertEqual(instance.due_date_time,
                          parse(object_data['dueDateTime']))
@@ -969,7 +967,7 @@ class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerTestMixin,
 class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
                            FilterProjectTestCase):
     model_class = models.TaskTracker
-    sync_class = sync.TaskSynchronizer
+    synchronizer_class = sync.TaskSynchronizer
     fixture = fixtures.API_TASK
     update_field = "Title"
     assign_null_relation_field = 'AssignedResourceID'
@@ -977,7 +975,7 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
-        self.synchronizer = self.sync_class()
+        self.synchronizer = self.synchronizer_class()
         fixture_utils.init_resources()
         fixture_utils.init_statuses()
         fixture_utils.init_priorities()

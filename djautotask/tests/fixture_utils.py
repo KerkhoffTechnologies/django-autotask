@@ -2,7 +2,7 @@ from suds.client import Client
 from atws.wrapper import QueryCursor
 from atws import helpers
 from xml.etree import ElementTree
-from djautotask import sync, sync_rest
+from djautotask import sync
 from djautotask.tests import mocks, fixtures
 from pathlib import Path
 

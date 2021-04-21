@@ -573,7 +573,10 @@ class TestSyncAllCommand(TestCase):
         mocks.create_mock_call(
             'djautotask.sync.QueryConditionMixin._get_query_conditions', None)
         fixture_utils.mock_udfs()
+
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
+        mocks.service_api_get_tickets_call(fixtures.API_TICKET)
+
         # Mock API calls to return values based on what entity
         # is being requested
         mocks.get_field_info_api_calls(
@@ -653,7 +656,7 @@ class TestSyncAllCommand(TestCase):
 
         self.assertEqual(
             models.Ticket.objects.all().count(),
-            len(fixtures.API_TICKET['itmes'])
+            len(fixtures.API_TICKET['items'])
         )
 
     def test_full_sync(self):
@@ -710,10 +713,8 @@ class TestSyncAllCommand(TestCase):
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
-        mocks.service_api_get_contacts_call({
-                "items": [],
-                "pageDetails": fixtures.API_PAGE_DETAILS
-            })
+        mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
+        mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
 
         output = run_sync_command(full_option=True)
 
