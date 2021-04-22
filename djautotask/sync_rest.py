@@ -148,7 +148,7 @@ class Synchronizer:
     def fetch_sync_by_id(self, instance_id):
         api_instance = self.get_single(instance_id)
         instance, created = \
-            self.update_or_create_instance(api_instance['items'][0])
+            self.update_or_create_instance(api_instance['item'])
         return instance
 
     def update_or_create_instance(self, api_instance):
@@ -404,7 +404,7 @@ class TicketSynchronizer(SyncRecordUDFMixin, Synchronizer, ParentSynchronizer):
 
     def fetch_sync_by_id(self, instance_id):
         instance = super().fetch_sync_by_id(instance_id)
-        if instance.completed_date > parse(self.completed_date):
+        if instance.status.id != models.Status.COMPLETE_ID:
             self.sync_related(instance)
         return instance
 

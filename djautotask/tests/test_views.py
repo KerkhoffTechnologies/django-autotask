@@ -36,9 +36,9 @@ class TestCallBackView(TestCase):
         self.assertEqual(Ticket.objects.count(), 0)
 
         fixture_utils.init_statuses()
-        _, patch = mocks.service_api_get_tickets_call(fixtures.API_TICKET)
+        _, patch = mocks.service_api_get_tickets_call(fixtures.API_TICKET_BY_ID)
 
-        self._test_synced(fixtures.API_TICKET['items'][0])
+        self._test_synced(fixtures.API_TICKET_BY_ID['item'])
         patch.stop()
 
     def test_update(self):
@@ -51,7 +51,7 @@ class TestCallBackView(TestCase):
         t = Ticket.objects.get(id=7688)
         t.description = 'foobar'
         t.save()
-        _, patch = mocks.service_api_get_tickets_call(fixtures.API_TICKET)
+        _, patch = mocks.service_api_get_tickets_call(fixtures.API_TICKET_BY_ID)
 
-        self._test_synced(fixtures.API_TICKET['items'][0])
+        self._test_synced(fixtures.API_TICKET_BY_ID['item'])
         patch.stop()

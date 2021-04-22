@@ -363,7 +363,7 @@ class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 
     def get_ticket(self, ticket_id):
-        endpoint_url = '{}/{}'.format(self.API, ticket_id)
+        endpoint_url = '{}{}'.format(self.api_base_url, ticket_id)
         return self.fetch_resource(endpoint_url)
 
     def get_tickets(self, next_url, *args, **kwargs):

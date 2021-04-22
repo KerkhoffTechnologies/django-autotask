@@ -362,13 +362,6 @@ class TestTicketSynchronizer(
         self.assertEqual(ticket_qset.count(), 0)
         patch.stop()
 
-    def test_fetch_sync_by_id(self):
-        _, patch = mocks.service_api_get_ticket_call(self.fixture)
-        result = self.synchronizer.fetch_sync_by_id(
-            self.fixture["items"][0]['id'])
-        self._assert_fields(result, self.fixture["items"][0])
-        patch.stop()
-
     def test_sync_ticket_related_records(self):
         """
         Test to ensure that a ticket will sync related objects,

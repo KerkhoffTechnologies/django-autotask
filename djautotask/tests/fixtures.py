@@ -929,8 +929,7 @@ API_CONTACT = {
     "pageDetails": API_PAGE_DETAILS
 }
 
-API_TICKET_ITEMS = [
-    {
+API_TICKET_ITEM = {
         'companyID': 29683561,
         'billingCodeID': 29683407,
         'assignedResourceID': 29683794,
@@ -971,7 +970,11 @@ API_TICKET_ITEMS = [
         'userDefinedFields': {},
         'id': 7688
     }
-]
+API_TICKET_ITEMS = [API_TICKET_ITEM]
+
+API_TICKET_BY_ID = {
+    "item": API_TICKET_ITEM
+}
 API_TICKET = {
     "items": API_TICKET_ITEMS,
     "pageDetails": API_PAGE_DETAILS
