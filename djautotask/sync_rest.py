@@ -365,10 +365,10 @@ class TicketSynchronizer(SyncRecordUDFMixin, Synchronizer, ParentSynchronizer):
 
         self._set_datetime_attribute(instance, 'first_response_date_time')
         self._set_datetime_attribute(instance,
-                              'first_response_due_date_time')
+                                     'first_response_due_date_time')
         self._set_datetime_attribute(instance, 'resolution_plan_date_time')
         self._set_datetime_attribute(instance,
-                              'resolution_plan_due_date_time')
+                                     'resolution_plan_due_date_time')
         self._set_datetime_attribute(instance, 'resolved_date_time')
         self._set_datetime_attribute(instance, 'resolved_due_date_time')
         self._set_datetime_attribute(instance, 'create_date')
