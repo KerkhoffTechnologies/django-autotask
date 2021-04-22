@@ -223,24 +223,29 @@ class AutotaskAPIClient(object):
 
     def _build_filter(self, **kwargs):
         filter_array = []
-        if 'conditions' in kwargs:
+
+        # kwargs['conditions'][0] - common API condition
+        # kwargs['conditions'][1] - additional partial sync condition
+        if 'op' in kwargs:
+
+            sub_kwargs = {'conditions': kwargs['conditions'][0]}
+            filter_obj = {
+                "op": kwargs['op'],
+                "items": self._build_filter(**sub_kwargs)
+            }
+            filter_array.append(filter_obj)
+
+            # additional partial sync condition
+            if len(kwargs['conditions']) > 1:
+                sub_kwargs = {'conditions': [kwargs['conditions'][1]]}
+                partial_filter_obj = self._build_filter(**sub_kwargs)
+                filter_array.append(partial_filter_obj[0])
+
+        elif 'conditions' in kwargs:
+
             for condition in kwargs['conditions']:
                 filter_obj = self._build_filter_obj(*condition)
                 filter_array.append(filter_obj)
-        elif 'or_items' in kwargs:
-            sub_kwargs = {'conditions': kwargs['or_items']}
-            filter_obj = {
-                "op": "or",
-                "items": self._build_filter(**sub_kwargs)
-            }
-            filter_array.append(filter_obj)
-        elif 'and_items' in kwargs:
-            sub_kwargs = {'conditions': kwargs['or_items']}
-            filter_obj = {
-                "op": "and",
-                "items": self._build_filter(**sub_kwargs)
-            }
-            filter_array.append(filter_obj)
 
         return filter_array
 

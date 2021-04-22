@@ -61,8 +61,11 @@ class Synchronizer:
         uid = json_data.get(json_field)
 
         try:
-            related_instance = model_class.objects.get(pk=uid)
-            setattr(instance, model_field, related_instance)
+            if uid:
+                related_instance = model_class.objects.get(pk=uid)
+                setattr(instance, model_field, related_instance)
+            else:
+                self._assign_null_relation(instance, model_field)
         except model_class.DoesNotExist:
             logger.warning(
                 'Failed to find {} {} for {} {}.'.format(
@@ -135,13 +138,12 @@ class Synchronizer:
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
 
-    def _parse_date_time(self, instance, attribute_name):
+    def _set_datetime_attribute(self, instance, attribute_name):
         if getattr(instance, attribute_name):
             setattr(instance,
                     attribute_name,
                     parse(getattr(instance, attribute_name))
                     )
-        return instance
 
     def fetch_sync_by_id(self, instance_id):
         api_instance = self.get_single(instance_id)
@@ -323,9 +325,12 @@ class TicketSynchronizer(SyncRecordUDFMixin, Synchronizer, ParentSynchronizer):
         self.completed_date = (timezone.now() - timezone.timedelta(
                 hours=request_settings.get('keep_completed_hours')
             )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        self.api_conditions_op = 'or'
         self.api_conditions = [
-                ['completedDate', self.completed_date, 'gt'],
-                ['status', models.Status.COMPLETE_ID, 'noteq']
+                [
+                    ['completedDate', self.completed_date, 'gt'],
+                    ['status', models.Status.COMPLETE_ID, 'noteq']
+                ]
             ]
 
     def _assign_field_data(self, instance, json_data):
@@ -358,18 +363,18 @@ class TicketSynchronizer(SyncRecordUDFMixin, Synchronizer, ParentSynchronizer):
         instance.completed_date = json_data.get('completedDate')
         instance.last_activity_date = json_data.get('lastActivityDate')
 
-        instance = self._parse_date_time(instance, 'first_response_date_time')
-        instance = self._parse_date_time(instance,
-                                         'first_response_due_date_time')
-        instance = self._parse_date_time(instance, 'resolution_plan_date_time')
-        instance = self._parse_date_time(instance,
-                                         'resolution_plan_due_date_time')
-        instance = self._parse_date_time(instance, 'resolved_date_time')
-        instance = self._parse_date_time(instance, 'resolved_due_date_time')
-        instance = self._parse_date_time(instance, 'create_date')
-        instance = self._parse_date_time(instance, 'due_date_time')
-        instance = self._parse_date_time(instance, 'completed_date')
-        instance = self._parse_date_time(instance, 'last_activity_date')
+        self._set_datetime_attribute(instance, 'first_response_date_time')
+        self._set_datetime_attribute(instance,
+                              'first_response_due_date_time')
+        self._set_datetime_attribute(instance, 'resolution_plan_date_time')
+        self._set_datetime_attribute(instance,
+                              'resolution_plan_due_date_time')
+        self._set_datetime_attribute(instance, 'resolved_date_time')
+        self._set_datetime_attribute(instance, 'resolved_due_date_time')
+        self._set_datetime_attribute(instance, 'create_date')
+        self._set_datetime_attribute(instance, 'due_date_time')
+        self._set_datetime_attribute(instance, 'completed_date')
+        self._set_datetime_attribute(instance, 'last_activity_date')
 
         udfs = json_data.get('userDefinedFields')
 
@@ -390,7 +395,8 @@ class TicketSynchronizer(SyncRecordUDFMixin, Synchronizer, ParentSynchronizer):
         return instance
 
     def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['or_items'] = self.api_conditions
+        kwargs['op'] = self.api_conditions_op
+        kwargs['conditions'] = self.api_conditions
         return self.client.get_tickets(next_url, *args, **kwargs)
 
     def get_single(self, ticket_id):
