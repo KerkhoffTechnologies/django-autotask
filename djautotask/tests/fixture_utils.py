@@ -405,7 +405,6 @@ def init_ticket_categories():
 def init_tickets():
     models.Ticket.objects.all().delete()
     mocks.service_api_get_tickets_call(fixtures.API_TICKET)
-    mocks.service_api_get_ticket_call(fixtures.API_TICKET)
     synchronizer = syncrest.TicketSynchronizer()
     return synchronizer.sync()
 
