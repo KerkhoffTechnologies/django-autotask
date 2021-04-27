@@ -19,7 +19,7 @@ class TestCallBackView(TestCase):
         )
 
     def assert_fields(self, instance, entity):
-        self.assertEqual(instance.description, entity['Description'])
+        self.assertEqual(instance.description, entity['description'])
 
     def _test_synced(self, entity):
         response = self.post_data()
@@ -36,12 +36,9 @@ class TestCallBackView(TestCase):
         self.assertEqual(Ticket.objects.count(), 0)
 
         fixture_utils.init_statuses()
-        test_instance = fixture_utils.generate_objects(
-            'Ticket', fixtures.API_TICKET_LIST)
-        _, patch = mocks.create_mock_call(
-            mocks.WRAPPER_QUERY_METHOD, test_instance)
+        _, patch = mocks.service_api_get_ticket_call(fixtures.API_TICKET_BY_ID)
 
-        self._test_synced(fixtures.API_TICKET)
+        self._test_synced(fixtures.API_TICKET_BY_ID['item'])
         patch.stop()
 
     def test_update(self):
@@ -54,10 +51,7 @@ class TestCallBackView(TestCase):
         t = Ticket.objects.get(id=7688)
         t.description = 'foobar'
         t.save()
-        test_instance = fixture_utils.generate_objects(
-            'Ticket', fixtures.API_TICKET_LIST)
-        _, patch = mocks.create_mock_call(
-            mocks.WRAPPER_QUERY_METHOD, test_instance)
+        _, patch = mocks.service_api_get_ticket_call(fixtures.API_TICKET_BY_ID)
 
-        self._test_synced(fixtures.API_TICKET)
+        self._test_synced(fixtures.API_TICKET_BY_ID['item'])
         patch.stop()

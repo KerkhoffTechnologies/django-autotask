@@ -140,7 +140,7 @@ def manage_full_sync_return_data(value):
     Generate and return objects based on the entity specified in the query.
     """
     fixture_dict = {
-        'Ticket': fixtures.API_TICKET_LIST,
+        'Ticket': fixtures.API_TICKET,
         'Resource': fixtures.API_RESOURCE_LIST,
         'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST,
         'Account': fixtures.API_ACCOUNT_LIST,
@@ -403,13 +403,10 @@ def init_ticket_categories():
 
 
 def init_tickets():
-    mocks.create_mock_call(
-        'djautotask.sync.TicketSynchronizer._get_query_conditions', None)
-    return sync_objects(
-        'Ticket',
-        fixtures.API_TICKET_LIST,
-        sync.TicketSynchronizer
-    )
+    models.Ticket.objects.all().delete()
+    mocks.service_api_get_tickets_call(fixtures.API_TICKET)
+    synchronizer = syncrest.TicketSynchronizer()
+    return synchronizer.sync()
 
 
 def init_resources():

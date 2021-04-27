@@ -223,10 +223,30 @@ class AutotaskAPIClient(object):
 
     def _build_filter(self, **kwargs):
         filter_array = []
-        if 'conditions' in kwargs:
+
+        # kwargs['conditions'][0] - common API condition
+        # kwargs['conditions'][1] - additional partial sync condition
+        if 'op' in kwargs:
+
+            sub_kwargs = {'conditions': kwargs['conditions'][0]}
+            filter_obj = {
+                "op": kwargs['op'],
+                "items": self._build_filter(**sub_kwargs)
+            }
+            filter_array.append(filter_obj)
+
+            # additional partial sync condition
+            if len(kwargs['conditions']) > 1:
+                sub_kwargs = {'conditions': [kwargs['conditions'][1]]}
+                partial_filter_obj = self._build_filter(**sub_kwargs)
+                filter_array.append(partial_filter_obj[0])
+
+        elif 'conditions' in kwargs:
+
             for condition in kwargs['conditions']:
                 filter_obj = self._build_filter_obj(*condition)
                 filter_array.append(filter_obj)
+
         return filter_array
 
     def _build_filter_obj(self, field, value, op='eq'):
@@ -236,8 +256,6 @@ class AutotaskAPIClient(object):
     def fetch_resource(self, next_url=None, retry_counter=None, *args,
                        **kwargs):
         """
-        Issue a POST request to the specified REST endpoint.
-
         retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
         """
@@ -335,7 +353,18 @@ class AutotaskAPIClient(object):
 
 
 class ContactsAPIClient(AutotaskAPIClient):
-    API = 'contacts'
+    API = 'Contacts'
 
     def get_contacts(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+
+class TicketsAPIClient(AutotaskAPIClient):
+    API = 'Tickets'
+
+    def get_ticket(self, ticket_id):
+        endpoint_url = '{}{}'.format(self.api_base_url, ticket_id)
+        return self.fetch_resource(endpoint_url)
+
+    def get_tickets(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)

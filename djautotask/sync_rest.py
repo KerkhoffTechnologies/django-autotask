@@ -1,10 +1,16 @@
 import logging
+from dateutil.parser import parse
+from decimal import Decimal
 
 from django.db import transaction, IntegrityError
+from django.utils import timezone
 
 from djautotask import api_rest as api
 from djautotask import models
-from .sync import InvalidObjectException, SyncResults, log_sync_job
+from .sync import InvalidObjectException, SyncResults, log_sync_job, \
+    TicketNoteSynchronizer, TimeEntrySynchronizer, \
+    TicketSecondaryResourceSynchronizer, ParentSynchronizer
+from .utils import DjautotaskSettings
 
 CREATED = 1
 UPDATED = 2
@@ -55,8 +61,11 @@ class Synchronizer:
         uid = json_data.get(json_field)
 
         try:
-            related_instance = model_class.objects.get(pk=uid)
-            setattr(instance, model_field, related_instance)
+            if uid:
+                related_instance = model_class.objects.get(pk=uid)
+                setattr(instance, model_field, related_instance)
+            else:
+                self._assign_null_relation(instance, model_field)
         except model_class.DoesNotExist:
             logger.warning(
                 'Failed to find {} {} for {} {}.'.format(
@@ -128,6 +137,19 @@ class Synchronizer:
 
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
+
+    def _set_datetime_attribute(self, instance, attribute_name):
+        if getattr(instance, attribute_name):
+            setattr(instance,
+                    attribute_name,
+                    parse(getattr(instance, attribute_name))
+                    )
+
+    def fetch_sync_by_id(self, instance_id):
+        api_instance = self.get_single(instance_id)
+        instance, created = \
+            self.update_or_create_instance(api_instance['item'])
+        return instance
 
     def update_or_create_instance(self, api_instance):
         """
@@ -241,6 +263,50 @@ class Synchronizer:
         return json_data
 
 
+class SyncRestRecordUDFMixin:
+
+    def _assign_udf_data(self, instance, udfs):
+        for item in udfs:
+            try:
+                name = item['name']
+                value = item['value']
+
+                udf = self.udf_class.objects.get(
+                    name=name
+                )
+
+                instance.udf[str(udf.id)] = {
+                    'name': name,
+                    'value': value,
+                    'label': udf.label,
+                    'type': udf.type,
+                    'is_picklist': udf.is_picklist
+                }
+
+                if value and udf.is_picklist:
+                    # On a picklist item, the label is different from
+                    # the name.
+                    instance.udf[str(udf.id)]['label'] = \
+                        udf.picklist[value]['label']
+
+            except self.udf_class.MultipleObjectsReturned as e:
+                # Shouldn't ever happen but just in case, log and continue
+                logger.error(
+                    'Multiple UDF records returned for 1 name: {}'.format(e))
+            except self.udf_class.DoesNotExist as e:
+                # Can happen if sync not 100% up to date, debug log and
+                # continue
+                logger.debug(
+                    'No UDF records returned for name: {}'.format(e))
+            except KeyError as e:
+                # UDF has likely been updated but we don't have the
+                # updated changes locally until the UDF class has been synced.
+                logger.warning(
+                    'KeyError when trying to access UDF '
+                    'picklist label. {}'.format(e)
+                )
+
+
 class ContactSynchronizer(Synchronizer):
     client_class = api.ContactsAPIClient
     model_class = models.ContactTracker
@@ -271,3 +337,135 @@ class ContactSynchronizer(Synchronizer):
     def get_page(self, next_url=None, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_contacts(next_url, *args, **kwargs)
+
+
+# ParentSynchronizer: using SOAP API
+class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
+                         ParentSynchronizer):
+    client_class = api.TicketsAPIClient
+    model_class = models.TicketTracker
+    udf_class = models.TicketUDF
+
+    related_meta = {
+        'companyID': (models.Account, 'account'),
+        'status': (models.Status, 'status'),
+        'assignedResourceID': (models.Resource, 'assigned_resource'),
+        'priority': (models.Priority, 'priority'),
+        'queueID': (models.Queue, 'queue'),
+        'projectID': (models.Project, 'project'),
+        'ticketCategory': (models.TicketCategory, 'category'),
+        'ticketType': (models.TicketType, 'type'),
+        'source': (models.Source, 'source'),
+        'issueType': (models.IssueType, 'issue_type'),
+        'subIssueType': (models.SubIssueType, 'sub_issue_type'),
+        'assignedResourceRoleID': (models.Role, 'assigned_resource_role'),
+        'billingCodeID': (models.AllocationCode, 'allocation_code'),
+        'contractID': (models.Contract, 'contract'),
+        'contactID': (models.Contact, 'contact'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request_settings = DjautotaskSettings().get_settings()
+        self.completed_date = (timezone.now() - timezone.timedelta(
+                hours=request_settings.get('keep_completed_hours')
+            )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        self.api_conditions_op = 'or'
+        self.api_conditions = [
+                [
+                    ['completedDate', self.completed_date, 'gt'],
+                    ['status', models.Status.COMPLETE_ID, 'noteq']
+                ]
+            ]
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.title = json_data['title']
+
+        instance.ticket_number = json_data.get('ticketNumber')
+        instance.description = json_data.get('description')
+        instance.estimated_hours = json_data.get('estimatedHours')
+        instance.service_level_agreement = \
+            json_data.get('serviceLevelAgreementID')
+        instance.service_level_agreement_has_been_met = \
+            bool(json_data.get('serviceLevelAgreementHasBeenMet'))
+        sla_paused = \
+            json_data.get('serviceLevelAgreementPausedNextEventHours')
+        instance.first_response_date_time = \
+            json_data.get('firstResponseDateTime')
+        instance.first_response_due_date_time = \
+            json_data.get('firstResponseDueDateTime')
+        instance.resolution_plan_date_time = \
+            json_data.get('resolutionPlanDateTime')
+        instance.resolution_plan_due_date_time = \
+            json_data.get('resolutionPlanDueDateTime')
+        instance.resolved_date_time = \
+            json_data.get('resolvedDateTime')
+        instance.resolved_due_date_time = \
+            json_data.get('resolvedDueDateTime')
+        instance.create_date = json_data.get('createDate')
+        instance.due_date_time = json_data.get('dueDateTime')
+        instance.completed_date = json_data.get('completedDate')
+        instance.last_activity_date = json_data.get('lastActivityDate')
+
+        self._set_datetime_attribute(instance, 'first_response_date_time')
+        self._set_datetime_attribute(instance,
+                                     'first_response_due_date_time')
+        self._set_datetime_attribute(instance, 'resolution_plan_date_time')
+        self._set_datetime_attribute(instance,
+                                     'resolution_plan_due_date_time')
+        self._set_datetime_attribute(instance, 'resolved_date_time')
+        self._set_datetime_attribute(instance, 'resolved_due_date_time')
+        self._set_datetime_attribute(instance, 'create_date')
+        self._set_datetime_attribute(instance, 'due_date_time')
+        self._set_datetime_attribute(instance, 'completed_date')
+        self._set_datetime_attribute(instance, 'last_activity_date')
+
+        udfs = json_data.get('userDefinedFields')
+
+        # Refresh udf field to eliminate stale udfs
+        instance.udf = dict()
+
+        if len(udfs):
+            self._assign_udf_data(instance, udfs)
+
+        if sla_paused:
+            instance.service_level_agreement_paused_next_event_hours = \
+                Decimal(str(round(sla_paused, 2)))
+        if instance.estimated_hours:
+            instance.estimated_hours = \
+                Decimal(str(round(instance.estimated_hours, 2)))
+
+        self.set_relations(instance, json_data)
+        return instance
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        kwargs['op'] = self.api_conditions_op
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_tickets(next_url, *args, **kwargs)
+
+    def get_single(self, ticket_id):
+        return self.client.get_ticket(ticket_id)
+
+    def fetch_sync_by_id(self, instance_id):
+        instance = super().fetch_sync_by_id(instance_id)
+        if instance.status.id != models.Status.COMPLETE_ID:
+            self.sync_related(instance)
+        return instance
+
+    # method in ParentSynchronizer: using SOAP API
+    def sync_related(self, instance):
+        sync_classes = []
+        query_params = ('TicketID', instance.id)
+
+        sync_classes.append(
+            (TicketNoteSynchronizer(), query_params)
+        )
+        sync_classes.append(
+            (TimeEntrySynchronizer(), query_params)
+        )
+        sync_classes.append(
+            (TicketSecondaryResourceSynchronizer(), query_params)
+        )
+
+        self.sync_children(*sync_classes)

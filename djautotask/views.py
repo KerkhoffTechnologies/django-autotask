@@ -7,7 +7,7 @@ from django.views.generic import View
 from atws.wrapper import AutotaskAPIException, AutotaskProcessException
 from django.http import HttpResponse, HttpResponseBadRequest
 
-from djautotask import sync, models
+from djautotask import sync_rest as sync, models
 from djautotask.api import parse_autotaskprocessexception, \
     parse_autotaskapiexception
 
