@@ -8,7 +8,7 @@ from django.utils import timezone
 from djautotask import api_rest as api
 from djautotask import models
 from .sync import InvalidObjectException, SyncResults, log_sync_job, \
-    SyncRecordUDFMixin, TicketNoteSynchronizer, TimeEntrySynchronizer, \
+    TicketNoteSynchronizer, TimeEntrySynchronizer, \
     TicketSecondaryResourceSynchronizer, ParentSynchronizer
 from .utils import DjautotaskSettings
 
@@ -263,6 +263,50 @@ class Synchronizer:
         return json_data
 
 
+class SyncRestRecordUDFMixin:
+
+    def _assign_udf_data(self, instance, udfs):
+        for item in udfs:
+            try:
+                name = item['name']
+                value = item['value']
+
+                udf = self.udf_class.objects.get(
+                    name=name
+                )
+
+                instance.udf[str(udf.id)] = {
+                    'name': name,
+                    'value': value,
+                    'label': udf.label,
+                    'type': udf.type,
+                    'is_picklist': udf.is_picklist
+                }
+
+                if value and udf.is_picklist:
+                    # On a picklist item, the label is different from
+                    # the name.
+                    instance.udf[str(udf.id)]['label'] = \
+                        udf.picklist[value]['label']
+
+            except self.udf_class.MultipleObjectsReturned as e:
+                # Shouldn't ever happen but just in case, log and continue
+                logger.error(
+                    'Multiple UDF records returned for 1 name: {}'.format(e))
+            except self.udf_class.DoesNotExist as e:
+                # Can happen if sync not 100% up to date, debug log and
+                # continue
+                logger.debug(
+                    'No UDF records returned for name: {}'.format(e))
+            except KeyError as e:
+                # UDF has likely been updated but we don't have the
+                # updated changes locally until the UDF class has been synced.
+                logger.warning(
+                    'KeyError when trying to access UDF '
+                    'picklist label. {}'.format(e)
+                )
+
+
 class ContactSynchronizer(Synchronizer):
     client_class = api.ContactsAPIClient
     model_class = models.ContactTracker
@@ -296,7 +340,7 @@ class ContactSynchronizer(Synchronizer):
 
 
 # ParentSynchronizer: using SOAP API
-class TicketSynchronizer(SyncRecordUDFMixin, Synchronizer, ParentSynchronizer):
+class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer, ParentSynchronizer):
     client_class = api.TicketsAPIClient
     model_class = models.TicketTracker
     udf_class = models.TicketUDF
