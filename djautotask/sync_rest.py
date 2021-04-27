@@ -340,7 +340,8 @@ class ContactSynchronizer(Synchronizer):
 
 
 # ParentSynchronizer: using SOAP API
-class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer, ParentSynchronizer):
+class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
+                         ParentSynchronizer):
     client_class = api.TicketsAPIClient
     model_class = models.TicketTracker
     udf_class = models.TicketUDF
