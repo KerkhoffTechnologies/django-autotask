@@ -177,8 +177,17 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
 
     def update_resource(self, extra=None):
         changed_fields = ['assigned_resource', 'assigned_resource_role']
+        # TODO will be improved after task REST API
         if extra:
-            changed_fields += extra
+            try:
+                keys = []
+                for key in extra.keys():
+                    key = key[0].lower() + key[1:]
+                    keys.append(key)
+                changed_fields += keys
+            except TypeError:
+                changed_fields += extra
+
         return self.update_at(changed_fields=changed_fields)
 
 
