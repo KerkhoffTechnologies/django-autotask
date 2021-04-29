@@ -1,12 +1,14 @@
+import datetime
 import json
 import logging
-
+import pytz
 import requests
-from django.conf import settings
-from retrying import retry
-from django.core.cache import cache
 
+from django.conf import settings
+from django.core.cache import cache
+from django.db import models
 from djautotask.utils import DjautotaskSettings
+from retrying import retry
 
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
 # wait before retrying a request.
@@ -253,6 +255,34 @@ class AutotaskAPIClient(object):
         filter_obj = {"op": op, "field": field, "value": value}
         return filter_obj
 
+    def _format_request_body(self, api_entity, changed_fields):
+        body = {
+            'id': api_entity.id
+        }
+
+        for field, value in changed_fields.items():
+
+            if field in api_entity.EDITABLE_FIELDS:
+                key = api_entity.EDITABLE_FIELDS[field]
+
+                if isinstance(value, datetime.datetime):
+                    body.update({
+                        key: value.astimezone(
+                            pytz.timezone('UTC')).strftime(
+                                "%Y-%m-%dT%H:%M:%SZ")
+                    })
+
+                elif isinstance(value, models.Model):
+                    body.update({
+                        key: value.id
+                    })
+                else:
+                    body.update(
+                        {key: str(value) if value else ''}
+                    )
+
+        return body
+
     def fetch_resource(self, next_url=None, retry_counter=None, *args,
                        **kwargs):
         """
@@ -368,3 +398,9 @@ class TicketsAPIClient(AutotaskAPIClient):
 
     def get_tickets(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
+
+    def update_ticket(self, ticket, changed_fields):
+        endpoint_url = '{}'.format(self.api_base_url)
+        body = self._format_request_body(ticket, changed_fields)
+
+        return self.request('patch', endpoint_url, body)

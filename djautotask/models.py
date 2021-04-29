@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from django.utils import timezone
-from djautotask import api
+from djautotask import api, api_rest
 from model_utils import FieldTracker
 
 OFFSET_TIMEZONE = 'America/New_York'
@@ -25,6 +25,7 @@ class SyncJob(models.Model):
             return self.end_time - self.start_time
 
 
+# TODO: remove update_resource after completing task REST API
 class ResourceAssignableModel:
 
     def update_resource(self, extra=None):
@@ -45,7 +46,20 @@ class ResourceAssignableModel:
         return self.update_at(data)
 
 
-class Ticket(TimeStampedModel, ResourceAssignableModel):
+class ATUpdateMixin:
+
+    def get_changed_values(self, changed_field_keys):
+
+        updated_objects = {}
+        if changed_field_keys:
+            for field in changed_field_keys:
+                field = field.replace('_id', '')
+                updated_objects[field] = getattr(self, field)
+
+        return updated_objects
+
+
+class Ticket(ATUpdateMixin, TimeStampedModel):
     ticket_number = models.CharField(blank=True, null=True, max_length=50)
     completed_date = models.DateTimeField(blank=True, null=True)
     create_date = models.DateTimeField(blank=True, null=True)
@@ -117,6 +131,23 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
+    EDITABLE_FIELDS = {
+        'title': 'title',
+        'description': 'description',
+        'queue': 'queueID',
+        'estimated_hours': 'estimatedHours',
+        'due_date_time': 'dueDateTime',
+        'status': 'status',
+        'priority': 'priority',
+        'category': 'ticketCategory',
+        'allocation_code': 'billingCodeID',
+        'issue_type': 'issueType',
+        'sub_issue_type': 'subIssueType',
+        'project': 'projectID',
+        'assigned_resource': 'assignedResourceID',
+        'assigned_resource_role': 'assignedResourceRoleID',
+    }
+
     class Meta:
         verbose_name = 'Ticket'
 
@@ -129,22 +160,26 @@ class Ticket(TimeStampedModel, ResourceAssignableModel):
 
         If update_at as a kwarg is True, then update Autotask with changes.
         """
-
+        changed_fields = kwargs.pop('changed_fields', None)
         update_at = kwargs.pop('update_at', False)
-        super().save(*args, **kwargs)
-        if update_at:
-            self.update_at()
 
-    def update_at(self, data=None):
-        if data:
-            fields_to_update = {}
-            for field, data in data.items():
-                fields_to_update[field] = data
-        else:
-            fields_to_update = {
-                'Status': self.status.id,
-            }
-        return api.update_object('Ticket', self.id, fields_to_update)
+        if update_at and changed_fields:
+            self.update_at(changed_fields=changed_fields)
+
+        super().save(**kwargs)
+
+    def update_at(self, **kwargs):
+        api_client = api_rest.TicketsAPIClient()
+        changed_fields = kwargs.get('changed_fields')
+        updated_objects = self.get_changed_values(changed_fields)
+
+        return api_client.update_ticket(self, updated_objects)
+
+    def update_resource(self, extra=None):
+        changed_fields = ['assigned_resource', 'assigned_resource_role']
+        if extra:
+            changed_fields += extra
+        return self.update_at(changed_fields=changed_fields)
 
 
 class AvailablePicklistManager(models.Manager):
