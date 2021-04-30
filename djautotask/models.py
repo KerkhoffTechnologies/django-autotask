@@ -304,6 +304,9 @@ class Resource(TimeStampedModel):
 
 
 class TicketCategory(TimeStampedModel):
+    # default system id to be used for creating tickets
+    STANDARD_ID = 3
+
     name = models.CharField(max_length=30)
     active = models.BooleanField(default=False)
     display_color = models.ForeignKey(
