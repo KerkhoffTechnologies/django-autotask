@@ -25,27 +25,6 @@ class SyncJob(models.Model):
             return self.end_time - self.start_time
 
 
-# TODO: remove update_resource after completing task REST API
-class ResourceAssignableModel:
-
-    def update_resource(self, extra=None):
-        """
-        Send assigned resource updates to Autotask
-        """
-        data = {
-            'AssignedResourceID':
-                self.assigned_resource.id
-                if self.assigned_resource else None,
-
-            'AssignedResourceRoleID':
-                self.assigned_resource_role.id
-                if self.assigned_resource_role else None
-        }
-        if extra:
-            data.update(extra)
-        return self.update_at(data)
-
-
 class ATUpdateMixin:
 
     def get_changed_values(self, changed_field_keys):
@@ -174,21 +153,6 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         updated_objects = self.get_changed_values(changed_fields)
 
         return api_client.update_ticket(self, updated_objects)
-
-    def update_resource(self, extra=None):
-        changed_fields = ['assigned_resource', 'assigned_resource_role']
-        # TODO will be improved after task REST API
-        if extra:
-            try:
-                keys = []
-                for key in extra.keys():
-                    key = key[0].lower() + key[1:]
-                    keys.append(key)
-                changed_fields += keys
-            except TypeError:
-                changed_fields += extra
-
-        return self.update_at(changed_fields=changed_fields)
 
 
 class AvailablePicklistManager(models.Manager):
@@ -577,7 +541,7 @@ class Phase(TimeStampedModel):
         return self.title
 
 
-class Task(TimeStampedModel, ResourceAssignableModel):
+class Task(TimeStampedModel):
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
     description = models.CharField(blank=True, null=True, max_length=8000)
