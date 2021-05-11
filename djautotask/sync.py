@@ -553,34 +553,6 @@ class ChildSynchronizer:
             results.skipped_count, results.deleted_count
 
 
-class QueryConditionMixin:
-
-    def _get_query_conditions(self, query):
-        # Don't sync the 'Complete' status for tickets and tasks.
-        # Most if not all tickets/tasks end up here and stay here forever
-        # or until deleted. This would cause ticket/task syncs to take a
-        # very long time. Instead only get completed tickets X number of
-        # hours in the past, defined in the settings.
-        request_settings = DjautotaskSettings().get_settings()
-        query.open_bracket('AND')
-        query.WHERE(
-            'Status',
-            query.NotEqual,
-            models.Status.COMPLETE_ID
-        )
-        query.open_bracket('OR')
-        query.WHERE(
-            self.completed_date_field,
-            query.GreaterThan,
-            (timezone.now() - timezone.timedelta(
-                hours=request_settings.get('keep_completed_hours')
-            )).isoformat()
-        )
-        query.close_bracket()
-        query.close_bracket()
-        return query
-
-
 class BatchQueryMixin:
     """
     Fetch records from the API only fetching records if the related model(s)
@@ -1005,67 +977,6 @@ class PhaseSynchronizer(Synchronizer):
         instance.last_activity_date = object_data.get('LastActivityDateTime')
 
         self.set_relations(instance, object_data)
-
-        return instance
-
-
-class TaskSynchronizer(SyncRecordUDFMixin, QueryConditionMixin,
-                       FilterProjectStatusMixin, Synchronizer):
-    model_class = models.TaskTracker
-    udf_class = models.TaskUDF
-    last_updated_field = 'LastActivityDateTime'
-    object_filter_field = 'ProjectID'
-    completed_date_field = 'CompletedDateTime'
-
-    related_meta = {
-        'AssignedResourceID': (models.Resource, 'assigned_resource'),
-        'ProjectID': (models.Project, 'project'),
-        'PhaseID': (models.Phase, 'phase'),
-        'Status': (models.Status, 'status'),
-        'PriorityLabel': (models.Priority, 'priority'),
-        'AssignedResourceRoleID': (models.Role, 'assigned_resource_role'),
-        'AllocationCodeID': (models.AllocationCode, 'allocation_code'),
-        'DepartmentID': (models.Department, 'department'),
-    }
-
-    def get_active_ids(self):
-        active_projects = models.Project.objects.exclude(
-            Q(status__is_active=False) |
-            Q(status__id=models.ProjectStatus.COMPLETE_ID)
-        ).values_list('id', flat=True).order_by(self.db_lookup_key)
-
-        return active_projects
-
-    def _assign_field_data(self, instance, object_data):
-
-        instance.id = object_data['id']
-        instance.title = object_data.get('Title')
-        instance.number = object_data.get('TaskNumber')
-        instance.description = object_data.get('Description')
-        instance.completed_date = object_data.get('CompletedDateTime')
-        instance.create_date = object_data.get('CreateDateTime')
-        instance.start_date = object_data.get('StartDateTime')
-        instance.end_date = object_data.get('EndDateTime')
-        instance.estimated_hours = object_data.get('EstimatedHours')
-        instance.remaining_hours = object_data.get('RemainingHours')
-        instance.last_activity_date = object_data.get('LastActivityDateTime')
-
-        udfs = object_data.get('UserDefinedFields')
-
-        # Refresh udf field to eliminate stale udfs
-        instance.udf = dict()
-
-        if len(udfs):
-            self._assign_udf_data(instance, udfs)
-
-        self.set_relations(instance, object_data)
-
-        if instance.estimated_hours:
-            instance.estimated_hours = \
-                Decimal(str(round(instance.estimated_hours, 2)))
-        if instance.remaining_hours:
-            instance.remaining_hours = \
-                Decimal(str(round(instance.remaining_hours, 2)))
 
         return instance
 

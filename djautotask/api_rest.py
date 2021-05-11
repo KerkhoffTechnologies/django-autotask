@@ -381,6 +381,15 @@ class AutotaskAPIClient(object):
             self._log_failed(response)
             raise AutotaskAPIError(response)
 
+    def get_instance(self, instance_id):
+        endpoint_url = '{}{}'.format(self.api_base_url, instance_id)
+        return self.fetch_resource(endpoint_url)
+
+    def update_instance(self, instance, changed_fields):
+        endpoint_url = '{}'.format(self.api_base_url)
+        body = self._format_request_body(instance, changed_fields)
+        return self.request('patch', endpoint_url, body)
+
 
 class ContactsAPIClient(AutotaskAPIClient):
     API = 'Contacts'
@@ -393,14 +402,23 @@ class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 
     def get_ticket(self, ticket_id):
-        endpoint_url = '{}{}'.format(self.api_base_url, ticket_id)
-        return self.fetch_resource(endpoint_url)
+        return self.get_instance(ticket_id)
 
     def get_tickets(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
 
     def update_ticket(self, ticket, changed_fields):
-        endpoint_url = '{}'.format(self.api_base_url)
-        body = self._format_request_body(ticket, changed_fields)
+        return self.update_instance(ticket, changed_fields)
 
-        return self.request('patch', endpoint_url, body)
+
+class TasksAPIClient(AutotaskAPIClient):
+    API = 'Tasks'
+
+    def get_task(self, task_id):
+        return self.get_instance(task_id)
+
+    def get_tasks(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+    def update_task(self, task, changed_fields):
+        return self.update_instance(task, changed_fields)

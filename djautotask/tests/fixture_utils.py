@@ -458,13 +458,10 @@ def init_phases():
 
 
 def init_tasks():
-    mocks.create_mock_call(
-        'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
-    sync_objects(
-        'Task',
-        fixtures.API_TASK_LIST,
-        sync.TaskSynchronizer
-    )
+    models.Task.objects.all().delete()
+    mocks.service_api_get_tasks_call(fixtures.API_TASK)
+    synchronizer = syncrest.TaskSynchronizer()
+    return synchronizer.sync()
 
 
 def init_task_secondary_resources():

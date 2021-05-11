@@ -1,6 +1,24 @@
 from datetime import datetime
 from dateutil.tz import tzoffset
 
+
+API_PAGE_DETAILS = {
+        "count": 1,
+        "requestCount": 500,
+        "prevPageUrl": None,
+        "nextPageUrl": None
+    }
+
+API_EMPTY = {
+    "items": [],
+    "pageDetails": {
+        "count": 0,
+        "requestCount": 500,
+        "prevPageUrl": None,
+        "nextPageUrl": None
+    }
+}
+
 API_ACCOUNT_LIST = [
     {
         'id': 174,
@@ -526,7 +544,7 @@ API_PHASE = {
 
 API_PHASE_LIST = [API_PHASE]
 
-API_TASK = {
+API_TASK_ITEM = {
     'id': 7733,
     'AllocationCodeID': 29683415,
     'AssignedResourceID': 29683794,
@@ -563,7 +581,15 @@ API_TASK = {
     'LastActivityPersonType': 1,
     'UserDefinedFields': {}
 }
-API_TASK_LIST = [API_TASK]
+API_TASK_LIST = [API_TASK_ITEM]
+API_TASK_ITEMS = [API_TASK_ITEM]
+API_TASK_BY_ID = {
+    "item": API_TASK_ITEM
+}
+API_TASK = {
+    "items": API_TASK_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
 
 API_TASK_SECONDARY_RESOURCE = {
     'id': 29684411,
@@ -856,7 +882,7 @@ API_TASK_PREDECESSOR = {
     'id': 1,
     'UserDefinedFields': None,
     'LagDays': 0,
-    'PredecessorTaskID': API_TASK['id'],
+    'PredecessorTaskID': API_TASK_ITEM['id'],
     'SuccessorTaskID': 7755,
 }
 API_TASK_PREDECESSOR_LIST = [API_TASK_PREDECESSOR]
@@ -889,23 +915,6 @@ API_UDF_LIST = [
     },
 
 ]
-
-API_PAGE_DETAILS = {
-        "count": 1,
-        "requestCount": 500,
-        "prevPageUrl": None,
-        "nextPageUrl": None
-    }
-
-API_EMPTY = {
-    "items": [],
-    "pageDetails": {
-        "count": 0,
-        "requestCount": 500,
-        "prevPageUrl": None,
-        "nextPageUrl": None
-    }
-}
 
 API_CONTACT_ITEMS = [
     {
@@ -971,7 +980,6 @@ API_TICKET_ITEM = {
         'id': 7688
     }
 API_TICKET_ITEMS = [API_TICKET_ITEM]
-
 API_TICKET_BY_ID = {
     "item": API_TICKET_ITEM
 }

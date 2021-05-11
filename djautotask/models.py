@@ -37,6 +37,24 @@ class ATUpdateMixin:
 
         return updated_objects
 
+    def save(self, *args, **kwargs):
+        """
+        Save the object.
+        If update_at as a kwarg is True, then update Autotask with changes.
+        """
+        changed_fields = kwargs.pop('changed_fields', None)
+        update_at = kwargs.pop('update_at', False)
+
+        if update_at and changed_fields:
+            self.update_at(changed_fields=changed_fields)
+
+        super().save(**kwargs)
+
+    def update_at(self, api_client, **kwargs):
+        changed_fields = kwargs.get('changed_fields')
+        updated_objects = self.get_changed_values(changed_fields)
+        return api_client.update_ticket(self, updated_objects)
+
 
 class Ticket(ATUpdateMixin, TimeStampedModel):
     ticket_number = models.CharField(blank=True, null=True, max_length=50)
@@ -133,26 +151,9 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     def __str__(self):
         return '{}-{}'.format(self.id, self.title)
 
-    def save(self, *args, **kwargs):
-        """
-        Save the object.
-
-        If update_at as a kwarg is True, then update Autotask with changes.
-        """
-        changed_fields = kwargs.pop('changed_fields', None)
-        update_at = kwargs.pop('update_at', False)
-
-        if update_at and changed_fields:
-            self.update_at(changed_fields=changed_fields)
-
-        super().save(**kwargs)
-
     def update_at(self, **kwargs):
         api_client = api_rest.TicketsAPIClient()
-        changed_fields = kwargs.get('changed_fields')
-        updated_objects = self.get_changed_values(changed_fields)
-
-        return api_client.update_ticket(self, updated_objects)
+        return super().update_at(api_client, **kwargs);
 
 
 class AvailablePicklistManager(models.Manager):
@@ -544,7 +545,7 @@ class Phase(TimeStampedModel):
         return self.title
 
 
-class Task(TimeStampedModel):
+class Task(ATUpdateMixin, TimeStampedModel):
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
     description = models.CharField(blank=True, null=True, max_length=8000)
@@ -592,29 +593,9 @@ class Task(TimeStampedModel):
     def __str__(self):
         return self.title
 
-    def save(self, *args, **kwargs):
-        """
-        Save the object.
-
-        If update_at as a kwarg is True, then update Autotask with changes.
-        """
-
-        update_at = kwargs.pop('update_at', False)
-        super().save(*args, **kwargs)
-        if update_at:
-            self.update_at()
-
-    def update_at(self, data=None):
-        if data:
-            fields_to_update = {}
-            for field, data in data.items():
-                fields_to_update[field] = data
-        else:
-            fields_to_update = {
-                'Status': self.status.id,
-            }
-
-        return api.update_object('Task', self.id, fields_to_update)
+    def update_at(self, **kwargs):
+        api_client = api_rest.TasksAPIClient()
+        return super().update_at(api_client, **kwargs);
 
 
 class TaskSecondaryResource(TimeStampedModel):

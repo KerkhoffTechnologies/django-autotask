@@ -960,10 +960,10 @@ class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerTestMixin,
 class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
                            FilterProjectTestCase):
     model_class = models.TaskTracker
-    synchronizer_class = sync.TaskSynchronizer
+    synchronizer_class = sync_rest.TaskSynchronizer
     fixture = fixtures.API_TASK
-    update_field = "Title"
-    assign_null_relation_field = 'AssignedResourceID'
+    update_field = "title"
+    assign_null_relation_field = 'assignedResourceID'
 
     def setUp(self):
         super().setUp()
@@ -978,25 +978,25 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.title, object_data['Title'])
-        self.assertEqual(instance.number, object_data['TaskNumber'])
+        self.assertEqual(instance.title, object_data['title'])
+        self.assertEqual(instance.number, object_data['taskNumber'])
         self.assertEqual(instance.completed_date,
-                         object_data['CompletedDateTime'])
-        self.assertEqual(instance.create_date, object_data['CreateDateTime'])
-        self.assertEqual(instance.start_date, object_data['StartDateTime'])
-        self.assertEqual(instance.description, object_data['Description'])
+                         object_data['completedDateTime'])
+        self.assertEqual(instance.create_date, object_data['createDateTime'])
+        self.assertEqual(instance.start_date, object_data['startDateTime'])
+        self.assertEqual(instance.description, object_data['description'])
         self.assertEqual(instance.remaining_hours,
-                         object_data['RemainingHours'])
+                         object_data['remainingHours'])
         self.assertEqual(instance.estimated_hours,
-                         object_data['EstimatedHours'])
+                         object_data['estimatedHours'])
         self.assertEqual(instance.last_activity_date,
-                         object_data['LastActivityDateTime'])
+                         object_data['lastActivityDateTime'])
 
-        self.assertEqual(instance.status.id, object_data['Status'])
-        self.assertEqual(instance.priority.id, object_data['PriorityLabel'])
-        self.assertEqual(instance.project.id, object_data['ProjectID'])
+        self.assertEqual(instance.status.id, object_data['status'])
+        self.assertEqual(instance.priority.id, object_data['priorityLabel'])
+        self.assertEqual(instance.project.id, object_data['projectID'])
         self.assertEqual(instance.assigned_resource.id,
-                         object_data['AssignedResourceID'])
+                         object_data['assignedResourceID'])
 
     def test_sync_task(self):
         """
@@ -1019,7 +1019,7 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
 
         mocks.api_query_call([])
 
-        synchronizer = sync.TaskSynchronizer(full=True)
+        synchronizer = sync_rest.TaskSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(task_qset.count(), 0)
 
@@ -1037,7 +1037,7 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
         _, patch = mocks.create_mock_call(
             mocks.WRAPPER_QUERY_METHOD, task_instance
         )
-        synchronizer = sync.TaskSynchronizer(full=True)
+        synchronizer = sync_rest.TaskSynchronizer(full=True)
         synchronizer.sync()
 
         synced_task_ids = models.Task.objects.values_list('id', flat=True)
@@ -1064,7 +1064,7 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
         _, patch = mocks.create_mock_call(
             mocks.WRAPPER_QUERY_METHOD, task_instance
         )
-        synchronizer = sync.TaskSynchronizer(full=True)
+        synchronizer = sync_rest.TaskSynchronizer(full=True)
         synchronizer.sync()
 
         synced_task_ids = models.Task.objects.values_list('id', flat=True)
