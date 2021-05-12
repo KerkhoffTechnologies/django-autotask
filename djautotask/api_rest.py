@@ -226,28 +226,20 @@ class AutotaskAPIClient(object):
     def _build_filter(self, **kwargs):
         filter_array = []
 
-        # kwargs['conditions'][0] - common API condition
-        # kwargs['conditions'][1] - additional partial sync condition
-        if 'op' in kwargs:
-
-            sub_kwargs = {'conditions': kwargs['conditions'][0]}
-            filter_obj = {
-                "op": kwargs['op'],
-                "items": self._build_filter(**sub_kwargs)
-            }
-            filter_array.append(filter_obj)
-
-            # additional partial sync condition
-            if len(kwargs['conditions']) > 1:
-                sub_kwargs = {'conditions': [kwargs['conditions'][1]]}
-                partial_filter_obj = self._build_filter(**sub_kwargs)
-                filter_array.append(partial_filter_obj[0])
-
-        elif 'conditions' in kwargs:
+        if 'conditions' in kwargs:
 
             for condition in kwargs['conditions']:
-                filter_obj = self._build_filter_obj(*condition)
-                filter_array.append(filter_obj)
+
+                if type(condition[0]) == dict:
+                    sub_kwargs = {'conditions': condition[0]['operands']}
+                    filter_obj = {
+                        "op": condition[0]['op'],
+                        "items": self._build_filter(**sub_kwargs)
+                    }
+                    filter_array.append(filter_obj)
+                else:
+                    filter_obj = self._build_filter_obj(*condition)
+                    filter_array.append(filter_obj)
 
         return filter_array
 
@@ -414,11 +406,10 @@ class TicketsAPIClient(AutotaskAPIClient):
 class TasksAPIClient(AutotaskAPIClient):
     API = 'Tasks'
 
-    def get_task(self, task_id):
-        return self.get_instance(task_id)
-
     def get_tasks(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
 
     def update_task(self, task, changed_fields):
-        return self.update_instance(task, changed_fields)
+        endpoint_url = 'Projects/{}/{}'.format(task.project, self.api_base_url)
+        body = self._format_request_body(task, changed_fields)
+        return self.request('patch', endpoint_url, body)

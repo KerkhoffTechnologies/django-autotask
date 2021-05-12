@@ -372,13 +372,17 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         self.completed_date = (timezone.now() - timezone.timedelta(
                 hours=request_settings.get('keep_completed_hours')
             )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        self.api_conditions_op = 'or'
         self.api_conditions = [
-                [
-                    ['completedDate', self.completed_date, 'gt'],
-                    ['status', models.Status.COMPLETE_ID, 'noteq']
-                ]
+            [
+                {
+                    "op": "or",
+                    "operands": [
+                        ['completedDate', self.completed_date, 'gt'],
+                        ['status', models.Status.COMPLETE_ID, 'noteq']
+                    ]
+                }
             ]
+        ]
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -442,7 +446,6 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         return instance
 
     def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['op'] = self.api_conditions_op
         kwargs['conditions'] = self.api_conditions
         return self.client.get_tickets(next_url, *args, **kwargs)
 
@@ -500,15 +503,16 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, Synchronizer):
             )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         self.api_conditions = [
             ['projectId', list(self.get_active_ids()), 'in'],
+            [
+                {
+                    "op": "or",
+                    "operands": [
+                        ['completedDateTime', self.completed_date, 'gt'],
+                        ['status', models.Status.COMPLETE_ID, 'noteq']
+                    ]
+                }
+            ]
         ]
-        # TODO: combine both `or` & 'and' (above) condition
-        # self.api_conditions_op = 'or'
-        # self.api_conditions = [
-        #         [
-        #             ['completedDateTime', self.completed_date, 'gt'],
-        #             ['status', models.Status.COMPLETE_ID, 'noteq']
-        #         ]
-        #     ]
 
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
@@ -557,9 +561,5 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, Synchronizer):
         return instance
 
     def get_page(self, next_url=None, *args, **kwargs):
-        # kwargs['op'] = self.api_conditions_op
         kwargs['conditions'] = self.api_conditions
         return self.client.get_tasks(next_url, *args, **kwargs)
-
-    def get_single(self, task_id):
-        return self.client.get_task(task_id)
