@@ -5,7 +5,6 @@ from suds.client import Client
 from atws.wrapper import AutotaskProcessException, AutotaskAPIException
 from atws import Query, helpers, picklist
 from django.db import transaction, IntegrityError
-from django.db.models import Q
 from django.utils import timezone
 from djautotask.utils import DjautotaskSettings
 

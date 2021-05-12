@@ -43,6 +43,9 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         self.synchronizer = self.synchronizer_class()
         return self.synchronizer.sync()
 
+    def _parse_datetime(self, datetime):
+        return parse(datetime) if datetime else None
+
     def test_sync(self):
         self._sync(self.fixture)
         instance_dict = {c['id']: c for c in self.fixture["items"]}
@@ -308,16 +311,16 @@ class TestTicketSynchronizer(
         self.assertEqual(instance.title, object_data['title'])
         self.assertEqual(instance.ticket_number, object_data['ticketNumber'])
         self.assertEqual(instance.completed_date,
-                         parse(object_data['completedDate']))
+                         self._parse_datetime(object_data['completedDate']))
         self.assertEqual(instance.create_date,
-                         parse(object_data['createDate']))
+                         self._parse_datetime(object_data['createDate']))
         self.assertEqual(instance.description, object_data['description'])
         self.assertEqual(instance.due_date_time,
-                         parse(object_data['dueDateTime']))
+                         self._parse_datetime(object_data['dueDateTime']))
         self.assertEqual(instance.estimated_hours,
                          object_data['estimatedHours'])
         self.assertEqual(instance.last_activity_date,
-                         parse(object_data['lastActivityDate']))
+                         self._parse_datetime(object_data['lastActivityDate']))
         self.assertEqual(instance.status.id, object_data['status'])
         self.assertEqual(instance.assigned_resource.id,
                          object_data['assignedResourceID'])
@@ -971,16 +974,20 @@ class TestTaskSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.title, object_data['title'])
         self.assertEqual(instance.number, object_data['taskNumber'])
         self.assertEqual(instance.completed_date,
-                         object_data['completedDateTime'])
-        self.assertEqual(instance.create_date, object_data['createDateTime'])
-        self.assertEqual(instance.start_date, object_data['startDateTime'])
+                         self._parse_datetime(
+                             object_data['completedDateTime']))
+        self.assertEqual(instance.create_date,
+                         self._parse_datetime(object_data['createDateTime']))
+        self.assertEqual(instance.start_date,
+                         self._parse_datetime(object_data['startDateTime']))
         self.assertEqual(instance.description, object_data['description'])
         self.assertEqual(instance.remaining_hours,
                          object_data['remainingHours'])
         self.assertEqual(instance.estimated_hours,
                          object_data['estimatedHours'])
         self.assertEqual(instance.last_activity_date,
-                         object_data['lastActivityDateTime'])
+                         self._parse_datetime(
+                             object_data['lastActivityDateTime']))
 
         self.assertEqual(instance.status.id, object_data['status'])
         self.assertEqual(instance.priority.id, object_data['priorityLabel'])
