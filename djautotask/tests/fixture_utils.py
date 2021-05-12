@@ -50,6 +50,7 @@ def set_attributes(suds_object, fixture_object):
     return suds_object
 
 
+# generate object for SOAP API
 def generate_objects(object_type, fixture_objects):
     """
     Generate multiple objects based on the given fixtures.
@@ -68,6 +69,27 @@ def generate_objects(object_type, fixture_objects):
         object_list.append(suds_object)
 
     return QueryCursor(mock_query_generator(object_list))
+
+
+# generate object for REST API
+def generate_api_objects(fixture_objects):
+    """
+    Generate multiple objects based on the given fixtures.
+    """
+    if fixture_objects is None:
+        raise Exception("fixture_objects is empty.")
+
+    fixture_result = {
+        "items": [],
+        "pageDetails": fixtures.API_PAGE_DETAILS
+    }
+    fixture_result["pageDetails"]["count"] = 0
+
+    for fixture in fixture_objects:
+        fixture_result["items"] += fixture["items"]
+        fixture_result["pageDetails"]["count"] += len(fixture["items"])
+
+    return fixture_result
 
 
 def generate_picklist_objects(object_type, fixture_objects):
@@ -147,7 +169,7 @@ def manage_full_sync_return_data(value):
         'AccountPhysicalLocation': fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST,
         'Project': fixtures.API_PROJECT_LIST,
         'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
-        'Task': fixtures.API_TASK_LIST,
+        'Task': fixtures.API_TASK,
         'Phase': fixtures.API_PHASE_LIST,
         'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
         'TicketNote': fixtures.API_TICKET_NOTE_LIST,

@@ -498,13 +498,17 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, Synchronizer):
         self.completed_date = (timezone.now() - timezone.timedelta(
                 hours=request_settings.get('keep_completed_hours')
             )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        self.api_conditions_op = 'or'
         self.api_conditions = [
-                [
-                    ['completedDateTime', self.completed_date, 'gt'],
-                    ['status', models.Status.COMPLETE_ID, 'noteq']
-                ]
-            ]
+            ['projectId', list(self.get_active_ids()), 'in'],
+        ]
+        # TODO: combine both `or` & 'and' (above) condition
+        # self.api_conditions_op = 'or'
+        # self.api_conditions = [
+        #         [
+        #             ['completedDateTime', self.completed_date, 'gt'],
+        #             ['status', models.Status.COMPLETE_ID, 'noteq']
+        #         ]
+        #     ]
 
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
@@ -553,7 +557,7 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, Synchronizer):
         return instance
 
     def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['op'] = self.api_conditions_op
+        # kwargs['op'] = self.api_conditions_op
         kwargs['conditions'] = self.api_conditions
         return self.client.get_tasks(next_url, *args, **kwargs)
 

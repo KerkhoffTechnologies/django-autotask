@@ -134,21 +134,9 @@ class TestAssignNullRelationMixin:
         fixture_instance = deepcopy(
             getattr(fixtures, 'API_{}'.format(model_type.upper()))
         )
+        fixture_instance['items'][0].pop(self.assign_null_relation_field)
 
-        try:
-            # Task using SOAP API
-            fixture_instance.pop(self.assign_null_relation_field)
-            object_instance = fixture_utils.generate_objects(
-                model_type, [fixture_instance]
-            )
-            _, patch = mocks.create_mock_call(
-                mocks.WRAPPER_QUERY_METHOD, object_instance
-            )
-        except KeyError:
-            # Ticket using REST API
-            fixture_instance['items'][0].pop(self.assign_null_relation_field)
-            _, patch = mocks.service_api_get_tickets_call(fixture_instance)
-
+        _, patch = self._call_api(fixture_instance)
         synchronizer = self.synchronizer_class(full=True)
         synchronizer.sync()
 
@@ -957,26 +945,28 @@ class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerTestMixin,
         patch.stop()
 
 
-class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
+class TestTaskSynchronizer(SynchronizerRestTestMixin,
+                           TestAssignNullRelationMixin,
                            FilterProjectTestCase):
-    model_class = models.TaskTracker
     synchronizer_class = sync_rest.TaskSynchronizer
+    model_class = models.TaskTracker
     fixture = fixtures.API_TASK
     update_field = "title"
     assign_null_relation_field = 'assignedResourceID'
 
     def setUp(self):
         super().setUp()
-        mocks.init_api_connection(Wrapper)
-        self.synchronizer = self.synchronizer_class()
         fixture_utils.init_resources()
         fixture_utils.init_statuses()
         fixture_utils.init_priorities()
         fixture_utils.init_project_statuses()
         fixture_utils.init_projects()
-        fixture_utils.init_tasks()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_tasks_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
         self.assertEqual(instance.title, object_data['title'])
         self.assertEqual(instance.number, object_data['taskNumber'])
@@ -1004,46 +994,46 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
         """
         self.assertGreater(models.Task.objects.all().count(), 0)
 
-        instance = models.Task.objects.get(id=self.fixture['id'])
+        instance = models.Task.objects.get(id=self.fixture["items"][0]['id'])
 
-        self._assert_sync(instance, self.fixture)
+        self._assert_fields(instance, self.fixture["items"][0])
         self.assert_sync_job()
 
     def test_delete_stale_tasks(self):
         """
         Local task should be deleted if not returned during a full sync
         """
-        task_id = fixtures.API_TASK['id']
+        task_id = fixtures.API_TASK["items"][0]['id']
         task_qset = models.Task.objects.filter(id=task_id)
         self.assertEqual(task_qset.count(), 1)
 
-        mocks.api_query_call([])
+        _, patch = mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
 
         synchronizer = sync_rest.TaskSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(task_qset.count(), 0)
+        patch.stop()
 
     def test_sync_filters_tasks_on_inactive_project(self):
 
         # Add copied task to project in 'Complete' status to ensure it is
         # filtered out during the sync.
         task_fixture = deepcopy(fixtures.API_TASK)
-        task_fixture['id'] = '7740'
-        task_fixture['ProjectID'] = self.inactive_project.id
+        task_fixture["items"][0]['id'] = '7740'
+        task_fixture["items"][0]['projectID'] = self.inactive_project.id
 
-        task_instance = fixture_utils.generate_objects(
-            'Task', [task_fixture, fixtures.API_TASK]
+        task_instance = fixture_utils.generate_api_objects(
+            [task_fixture, fixtures.API_TASK]
         )
-        _, patch = mocks.create_mock_call(
-            mocks.WRAPPER_QUERY_METHOD, task_instance
-        )
+        _, patch = mocks.service_api_get_tasks_call(task_instance)
+
         synchronizer = sync_rest.TaskSynchronizer(full=True)
         synchronizer.sync()
 
         synced_task_ids = models.Task.objects.values_list('id', flat=True)
         self.assertGreater(models.Task.objects.all().count(), 0)
-        self.assertNotIn(task_fixture['id'], synced_task_ids)
-        self.assertIn(fixtures.API_TASK['id'], synced_task_ids)
+        self.assertNotIn(task_fixture["items"][0]['id'], synced_task_ids)
+        self.assertIn(fixtures.API_TASK["items"][0]['id'], synced_task_ids)
         patch.stop()
 
     def test_sync_filters_tasks_on_complete_project(self):
@@ -1055,22 +1045,21 @@ class TestTaskSynchronizer(TestAssignNullRelationMixin, SynchronizerTestMixin,
         project.save()
 
         task_fixture = deepcopy(fixtures.API_TASK)
-        task_fixture['id'] = '7741'
-        task_fixture['ProjectID'] = project.id
+        task_fixture["items"][0]['id'] = '7741'
+        task_fixture["items"][0]['projectID'] = project.id
 
-        task_instance = fixture_utils.generate_objects(
-            'Task', [task_fixture, fixtures.API_TASK]
+        task_instance = fixture_utils.generate_api_objects(
+            [task_fixture, fixtures.API_TASK]
         )
-        _, patch = mocks.create_mock_call(
-            mocks.WRAPPER_QUERY_METHOD, task_instance
-        )
+        _, patch = mocks.service_api_get_tasks_call(task_instance)
+
         synchronizer = sync_rest.TaskSynchronizer(full=True)
         synchronizer.sync()
 
         synced_task_ids = models.Task.objects.values_list('id', flat=True)
         self.assertGreater(models.Task.objects.all().count(), 0)
-        self.assertNotIn(task_fixture['id'], synced_task_ids)
-        self.assertIn(fixtures.API_TASK['id'], synced_task_ids)
+        self.assertNotIn(task_fixture["items"][0]['id'], synced_task_ids)
+        self.assertIn(fixtures.API_TASK["items"][0]['id'], synced_task_ids)
         patch.stop()
 
 
@@ -1635,10 +1624,10 @@ class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):
         self.synchronizer = sync.TaskPredecessorSynchronizer()
 
         mocks.init_api_connection(Wrapper)
+        fixture_utils.init_tasks()
         models.Task.objects.create(
             id=fixtures.API_TASK_PREDECESSOR['SuccessorTaskID'],
             title='Successor Task')
-        fixture_utils.init_tasks()
         fixture_utils.init_task_predecessors()
 
     def _assert_sync(self, instance, object_data):

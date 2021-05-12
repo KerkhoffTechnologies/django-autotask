@@ -354,7 +354,7 @@ class TestSyncPhaseCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncTaskCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncTaskCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
         mocks.service_api_get_tasks_call,
         fixtures.API_TASK,
@@ -712,6 +712,7 @@ class TestSyncAllCommand(TestCase):
 
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
         mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
+        mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
 
         output = run_sync_command(full_option=True)
 

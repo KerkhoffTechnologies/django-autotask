@@ -153,7 +153,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api_rest.TicketsAPIClient()
-        return super().update_at(api_client, **kwargs);
+        return super().update_at(api_client, **kwargs)
 
 
 class AvailablePicklistManager(models.Manager):
@@ -595,7 +595,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api_rest.TasksAPIClient()
-        return super().update_at(api_client, **kwargs);
+        return super().update_at(api_client, **kwargs)
 
 
 class TaskSecondaryResource(TimeStampedModel):
