@@ -589,6 +589,20 @@ class Task(ATUpdateMixin, TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
+    EDITABLE_FIELDS = {
+        'title': 'title',
+        'description': 'description',
+        'start_date': 'startDate',
+        'end_date': 'endDate',
+        'estimated_hours': 'estimatedHours',
+        'status': 'status',
+        'department': 'department',
+        'allocation_code': 'billingCodeID',
+        'priority': 'priority',
+        'project': 'projectID',
+        'phase': 'phase',
+    }
+
     def __str__(self):
         return self.title
 

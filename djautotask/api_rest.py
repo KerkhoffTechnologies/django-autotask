@@ -206,6 +206,13 @@ class AutotaskAPIClient(object):
             self.API,
         )
 
+    def get_api_base_url(self, endpoint):
+        return '{0}v{1}/{2}/'.format(
+            self.server_url,
+            settings.AUTOTASK_CREDENTIALS['rest_api_version'],
+            endpoint,
+        )
+
     def get_headers(self):
         headers = {'Content-Type': 'application/json'}
 
@@ -405,11 +412,16 @@ class TicketsAPIClient(AutotaskAPIClient):
 
 class TasksAPIClient(AutotaskAPIClient):
     API = 'Tasks'
+    PARENT_API = 'Projects'
 
     def get_tasks(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
 
     def update_task(self, task, changed_fields):
-        endpoint_url = 'Projects/{}/{}'.format(task.project, self.api_base_url)
+        endpoint_url = '{}{}/{}'.format(
+            self.get_api_base_url(self.PARENT_API),
+            task.project.id,
+            self.API
+        )
         body = self._format_request_body(task, changed_fields)
         return self.request('patch', endpoint_url, body)
