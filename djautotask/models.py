@@ -27,15 +27,16 @@ class SyncJob(models.Model):
 
 class ATUpdateMixin:
 
-    def get_changed_values(self, changed_field_keys):
+    def get_updated_object(self, **kwargs):
+        changed_field_keys = kwargs.get('changed_fields')
 
-        updated_objects = {}
+        updated_object = {}
         if changed_field_keys:
             for field in changed_field_keys:
                 field = field.replace('_id', '')
-                updated_objects[field] = getattr(self, field)
+                updated_object[field] = getattr(self, field)
 
-        return updated_objects
+        return updated_object
 
     def save(self, *args, **kwargs):
         """
@@ -49,11 +50,6 @@ class ATUpdateMixin:
             self.update_at(changed_fields=changed_fields)
 
         super().save(**kwargs)
-
-    def update_at(self, api_client, **kwargs):
-        changed_fields = kwargs.get('changed_fields')
-        updated_objects = self.get_changed_values(changed_fields)
-        return api_client.update_ticket(self, updated_objects)
 
 
 class Ticket(ATUpdateMixin, TimeStampedModel):
@@ -153,7 +149,10 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api_rest.TicketsAPIClient()
-        return super().update_at(api_client, **kwargs)
+        return api_client.update_ticket(
+            self,
+            self.get_updated_object(**kwargs)
+        )
 
 
 class AvailablePicklistManager(models.Manager):
@@ -595,7 +594,10 @@ class Task(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api_rest.TasksAPIClient()
-        return super().update_at(api_client, **kwargs)
+        return api_client.update_task(
+            self,
+            self.get_updated_object(**kwargs)
+        )
 
 
 class TaskSecondaryResource(TimeStampedModel):
