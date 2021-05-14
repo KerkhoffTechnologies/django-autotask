@@ -489,7 +489,6 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, Synchronizer):
         'departmentID': (models.Department, 'department'),
         'phaseID': (models.Phase, 'phase'),
         'projectID': (models.Project, 'project'),
-        'priority': (models.Priority, 'priority'),
         'priorityLabel': (models.Priority, 'priority'),
         'status': (models.Status, 'status'),
     }

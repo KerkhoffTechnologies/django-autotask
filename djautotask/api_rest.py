@@ -424,4 +424,5 @@ class TasksAPIClient(AutotaskAPIClient):
             self.API
         )
         body = self._format_request_body(task, changed_fields)
-        return self.request('patch', endpoint_url, body)
+        result = self.request('patch', endpoint_url, body)
+        return result

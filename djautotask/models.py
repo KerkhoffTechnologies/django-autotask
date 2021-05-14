@@ -598,7 +598,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'status': 'status',
         'department': 'department',
         'allocation_code': 'billingCodeID',
-        'priority': 'priority',
+        'priority': 'priorityLabel',
         'project': 'projectID',
         'phase': 'phase',
     }
