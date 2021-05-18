@@ -3,6 +3,7 @@ from dateutil.parser import parse
 from decimal import Decimal
 
 from django.db import transaction, IntegrityError
+from django.db.models import Q
 from django.utils import timezone
 
 from djautotask import api_rest as api
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class Synchronizer:
     lookup_key = 'id'
+    last_updated_field = 'lastActivityDate'
 
     def __init__(self, full=False, *args, **kwargs):
         self.api_conditions = []
@@ -238,7 +240,7 @@ class Synchronizer:
             last_sync_job_time = sync_job_qset.last().start_time.strftime(
                 '%Y-%m-%dT%H:%M:%S.%fZ')
             self.api_conditions.append(
-                ["lastActivityDate", last_sync_job_time, "gt"]
+                [self.last_updated_field, last_sync_job_time, "gt"]
             )
         results = SyncResults()
         results = self.get(results)
@@ -339,12 +341,33 @@ class ContactSynchronizer(Synchronizer):
         return self.client.get_contacts(next_url, *args, **kwargs)
 
 
+class TicketTaskMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request_settings = DjautotaskSettings().get_settings()
+        self.completed_date = (timezone.now() - timezone.timedelta(
+                hours=request_settings.get('keep_completed_hours')
+            )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        self.api_conditions = [
+            [
+                {
+                    "op": "or",
+                    "operands": [
+                        [self.completed_date_field, self.completed_date, 'gt'],
+                        ['status', models.Status.COMPLETE_ID, 'noteq']
+                    ]
+                }
+            ]
+        ]
+
+
 # ParentSynchronizer: using SOAP API
-class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
+class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
                          ParentSynchronizer):
     client_class = api.TicketsAPIClient
     model_class = models.TicketTracker
     udf_class = models.TicketUDF
+    completed_date_field = 'completedDate'
 
     related_meta = {
         'companyID': (models.Account, 'account'),
@@ -363,20 +386,6 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         'contractID': (models.Contract, 'contract'),
         'contactID': (models.Contact, 'contact'),
     }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request_settings = DjautotaskSettings().get_settings()
-        self.completed_date = (timezone.now() - timezone.timedelta(
-                hours=request_settings.get('keep_completed_hours')
-            )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        self.api_conditions_op = 'or'
-        self.api_conditions = [
-                [
-                    ['completedDate', self.completed_date, 'gt'],
-                    ['status', models.Status.COMPLETE_ID, 'noteq']
-                ]
-            ]
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -440,7 +449,6 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         return instance
 
     def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['op'] = self.api_conditions_op
         kwargs['conditions'] = self.api_conditions
         return self.client.get_tickets(next_url, *args, **kwargs)
 
@@ -469,3 +477,79 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         )
 
         self.sync_children(*sync_classes)
+
+
+class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
+    client_class = api.TasksAPIClient
+    model_class = models.TaskTracker
+    udf_class = models.TaskUDF
+    object_filter_field = 'projectID'
+    completed_date_field = 'completedDateTime'
+
+    related_meta = {
+        'assignedResourceID': (models.Resource, 'assigned_resource'),
+        'assignedResourceRoleID': (models.Role, 'assigned_resource_role'),
+        'billingCodeID': (models.AllocationCode, 'allocation_code'),
+        'departmentID': (models.Department, 'department'),
+        'phaseID': (models.Phase, 'phase'),
+        'projectID': (models.Project, 'project'),
+        'priorityLabel': (models.Priority, 'priority'),
+        'status': (models.Status, 'status'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        self.last_updated_field = 'lastActivityDateTime'
+        super().__init__(*args, **kwargs)
+        self.api_conditions += [
+            ['projectId', list(self.get_active_ids()), 'in']
+        ]
+
+    def get_active_ids(self):
+        active_projects = models.Project.objects.exclude(
+            Q(status__is_active=False) |
+            Q(status__id=models.ProjectStatus.COMPLETE_ID)
+        ).values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_projects
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.title = json_data['title']
+
+        instance.number = json_data.get('taskNumber')
+        instance.description = json_data.get('description')
+        instance.create_date = json_data.get('createDateTime')
+        instance.completed_date = json_data.get('completedDateTime')
+        instance.start_date = json_data.get('startDateTime')
+        instance.end_date = json_data.get('endDateTime')
+        instance.estimated_hours = json_data.get('estimatedHours')
+        instance.remaining_hours = json_data.get('remainingHours')
+        instance.last_activity_date = json_data.get('lastActivityDateTime')
+
+        self._set_datetime_attribute(instance, 'create_date')
+        self._set_datetime_attribute(instance, 'completed_date')
+        self._set_datetime_attribute(instance, 'start_date')
+        self._set_datetime_attribute(instance, 'end_date')
+        self._set_datetime_attribute(instance, 'last_activity_date')
+
+        udfs = json_data.get('userDefinedFields')
+
+        # Refresh udf field to eliminate stale udfs
+        instance.udf = dict()
+
+        if len(udfs):
+            self._assign_udf_data(instance, udfs)
+
+        if instance.estimated_hours:
+            instance.estimated_hours = \
+                Decimal(str(round(instance.estimated_hours, 2)))
+        if instance.remaining_hours:
+            instance.remaining_hours = \
+                Decimal(str(round(instance.remaining_hours, 2)))
+
+        self.set_relations(instance, json_data)
+        return instance
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_tasks(next_url, *args, **kwargs)

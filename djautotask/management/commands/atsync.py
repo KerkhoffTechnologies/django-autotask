@@ -48,7 +48,7 @@ class Command(BaseCommand):
             ('task_secondary_resource',
              sync.TaskSecondaryResourceSynchronizer,
              _('Task Secondary Resource')),
-            ('task', sync.TaskSynchronizer, _('Task')),
+            ('task', syncrest.TaskSynchronizer, _('Task')),
             ('display_color', sync.DisplayColorSynchronizer,
              _('Display Color')),
             ('ticket_category', sync.TicketCategorySynchronizer,

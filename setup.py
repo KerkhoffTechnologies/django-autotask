@@ -14,7 +14,7 @@ setup(
                 'and callbacks.',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    keywords='django autotask soap api python',
+    keywords='django autotask soap rest api python',
     packages=find_packages(),
     author='Kerkhoff Technologies Inc.',
     author_email='matt@kerkhofftech.ca',
