@@ -1,6 +1,24 @@
 from datetime import datetime
 from dateutil.tz import tzoffset
 
+
+API_PAGE_DETAILS = {
+        "count": 1,
+        "requestCount": 500,
+        "prevPageUrl": None,
+        "nextPageUrl": None
+    }
+
+API_EMPTY = {
+    "items": [],
+    "pageDetails": {
+        "count": 0,
+        "requestCount": 500,
+        "prevPageUrl": None,
+        "nextPageUrl": None
+    }
+}
+
 API_ACCOUNT_LIST = [
     {
         'id': 174,
@@ -526,44 +544,48 @@ API_PHASE = {
 
 API_PHASE_LIST = [API_PHASE]
 
-API_TASK = {
+API_TASK_ITEM = {
     'id': 7733,
-    'AllocationCodeID': 29683415,
-    'AssignedResourceID': 29683794,
-    'AssignedResourceRoleID': 29682834,
-    'CanClientPortalUserCompleteTask': False,
-    'CreateDateTime':
-        datetime(2018, 1, 20, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'CreatorResourceID': 4,
-    'CompletedDateTime': None,
-    'DepartmentID': 29683385,
-    'Description': 'Review modular code',
-    'EndDateTime': datetime(2019, 9, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'EstimatedHours': 5.0,
-    'ExternalID': None,
-    'HoursToBeScheduled': 5.0,
-    'IsVisibleInClientPortal': True,
-    'LastActivityDateTime':
-        datetime(2019, 10, 6, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'PhaseID': 7732,
-    'Priority': 0,
-    'PriorityLabel': 1,
-    'ProjectID': 4,
-    'PurchaseOrderNumber': None,
-    'RemainingHours': 5.0,
-    'StartDateTime':
-        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'Status': 11,
-    'TaskIsBillable': False,
-    'TaskNumber': 'T20120604.0012',
-    'TaskType': 1,
-    'Title': 'Review modular code',
-    'CreatorType': 1,
-    'LastActivityResourceID': 29683968,
-    'LastActivityPersonType': 1,
-    'UserDefinedFields': {}
+    'allocationCodeID': 29683415,
+    'assignedResourceID': 29683794,
+    'assignedResourceRoleID': 29682834,
+    'canClientPortalUserCompleteTask': False,
+    'createDateTime': '2018-01-20T12:00:00.000Z',
+    'creatorResourceID': 4,
+    'completedDateTime': None,
+    'departmentID': 29683385,
+    'description': 'Review modular code',
+    'endDateTime': '2019-09-23T12:00:00.000Z',
+    'estimatedHours': 5.0,
+    'externalID': None,
+    'hoursToBeScheduled': 5.0,
+    'isVisibleInClientPortal': True,
+    'lastActivityDateTime': '2019-10-06T12:00:00.000Z',
+    'phaseID': 7732,
+    'priority': 0,
+    'priorityLabel': 1,
+    'projectID': 4,
+    'purchaseOrderNumber': None,
+    'remainingHours': 5.0,
+    'startDateTime': '2018-01-23T12:00:00.000Z',
+    'status': 11,
+    'taskIsBillable': False,
+    'taskNumber': 'T20120604.0012',
+    'taskType': 1,
+    'title': 'Review modular code',
+    'creatorType': 1,
+    'lastActivityResourceID': 29683968,
+    'lastActivityPersonType': 1,
+    'userDefinedFields': {}
 }
-API_TASK_LIST = [API_TASK]
+API_TASK_ITEMS = [API_TASK_ITEM]
+API_TASK_BY_ID = {
+    "item": API_TASK_ITEM
+}
+API_TASK = {
+    "items": API_TASK_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
 
 API_TASK_SECONDARY_RESOURCE = {
     'id': 29684411,
@@ -856,7 +878,7 @@ API_TASK_PREDECESSOR = {
     'id': 1,
     'UserDefinedFields': None,
     'LagDays': 0,
-    'PredecessorTaskID': API_TASK['id'],
+    'PredecessorTaskID': API_TASK_ITEM['id'],
     'SuccessorTaskID': 7755,
 }
 API_TASK_PREDECESSOR_LIST = [API_TASK_PREDECESSOR]
@@ -889,23 +911,6 @@ API_UDF_LIST = [
     },
 
 ]
-
-API_PAGE_DETAILS = {
-        "count": 1,
-        "requestCount": 500,
-        "prevPageUrl": None,
-        "nextPageUrl": None
-    }
-
-API_EMPTY = {
-    "items": [],
-    "pageDetails": {
-        "count": 0,
-        "requestCount": 500,
-        "prevPageUrl": None,
-        "nextPageUrl": None
-    }
-}
 
 API_CONTACT_ITEMS = [
     {
@@ -971,7 +976,6 @@ API_TICKET_ITEM = {
         'id': 7688
     }
 API_TICKET_ITEMS = [API_TICKET_ITEM]
-
 API_TICKET_BY_ID = {
     "item": API_TICKET_ITEM
 }

@@ -354,16 +354,16 @@ class TestSyncPhaseCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncTaskCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncTaskCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_TASK_LIST,
+        mocks.service_api_get_tasks_call,
+        fixtures.API_TASK,
         'task',
     )
 
     def setUp(self):
         super().setUp()
-        mocks.create_mock_call(
-            'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
+        fixture_utils.init_tasks()
 
 
 class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
@@ -561,8 +561,6 @@ class TestSyncAllCommand(TestCase):
         super().setUp()
         mocks.init_api_connection(Wrapper)
         mocks.create_mock_call(
-            'djautotask.sync.TaskSynchronizer._get_query_conditions', None)
-        mocks.create_mock_call(
             'djautotask.sync.TicketNoteSynchronizer._get_query_conditions',
             None
         )
@@ -570,12 +568,11 @@ class TestSyncAllCommand(TestCase):
             'djautotask.sync.TaskNoteSynchronizer._get_query_conditions',
             None
         )
-        mocks.create_mock_call(
-            'djautotask.sync.QueryConditionMixin._get_query_conditions', None)
         fixture_utils.mock_udfs()
 
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
         mocks.service_api_get_tickets_call(fixtures.API_TICKET)
+        mocks.service_api_get_tasks_call(fixtures.API_TASK)
 
         # Mock API calls to return values based on what entity
         # is being requested
@@ -715,6 +712,7 @@ class TestSyncAllCommand(TestCase):
 
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
         mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
+        mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
 
         output = run_sync_command(full_option=True)
 

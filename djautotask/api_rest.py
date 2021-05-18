@@ -200,10 +200,16 @@ class AutotaskAPIClient(object):
         return msg
 
     def build_api_base_url(self):
-        self.api_base_url = '{0}v{1}/{2}/'.format(
+        self.api_base_url = self.get_api_base_url()
+
+    def get_api_base_url(self, endpoint=None):
+        if not endpoint:
+            endpoint = self.API
+
+        return '{0}v{1}/{2}/'.format(
             self.server_url,
             settings.AUTOTASK_CREDENTIALS['rest_api_version'],
-            self.API,
+            endpoint,
         )
 
     def get_headers(self):
@@ -226,28 +232,20 @@ class AutotaskAPIClient(object):
     def _build_filter(self, **kwargs):
         filter_array = []
 
-        # kwargs['conditions'][0] - common API condition
-        # kwargs['conditions'][1] - additional partial sync condition
-        if 'op' in kwargs:
-
-            sub_kwargs = {'conditions': kwargs['conditions'][0]}
-            filter_obj = {
-                "op": kwargs['op'],
-                "items": self._build_filter(**sub_kwargs)
-            }
-            filter_array.append(filter_obj)
-
-            # additional partial sync condition
-            if len(kwargs['conditions']) > 1:
-                sub_kwargs = {'conditions': [kwargs['conditions'][1]]}
-                partial_filter_obj = self._build_filter(**sub_kwargs)
-                filter_array.append(partial_filter_obj[0])
-
-        elif 'conditions' in kwargs:
+        if 'conditions' in kwargs:
 
             for condition in kwargs['conditions']:
-                filter_obj = self._build_filter_obj(*condition)
-                filter_array.append(filter_obj)
+
+                if type(condition[0]) == dict:
+                    sub_kwargs = {'conditions': condition[0]['operands']}
+                    filter_obj = {
+                        "op": condition[0]['op'],
+                        "items": self._build_filter(**sub_kwargs)
+                    }
+                    filter_array.append(filter_obj)
+                else:
+                    filter_obj = self._build_filter_obj(*condition)
+                    filter_array.append(filter_obj)
 
         return filter_array
 
@@ -381,6 +379,15 @@ class AutotaskAPIClient(object):
             self._log_failed(response)
             raise AutotaskAPIError(response)
 
+    def get_instance(self, instance_id):
+        endpoint_url = '{}{}'.format(self.api_base_url, instance_id)
+        return self.fetch_resource(endpoint_url)
+
+    def update_instance(self, instance, changed_fields):
+        endpoint_url = '{}'.format(self.api_base_url)
+        body = self._format_request_body(instance, changed_fields)
+        return self.request('patch', endpoint_url, body)
+
 
 class ContactsAPIClient(AutotaskAPIClient):
     API = 'Contacts'
@@ -393,14 +400,28 @@ class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 
     def get_ticket(self, ticket_id):
-        endpoint_url = '{}{}'.format(self.api_base_url, ticket_id)
-        return self.fetch_resource(endpoint_url)
+        return self.get_instance(ticket_id)
 
     def get_tickets(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
 
     def update_ticket(self, ticket, changed_fields):
-        endpoint_url = '{}'.format(self.api_base_url)
-        body = self._format_request_body(ticket, changed_fields)
+        return self.update_instance(ticket, changed_fields)
 
-        return self.request('patch', endpoint_url, body)
+
+class TasksAPIClient(AutotaskAPIClient):
+    API = 'Tasks'
+    PARENT_API = 'Projects'
+
+    def get_tasks(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+    def update_task(self, task, changed_fields):
+        endpoint_url = '{}{}/{}'.format(
+            self.get_api_base_url(self.PARENT_API),
+            task.project.id,
+            self.API
+        )
+        body = self._format_request_body(task, changed_fields)
+        result = self.request('patch', endpoint_url, body)
+        return result
