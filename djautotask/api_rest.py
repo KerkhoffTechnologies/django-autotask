@@ -200,13 +200,12 @@ class AutotaskAPIClient(object):
         return msg
 
     def build_api_base_url(self):
-        self.api_base_url = '{0}v{1}/{2}/'.format(
-            self.server_url,
-            settings.AUTOTASK_CREDENTIALS['rest_api_version'],
-            self.API,
-        )
+        self.api_base_url = self.get_api_base_url()
 
-    def get_api_base_url(self, endpoint):
+    def get_api_base_url(self, endpoint=None):
+        if not endpoint:
+            endpoint = self.API
+
         return '{0}v{1}/{2}/'.format(
             self.server_url,
             settings.AUTOTASK_CREDENTIALS['rest_api_version'],

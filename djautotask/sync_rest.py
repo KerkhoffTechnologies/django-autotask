@@ -341,12 +341,33 @@ class ContactSynchronizer(Synchronizer):
         return self.client.get_contacts(next_url, *args, **kwargs)
 
 
+class TicketTaskMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request_settings = DjautotaskSettings().get_settings()
+        self.completed_date = (timezone.now() - timezone.timedelta(
+                hours=request_settings.get('keep_completed_hours')
+            )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        self.api_conditions = [
+            [
+                {
+                    "op": "or",
+                    "operands": [
+                        [self.completed_date_field, self.completed_date, 'gt'],
+                        ['status', models.Status.COMPLETE_ID, 'noteq']
+                    ]
+                }
+            ]
+        ]
+
+
 # ParentSynchronizer: using SOAP API
-class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
+class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
                          ParentSynchronizer):
     client_class = api.TicketsAPIClient
     model_class = models.TicketTracker
     udf_class = models.TicketUDF
+    completed_date_field = 'completedDate'
 
     related_meta = {
         'companyID': (models.Account, 'account'),
@@ -365,24 +386,6 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         'contractID': (models.Contract, 'contract'),
         'contactID': (models.Contact, 'contact'),
     }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request_settings = DjautotaskSettings().get_settings()
-        self.completed_date = (timezone.now() - timezone.timedelta(
-                hours=request_settings.get('keep_completed_hours')
-            )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        self.api_conditions = [
-            [
-                {
-                    "op": "or",
-                    "operands": [
-                        ['completedDate', self.completed_date, 'gt'],
-                        ['status', models.Status.COMPLETE_ID, 'noteq']
-                    ]
-                }
-            ]
-        ]
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -476,11 +479,12 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         self.sync_children(*sync_classes)
 
 
-class TaskSynchronizer(SyncRestRecordUDFMixin, Synchronizer):
+class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
     client_class = api.TasksAPIClient
     model_class = models.TaskTracker
     udf_class = models.TaskUDF
     object_filter_field = 'projectID'
+    completed_date_field = 'completedDateTime'
 
     related_meta = {
         'assignedResourceID': (models.Resource, 'assigned_resource'),
@@ -496,21 +500,8 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, Synchronizer):
     def __init__(self, *args, **kwargs):
         self.last_updated_field = 'lastActivityDateTime'
         super().__init__(*args, **kwargs)
-        request_settings = DjautotaskSettings().get_settings()
-        self.completed_date = (timezone.now() - timezone.timedelta(
-                hours=request_settings.get('keep_completed_hours')
-            )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        self.api_conditions = [
-            ['projectId', list(self.get_active_ids()), 'in'],
-            [
-                {
-                    "op": "or",
-                    "operands": [
-                        ['completedDateTime', self.completed_date, 'gt'],
-                        ['status', models.Status.COMPLETE_ID, 'noteq']
-                    ]
-                }
-            ]
+        self.api_conditions += [
+            ['projectId', list(self.get_active_ids()), 'in']
         ]
 
     def get_active_ids(self):
