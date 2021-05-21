@@ -338,9 +338,11 @@ class AutotaskAPIClient(object):
         else:
             endpoint = self._endpoint()
 
+        body = self.QUERYSTR if method == 'post' else None
+
         return _fetch_resource(
             endpoint, request_retry_counter=retry_counter,
-            request_method=method, request_body=self.QUERYSTR, **kwargs)
+            request_method=method, request_body=body, **kwargs)
 
     def log_message(self, endpoint, method, body):
         logger_message = \
