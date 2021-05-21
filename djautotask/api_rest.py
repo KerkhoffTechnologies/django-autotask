@@ -282,7 +282,7 @@ class AutotaskAPIClient(object):
         return body
 
     def fetch_resource(self, next_url=None, retry_counter=None, method='get',
-                       body=None, *args, **kwargs):
+                       *args, **kwargs):
         """
         retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
@@ -292,20 +292,14 @@ class AutotaskAPIClient(object):
                wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
                retry_on_exception=retry_if_api_error)
         def _fetch_resource(endpoint_url, request_retry_counter=None,
-                            request_method=method, request_body=body,
+                            request_method=method, request_body=None,
                             **kwargs):
             if not request_retry_counter:
                 request_retry_counter = {'count': 0}
             request_retry_counter['count'] += 1
 
             try:
-                logger_message = 'Making {} request to {}'.format(
-                    request_method.upper(), endpoint)
-                if body:
-                    logger_message = \
-                        '{}. Request body: {}'.format(logger_message, body)
-
-                logger.debug(logger_message)
+                self.log_message(endpoint_url, request_method, request_body)
 
                 response = requests.request(
                     request_method,
@@ -346,7 +340,17 @@ class AutotaskAPIClient(object):
 
         return _fetch_resource(
             endpoint, request_retry_counter=retry_counter,
-            request_method=method, request_body=body, **kwargs)
+            request_method=method, request_body=self.QUERYSTR, **kwargs)
+
+    def log_message(self, endpoint, method, body):
+        logger_message = \
+            'Making {} request to {}'.format(method.upper(), endpoint)
+
+        if method == 'post':
+            logger_message = \
+                '{}. Request body: {}'.format(logger_message, body)
+
+        logger.debug(logger_message)
 
     def request(self, method, endpoint_url, body=None):
         """
@@ -433,10 +437,7 @@ class TasksAPIClient(AutotaskAPIClient):
         issues for cases where there are a large number of open projects in
         the database.
         """
-        self.build_query_string(**kwargs)
-
-        return self.fetch_resource(next_url, method='post',
-                                   body=self.QUERYSTR, *args, **kwargs)
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
     def update_task(self, task, changed_fields):
         endpoint_url = '{}{}/{}'.format(
