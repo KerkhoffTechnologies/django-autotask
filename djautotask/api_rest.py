@@ -281,8 +281,8 @@ class AutotaskAPIClient(object):
 
         return body
 
-    def fetch_resource(self, next_url=None, retry_counter=None, *args,
-                       **kwargs):
+    def fetch_resource(self, next_url=None, retry_counter=None, method='get',
+                       *args, **kwargs):
         """
         retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
@@ -291,21 +291,27 @@ class AutotaskAPIClient(object):
                wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
                wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
                retry_on_exception=retry_if_api_error)
-        def _fetch_resource(endpoint, retry_counter=None, **kwargs):
-            if not retry_counter:
-                retry_counter = {'count': 0}
-            retry_counter['count'] += 1
+        def _fetch_resource(endpoint_url, request_retry_counter=None,
+                            request_method=method, request_body=None,
+                            **kwargs):
+            if not request_retry_counter:
+                request_retry_counter = {'count': 0}
+            request_retry_counter['count'] += 1
 
             try:
-                logger.debug('Making GET request to {}'.format(endpoint))
-                response = requests.get(
-                    endpoint,
+                self.log_message(endpoint_url, request_method, request_body)
+
+                response = requests.request(
+                    request_method,
+                    endpoint_url,
+                    data=request_body,
                     timeout=self.timeout,
                     headers=self.get_headers(),
                 )
 
             except requests.RequestException as e:
-                logger.error('Request failed: GET {}: {}'.format(endpoint, e))
+                logger.error('Request failed: {} {}: {}'.format(
+                    request_method.upper(), endpoint_url, e))
                 raise AutotaskAPIError('{}'.format(e))
 
             if 200 <= response.status_code < 300:
@@ -332,7 +338,22 @@ class AutotaskAPIClient(object):
         else:
             endpoint = self._endpoint()
 
-        return _fetch_resource(endpoint, retry_counter=retry_counter, **kwargs)
+        body = self.QUERYSTR if method == 'post' else None
+
+        return _fetch_resource(
+            endpoint, request_retry_counter=retry_counter,
+            request_method=method, request_body=body, **kwargs)
+
+    def log_message(self, endpoint, method, body):
+        body = body if body else ''
+
+        logger_message = \
+            'Making {} request to {}'.format(method.upper(), endpoint)
+        if method == 'post':
+            logger_message = \
+                '{}. Request body: {}'.format(logger_message, body)
+
+        logger.debug(logger_message)
 
     def request(self, method, endpoint_url, body=None):
         """
@@ -414,7 +435,12 @@ class TasksAPIClient(AutotaskAPIClient):
     PARENT_API = 'Projects'
 
     def get_tasks(self, next_url, *args, **kwargs):
-        return self.fetch_resource(next_url, *args, **kwargs)
+        """
+        Fetch tasks from the API. We use a POST request to avoid URL length
+        issues for cases where there are a large number of open projects in
+        the database.
+        """
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
     def update_task(self, task, changed_fields):
         endpoint_url = '{}{}/{}'.format(
@@ -425,3 +451,6 @@ class TasksAPIClient(AutotaskAPIClient):
         body = self._format_request_body(task, changed_fields)
         result = self.request('patch', endpoint_url, body)
         return result
+
+    def _endpoint(self):
+        return '{}{}'.format(self.api_base_url, self.POST_QUERY)
