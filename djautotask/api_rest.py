@@ -345,9 +345,10 @@ class AutotaskAPIClient(object):
             request_method=method, request_body=body, **kwargs)
 
     def log_message(self, endpoint, method, body):
+        body = body if body else ''
+
         logger_message = \
             'Making {} request to {}'.format(method.upper(), endpoint)
-
         if method == 'post':
             logger_message = \
                 '{}. Request body: {}'.format(logger_message, body)
