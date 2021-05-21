@@ -457,7 +457,8 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
 
     def fetch_sync_by_id(self, instance_id):
         instance = super().fetch_sync_by_id(instance_id)
-        if instance.status.id != models.Status.COMPLETE_ID:
+        if not instance.status or \
+                instance.status.id != models.Status.COMPLETE_ID:
             self.sync_related(instance)
         return instance
 
