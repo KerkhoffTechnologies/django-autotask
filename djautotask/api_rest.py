@@ -156,7 +156,7 @@ class AutotaskAPIClient(object):
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
         self.api_base_url = None
-        self.build_api_base_url()
+        self.api_base_url = self.build_api_base_url()
 
     def _endpoint(self):
         return '{0}{1}{2}'.format(self.api_base_url,
@@ -199,10 +199,7 @@ class AutotaskAPIClient(object):
                                                     error)
         return msg
 
-    def build_api_base_url(self):
-        self.api_base_url = self.get_api_base_url()
-
-    def get_api_base_url(self, endpoint=None):
+    def build_api_base_url(self, endpoint=None):
         if not endpoint:
             endpoint = self.API
 
@@ -444,7 +441,7 @@ class TasksAPIClient(AutotaskAPIClient):
 
     def update_task(self, task, changed_fields):
         endpoint_url = '{}{}/{}'.format(
-            self.get_api_base_url(self.PARENT_API),
+            self.build_api_base_url(self.PARENT_API),
             task.project.id,
             self.API
         )

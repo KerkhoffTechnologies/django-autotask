@@ -592,15 +592,16 @@ class Task(ATUpdateMixin, TimeStampedModel):
     EDITABLE_FIELDS = {
         'title': 'title',
         'description': 'description',
-        'start_date': 'startDate',
-        'end_date': 'endDate',
+        'start_date': 'startDateTime',
+        'end_date': 'endDateTime',
         'estimated_hours': 'estimatedHours',
         'status': 'status',
-        'department': 'department',
+        'department': 'departmentID',
         'allocation_code': 'billingCodeID',
         'priority': 'priorityLabel',
-        'project': 'projectID',
-        'phase': 'phase',
+        'phase': 'phaseID',
+        'assigned_resource': 'assignedResourceID',
+        'assigned_resource_role': 'assignedResourceRoleID',
     }
 
     def __str__(self):
