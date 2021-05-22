@@ -600,6 +600,8 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'allocation_code': 'billingCodeID',
         'priority': 'priorityLabel',
         'phase': 'phaseID',
+        'assigned_resource': 'assignedResourceID',
+        'assigned_resource_role': 'assignedResourceRoleID',
     }
 
     def __str__(self):
