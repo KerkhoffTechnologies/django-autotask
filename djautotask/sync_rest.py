@@ -519,6 +519,15 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
 
         instance.number = json_data.get('taskNumber')
         instance.description = json_data.get('description')
+
+        if instance.description:
+            # Truncate the field to 8000 characters as per AT docs. Since we've
+            # received descriptions greater than 8000 we'll truncate here
+            # instead of catching the DataError that would be raised.
+            # It is preferred to keep the DB schema in-line with the
+            # AT specifications, even if they are wrong.
+            instance.description = \
+                instance.description[:models.Task.MAX_DESCRIPTION]
         instance.create_date = json_data.get('createDateTime')
         instance.completed_date = json_data.get('completedDateTime')
         instance.start_date = json_data.get('startDateTime')

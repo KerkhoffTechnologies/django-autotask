@@ -545,9 +545,11 @@ class Phase(TimeStampedModel):
 
 
 class Task(ATUpdateMixin, TimeStampedModel):
+    MAX_DESCRIPTION = 8000
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
-    description = models.CharField(blank=True, null=True, max_length=8000)
+    description = models.TextField(blank=True, null=True,
+                                   max_length=MAX_DESCRIPTION)
     completed_date = models.DateTimeField(blank=True, null=True)
     create_date = models.DateTimeField(blank=True, null=True)
     start_date = models.DateTimeField(blank=True, null=True)
