@@ -563,3 +563,93 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
     def get_page(self, next_url=None, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_tasks(next_url, *args, **kwargs)
+
+
+class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
+                          ParentSynchronizer):
+    client_class = api.ProjectsAPIClient
+    model_class = models.ProjectTracker
+    udf_class = models.ProjectUDF
+    last_updated_field = 'lastActivityDateTime'
+
+    related_meta = {
+        'projectLeadResourceID': (models.Resource, 'project_lead_resource'),
+        'companyID': (models.Account, 'account'),
+        'status': (models.ProjectStatus, 'status'),
+        'projectType': (models.ProjectType, 'type'),
+        'contractID': (models.Contract, 'contract'),
+        'department': (models.Department, 'department'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api_conditions += [
+            ['status', models.ProjectStatus.COMPLETE_ID, 'noteq'],
+            ['status', list(self.get_active_ids()), 'in']
+        ]
+
+    def get_active_ids(self):
+        active_project_statuses = models.ProjectStatus.objects.exclude(
+            is_active=False).values_list('id', flat=True).order_by(
+            self.lookup_key)
+
+        return active_project_statuses
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.name = object_data.get('projectName')
+        instance.number = object_data.get('projectNumber')
+        instance.description = object_data.get('description')
+        instance.actual_hours = object_data.get('actualHours')
+        instance.completed_percentage = object_data.get('completedPercentage')
+        instance.duration = object_data.get('duration')
+        instance.estimated_time = object_data.get('estimatedTime')
+        instance.status_detail = object_data.get('statusDetail')
+
+        instance.completed_date = object_data.get('completedDateTime')
+        instance.end_date = object_data.get('endDateTime')
+        instance.start_date = object_data.get('startDateTime')
+        instance.last_activity_date_time = \
+            object_data.get('lastActivityDateTime')
+
+        self._set_datetime_attribute(instance, 'completed_date')
+        self._set_datetime_attribute(instance, 'end_date')
+        self._set_datetime_attribute(instance, 'start_date')
+        self._set_datetime_attribute(instance, 'last_activity_date_time')
+
+        if instance.completed_date:
+            instance.completed_date = instance.completed_date.date()
+        if instance.end_date:
+            instance.end_date = instance.end_date.date()
+        if instance.start_date:
+            instance.start_date = instance.start_date.date()
+
+        udfs = object_data.get('userDefinedFields')
+
+        # Refresh udf field to eliminate stale udfs
+        instance.udf = dict()
+
+        if len(udfs):
+            self._assign_udf_data(instance, udfs)
+
+        if instance.estimated_time:
+            instance.estimated_time = \
+                Decimal(str(round(instance.estimated_time, 2)))
+        if instance.actual_hours:
+            instance.actual_hours = \
+                Decimal(str(round(instance.actual_hours, 2)))
+
+        if instance.description:
+            # Autotask docs say the max description length is 2000
+            # characters but we've seen descriptions that are longer than that.
+            # So truncate the field to 2000 characters just in case.
+            instance.description = instance.description[:2000]
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_projects(next_url, *args, **kwargs)

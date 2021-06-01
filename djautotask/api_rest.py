@@ -451,3 +451,16 @@ class TasksAPIClient(AutotaskAPIClient):
 
     def _endpoint(self):
         return '{}{}'.format(self.api_base_url, self.POST_QUERY)
+
+
+class ProjectsAPIClient(AutotaskAPIClient):
+    API = 'Projects'
+
+    def get_project(self, project_id):
+        return self.get_instance(project_id)
+
+    def get_projects(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+    def update_project(self, project, changed_fields):
+        return self.update_instance(project, changed_fields)
