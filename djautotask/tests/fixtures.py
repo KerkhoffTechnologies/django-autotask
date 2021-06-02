@@ -132,56 +132,56 @@ API_PROJECT_TYPE_LIST = [
     }
 ]
 
-API_PROJECT_LIST = [
-    {
+API_PROJECT_ITEM = {
         'id': 4,
-        'ProjectName': 'Software Project',
-        'AccountID': 174,
-        'Type': 5,
-        'ExtPNumber': '',
-        'ProjectNumber': 'P20120604.0001',
-        'Description': '',
-        'Department': 29683384,
-        'ContractID': 29684183,
-        'CreateDateTime':
-            datetime(2012, 6, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
-        'CreatorResourceID': 4,
-        'StartDateTime':
-            datetime(2012, 6, 19, 5, 0, tzinfo=tzoffset(None, 3600)),
-        'EndDateTime':
-            datetime(2012, 10, 24, 5, 0, tzinfo=tzoffset(None, 3600)),
-        'Duration': 59,
-        'ActualHours': 0.0,
-        'ActualBilledHours': 0.0,
-        'EstimatedTime': 164.0,
-        'LaborEstimatedRevenue': 0.0,
-        'LaborEstimatedCosts': 0.0,
-        'LaborEstimatedMarginPercentage': 0.0,
-        'ProjectCostsRevenue': 0.0,
-        'ProjectCostsBudget': 0.0,
-        'ProjectCostEstimatedMarginPercentage': 0.0,
-        'ChangeOrdersRevenue': 0.0,
-        'SGDA': 0.0,
-        'OriginalEstimatedRevenue': 0.0,
-        'EstimatedSalesCost': 0.0,
-        'Status': 1,
-        'ProjectLeadResourceID': 29683794,
-        'CompletedPercentage': 0,
-        'CompletedDateTime':
-            datetime(2019, 9, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
-        'StatusDetail': '',
-        'StatusDateTime':
-            datetime(2012, 6, 18, 5, 0, tzinfo=tzoffset(None, 3600)),
+        'projectName': 'Software Project',
+        'companyID': 174,
+        'projectType': 5,
+        'extProjectNumber': '',
+        'projectNumber': 'P20120604.0001',
+        'description': '',
+        'department': 29683384,
+        'contractID': 29684183,
+        'createDateTime': '2012-06-18T06:00:00.000Z',
+        'creatorResourceID': 4,
+        'startDateTime': '2012-06-19T06:00:00.000Z',
+        'endDateTime': '2012-10-24T06:00:00.000Z',
+        'duration': 59,
+        'actualHours': 0.0,
+        'actualBilledHours': 0.0,
+        'estimatedTime': 164.0,
+        'laborEstimatedRevenue': 0.0,
+        'laborEstimatedCosts': 0.0,
+        'laborEstimatedMarginPercentage': 0.0,
+        'projectCostsRevenue': 0.0,
+        'projectCostsBudget': 0.0,
+        'projectCostEstimatedMarginPercentage': 0.0,
+        'changeOrdersRevenue': 0.0,
+        'sgda': 0.0,
+        'originalEstimatedRevenue': 0.0,
+        'estimatedSalesCost': 0.0,
+        'status': 1,
+        'projectLeadResourceID': 29683794,
+        'completedPercentage': 0,
+        'completedDateTime': '2019-09-18T06:00:00.000Z',
+        'statusDetail': '',
+        'statusDateTime': '2012-06-18T06:00:00.000Z',
         'LineOfBusiness': 6,
-        'PurchaseOrderNumber': '',
-        'BusinessDivisionSubdivisionID': 6,
-        'LastActivityResourceID': 4,
-        'LastActivityDateTime':
-            datetime(2012, 6, 18, 1, 0, tzinfo=tzoffset(None, 3600)),
-        'LastActivityPersonType': 1,
-        'UserDefinedFields': {},
+        'purchaseOrderNumber': '',
+        'businessDivisionSubdivisionID': 6,
+        'lastActivityResourceID': 4,
+        'lastActivityDateTime': '2012-06-18T02:00:00.000Z',
+        'lastActivityPersonType': 1,
+        'userDefinedFields': {},
     }
-]
+API_PROJECT_ITEMS = [API_PROJECT_ITEM]
+API_PROJECT_BY_ID = {
+    "item": API_PROJECT_ITEM
+}
+API_PROJECT = {
+    "items": API_PROJECT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
 
 API_SECONDARY_RESOURCE_LIST = [
     {

@@ -25,6 +25,7 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
     synchronizer_class = None
     model_class = None
     fixture = None
+    update_field = None
 
     def _call_api(self, return_data):
         raise NotImplementedError
@@ -56,6 +57,18 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
         self.assert_sync_job()
 
+    def test_save_instace(self):
+        """
+        Test to ensure synchronizer saves a instance locally.
+        """
+        self.assertGreater(self.model_class.objects.all().count(), 0)
+
+        object_data = self.fixture["items"][0]
+        instance = self.model_class.objects.get(id=object_data['id'])
+
+        self._assert_fields(instance, object_data)
+        self.assert_sync_job()
+
     def test_sync_update(self):
         self._sync(self.fixture)
 
@@ -79,6 +92,21 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
         self.assertNotEqual(getattr(original, self.update_field), new_val)
         self._assert_fields(changed, new_json)
+
+    def test_delete_stale_instances(self):
+        """
+        Local instance should be deleted if not returned during a full sync
+        """
+        instance_id = self.fixture["items"][0]['id']
+        instance_qset = self.model_class.objects.filter(id=instance_id)
+        self.assertEqual(instance_qset.count(), 1)
+
+        _, patch = self._call_api(fixtures.API_EMPTY)
+
+        synchronizer = self.synchronizer_class(full=True)
+        synchronizer.sync()
+        self.assertEqual(instance_qset.count(), 0)
+        patch.stop()
 
     def test_sync_skips(self):
         self._sync(self.fixture)
@@ -110,6 +138,7 @@ class TestContactSynchronizer(SynchronizerRestTestMixin, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_accounts()
+        self._sync(self.fixture)
 
     def _call_api(self, return_data):
         return mocks.service_api_get_contacts_call(return_data)
@@ -325,33 +354,6 @@ class TestTicketSynchronizer(
         self.assertEqual(instance.assigned_resource.id,
                          object_data['assignedResourceID'])
         self.assertEqual(instance.contract.id, object_data['contractID'])
-
-    def test_sync_ticket(self):
-        """
-        Test to ensure ticket synchronizer saves a Ticket instance locally.
-        """
-        self.assertGreater(models.Ticket.objects.all().count(), 0)
-
-        object_data = self.fixture["items"][0]
-        instance = models.Ticket.objects.get(id=object_data['id'])
-
-        self._assert_fields(instance, object_data)
-        self.assert_sync_job()
-
-    def test_delete_stale_tickets(self):
-        """
-        Local ticket should be deleted if not returned during a full sync
-        """
-        ticket_id = self.fixture["items"][0]['id']
-        ticket_qset = models.Ticket.objects.filter(id=ticket_id)
-        self.assertEqual(ticket_qset.count(), 1)
-
-        _, patch = mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
-
-        synchronizer = sync_rest.TicketSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(ticket_qset.count(), 0)
-        patch.stop()
 
     def test_sync_ticket_related_records(self):
         """
@@ -827,97 +829,96 @@ class FilterProjectTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.inactive_status = models.ProjectStatus.objects.create(
-            label='New (Inactive)', is_active=False)
+            label='New (Inactive)', is_active=False, id=9)
         cls.inactive_project = \
             models.Project.objects.create(name='Inactive Project')
         cls.inactive_project.status = cls.inactive_status
         cls.inactive_project.save()
 
 
-class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerTestMixin,
+class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerRestTestMixin,
                               TestCase):
+    synchronizer_class = sync_rest.ProjectSynchronizer
     model_class = models.ProjectTracker
-    fixture = fixtures.API_PROJECT_LIST[0]
-    update_field = 'ProjectName'
+    fixture = fixtures.API_PROJECT
+    update_field = 'description'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.ProjectSynchronizer()
         fixture_utils.init_contracts()
         fixture_utils.init_resources()
         fixture_utils.init_accounts()
         fixture_utils.init_departments()
         fixture_utils.init_project_statuses()
         fixture_utils.init_project_types()
-        fixture_utils.init_projects()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.name, object_data['ProjectName'])
-        self.assertEqual(instance.number, object_data['ProjectNumber'])
-        self.assertEqual(instance.description, object_data['Description'])
-        self.assertEqual(instance.actual_hours, object_data['ActualHours'])
-        self.assertEqual(instance.completed_date,
-                         object_data['CompletedDateTime'].date())
-        self.assertEqual(instance.completed_percentage,
-                         object_data['CompletedPercentage'])
-        self.assertEqual(instance.duration, object_data['Duration'])
-        self.assertEqual(instance.start_date,
-                         object_data['StartDateTime'].date())
-        self.assertEqual(instance.end_date,
-                         object_data['EndDateTime'].date())
-        self.assertEqual(instance.estimated_time, object_data['EstimatedTime'])
-        self.assertEqual(instance.last_activity_date_time,
-                         object_data['LastActivityDateTime'])
-        self.assertEqual(instance.project_lead_resource.id,
-                         object_data['ProjectLeadResourceID'])
-        self.assertEqual(instance.account.id, object_data['AccountID'])
-        self.assertEqual(instance.status.id, object_data['Status'])
-        self.assertEqual(instance.type.id, object_data['Type'])
-        self.assertEqual(instance.contract.id, object_data['ContractID'])
-        self.assertEqual(instance.department.id, object_data['Department'])
+    def _call_api(self, return_data):
+        return mocks.service_api_get_projects_call(return_data)
 
-    def test_sync_project(self):
-        self.assertGreater(models.Project.objects.all().count(), 0)
-        instance = models.Project.objects.get(id=self.fixture['id'])
+    def test_sync(self):
+        instance_dict = {c['id']: c for c in self.fixture["items"]}
 
-        self._assert_sync(instance, self.fixture)
+        for instance in self.model_class.objects.all():
+            if instance.status.is_active:
+                json_data = instance_dict[instance.id]
+                self._assert_fields(instance, json_data)
+
         self.assert_sync_job()
 
-    def test_delete_stale_project(self):
-        project_qset = models.Project.objects.all()
-        self.assertGreater(project_qset.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.ProjectSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(project_qset.count(), 0)
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.name, object_data['projectName'])
+        self.assertEqual(instance.number, object_data['projectNumber'])
+        self.assertEqual(instance.description, object_data['description'])
+        self.assertEqual(instance.actual_hours, object_data['actualHours'])
+        self.assertEqual(instance.completed_date,
+                         self._parse_datetime(
+                             object_data['completedDateTime']).date())
+        self.assertEqual(instance.completed_percentage,
+                         object_data['completedPercentage'])
+        self.assertEqual(instance.duration, object_data['duration'])
+        self.assertEqual(instance.start_date,
+                         self._parse_datetime(
+                             object_data['startDateTime']).date())
+        self.assertEqual(instance.end_date,
+                         self._parse_datetime(
+                             object_data['endDateTime']).date())
+        self.assertEqual(instance.estimated_time, object_data['estimatedTime'])
+        self.assertEqual(instance.last_activity_date_time,
+                         self._parse_datetime(
+                             object_data['lastActivityDateTime']))
+        self.assertEqual(instance.project_lead_resource.id,
+                         object_data['projectLeadResourceID'])
+        self.assertEqual(instance.account.id, object_data['companyID'])
+        self.assertEqual(instance.status.id, object_data['status'])
+        self.assertEqual(instance.type.id, object_data['projectType'])
+        self.assertEqual(instance.contract.id, object_data['contractID'])
+        self.assertEqual(instance.department.id, object_data['department'])
 
     def test_sync_filters_projects_in_inactive_status(self):
         """
         Test to ensure that sync does not persist projects in an
         inactive project status.
         """
-        project_in_active_status = fixtures.API_PROJECT_LIST[0]
+        project_in_active_status = fixtures.API_PROJECT
         project_fixture = deepcopy(project_in_active_status)
-        project_fixture['id'] = '5'
-        project_fixture['Status'] = self.inactive_status.id
+        project_fixture["items"][0]['id'] = '5'
+        project_fixture["items"][0]['status'] = self.inactive_status.id
 
-        project_instance = fixture_utils.generate_objects(
-            'Project', [project_fixture, fixtures.API_PROJECT_LIST[0]]
+        project_instance = fixture_utils.generate_api_objects(
+            [project_fixture, fixtures.API_PROJECT]
         )
-        _, patch = mocks.create_mock_call(
-            mocks.WRAPPER_QUERY_METHOD, project_instance
-        )
-        synchronizer = sync.ProjectSynchronizer(full=True)
+        _, patch = mocks.service_api_get_projects_call(project_instance)
+        synchronizer = sync_rest.ProjectSynchronizer(full=True)
         synchronizer.sync()
 
         synced_project_ids = \
             models.Project.objects.values_list('id', flat=True)
         self.assertGreater(models.Project.objects.all().count(), 0)
-        self.assertNotIn(project_fixture['id'], synced_project_ids)
-        self.assertIn(project_in_active_status['id'], synced_project_ids)
+        self.assertNotIn(project_fixture["items"][0]['id'], synced_project_ids)
+        self.assertIn(project_in_active_status["items"][0]['id'],
+                      synced_project_ids)
         patch.stop()
 
     def test_sync_filters_projects_in_complete_status(self):
@@ -925,26 +926,25 @@ class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerTestMixin,
         Test to ensure that sync does not persist projects in an
         inactive project status.
         """
-        project_in_complete_status = fixtures.API_PROJECT_LIST[0]
+        project_in_complete_status = fixtures.API_PROJECT
         project_fixture = deepcopy(project_in_complete_status)
-        project_fixture['id'] = '6'
+        project_fixture["items"][0]['id'] = '6'
         # 5 Is the Autotask system complete status
-        project_fixture['Status'] = 5
+        project_fixture["items"][0]['status'] = 5
 
-        project_instance = fixture_utils.generate_objects(
-            'Project', [project_fixture, fixtures.API_PROJECT_LIST[0]]
+        project_instance = fixture_utils.generate_api_objects(
+            [project_fixture, fixtures.API_PROJECT]
         )
-        _, patch = mocks.create_mock_call(
-            mocks.WRAPPER_QUERY_METHOD, project_instance
-        )
-        synchronizer = sync.ProjectSynchronizer(full=True)
+        _, patch = mocks.service_api_get_projects_call(project_instance)
+        synchronizer = sync_rest.ProjectSynchronizer(full=True)
         synchronizer.sync()
 
         synced_project_ids = \
             models.Project.objects.values_list('id', flat=True)
         self.assertGreater(models.Project.objects.all().count(), 0)
-        self.assertNotIn(project_fixture['id'], synced_project_ids)
-        self.assertIn(project_in_complete_status['id'], synced_project_ids)
+        self.assertNotIn(project_fixture["items"][0]['id'], synced_project_ids)
+        self.assertIn(project_in_complete_status["items"][0]['id'],
+                      synced_project_ids)
         patch.stop()
 
 
@@ -994,32 +994,6 @@ class TestTaskSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.project.id, object_data['projectID'])
         self.assertEqual(instance.assigned_resource.id,
                          object_data['assignedResourceID'])
-
-    def test_sync_task(self):
-        """
-        Test to ensure task synchronizer saves a Task instance locally.
-        """
-        self.assertGreater(models.Task.objects.all().count(), 0)
-
-        instance = models.Task.objects.get(id=self.fixture["items"][0]['id'])
-
-        self._assert_fields(instance, self.fixture["items"][0])
-        self.assert_sync_job()
-
-    def test_delete_stale_tasks(self):
-        """
-        Local task should be deleted if not returned during a full sync
-        """
-        task_id = fixtures.API_TASK["items"][0]['id']
-        task_qset = models.Task.objects.filter(id=task_id)
-        self.assertEqual(task_qset.count(), 1)
-
-        _, patch = mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
-
-        synchronizer = sync_rest.TaskSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(task_qset.count(), 0)
-        patch.stop()
 
     def test_sync_filters_tasks_on_inactive_project(self):
 

@@ -570,6 +570,7 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
     client_class = api.ProjectsAPIClient
     model_class = models.ProjectTracker
     udf_class = models.ProjectUDF
+    # override
     last_updated_field = 'lastActivityDateTime'
 
     related_meta = {

@@ -340,11 +340,16 @@ class TestSyncAccountLocationCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncProjectCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncProjectCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_PROJECT_LIST,
+        mocks.service_api_get_projects_call,
+        fixtures.API_PROJECT,
         'project',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_projects()
 
 
 class TestSyncPhaseCommand(AbstractBaseSyncTest, TestCase):
@@ -569,10 +574,7 @@ class TestSyncAllCommand(TestCase):
             None
         )
         fixture_utils.mock_udfs()
-
-        mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
-        mocks.service_api_get_tickets_call(fixtures.API_TICKET)
-        mocks.service_api_get_tasks_call(fixtures.API_TASK)
+        self._call_service_api()
 
         # Mock API calls to return values based on what entity
         # is being requested
@@ -710,10 +712,7 @@ class TestSyncAllCommand(TestCase):
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
-        mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
-        mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
-        mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
-
+        self._call_empty_service_api()
         output = run_sync_command(full_option=True)
 
         # Verify the rest of sync classes summaries.
@@ -741,3 +740,15 @@ class TestSyncAllCommand(TestCase):
             self.assertIn(summary, output.getvalue().strip())
 
         _patch.stop()
+
+    def _call_service_api(self):
+        mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
+        mocks.service_api_get_tickets_call(fixtures.API_TICKET)
+        mocks.service_api_get_tasks_call(fixtures.API_TASK)
+        mocks.service_api_get_projects_call(fixtures.API_PROJECT)
+
+    def _call_empty_service_api(self):
+        mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
+        mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
+        mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
+        mocks.service_api_get_projects_call(fixtures.API_EMPTY)
