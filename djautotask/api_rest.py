@@ -459,8 +459,9 @@ class ProjectsAPIClient(AutotaskAPIClient):
     def get_project(self, project_id):
         return self.get_instance(project_id)
 
+    # use POST method because of IN-clause query string
     def get_projects(self, next_url, *args, **kwargs):
-        return self.fetch_resource(next_url, *args, **kwargs)
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
     def update_project(self, project, changed_fields):
         return self.update_instance(project, changed_fields)

@@ -457,7 +457,7 @@ class AvailableProjectManager(models.Manager):
         )
 
 
-class Project(TimeStampedModel):
+class Project(ATUpdateMixin, TimeStampedModel):
     name = models.CharField(max_length=100)
     number = models.CharField(null=True, max_length=50)
     description = models.CharField(max_length=2000)
@@ -497,6 +497,17 @@ class Project(TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
+    EDITABLE_FIELDS = {
+        'name': 'projectName',
+        'status': 'status',
+        'description': 'description',
+        'end_date': 'endDateTime',
+        'type': 'projectType',
+        'project_lead_resource': 'projectLeadResourceID',
+        'department': 'department',
+        'status_detail': 'statusDetail',
+    }
+
     objects = models.Manager()
     available_objects = AvailableProjectManager()
 
@@ -506,16 +517,12 @@ class Project(TimeStampedModel):
     def __str__(self):
         return self.name
 
-    def update_at(self, data=None):
-        if data:
-            fields_to_update = {}
-            for field, data in data.items():
-                fields_to_update[field] = data
-        else:
-            fields_to_update = {
-                'Status': self.status.id,
-            }
-        return api.update_object('Project', self.id, fields_to_update)
+    def update_at(self, **kwargs):
+        api_client = api_rest.ProjectsAPIClient()
+        return api_client.update_project(
+            self,
+            self.get_updated_object(**kwargs)
+        )
 
 
 class Phase(TimeStampedModel):
