@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from django.utils import timezone
-from djautotask import api, api_rest
+from djautotask import api_rest
 from model_utils import FieldTracker
 
 OFFSET_TIMEZONE = 'America/New_York'
