@@ -465,3 +465,6 @@ class ProjectsAPIClient(AutotaskAPIClient):
 
     def update_project(self, project, changed_fields):
         return self.update_instance(project, changed_fields)
+
+    def _endpoint(self):
+        return '{}{}'.format(self.api_base_url, self.POST_QUERY)
