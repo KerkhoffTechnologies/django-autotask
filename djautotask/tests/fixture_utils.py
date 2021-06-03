@@ -167,7 +167,7 @@ def manage_full_sync_return_data(value):
         'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST,
         'Account': fixtures.API_ACCOUNT_LIST,
         'AccountPhysicalLocation': fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST,
-        'Project': fixtures.API_PROJECT_LIST,
+        'Project': fixtures.API_PROJECT,
         'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
         'Task': fixtures.API_TASK,
         'Phase': fixtures.API_PHASE_LIST,
@@ -464,11 +464,10 @@ def init_account_physical_locations():
 
 
 def init_projects():
-    sync_objects(
-        'Project',
-        fixtures.API_PROJECT_LIST,
-        sync.ProjectSynchronizer
-    )
+    models.Project.objects.all().delete()
+    mocks.service_api_get_projects_call(fixtures.API_PROJECT)
+    synchronizer = syncrest.ProjectSynchronizer()
+    return synchronizer.sync()
 
 
 def init_phases():
