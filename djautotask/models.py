@@ -501,6 +501,7 @@ class Project(ATUpdateMixin, TimeStampedModel):
         'name': 'projectName',
         'status': 'status',
         'description': 'description',
+        'start_date': 'startDateTime',
         'end_date': 'endDateTime',
         'type': 'projectType',
         'project_lead_resource': 'projectLeadResourceID',
