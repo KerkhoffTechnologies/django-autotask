@@ -146,6 +146,10 @@ class Synchronizer:
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
 
+    # another approach for sync to resolve an issue of AT REST API
+    # query limitation(up to 500), especially when OR & IN conditions are used.
+    # Page calls & DB update should be done here while conditions are hold
+    # because IN-condition clauses are divided, used, and changed during sync.
     def fetch_records_by_altered_condition(self, next_url, results,
                                            *args, **kwargs):
 
@@ -158,19 +162,11 @@ class Synchronizer:
             condition_part = \
                 self.changing_condition_pool[i:i + self.changing_condition_num]
 
-            found = False
             for idx, c in enumerate(self.api_conditions):
                 if isinstance(c[0], str) and c[0] == field_name:
-                    found = True
                     self.api_conditions[idx][1] = condition_part
 
-            if not found:
-                self.api_conditions += [
-                    [field_name, condition_part, 'in']
-                ]
-
             # request using updated condition
-            # page calls & DB update should be done while conditions are hold
             kwargs['conditions'] = self.api_conditions
             while True:
                 logger.info(
@@ -537,7 +533,7 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
     completed_date_field = 'completedDateTime'
     changing_condition_field_name = 'projectId'
     get_page_method_name = 'get_tasks'
-    changing_condition_num = 2
+    changing_condition_num = 5
 
     related_meta = {
         'assignedResourceID': (models.Resource, 'assigned_resource'),
@@ -554,6 +550,11 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
         self.last_updated_field = 'lastActivityDateTime'
         self.changing_condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
+        self.api_conditions += [
+            [self.changing_condition_field_name,
+             self.changing_condition_pool,
+             'in']
+        ]
 
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
