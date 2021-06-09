@@ -24,6 +24,12 @@ class Synchronizer:
     lookup_key = 'id'
     last_updated_field = 'lastActivityDate'
 
+    # optional member variables for fetch_records_by_altered_condition method
+    changing_condition_pool = None
+    changing_condition_field_name = None
+    get_page_method_name = None
+    changing_condition_num = 100
+
     def __init__(self, full=False, *args, **kwargs):
         self.api_conditions = []
         self.client = self.client_class()
@@ -139,6 +145,49 @@ class Synchronizer:
 
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
+
+    def fetch_records_by_altered_condition(self, next_url, results,
+                                           *args, **kwargs):
+
+        field_name = self.changing_condition_field_name
+        method = getattr(self.client, self.get_page_method_name)
+
+        for i in range(0, len(self.changing_condition_pool),
+                       self.changing_condition_num):
+
+            condition_part = \
+                self.changing_condition_pool[i:i + self.changing_condition_num]
+
+            found = False
+            for idx, c in enumerate(self.api_conditions):
+                if isinstance(c[0], str) and c[0] == field_name:
+                    found = True
+                    self.api_conditions[idx][1] = condition_part
+
+            if not found:
+                self.api_conditions += [
+                    [field_name, condition_part, 'in']
+                ]
+
+            # request using updated condition
+            # page calls & DB update should be done while conditions are hold
+            kwargs['conditions'] = self.api_conditions
+            while True:
+                logger.info(
+                    'Fetching {} records'.format(
+                        self.model_class.__bases__[0].__name__)
+                )
+                api_return = method(next_url, *args, **kwargs)
+                page = api_return.get("items")
+                next_url = api_return.get("pageDetails").get("nextPageUrl")
+                self.persist_page(page, results)
+
+                if not next_url:
+                    break
+
+            self.client.QUERYSTR = None
+
+        return results
 
     def _set_datetime_attribute(self, instance, attribute_name):
         if getattr(instance, attribute_name):
@@ -486,6 +535,9 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
     udf_class = models.TaskUDF
     object_filter_field = 'projectID'
     completed_date_field = 'completedDateTime'
+    changing_condition_field_name = 'projectId'
+    get_page_method_name = 'get_tasks'
+    changing_condition_num = 2
 
     related_meta = {
         'assignedResourceID': (models.Resource, 'assigned_resource'),
@@ -500,10 +552,8 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
 
     def __init__(self, *args, **kwargs):
         self.last_updated_field = 'lastActivityDateTime'
+        self.changing_condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
-        self.api_conditions += [
-            ['projectId', list(self.get_active_ids()), 'in']
-        ]
 
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
@@ -560,9 +610,9 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
         self.set_relations(instance, json_data)
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_tasks(next_url, *args, **kwargs)
+    def fetch_records(self, results):
+        next_url = None
+        return self.fetch_records_by_altered_condition(next_url, results)
 
 
 class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
