@@ -482,7 +482,8 @@ def init_tasks():
     models.Task.objects.all().delete()
     mocks.service_api_get_tasks_call(fixtures.API_TASK)
     synchronizer = syncrest.TaskSynchronizer()
-    return synchronizer.sync()
+    result = synchronizer.sync()
+    return result
 
 
 def init_task_secondary_resources():

@@ -709,10 +709,10 @@ class TestSyncAllCommand(TestCase):
         mocks.get_field_info_api_calls()
         _, _patch = mocks.build_batch_query()
 
+        self._call_empty_service_api()
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
-        self._call_empty_service_api()
         output = run_sync_command(full_option=True)
 
         # Verify the rest of sync classes summaries.
