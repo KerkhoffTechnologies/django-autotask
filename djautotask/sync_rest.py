@@ -69,7 +69,7 @@ class Synchronizer:
         uid = json_data.get(json_field)
 
         try:
-            if uid:
+            if uid is not None:
                 related_instance = model_class.objects.get(pk=uid)
                 setattr(instance, model_field, related_instance)
             else:
