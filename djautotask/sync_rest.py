@@ -533,7 +533,6 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
     completed_date_field = 'completedDateTime'
     changing_condition_field_name = 'projectId'
     get_page_method_name = 'get_tasks'
-    changing_condition_num = 10
 
     related_meta = {
         'assignedResourceID': (models.Resource, 'assigned_resource'),
