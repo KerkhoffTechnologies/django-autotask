@@ -368,6 +368,7 @@ class TestSyncTaskCommand(AbstractBaseSyncRestTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
 
 
@@ -398,6 +399,7 @@ class TestSyncTaskNoteCommand(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
         fixture_utils.init_task_notes()
 
@@ -510,6 +512,7 @@ class TestSyncServiceCallTaskCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_accounts()
         fixture_utils.init_service_calls()
         fixture_utils.init_statuses()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
 
 
@@ -545,6 +548,7 @@ class TestSyncServiceCallTaskResourceCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_accounts()
         fixture_utils.init_service_calls()
         fixture_utils.init_statuses()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
         fixture_utils.init_service_call_tasks()
 
@@ -557,6 +561,7 @@ class TestSyncTaskPredecessor(AbstractBaseSyncTest, TestCase):
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
 
 
@@ -709,10 +714,10 @@ class TestSyncAllCommand(TestCase):
         mocks.get_field_info_api_calls()
         _, _patch = mocks.build_batch_query()
 
+        self._call_empty_service_api()
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
-        self._call_empty_service_api()
         output = run_sync_command(full_option=True)
 
         # Verify the rest of sync classes summaries.

@@ -20,6 +20,40 @@ SKIPPED = 3
 logger = logging.getLogger(__name__)
 
 
+class BatchQueryMixin:
+
+    condition_pool = None
+    condition_field_name = None
+    batch_query_size = None
+
+    def __init__(self, full=False, *args, **kwargs):
+        settings = DjautotaskSettings().get_settings()
+        self.batch_query_size = settings.get('batch_query_size')
+        super().__init__(full, *args, **kwargs)
+
+    # another approach for sync to resolve an issue of AT REST API
+    # query limitation(up to 500), especially when OR & IN conditions are used.
+    # Split original get call into several small calls and
+    # repeat with different api condition
+    def get(self, results):
+
+        field_ids = self.condition_pool
+        batch_query_size = self.batch_query_size
+
+        while field_ids:
+            batch_condition = field_ids[:batch_query_size]
+            del field_ids[:batch_query_size]
+
+            for idx, c in enumerate(self.api_conditions):
+                if isinstance(c[0], str) and c[0] == self.condition_field_name:
+                    self.api_conditions[idx][1] = batch_condition
+
+            self.fetch_records(results)
+            self.client.QUERYSTR = None
+
+        return results
+
+
 class Synchronizer:
     lookup_key = 'id'
     last_updated_field = 'lastActivityDate'
@@ -480,12 +514,13 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
         self.sync_children(*sync_classes)
 
 
-class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
+class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
+                       BatchQueryMixin, Synchronizer):
     client_class = api.TasksAPIClient
     model_class = models.TaskTracker
     udf_class = models.TaskUDF
-    object_filter_field = 'projectID'
     completed_date_field = 'completedDateTime'
+    condition_field_name = 'projectId'
 
     related_meta = {
         'assignedResourceID': (models.Resource, 'assigned_resource'),
@@ -500,9 +535,10 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
 
     def __init__(self, *args, **kwargs):
         self.last_updated_field = 'lastActivityDateTime'
+        self.condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
         self.api_conditions += [
-            ['projectId', list(self.get_active_ids()), 'in']
+            [self.condition_field_name, self.condition_pool, 'in']
         ]
 
     def get_active_ids(self):

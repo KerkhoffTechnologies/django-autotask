@@ -273,6 +273,7 @@ class TestTaskNoteSynchronizer(SynchronizerTestMixin, TestCase):
         self.synchronizer = sync.TaskNoteSynchronizer()
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_resources()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
         fixture_utils.init_note_types()
         fixture_utils.init_task_notes()
@@ -1052,6 +1053,7 @@ class TestTaskSecondaryResourceSynchronizer(SynchronizerTestMixin, TestCase):
         super().setUp()
         self.synchronizer = sync.TaskSecondaryResourceSynchronizer()
         fixture_utils.init_resources()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
         fixture_utils.init_task_secondary_resources()
 
@@ -1605,6 +1607,7 @@ class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):
         self.synchronizer = sync.TaskPredecessorSynchronizer()
 
         mocks.init_api_connection(Wrapper)
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
         models.Task.objects.create(
             id=fixtures.API_TASK_PREDECESSOR['SuccessorTaskID'],
