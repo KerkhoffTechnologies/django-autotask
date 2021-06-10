@@ -20,15 +20,43 @@ SKIPPED = 3
 logger = logging.getLogger(__name__)
 
 
+class BatchQueryMixin:
+
+    condition_pool = None
+    condition_field_name = None
+    batch_query_size = None
+
+    def __init__(self, full=False, *args, **kwargs):
+        settings = DjautotaskSettings().get_settings()
+        self.batch_query_size = settings.get('batch_query_size')
+        super().__init__(full, *args, **kwargs)
+
+    # another approach for sync to resolve an issue of AT REST API
+    # query limitation(up to 500), especially when OR & IN conditions are used.
+    # Split original get call into several small calls and
+    # repeat with different api condition
+    def get(self, results):
+
+        field_ids = self.condition_pool
+        batch_query_size = self.batch_query_size
+
+        while field_ids:
+            batch_condition = field_ids[:batch_query_size]
+            del field_ids[:batch_query_size]
+
+            for idx, c in enumerate(self.api_conditions):
+                if isinstance(c[0], str) and c[0] == self.condition_field_name:
+                    self.api_conditions[idx][1] = batch_condition
+
+            self.fetch_records(results)
+            self.client.QUERYSTR = None
+
+        return results
+
+
 class Synchronizer:
     lookup_key = 'id'
     last_updated_field = 'lastActivityDate'
-
-    # optional member variables for fetch_records_by_altered_condition method
-    changing_condition_pool = None
-    changing_condition_field_name = None
-    get_page_method_name = None
-    changing_condition_num = 100
 
     def __init__(self, full=False, *args, **kwargs):
         self.api_conditions = []
@@ -145,45 +173,6 @@ class Synchronizer:
 
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
-
-    # another approach for sync to resolve an issue of AT REST API
-    # query limitation(up to 500), especially when OR & IN conditions are used.
-    # Page calls & DB update should be done here while conditions are hold
-    # because IN-condition clauses are divided, used, and changed during sync.
-    def fetch_records_by_altered_condition(self, next_url, results,
-                                           *args, **kwargs):
-
-        field_name = self.changing_condition_field_name
-        method = getattr(self.client, self.get_page_method_name)
-
-        for i in range(0, len(self.changing_condition_pool),
-                       self.changing_condition_num):
-
-            condition_part = \
-                self.changing_condition_pool[i:i + self.changing_condition_num]
-
-            for idx, c in enumerate(self.api_conditions):
-                if isinstance(c[0], str) and c[0] == field_name:
-                    self.api_conditions[idx][1] = condition_part
-
-            # request using updated condition
-            kwargs['conditions'] = self.api_conditions
-            while True:
-                logger.info(
-                    'Fetching {} records'.format(
-                        self.model_class.__bases__[0].__name__)
-                )
-                api_return = method(next_url, *args, **kwargs)
-                page = api_return.get("items")
-                next_url = api_return.get("pageDetails").get("nextPageUrl")
-                self.persist_page(page, results)
-
-                if not next_url:
-                    break
-
-            self.client.QUERYSTR = None
-
-        return results
 
     def _set_datetime_attribute(self, instance, attribute_name):
         if getattr(instance, attribute_name):
@@ -525,14 +514,13 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
         self.sync_children(*sync_classes)
 
 
-class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
+class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
+                       BatchQueryMixin, Synchronizer):
     client_class = api.TasksAPIClient
     model_class = models.TaskTracker
     udf_class = models.TaskUDF
-    object_filter_field = 'projectID'
     completed_date_field = 'completedDateTime'
-    changing_condition_field_name = 'projectId'
-    get_page_method_name = 'get_tasks'
+    condition_field_name = 'projectId'
 
     related_meta = {
         'assignedResourceID': (models.Resource, 'assigned_resource'),
@@ -547,12 +535,10 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
 
     def __init__(self, *args, **kwargs):
         self.last_updated_field = 'lastActivityDateTime'
-        self.changing_condition_pool = list(self.get_active_ids())
+        self.condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
         self.api_conditions += [
-            [self.changing_condition_field_name,
-             self.changing_condition_pool,
-             'in']
+            [self.condition_field_name, self.condition_pool, 'in']
         ]
 
     def get_active_ids(self):
@@ -610,9 +596,9 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer):
         self.set_relations(instance, json_data)
         return instance
 
-    def fetch_records(self, results):
-        next_url = None
-        return self.fetch_records_by_altered_condition(next_url, results)
+    def get_page(self, next_url=None, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
+        return self.client.get_tasks(next_url, *args, **kwargs)
 
 
 class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
