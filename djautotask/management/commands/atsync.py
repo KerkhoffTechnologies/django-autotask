@@ -25,7 +25,11 @@ class Command(BaseCommand):
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
             ('status', sync.StatusSynchronizer, _('Status')),
-            ('license_type', sync.LicenseTypeSynchronizer, _('License Type')),
+            (
+                'license_type',
+                syncrest.LicenseTypeSynchronizer,
+                _('License Type')
+            ),
             ('resource', sync.ResourceSynchronizer, _('Resource')),
             ('ticket_secondary_resource',
              sync.TicketSecondaryResourceSynchronizer,

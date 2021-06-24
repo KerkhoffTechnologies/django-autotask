@@ -183,6 +183,35 @@ API_PROJECT = {
     "pageDetails": API_PAGE_DETAILS
 }
 
+API_LICENSE_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "licenseType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": True,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "1",
+                    "label": "Administrator",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
 API_SECONDARY_RESOURCE_LIST = [
     {
         'id': 29684157,
@@ -453,6 +482,7 @@ API_SUB_ISSUE_TYPE_LIST = [
     },
 ]
 
+# TODO: will be deleted after Resource sync is converted to REST
 API_LICENSE_TYPE_LIST = [
     {
         'IsActive': True,

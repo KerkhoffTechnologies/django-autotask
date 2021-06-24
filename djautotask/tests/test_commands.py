@@ -77,6 +77,29 @@ class AbstractBaseSyncRestTest(object):
         self.assertEqual(msg, out.getvalue().strip())
 
 
+class PicklistSyncTest(AbstractBaseSyncRestTest):
+
+    def test_full_sync(self):
+        self.test_sync()
+        mock_call, return_value, at_object = self.args
+        args = [
+            mock_call,
+            {
+                "fields": []
+            },
+            at_object
+        ]
+
+        out = self._test_sync(*args, full_option=True)
+        obj_label = self._title_for_at_object(at_object)
+        msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Skipped: 0, ' \
+                   'Deleted: {}'
+        msg = msg_tmpl.format(
+            obj_label, len(return_value.get('fields')[0].get('picklistValues'))
+        )
+        self.assertEqual(msg, out.getvalue().strip())
+
+
 class TestSyncContactCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
         mocks.service_api_get_contacts_call,
@@ -274,13 +297,16 @@ class TestDisplayColorCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
-class TestLicenseTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'LicenseType'
-
+class TestSyncLicenseTypeCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_LICENSE_TYPE_LIST,
+        mocks.service_api_get_license_types_call,
+        fixtures.API_LICENSE_TYPE_FIELD,
         'license_type',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_license_types()
 
 
 class TestSyncTaskTypeLinkCommand(AbstractPicklistSyncCommandTest, TestCase):
@@ -591,6 +617,7 @@ class TestSyncAllCommand(TestCase):
         )
 
         sync_test_cases = [
+            TestSyncLicenseTypeCommand,
             TestSyncTicketCommand,
             TestSyncTaskCommand,
             TestSyncStatusCommand,
@@ -607,7 +634,6 @@ class TestSyncAllCommand(TestCase):
             TestSyncSubIssueTypeCommand,
             TestSyncTicketTypeCommand,
             TestDisplayColorCommand,
-            TestLicenseTypeCommand,
             TestSyncTaskSecondaryResourceCommand,
             TestSyncPhaseCommand,
             TestSyncTicketNoteCommand,
@@ -652,7 +678,11 @@ class TestSyncAllCommand(TestCase):
 
         for mock_call, fixture, at_object in self.test_args:
             if mock_call:
-                fixture_len = len(fixture.get('items'))
+                if 'fields' in fixture:
+                    fixture_len = \
+                        len(fixture.get('fields')[0].get('picklistValues'))
+                else:
+                    fixture_len = len(fixture.get('items'))
             else:
                 fixture_len = len(fixture)
             summary = sync_summary(slug_to_title(at_object), fixture_len)
@@ -751,9 +781,12 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_tickets_call(fixtures.API_TICKET)
         mocks.service_api_get_tasks_call(fixtures.API_TASK)
         mocks.service_api_get_projects_call(fixtures.API_PROJECT)
+        mocks.service_api_get_license_types_call(
+            fixtures.API_LICENSE_TYPE_FIELD)
 
     def _call_empty_service_api(self):
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
         mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
         mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
         mocks.service_api_get_projects_call(fixtures.API_EMPTY)
+        mocks.service_api_get_license_types_call({"fields": []})

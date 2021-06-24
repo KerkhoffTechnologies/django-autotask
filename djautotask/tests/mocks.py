@@ -114,6 +114,11 @@ def service_api_get_projects_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_license_types_call(return_value):
+    method_name = 'djautotask.api_rest.LicenseTypesAPIClient.get_license_types'
+    return create_mock_call(method_name, return_value)
+
+
 def get(url, data, headers=None, status=200):
     """Set up requests mock for given URL and JSON-serializable data."""
     get_raw(url, json.dumps(data), "application/json", headers, status=status)

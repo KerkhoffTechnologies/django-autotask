@@ -393,11 +393,10 @@ def init_display_colors():
 
 
 def init_license_types():
-    sync_picklist_objects(
-        'LicenseType',
-        fixtures.API_LICENSE_TYPE_LIST,
-        sync.LicenseTypeSynchronizer
-    )
+    models.LicenseType.objects.all().delete()
+    mocks.service_api_get_license_types_call(fixtures.API_LICENSE_TYPE_FIELD)
+    synchronizer = syncrest.LicenseTypeSynchronizer()
+    return synchronizer.sync()
 
 
 def init_use_types():

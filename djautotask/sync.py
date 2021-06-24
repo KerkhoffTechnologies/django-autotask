@@ -684,12 +684,6 @@ class DisplayColorSynchronizer(PicklistSynchronizer):
     picklist_field = 'DisplayColorRGB'
 
 
-class LicenseTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.LicenseTypeTracker
-    entity_type = 'Resource'
-    picklist_field = 'LicenseType'
-
-
 class NoteTypeSynchronizer(PicklistSynchronizer):
     # We are using ticket note to get the picklist, but like Ticket Status
     # and Task Status both use one status type, so do Ticket and Task notes

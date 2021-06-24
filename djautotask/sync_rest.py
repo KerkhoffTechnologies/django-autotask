@@ -97,7 +97,7 @@ class Synchronizer:
         uid = json_data.get(json_field)
 
         try:
-            if uid is not None:
+            if uid is not None and uid != '':
                 related_instance = model_class.objects.get(pk=uid)
                 setattr(instance, model_field, related_instance)
             else:
@@ -114,13 +114,16 @@ class Synchronizer:
             self._assign_null_relation(instance, model_field)
 
     def _instance_ids(self, filter_params=None):
+        # self.lookup_key is used only for json_data. In DB, id is fixed for
+        # primary key name
+        db_lookup_key = 'id'
         if not filter_params:
-            ids = self.model_class.objects.all().order_by(self.lookup_key)\
-                .values_list(self.lookup_key, flat=True)
+            ids = self.model_class.objects.all().order_by(db_lookup_key)\
+                .values_list(db_lookup_key, flat=True)
         else:
             ids = self.model_class.objects.filter(filter_params)\
-                .order_by(self.lookup_key)\
-                .values_list(self.lookup_key, flat=True)
+                .order_by(db_lookup_key)\
+                .values_list(db_lookup_key, flat=True)
         return set(ids)
 
     def get(self, results):
@@ -161,7 +164,7 @@ class Synchronizer:
             except InvalidObjectException as e:
                 logger.warning('{}'.format(e))
 
-            results.synced_ids.add(record['id'])
+            results.synced_ids.add(record[self.lookup_key])
 
         return results
 
@@ -278,6 +281,11 @@ class Synchronizer:
             )
         results = SyncResults()
         results = self.get(results)
+        results.synced_ids = set(
+            list(
+                map(int, results.synced_ids)
+            )
+        )
 
         if self.full:
             # Set of IDs of all records prior to sync,
@@ -689,3 +697,53 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
     def get_page(self, next_url=None, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_projects(next_url, *args, **kwargs)
+
+
+class PicklistSynchronizer(Synchronizer):
+    lookup_name = None
+    lookup_key = 'value'
+    last_updated_field = None
+
+    def fetch_records(self, results):
+        logger.info(
+            'Fetching {} records'.format(
+                self.model_class.__bases__[0].__name__)
+        )
+        api_return = self.get_page()
+        fields = api_return.get("fields")
+        page = None
+
+        if fields:
+            for field in fields:
+                try:
+                    if field.get("name") == self.lookup_name:
+                        page = field["picklistValues"]
+                        break
+                except (AttributeError, NameError):
+                    pass
+
+        if page:
+            self.persist_page(page, results)
+
+        return results
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = int(json_data[self.lookup_key])
+        instance.label = json_data.get('label')
+        instance.is_default_value = json_data.get('isDefaultValue')
+        instance.sort_order = json_data.get('sortOrder')
+        instance.is_active = json_data.get('isActive')
+        instance.is_system = json_data.get('isSystem')
+
+        if hasattr(self, 'related_meta'):
+            self.set_relations(instance, json_data)
+        return instance
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get_license_types(next_url, *args, **kwargs)
+
+
+class LicenseTypeSynchronizer(PicklistSynchronizer):
+    client_class = api.LicenseTypesAPIClient
+    model_class = models.LicenseTypeTracker
+    lookup_name = 'licenseType'

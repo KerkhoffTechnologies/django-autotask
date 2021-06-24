@@ -468,3 +468,66 @@ class ProjectsAPIClient(AutotaskAPIClient):
 
     def _endpoint(self):
         return '{}{}'.format(self.api_base_url, self.POST_QUERY)
+
+
+class AutotaskPicklistAPIClient(AutotaskAPIClient):
+    def fetch_resource(self, next_url=None, retry_counter=None, method='get',
+                       *args, **kwargs):
+        """
+        retry_counter is a dict in the form {'count': 0} that is passed in
+        to verify the number of attempts that were made.
+        """
+        @retry(stop_max_attempt_number=self.request_settings['max_attempts'],
+               wait_exponential_multiplier=RETRY_WAIT_EXPONENTIAL_MULTAPPLIER,
+               wait_exponential_max=RETRY_WAIT_EXPONENTIAL_MAX,
+               retry_on_exception=retry_if_api_error)
+        def _fetch_resource(endpoint_url, request_retry_counter=None,
+                            request_method=method, request_body=None,
+                            **kwargs):
+            if not request_retry_counter:
+                request_retry_counter = {'count': 0}
+            request_retry_counter['count'] += 1
+
+            try:
+                self.log_message(endpoint_url, request_method, request_body)
+
+                response = requests.request(
+                    request_method,
+                    endpoint_url,
+                    data=request_body,
+                    timeout=self.timeout,
+                    headers=self.get_headers(),
+                )
+
+            except requests.RequestException as e:
+                logger.error('Request failed: {} {}: {}'.format(
+                    request_method.upper(), endpoint_url, e))
+                raise AutotaskAPIError('{}'.format(e))
+
+            if 200 <= response.status_code < 300:
+                return response.json()
+            elif 400 <= response.status_code < 499:
+                self._log_failed(response)
+                raise AutotaskAPIClientError(
+                    self._prepare_error_response(response))
+            elif response.status_code == 500:
+                self._log_failed(response)
+                raise AutotaskAPIServerError(
+                    self._prepare_error_response(response))
+            else:
+                self._log_failed(response)
+                raise AutotaskAPIError(
+                    self._prepare_error_response(response))
+
+        endpoint = self.api_base_url
+
+        return _fetch_resource(
+            endpoint, request_retry_counter=retry_counter,
+            request_method=method, **kwargs)
+
+
+class LicenseTypesAPIClient(AutotaskPicklistAPIClient):
+    API = 'Resources/entityinformation/fields'
+
+    def get_license_types(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
