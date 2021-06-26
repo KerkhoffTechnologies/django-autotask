@@ -414,6 +414,20 @@ class ContactsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(next_url, *args, **kwargs)
 
 
+class RolesAPIClient(AutotaskAPIClient):
+    API = 'Roles'
+
+    def get_roles(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+
+class DepartmentsAPIClient(AutotaskAPIClient):
+    API = 'Departments'
+
+    def get_departments(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+
 class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 

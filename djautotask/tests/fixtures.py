@@ -785,25 +785,33 @@ API_ALLOCATION_CODE = {
 }
 API_ALLOCATION_CODE_LIST = [API_ALLOCATION_CODE]
 
-API_ROLE = {
+API_ROLE_ITEM = {
     'id': 29683396,
-    'Name': "IT:Technician I",
-    'Description': "",
-    'Active': True,
-    'HourlyFactor': 1,
-    'HourlyRate': 100,
-    'RoleType': 0,
-    'SystemRole': False,
+    'name': "IT:Technician I",
+    'description': "",
+    'isActive': True,
+    'hourlyFactor': 1,
+    'hourlyRate': 100,
+    'roleType': 0,
+    'isSystemRole': False,
+    }
+API_ROLE_ITEMS = [API_ROLE_ITEM]
+API_ROLE = {
+    "items": API_ROLE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_ROLE_LIST = [API_ROLE]
 
-API_DEPARTMENT = {
+API_DEPARTMENT_ITEM = {
     'id': 29683384,
-    'Name': "Finance",
-    'Description': "Finance Dept",
-    'Number': "",
+    'name': "Finance",
+    'description': "Finance Dept",
+    'number': "",
+    }
+API_DEPARTMENT_ITEMS = [API_DEPARTMENT_ITEM]
+API_DEPARTMENT = {
+    "items": API_DEPARTMENT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_DEPARTMENT_LIST = [API_DEPARTMENT]
 
 API_RESOURCE_ROLE_DEPARTMENT = {
     'id': 32,

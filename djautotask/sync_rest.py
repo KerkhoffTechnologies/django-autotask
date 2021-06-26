@@ -383,6 +383,49 @@ class ContactSynchronizer(Synchronizer):
         return self.client.get_contacts(next_url, *args, **kwargs)
 
 
+class RoleSynchronizer(Synchronizer):
+    client_class = api.RolesAPIClient
+    model_class = models.RoleTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.active = json_data.get('isActive')
+        instance.name = json_data.get('name')
+        instance.description = json_data.get('description')
+        instance.hourly_factor = json_data.get('hourlyFactor')
+        instance.hourly_rate = json_data.get('hourlyRate')
+        instance.role_type = json_data.get('roleType')
+        instance.system_role = json_data.get('isSystemRole')
+
+        if instance.hourly_factor:
+            instance.hourly_factor = \
+                Decimal(str(round(instance.hourly_factor, 2)))
+        if instance.hourly_rate:
+            instance.hourly_rate = \
+                Decimal(str(round(instance.hourly_rate, 2)))
+
+        return instance
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get_roles(next_url, *args, **kwargs)
+
+
+class DepartmentSynchronizer(Synchronizer):
+    client_class = api.DepartmentsAPIClient
+    model_class = models.DepartmentTracker
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data.get('name')
+        instance.description = json_data.get('description')
+        instance.number = json_data.get('number')
+
+        return instance
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get_departments(next_url, *args, **kwargs)
+
+
 class TicketTaskMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

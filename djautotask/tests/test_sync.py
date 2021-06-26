@@ -1387,93 +1387,50 @@ class TestAllocationCodeSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(allocation_code_qset.count(), 0)
 
 
-class TestRoleSynchronizer(SynchronizerTestMixin, TestCase):
+class TestRoleSynchronizer(SynchronizerRestTestMixin,
+                           TestCase):
+    synchronizer_class = sync_rest.RoleSynchronizer
     model_class = models.RoleTracker
     fixture = fixtures.API_ROLE
-    update_field = "Name"
+    update_field = 'description'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.RoleSynchronizer()
-        fixture_utils.init_roles()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.name, object_data['Name'])
-        self.assertEqual(instance.description, object_data['Description'])
-        self.assertEqual(instance.active, object_data['Active'])
-        self.assertEqual(instance.hourly_factor, object_data['HourlyFactor'])
-        self.assertEqual(instance.hourly_rate, object_data['HourlyRate'])
-        self.assertEqual(instance.role_type, object_data['RoleType'])
-        self.assertEqual(instance.system_role, object_data['SystemRole'])
+    def _call_api(self, return_data):
+        return mocks.service_api_get_roles_call(return_data)
 
-    def test_sync_role(self):
-        """
-        Test to ensure role synchronizer saves a Role instance locally.
-        """
-        self.assertGreater(models.Role.objects.all().count(), 0)
-
-        instance = models.Role.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_stale_roles(self):
-        """
-        Local Roles should be deleted if not returned during a full sync
-        """
-        role_id = fixtures.API_ROLE['id']
-        qs = models.Role.objects.filter(id=role_id)
-        self.assertEqual(qs.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.RoleSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(qs.count(), 0)
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.description, json_data['description'])
+        self.assertEqual(instance.active, json_data['isActive'])
+        self.assertEqual(instance.hourly_factor, json_data['hourlyFactor'])
+        self.assertEqual(instance.hourly_rate, json_data['hourlyRate'])
+        self.assertEqual(instance.role_type, json_data['roleType'])
+        self.assertEqual(instance.system_role, json_data['isSystemRole'])
 
 
-class TestDepartmentSynchronizer(SynchronizerTestMixin, TestCase):
+class TestDepartmentSynchronizer(SynchronizerRestTestMixin,
+                                 TestCase):
+    synchronizer_class = sync_rest.DepartmentSynchronizer
     model_class = models.DepartmentTracker
     fixture = fixtures.API_DEPARTMENT
-    update_field = "Name"
+    update_field = 'description'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.DepartmentSynchronizer()
-        fixture_utils.init_departments()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.name, object_data['Name'])
-        self.assertEqual(instance.description, object_data['Description'])
-        self.assertEqual(instance.number, object_data['Number'])
+    def _call_api(self, return_data):
+        return mocks.service_api_get_departments_call(return_data)
 
-    def test_sync_department(self):
-        """
-        Test to ensure department synchronizer saves a Department instance
-        locally.
-        """
-        self.assertGreater(models.Department.objects.all().count(), 0)
-
-        instance = models.Department.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_stale_departments(self):
-        """
-        Local Departments should be deleted if not returned during a full sync
-        """
-        department_id = fixtures.API_DEPARTMENT['id']
-        qs = models.Department.objects.filter(id=department_id)
-        self.assertEqual(qs.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.DepartmentSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(qs.count(), 0)
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.description, json_data['description'])
+        self.assertEqual(instance.number, json_data['number'])
 
 
 class TestResourceRoleDepartmentSynchronizer(SynchronizerTestMixin, TestCase):

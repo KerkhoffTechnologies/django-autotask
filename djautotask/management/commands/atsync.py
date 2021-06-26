@@ -75,8 +75,8 @@ class Command(BaseCommand):
             ('use_type', syncrest.UseTypeSynchronizer, _('Use Type')),
             ('allocation_code', sync.AllocationCodeSynchronizer,
              _('Allocation Code')),
-            ('role', sync.RoleSynchronizer, _('Role')),
-            ('department', sync.DepartmentSynchronizer, _('Department')),
+            ('role', syncrest.RoleSynchronizer, _('Role')),
+            ('department', syncrest.DepartmentSynchronizer, _('Department')),
             ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
             (
                 'resource_role_department',

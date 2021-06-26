@@ -176,8 +176,8 @@ def manage_full_sync_return_data(value):
         'TaskNote': fixtures.API_TASK_NOTE_LIST,
         'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
         'AllocationCode': fixtures.API_ALLOCATION_CODE_LIST,
-        'Role': fixtures.API_ROLE_LIST,
-        'Department': fixtures.API_DEPARTMENT_LIST,
+        'Role': fixtures.API_ROLE,
+        'Department': fixtures.API_DEPARTMENT,
         'ResourceRoleDepartment': fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
         'ResourceServiceDeskRole':
             fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
@@ -537,19 +537,17 @@ def init_allocation_codes():
 
 
 def init_roles():
-    sync_objects(
-        'Role',
-        fixtures.API_ROLE_LIST,
-        sync.RoleSynchronizer
-    )
+    models.Role.objects.all().delete()
+    mocks.service_api_get_roles_call(fixtures.API_ROLE)
+    synchronizer = syncrest.RoleSynchronizer()
+    return synchronizer.sync()
 
 
 def init_departments():
-    sync_objects(
-        'Department',
-        fixtures.API_DEPARTMENT_LIST,
-        sync.DepartmentSynchronizer
-    )
+    models.Department.objects.all().delete()
+    mocks.service_api_get_departments_call(fixtures.API_DEPARTMENT)
+    synchronizer = syncrest.DepartmentSynchronizer()
+    return synchronizer.sync()
 
 
 def init_resource_role_departments():
