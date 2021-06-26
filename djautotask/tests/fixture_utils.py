@@ -247,17 +247,8 @@ def manage_sync_picklist_return_data(wrapper, entity):
         'TicketCategory': {
             'DisplayColorRGB': fixtures.API_DISPLAY_COLOR_LIST,
         },
-        'Resource': {
-            'LicenseType': fixtures.API_LICENSE_TYPE_LIST,
-        },
         'TicketNote': {
             'NoteType': fixtures.API_NOTE_TYPE_LIST,
-        },
-        'TimeEntry': {
-            'Type': fixtures.API_TASK_TYPE_LINK_LIST,
-        },
-        'AllocationCode': {
-            'UseType': fixtures.API_USE_TYPE_LIST,
         },
         'ServiceCall': {
             'Status': fixtures.API_SERVICE_CALL_STATUS_LIST,
@@ -376,14 +367,6 @@ def init_ticket_types():
     )
 
 
-def init_account_types():
-    sync_picklist_objects(
-        'AccountType',
-        fixtures.API_ACCOUNT_TYPE_LIST,
-        sync.AccountTypeSynchronizer
-    )
-
-
 def init_display_colors():
     sync_picklist_objects(
         'DisplayColorRGB',
@@ -400,11 +383,26 @@ def init_license_types():
 
 
 def init_use_types():
-    sync_picklist_objects(
-        'UseType',
-        fixtures.API_USE_TYPE_LIST,
-        sync.UseTypeSynchronizer
+    models.UseType.objects.all().delete()
+    mocks.service_api_get_use_types_call(fixtures.API_USE_TYPE_FIELD)
+    synchronizer = syncrest.UseTypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_task_type_links():
+    models.TaskTypeLink.objects.all().delete()
+    mocks.service_api_get_task_type_links_call(
+        fixtures.API_TASK_TYPE_LINK_FIELD
     )
+    synchronizer = syncrest.TaskTypeLinkSynchronizer()
+    return synchronizer.sync()
+
+
+def init_account_types():
+    models.AccountType.objects.all().delete()
+    mocks.service_api_get_account_types_call(fixtures.API_ACCOUNT_TYPE_FIELD)
+    synchronizer = syncrest.AccountTypeSynchronizer()
+    return synchronizer.sync()
 
 
 def init_service_call_statuses():
@@ -527,14 +525,6 @@ def init_time_entries():
         'TimeEntry',
         fixtures.API_TIME_ENTRY_LIST,
         sync.TimeEntrySynchronizer
-    )
-
-
-def init_task_type_links():
-    sync_picklist_objects(
-        'Type',
-        fixtures.API_TASK_TYPE_LINK_LIST,
-        sync.TaskTypeLinkSynchronizer
     )
 
 

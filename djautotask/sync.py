@@ -692,24 +692,6 @@ class NoteTypeSynchronizer(PicklistSynchronizer):
     picklist_field = 'NoteType'
 
 
-class TaskTypeLinkSynchronizer(PicklistSynchronizer):
-    model_class = models.TaskTypeLinkTracker
-    entity_type = 'TimeEntry'
-    picklist_field = 'Type'
-
-
-class UseTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.UseTypeTracker
-    entity_type = 'AllocationCode'
-    picklist_field = 'UseType'
-
-
-class AccountTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.AccountTypeTracker
-    entity_type = 'Account'
-    picklist_field = 'AccountType'
-
-
 class ServiceCallStatusSynchronizer(PicklistSynchronizer):
     model_class = models.ServiceCallStatusTracker
     entity_type = 'ServiceCall'

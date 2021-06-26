@@ -739,11 +739,38 @@ class PicklistSynchronizer(Synchronizer):
             self.set_relations(instance, json_data)
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get_license_types(next_url, *args, **kwargs)
-
 
 class LicenseTypeSynchronizer(PicklistSynchronizer):
     client_class = api.LicenseTypesAPIClient
     model_class = models.LicenseTypeTracker
     lookup_name = 'licenseType'
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get_license_types(next_url, *args, **kwargs)
+
+
+class UseTypeSynchronizer(PicklistSynchronizer):
+    client_class = api.UseTypesAPIClient
+    model_class = models.UseTypeTracker
+    lookup_name = 'useType'
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get_use_types(next_url, *args, **kwargs)
+
+
+class TaskTypeLinkSynchronizer(PicklistSynchronizer):
+    client_class = api.TaskTypeLinksAPIClient
+    model_class = models.TaskTypeLinkTracker
+    lookup_name = 'timeEntryType'
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get_task_type_links(next_url, *args, **kwargs)
+
+
+class AccountTypeSynchronizer(PicklistSynchronizer):
+    client_class = api.AccountTypesAPIClient
+    model_class = models.AccountTypeTracker
+    lookup_name = 'companyType'
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get_account_types(next_url, *args, **kwargs)

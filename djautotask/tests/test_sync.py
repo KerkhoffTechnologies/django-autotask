@@ -139,14 +139,12 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
 
 class PicklistSynchronizerRestTestMixin(SynchronizerRestTestMixin):
+    update_field = 'label'
     lookup_key = 'value'
 
     def setUp(self):
         self.fixture_items = self.fixture["fields"][0]["picklistValues"]
         self._sync(self.fixture)
-
-    def _call_api(self, return_data):
-        return mocks.service_api_get_license_types_call(return_data)
 
     def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, int(object_data['value']))
@@ -635,26 +633,6 @@ class TestDisplayColorSynchronizer(PicklistSynchronizerTestMixin, TestCase):
         fixture_utils.init_display_colors()
 
 
-class TestTaskTypeLinkSynchronizer(PicklistSynchronizerTestMixin, TestCase):
-    model_class = models.TaskTypeLinkTracker
-    fixture = fixtures.API_TASK_TYPE_LINK_LIST
-    synchronizer = sync.TaskTypeLinkSynchronizer
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_task_type_links()
-
-
-class TestUseTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
-    model_class = models.UseTypeTracker
-    fixture = fixtures.API_USE_TYPE_LIST
-    synchronizer = sync.UseTypeSynchronizer
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_use_types()
-
-
 class TestServiceCallStatusSynchronizer(PicklistSynchronizerTestMixin,
                                         TestCase):
     model_class = models.ServiceCallStatusTracker
@@ -664,16 +642,6 @@ class TestServiceCallStatusSynchronizer(PicklistSynchronizerTestMixin,
     def setUp(self):
         super().setUp()
         fixture_utils.init_service_call_statuses()
-
-
-class TestAccountTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
-    model_class = models.AccountTypeTracker
-    fixture = fixtures.API_ACCOUNT_TYPE_LIST
-    synchronizer = sync.AccountTypeSynchronizer
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_account_types()
 
 
 class TestTicketCategorySynchronizer(SynchronizerTestMixin, TestCase):
@@ -1105,7 +1073,37 @@ class TestLicenseTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
     synchronizer_class = sync_rest.LicenseTypeSynchronizer
     model_class = models.LicenseTypeTracker
     fixture = fixtures.API_LICENSE_TYPE_FIELD
-    update_field = 'label'
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_license_types_call(return_data)
+
+
+class TestUseTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.UseTypeSynchronizer
+    model_class = models.UseTypeTracker
+    fixture = fixtures.API_USE_TYPE_FIELD
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_use_types_call(return_data)
+
+
+class TestTaskTypeLinkSynchronizer(PicklistSynchronizerRestTestMixin,
+                                   TestCase):
+    synchronizer_class = sync_rest.TaskTypeLinkSynchronizer
+    model_class = models.TaskTypeLinkTracker
+    fixture = fixtures.API_TASK_TYPE_LINK_FIELD
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_task_type_links_call(return_data)
+
+
+class TestAccountTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.AccountTypeSynchronizer
+    model_class = models.AccountTypeTracker
+    fixture = fixtures.API_ACCOUNT_TYPE_FIELD
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_account_types_call(return_data)
 
 
 class TestTaskSecondaryResourceSynchronizer(SynchronizerTestMixin, TestCase):

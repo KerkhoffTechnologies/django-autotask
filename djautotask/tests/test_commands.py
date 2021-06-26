@@ -269,13 +269,16 @@ class TestSyncTicketTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
-class TestSyncAccountTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'AccountType'
-
+class TestSyncAccountTypeCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_ACCOUNT_TYPE_LIST,
+        mocks.service_api_get_account_types_call,
+        fixtures.API_ACCOUNT_TYPE_FIELD,
         'account_type',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_account_types()
 
 
 class TestSyncServiceCallStatusCommand(AbstractPicklistSyncCommandTest,
@@ -309,22 +312,28 @@ class TestSyncLicenseTypeCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_license_types()
 
 
-class TestSyncTaskTypeLinkCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'Type'
-
+class TestSyncTaskTypeLinkCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_TASK_TYPE_LINK_LIST,
+        mocks.service_api_get_task_type_links_call,
+        fixtures.API_TASK_TYPE_LINK_FIELD,
         'task_type_link',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_task_type_links()
 
-class TestUseTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'UseType'
 
+class TestSyncUseTypeCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_USE_TYPE_LIST,
+        mocks.service_api_get_use_types_call,
+        fixtures.API_USE_TYPE_FIELD,
         'use_type',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_use_types()
 
 
 class TestSyncTicketCategoryCommand(AbstractBaseSyncTest, TestCase):
@@ -618,6 +627,9 @@ class TestSyncAllCommand(TestCase):
 
         sync_test_cases = [
             TestSyncLicenseTypeCommand,
+            TestSyncTaskTypeLinkCommand,
+            TestSyncUseTypeCommand,
+            TestSyncAccountTypeCommand,
             TestSyncTicketCommand,
             TestSyncTaskCommand,
             TestSyncStatusCommand,
@@ -639,8 +651,6 @@ class TestSyncAllCommand(TestCase):
             TestSyncTicketNoteCommand,
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
-            TestSyncTaskTypeLinkCommand,
-            TestUseTypeCommand,
             TestAllocationCodeCommand,
             TestSyncRoleCommand,
             TestSyncDepartmentCommand,
@@ -696,6 +706,7 @@ class TestSyncAllCommand(TestCase):
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
         at_object_map = {
+            'account_type': models.AccountType,
             'status': models.Status,
             'ticket': models.Ticket,
             'resource': models.Resource,
@@ -783,6 +794,11 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_projects_call(fixtures.API_PROJECT)
         mocks.service_api_get_license_types_call(
             fixtures.API_LICENSE_TYPE_FIELD)
+        mocks.service_api_get_use_types_call(fixtures.API_USE_TYPE_FIELD)
+        mocks.service_api_get_task_type_links_call(
+            fixtures.API_TASK_TYPE_LINK_FIELD)
+        mocks.service_api_get_account_types_call(
+            fixtures.API_ACCOUNT_TYPE_FIELD)
 
     def _call_empty_service_api(self):
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
@@ -790,3 +806,6 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
         mocks.service_api_get_projects_call(fixtures.API_EMPTY)
         mocks.service_api_get_license_types_call({"fields": []})
+        mocks.service_api_get_use_types_call({"fields": []})
+        mocks.service_api_get_task_type_links_call({"fields": []})
+        mocks.service_api_get_account_types_call({"fields": []})

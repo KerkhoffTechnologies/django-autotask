@@ -531,3 +531,24 @@ class LicenseTypesAPIClient(AutotaskPicklistAPIClient):
 
     def get_license_types(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
+
+
+class UseTypesAPIClient(AutotaskPicklistAPIClient):
+    API = 'BillingCodes/entityinformation/fields'
+
+    def get_use_types(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+
+class TaskTypeLinksAPIClient(AutotaskPicklistAPIClient):
+    API = 'TimeEntries/entityinformation/fields'
+
+    def get_task_type_links(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
+
+class AccountTypesAPIClient(AutotaskPicklistAPIClient):
+    API = 'Companies/entityinformation/fields'
+
+    def get_account_types(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)

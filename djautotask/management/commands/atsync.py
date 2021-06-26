@@ -36,7 +36,11 @@ class Command(BaseCommand):
              _('Ticket Secondary Resource')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('queue', sync.QueueSynchronizer, _('Queue')),
-            ('account_type', sync.AccountTypeSynchronizer, _('Account Type')),
+            (
+                'account_type',
+                syncrest.AccountTypeSynchronizer,
+                _('Account Type')
+            ),
             ('account', sync.AccountSynchronizer, _('Account')),
             (
                 'account_physical_location',
@@ -66,9 +70,9 @@ class Command(BaseCommand):
             ('note_type', sync.NoteTypeSynchronizer, _('Note Type')),
             ('ticket_note', sync.TicketNoteSynchronizer, _('Ticket Note')),
             ('task_note', sync.TaskNoteSynchronizer, _('Task Note')),
-            ('task_type_link', sync.TaskTypeLinkSynchronizer,
+            ('task_type_link', syncrest.TaskTypeLinkSynchronizer,
              _('Task Type Link')),
-            ('use_type', sync.UseTypeSynchronizer, _('Use Type')),
+            ('use_type', syncrest.UseTypeSynchronizer, _('Use Type')),
             ('allocation_code', sync.AllocationCodeSynchronizer,
              _('Allocation Code')),
             ('role', sync.RoleSynchronizer, _('Role')),
