@@ -618,6 +618,12 @@ class Task(ATUpdateMixin, TimeStampedModel):
         return self.title
 
     def update_at(self, **kwargs):
+
+        if not self.project:
+            raise api_rest.AutotaskAPIClientError(
+                'Unable to update a task without an associated project.'
+            )
+
         api_client = api_rest.TasksAPIClient()
         return api_client.update_task(
             self,
