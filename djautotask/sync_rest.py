@@ -689,3 +689,87 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
     def get_page(self, next_url=None, *args, **kwargs):
         kwargs['conditions'] = self.api_conditions
         return self.client.get_projects(next_url, *args, **kwargs)
+
+
+###################################################################
+# Dummy Synchronizers                                             #
+###################################################################
+
+
+class DummySynchronizer:
+    # Use FIELDS to list fields we submit to create or update a record, used
+    # as a kind of validation method and way to link the snake_case field
+    # names to their camelCase api names
+    FIELDS = {}
+
+    def __init__(self):
+        self.api_conditions = []
+        self.client = self.client_class()
+
+    def get(self, parent=None, conditions=None):
+
+        records = []
+        next_url = None
+
+        while True:
+            logger.info(
+                'Fetching {} records'.format(self.record_name)
+            )
+            conditions = conditions if conditions else self.api_conditions
+            api_return = self._get_page(
+                next_url, conditions, parent=parent)
+            records += api_return.get("items")
+            next_url = api_return.get("pageDetails").get("nextPageUrl")
+
+            if not next_url:
+                break
+
+        return records
+
+    def update(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def create(self, parent=None, **kwargs):
+        raise NotImplementedError
+
+    def _get_page(self, next_url, conditions, parent=None):
+        raise NotImplementedError
+
+    def _format_record(self, **kwargs):
+        record = {}
+        for key, value in kwargs.items():
+            # Only consider fields of the record, discard anything else
+            if key in self.FIELDS.keys():
+                record[self.FIELDS[key]] = value
+
+        return record
+
+
+class TicketChecklistItemsSynchronizer(DummySynchronizer):
+    FIELDS = {
+        'id': 'id',
+        'ticket': 'ticketID',
+        'item_name': 'itemName',
+        'important': 'isImportant',
+        'completed': 'isCompleted',
+    }
+    client_class = api.TicketChecklistItemsAPIClient
+    record_name = "TicketChecklistItems"
+
+    # https://webservices2.autotask.net/atservicesrest/V1.0/Tickets/9980/ChecklistItems
+    def update(self, parent=None, **kwargs):
+        record = self._format_record(**kwargs)
+
+        return self.client.update(parent, **record)
+
+    def create(self, parent=None, **kwargs):
+        record = self._format_record(**kwargs)
+
+        return self.client.create(parent, **record)
+
+    def _get_page(self, next_url, conditions, parent=None):
+        if parent:
+            conditions += [
+                ['ticketID', parent, 'eq']
+            ]
+        return self.client.get(next_url, conditions)
