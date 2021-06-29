@@ -576,7 +576,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         related_name='secondary_resource_tasks'
     )
     project = models.ForeignKey(
-        'Project', null=True, on_delete=models.SET_NULL
+        'Project', on_delete=models.CASCADE
     )
     priority = models.ForeignKey(
         'Priority', null=True, blank=True, on_delete=models.SET_NULL
