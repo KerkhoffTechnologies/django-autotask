@@ -1146,8 +1146,11 @@ class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
         self.synchronizer = sync.TimeEntrySynchronizer()
 
         mocks.init_api_connection(Wrapper)
+        mocks.init_api_rest_connection()
+
         fixture_utils.init_resources()
         fixture_utils.init_tickets()
+        fixture_utils.init_tasks()
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
@@ -1609,9 +1612,11 @@ class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):
         mocks.init_api_connection(Wrapper)
         fixture_utils.init_projects()
         fixture_utils.init_tasks()
+
+        project = models.Project.objects.first()
         models.Task.objects.create(
             id=fixtures.API_TASK_PREDECESSOR['SuccessorTaskID'],
-            title='Successor Task')
+            title='Successor Task', project=project)
         fixture_utils.init_task_predecessors()
 
     def _assert_sync(self, instance, object_data):
