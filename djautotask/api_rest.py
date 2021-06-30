@@ -471,8 +471,16 @@ class ProjectsAPIClient(AutotaskAPIClient):
 
 class TicketChecklistItemsAPIClient(AutotaskAPIClient):
     API = 'ChecklistItems'
+    PARENT_API = 'Ticket'
 
     def get(self, next_url, conditions):
+        if not next_url:
+            # TODO following similar pattern to current rather than rewriting
+            #  parent API pattern in this issue, this method needs to be
+            #  updated in issue #2142. Uses of `PARENT_API` should be in
+            #  AutotaskAPIClient
+            self.api_base_url = self.build_api_base_url(
+                "{}{}".format(self.PARENT_API, self.API))
         return self.fetch_resource(next_url, conditions=conditions)
 
     def update(self, parent, **kwargs):
