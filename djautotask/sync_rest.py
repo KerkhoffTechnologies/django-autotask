@@ -164,12 +164,12 @@ class Synchronizer:
             except InvalidObjectException as e:
                 logger.warning('{}'.format(e))
 
-            results.synced_ids.add(record[self.lookup_key])
+            results.synced_ids.add(int(record[self.lookup_key]))
 
         return results
 
-    def get_page(self, *args, **kwargs):
-        raise NotImplementedError
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get(next_url, *args, **kwargs)
 
     def get_single(self, *args, **kwargs):
         raise NotImplementedError
@@ -282,9 +282,7 @@ class Synchronizer:
         results = SyncResults()
         results = self.get(results)
         results.synced_ids = set(
-            list(
-                map(int, results.synced_ids)
-            )
+            list(results.synced_ids)
         )
 
         if self.full:
@@ -406,9 +404,6 @@ class RoleSynchronizer(Synchronizer):
 
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get_roles(next_url, *args, **kwargs)
-
 
 class DepartmentSynchronizer(Synchronizer):
     client_class = api.DepartmentsAPIClient
@@ -421,9 +416,6 @@ class DepartmentSynchronizer(Synchronizer):
         instance.number = json_data.get('number')
 
         return instance
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get_departments(next_url, *args, **kwargs)
 
 
 class TicketTaskMixin:
@@ -788,17 +780,11 @@ class LicenseTypeSynchronizer(PicklistSynchronizer):
     model_class = models.LicenseTypeTracker
     lookup_name = 'licenseType'
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get_license_types(next_url, *args, **kwargs)
-
 
 class UseTypeSynchronizer(PicklistSynchronizer):
     client_class = api.UseTypesAPIClient
     model_class = models.UseTypeTracker
     lookup_name = 'useType'
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get_use_types(next_url, *args, **kwargs)
 
 
 class TaskTypeLinkSynchronizer(PicklistSynchronizer):
@@ -806,14 +792,8 @@ class TaskTypeLinkSynchronizer(PicklistSynchronizer):
     model_class = models.TaskTypeLinkTracker
     lookup_name = 'timeEntryType'
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get_task_type_links(next_url, *args, **kwargs)
-
 
 class AccountTypeSynchronizer(PicklistSynchronizer):
     client_class = api.AccountTypesAPIClient
     model_class = models.AccountTypeTracker
     lookup_name = 'companyType'
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get_account_types(next_url, *args, **kwargs)

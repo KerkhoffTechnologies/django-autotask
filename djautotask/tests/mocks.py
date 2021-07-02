@@ -95,12 +95,12 @@ def service_api_get_contacts_call(return_value):
 
 
 def service_api_get_roles_call(return_value):
-    method_name = 'djautotask.api_rest.RolesAPIClient.get_roles'
+    method_name = 'djautotask.api_rest.RolesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_departments_call(return_value):
-    method_name = 'djautotask.api_rest.DepartmentsAPIClient.get_departments'
+    method_name = 'djautotask.api_rest.DepartmentsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
@@ -125,23 +125,23 @@ def service_api_get_projects_call(return_value):
 
 
 def service_api_get_license_types_call(return_value):
-    method_name = 'djautotask.api_rest.LicenseTypesAPIClient.get_license_types'
+    method_name = 'djautotask.api_rest.LicenseTypesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_use_types_call(return_value):
-    method_name = 'djautotask.api_rest.UseTypesAPIClient.get_use_types'
+    method_name = 'djautotask.api_rest.UseTypesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_task_type_links_call(return_value):
     method_name = \
-        'djautotask.api_rest.TaskTypeLinksAPIClient.get_task_type_links'
+        'djautotask.api_rest.TaskTypeLinksAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_account_types_call(return_value):
-    method_name = 'djautotask.api_rest.AccountTypesAPIClient.get_account_types'
+    method_name = 'djautotask.api_rest.AccountTypesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
