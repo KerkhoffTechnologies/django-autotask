@@ -155,7 +155,6 @@ class AutotaskAPIClient(object):
 
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
-        self.api_base_url = None
         self.api_base_url = self.build_api_base_url()
 
     def _endpoint(self):
@@ -468,3 +467,34 @@ class ProjectsAPIClient(AutotaskAPIClient):
 
     def _endpoint(self):
         return '{}{}'.format(self.api_base_url, self.POST_QUERY)
+
+
+class TicketChecklistItemsAPIClient(AutotaskAPIClient):
+    API = 'ChecklistItems'
+    PARENT_API = 'Ticket'
+
+    def get(self, next_url, conditions):
+        if not next_url:
+            # TODO following similar pattern to current rather than rewriting
+            #  parent API pattern in this issue, this method needs to be
+            #  updated in issue #2142. Uses of `PARENT_API` should be in
+            #  AutotaskAPIClient
+            self.api_base_url = self.build_api_base_url(
+                "{}{}".format(self.PARENT_API, self.API))
+        return self.fetch_resource(next_url, conditions=conditions)
+
+    def update(self, parent, **kwargs):
+        endpoint_url = '{}{}/{}'.format(
+            self.build_api_base_url('tickets'),
+            parent,
+            self.API
+        )
+        return self.request('patch', endpoint_url, kwargs)
+
+    def create(self, parent, **kwargs):
+        endpoint_url = '{}{}/{}'.format(
+            self.build_api_base_url('tickets'),
+            parent,
+            self.API
+        )
+        return self.request('post', endpoint_url, kwargs)
