@@ -281,9 +281,6 @@ class Synchronizer:
             )
         results = SyncResults()
         results = self.get(results)
-        results.synced_ids = set(
-            list(results.synced_ids)
-        )
 
         if self.full:
             # Set of IDs of all records prior to sync,
