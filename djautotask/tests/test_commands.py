@@ -116,6 +116,7 @@ class AbstractBaseSyncTest(object):
 
     def setUp(self):
         mocks.init_api_connection(Wrapper)
+        mocks.init_api_rest_connection()
 
     def _title_for_at_object(self, at_object):
         return at_object.title().replace('_', ' ')
@@ -770,6 +771,7 @@ class TestSyncAllCommand(TestCase):
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
         output = run_sync_command(full_option=True)
+        _patch.stop()
 
         # Verify the rest of sync classes summaries.
         for mock_call, fixture, at_object in self.test_args:
@@ -782,11 +784,12 @@ class TestSyncAllCommand(TestCase):
                     'service_call_ticket_resource',
                     'service_call_task_resource',
                     'task_predecessor',
+                    'task'
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.
                 # We are just testing the command, there are sync tests to
-                # verify that the syncronizers work correctly
+                # verify that the synchronizers work correctly
                 self.assertGreater(pre_full_sync_counts[at_object], 0)
                 pre_full_sync_counts[at_object] = 0
             summary = full_sync_summary(
@@ -794,8 +797,6 @@ class TestSyncAllCommand(TestCase):
                 pre_full_sync_counts[at_object]
             )
             self.assertIn(summary, output.getvalue().strip())
-
-        _patch.stop()
 
     def _call_service_api(self):
         mocks.service_api_get_roles_call(fixtures.API_ROLE)
