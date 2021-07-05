@@ -1,5 +1,4 @@
 import logging
-from decimal import Decimal
 
 from suds.client import Client
 from atws.wrapper import AutotaskProcessException, AutotaskAPIException
@@ -684,36 +683,12 @@ class DisplayColorSynchronizer(PicklistSynchronizer):
     picklist_field = 'DisplayColorRGB'
 
 
-class LicenseTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.LicenseTypeTracker
-    entity_type = 'Resource'
-    picklist_field = 'LicenseType'
-
-
 class NoteTypeSynchronizer(PicklistSynchronizer):
     # We are using ticket note to get the picklist, but like Ticket Status
     # and Task Status both use one status type, so do Ticket and Task notes
     model_class = models.NoteTypeTracker
     entity_type = 'TicketNote'
     picklist_field = 'NoteType'
-
-
-class TaskTypeLinkSynchronizer(PicklistSynchronizer):
-    model_class = models.TaskTypeLinkTracker
-    entity_type = 'TimeEntry'
-    picklist_field = 'Type'
-
-
-class UseTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.UseTypeTracker
-    entity_type = 'AllocationCode'
-    picklist_field = 'UseType'
-
-
-class AccountTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.AccountTypeTracker
-    entity_type = 'Account'
-    picklist_field = 'AccountType'
 
 
 class ServiceCallStatusSynchronizer(PicklistSynchronizer):
@@ -1056,41 +1031,6 @@ class AllocationCodeSynchronizer(Synchronizer):
         instance.active = object_data.get('Active')
 
         self.set_relations(instance, object_data)
-
-        return instance
-
-
-class RoleSynchronizer(Synchronizer):
-    model_class = models.RoleTracker
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.active = object_data.get('Active')
-        instance.name = object_data.get('Name')
-        instance.description = object_data.get('Description')
-        instance.hourly_factor = object_data.get('HourlyFactor')
-        instance.hourly_rate = object_data.get('HourlyRate')
-        instance.role_type = object_data.get('RoleType')
-        instance.system_role = object_data.get('SystemRole')
-
-        if instance.hourly_factor:
-            instance.hourly_factor = \
-                Decimal(str(round(instance.hourly_factor, 2)))
-        if instance.hourly_rate:
-            instance.hourly_rate = \
-                Decimal(str(round(instance.hourly_rate, 2)))
-
-        return instance
-
-
-class DepartmentSynchronizer(Synchronizer):
-    model_class = models.DepartmentTracker
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.name = object_data.get('Name')
-        instance.description = object_data.get('Description')
-        instance.number = object_data.get('Number')
 
         return instance
 

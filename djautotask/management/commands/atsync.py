@@ -25,14 +25,22 @@ class Command(BaseCommand):
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
             ('status', sync.StatusSynchronizer, _('Status')),
-            ('license_type', sync.LicenseTypeSynchronizer, _('License Type')),
+            (
+                'license_type',
+                syncrest.LicenseTypeSynchronizer,
+                _('License Type')
+            ),
             ('resource', sync.ResourceSynchronizer, _('Resource')),
             ('ticket_secondary_resource',
              sync.TicketSecondaryResourceSynchronizer,
              _('Ticket Secondary Resource')),
             ('priority', sync.PrioritySynchronizer, _('Priority')),
             ('queue', sync.QueueSynchronizer, _('Queue')),
-            ('account_type', sync.AccountTypeSynchronizer, _('Account Type')),
+            (
+                'account_type',
+                syncrest.AccountTypeSynchronizer,
+                _('Account Type')
+            ),
             ('account', sync.AccountSynchronizer, _('Account')),
             (
                 'account_physical_location',
@@ -62,13 +70,13 @@ class Command(BaseCommand):
             ('note_type', sync.NoteTypeSynchronizer, _('Note Type')),
             ('ticket_note', sync.TicketNoteSynchronizer, _('Ticket Note')),
             ('task_note', sync.TaskNoteSynchronizer, _('Task Note')),
-            ('task_type_link', sync.TaskTypeLinkSynchronizer,
+            ('task_type_link', syncrest.TaskTypeLinkSynchronizer,
              _('Task Type Link')),
-            ('use_type', sync.UseTypeSynchronizer, _('Use Type')),
+            ('use_type', syncrest.UseTypeSynchronizer, _('Use Type')),
             ('allocation_code', sync.AllocationCodeSynchronizer,
              _('Allocation Code')),
-            ('role', sync.RoleSynchronizer, _('Role')),
-            ('department', sync.DepartmentSynchronizer, _('Department')),
+            ('role', syncrest.RoleSynchronizer, _('Role')),
+            ('department', syncrest.DepartmentSynchronizer, _('Department')),
             ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
             (
                 'resource_role_department',

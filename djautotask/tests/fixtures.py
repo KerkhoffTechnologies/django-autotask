@@ -183,6 +183,35 @@ API_PROJECT = {
     "pageDetails": API_PAGE_DETAILS
 }
 
+API_LICENSE_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "licenseType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": True,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "1",
+                    "label": "Administrator",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
 API_SECONDARY_RESOURCE_LIST = [
     {
         'id': 29684157,
@@ -453,56 +482,34 @@ API_SUB_ISSUE_TYPE_LIST = [
     },
 ]
 
-API_LICENSE_TYPE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'API User',
-        'SortOrder': 7,
-        'Value': 7,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Team Member',
-        'SortOrder': 4,
-        'Value': 4,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Administrator',
-        'SortOrder': 1,
-        'Value': 1,
-        'parentValue': None,
-    },
-]
-
-API_ACCOUNT_TYPE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Customer',
-        'SortOrder': 5,
-        'Value': 3,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Vendor',
-        'SortOrder': 6,
-        'Value': 2,
-        'parentValue': None,
-    },
-]
+API_ACCOUNT_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "companyType",
+            "dataType": "short",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "3",
+                    "label": "Customer",
+                    "isDefaultValue": False,
+                    "sortOrder": 5,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
 
 API_SERVICE_CALL_STATUS_LIST = [
     {
@@ -647,26 +654,34 @@ API_NOTE_TYPE_LIST = [
     },
 ]
 
-API_TASK_TYPE_LINK_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'ITServiceRequest',
-        'SortOrder': 1,
-        'Value': 19,
-        'ParentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'ProjectTask',
-        'SortOrder': 2,
-        'Value': 20,
-        'ParentValue': None,
-    }
-]
+API_TASK_TYPE_LINK_FIELD = {
+    "fields": [
+        {
+            "name": "timeEntryType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": True,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "19",
+                    "label": "ITServiceRequest",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
 
 API_TIME_ENTRY_TICKET = {
     'id': 4,
@@ -727,26 +742,34 @@ API_TIME_ENTRY_TASK = {
 }
 API_TIME_ENTRY_LIST = [API_TIME_ENTRY_TICKET, API_TIME_ENTRY_TASK]
 
-API_USE_TYPE_LIST = [
-    {
-        'Value': 1,
-        'Label': 'General Allocation Code',
-        'IsDefaultValue': False,
-        'SortOrder': 1,
-        'parentValue': None,
-        'IsActive': True,
-        'IsSystem': True,
-    },
-    {
-        'Value': 2,
-        'Label': 'Internal Allocation Code',
-        'IsDefaultValue': False,
-        'SortOrder': 1,
-        'parentValue': None,
-        'IsActive': True,
-        'IsSystem': True,
-    }
-]
+API_USE_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "useType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "2",
+                    "label": "General Allocation Code",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
 
 API_ALLOCATION_CODE = {
     'id': 2,
@@ -762,25 +785,33 @@ API_ALLOCATION_CODE = {
 }
 API_ALLOCATION_CODE_LIST = [API_ALLOCATION_CODE]
 
-API_ROLE = {
+API_ROLE_ITEM = {
     'id': 29683396,
-    'Name': "IT:Technician I",
-    'Description': "",
-    'Active': True,
-    'HourlyFactor': 1,
-    'HourlyRate': 100,
-    'RoleType': 0,
-    'SystemRole': False,
+    'name': "IT:Technician I",
+    'description': "",
+    'isActive': True,
+    'hourlyFactor': 1,
+    'hourlyRate': 100,
+    'roleType': 0,
+    'isSystemRole': False,
+    }
+API_ROLE_ITEMS = [API_ROLE_ITEM]
+API_ROLE = {
+    "items": API_ROLE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_ROLE_LIST = [API_ROLE]
 
-API_DEPARTMENT = {
+API_DEPARTMENT_ITEM = {
     'id': 29683384,
-    'Name': "Finance",
-    'Description': "Finance Dept",
-    'Number': "",
+    'name': "Finance",
+    'description': "Finance Dept",
+    'number': "",
+    }
+API_DEPARTMENT_ITEMS = [API_DEPARTMENT_ITEM]
+API_DEPARTMENT = {
+    "items": API_DEPARTMENT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_DEPARTMENT_LIST = [API_DEPARTMENT]
 
 API_RESOURCE_ROLE_DEPARTMENT = {
     'id': 32,

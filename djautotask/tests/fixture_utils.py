@@ -176,8 +176,8 @@ def manage_full_sync_return_data(value):
         'TaskNote': fixtures.API_TASK_NOTE_LIST,
         'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
         'AllocationCode': fixtures.API_ALLOCATION_CODE_LIST,
-        'Role': fixtures.API_ROLE_LIST,
-        'Department': fixtures.API_DEPARTMENT_LIST,
+        'Role': fixtures.API_ROLE,
+        'Department': fixtures.API_DEPARTMENT,
         'ResourceRoleDepartment': fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
         'ResourceServiceDeskRole':
             fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
@@ -247,17 +247,8 @@ def manage_sync_picklist_return_data(wrapper, entity):
         'TicketCategory': {
             'DisplayColorRGB': fixtures.API_DISPLAY_COLOR_LIST,
         },
-        'Resource': {
-            'LicenseType': fixtures.API_LICENSE_TYPE_LIST,
-        },
         'TicketNote': {
             'NoteType': fixtures.API_NOTE_TYPE_LIST,
-        },
-        'TimeEntry': {
-            'Type': fixtures.API_TASK_TYPE_LINK_LIST,
-        },
-        'AllocationCode': {
-            'UseType': fixtures.API_USE_TYPE_LIST,
         },
         'ServiceCall': {
             'Status': fixtures.API_SERVICE_CALL_STATUS_LIST,
@@ -376,14 +367,6 @@ def init_ticket_types():
     )
 
 
-def init_account_types():
-    sync_picklist_objects(
-        'AccountType',
-        fixtures.API_ACCOUNT_TYPE_LIST,
-        sync.AccountTypeSynchronizer
-    )
-
-
 def init_display_colors():
     sync_picklist_objects(
         'DisplayColorRGB',
@@ -393,19 +376,33 @@ def init_display_colors():
 
 
 def init_license_types():
-    sync_picklist_objects(
-        'LicenseType',
-        fixtures.API_LICENSE_TYPE_LIST,
-        sync.LicenseTypeSynchronizer
-    )
+    models.LicenseType.objects.all().delete()
+    mocks.service_api_get_license_types_call(fixtures.API_LICENSE_TYPE_FIELD)
+    synchronizer = syncrest.LicenseTypeSynchronizer()
+    return synchronizer.sync()
 
 
 def init_use_types():
-    sync_picklist_objects(
-        'UseType',
-        fixtures.API_USE_TYPE_LIST,
-        sync.UseTypeSynchronizer
+    models.UseType.objects.all().delete()
+    mocks.service_api_get_use_types_call(fixtures.API_USE_TYPE_FIELD)
+    synchronizer = syncrest.UseTypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_task_type_links():
+    models.TaskTypeLink.objects.all().delete()
+    mocks.service_api_get_task_type_links_call(
+        fixtures.API_TASK_TYPE_LINK_FIELD
     )
+    synchronizer = syncrest.TaskTypeLinkSynchronizer()
+    return synchronizer.sync()
+
+
+def init_account_types():
+    models.AccountType.objects.all().delete()
+    mocks.service_api_get_account_types_call(fixtures.API_ACCOUNT_TYPE_FIELD)
+    synchronizer = syncrest.AccountTypeSynchronizer()
+    return synchronizer.sync()
 
 
 def init_service_call_statuses():
@@ -531,14 +528,6 @@ def init_time_entries():
     )
 
 
-def init_task_type_links():
-    sync_picklist_objects(
-        'Type',
-        fixtures.API_TASK_TYPE_LINK_LIST,
-        sync.TaskTypeLinkSynchronizer
-    )
-
-
 def init_allocation_codes():
     sync_objects(
         'AllocationCode',
@@ -548,19 +537,17 @@ def init_allocation_codes():
 
 
 def init_roles():
-    sync_objects(
-        'Role',
-        fixtures.API_ROLE_LIST,
-        sync.RoleSynchronizer
-    )
+    models.Role.objects.all().delete()
+    mocks.service_api_get_roles_call(fixtures.API_ROLE)
+    synchronizer = syncrest.RoleSynchronizer()
+    return synchronizer.sync()
 
 
 def init_departments():
-    sync_objects(
-        'Department',
-        fixtures.API_DEPARTMENT_LIST,
-        sync.DepartmentSynchronizer
-    )
+    models.Department.objects.all().delete()
+    mocks.service_api_get_departments_call(fixtures.API_DEPARTMENT)
+    synchronizer = syncrest.DepartmentSynchronizer()
+    return synchronizer.sync()
 
 
 def init_resource_role_departments():

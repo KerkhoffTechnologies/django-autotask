@@ -26,6 +26,11 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
     model_class = None
     fixture = None
     update_field = None
+    lookup_key = 'id'
+
+    def setUp(self):
+        super().setUp()
+        self.fixture_items = self.fixture["items"]
 
     def _call_api(self, return_data):
         raise NotImplementedError
@@ -49,7 +54,9 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
     def test_sync(self):
         self._sync(self.fixture)
-        instance_dict = {c['id']: c for c in self.fixture["items"]}
+        instance_dict = {
+            int(c[self.lookup_key]): c for c in self.fixture_items
+        }
 
         for instance in self.model_class.objects.all():
             json_data = instance_dict[instance.id]
@@ -63,8 +70,10 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         """
         self.assertGreater(self.model_class.objects.all().count(), 0)
 
-        object_data = self.fixture["items"][0]
-        instance = self.model_class.objects.get(id=object_data['id'])
+        object_data = self.fixture_items[0]
+        instance = self.model_class.objects.get(
+            id=object_data[self.lookup_key]
+        )
 
         self._assert_fields(instance, object_data)
         self.assert_sync_job()
@@ -72,13 +81,13 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
     def test_sync_update(self):
         self._sync(self.fixture)
 
-        json_data = self.fixture["items"][0]
+        json_data = self.fixture_items[0]
 
-        instance_id = json_data['id']
+        instance_id = json_data[self.lookup_key]
         original = self.model_class.objects.get(id=instance_id)
 
         new_val = 'Some New Value'
-        new_json = deepcopy(self.fixture["items"][0])
+        new_json = deepcopy(self.fixture_items[0])
         new_json[self.update_field] = new_val
         new_json_list = [new_json]
 
@@ -97,7 +106,7 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         """
         Local instance should be deleted if not returned during a full sync
         """
-        instance_id = self.fixture["items"][0]['id']
+        instance_id = self.fixture_items[0][self.lookup_key]
         instance_qset = self.model_class.objects.filter(id=instance_id)
         self.assertEqual(instance_qset.count(), 1)
 
@@ -112,7 +121,7 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         self._sync(self.fixture)
 
         new_val = 'Some New Value'
-        new_json = deepcopy(self.fixture["items"][0])
+        new_json = deepcopy(self.fixture_items[0])
         new_json[self.update_field] = new_val
         new_json_list = [new_json]
 
@@ -127,6 +136,61 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
         self.assertEqual(skipped_count, 1)
         self.assertEqual(updated_count, 0)
+
+
+class PicklistSynchronizerRestTestMixin(SynchronizerRestTestMixin):
+    update_field = 'label'
+    lookup_key = 'value'
+
+    def setUp(self):
+        self.fixture_items = self.fixture["fields"][0]["picklistValues"]
+        self._sync(self.fixture)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, int(object_data['value']))
+        self.assertEqual(instance.label, object_data['label'])
+        self.assertEqual(instance.is_default_value,
+                         object_data['isDefaultValue'])
+        self.assertEqual(instance.sort_order, object_data['sortOrder'])
+        self.assertEqual(instance.is_active, object_data['isActive'])
+        self.assertEqual(instance.is_system, object_data['isSystem'])
+
+    def test_sync_skips(self):
+        self._sync(self.fixture)
+
+        new_val = 'Some New Value'
+        new_fixture = deepcopy(self.fixture)
+        new_json = new_fixture['fields'][0]['picklistValues'][0]
+        new_json[self.update_field] = new_val
+
+        # Sync it twice to be sure that the data will be updated, then ignored
+        return_value = new_fixture
+        self._sync(return_value)
+        _, updated_count, skipped_count, _ = \
+            self._sync_with_results(return_value)
+
+        self.assertEqual(skipped_count, 1)
+        self.assertEqual(updated_count, 0)
+
+    def test_sync_update(self):
+        self._sync(self.fixture)
+
+        json_data = self.fixture_items[0]
+
+        instance_id = json_data[self.lookup_key]
+        original = self.model_class.objects.get(id=instance_id)
+
+        new_val = 'Some New Value'
+        new_fixture = deepcopy(self.fixture)
+        new_json = new_fixture['fields'][0]['picklistValues'][0]
+        new_json[self.update_field] = new_val
+        return_value = new_fixture
+
+        self._sync(return_value)
+        changed = self.model_class.objects.get(id=instance_id)
+
+        self.assertNotEqual(getattr(original, self.update_field), new_val)
+        self._assert_fields(changed, new_json)
 
 
 class TestContactSynchronizer(SynchronizerRestTestMixin, TestCase):
@@ -569,36 +633,6 @@ class TestDisplayColorSynchronizer(PicklistSynchronizerTestMixin, TestCase):
         fixture_utils.init_display_colors()
 
 
-class TestLicenseTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
-    model_class = models.LicenseTypeTracker
-    fixture = fixtures.API_LICENSE_TYPE_LIST
-    synchronizer = sync.LicenseTypeSynchronizer
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_license_types()
-
-
-class TestTaskTypeLinkSynchronizer(PicklistSynchronizerTestMixin, TestCase):
-    model_class = models.TaskTypeLinkTracker
-    fixture = fixtures.API_TASK_TYPE_LINK_LIST
-    synchronizer = sync.TaskTypeLinkSynchronizer
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_task_type_links()
-
-
-class TestUseTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
-    model_class = models.UseTypeTracker
-    fixture = fixtures.API_USE_TYPE_LIST
-    synchronizer = sync.UseTypeSynchronizer
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_use_types()
-
-
 class TestServiceCallStatusSynchronizer(PicklistSynchronizerTestMixin,
                                         TestCase):
     model_class = models.ServiceCallStatusTracker
@@ -608,16 +642,6 @@ class TestServiceCallStatusSynchronizer(PicklistSynchronizerTestMixin,
     def setUp(self):
         super().setUp()
         fixture_utils.init_service_call_statuses()
-
-
-class TestAccountTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
-    model_class = models.AccountTypeTracker
-    fixture = fixtures.API_ACCOUNT_TYPE_LIST
-    synchronizer = sync.AccountTypeSynchronizer
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_account_types()
 
 
 class TestTicketCategorySynchronizer(SynchronizerTestMixin, TestCase):
@@ -858,7 +882,7 @@ class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerRestTestMixin,
         return mocks.service_api_get_projects_call(return_data)
 
     def test_sync(self):
-        instance_dict = {c['id']: c for c in self.fixture["items"]}
+        instance_dict = {c['id']: c for c in self.fixture_items}
 
         for instance in self.model_class.objects.all():
             if instance.status.is_active:
@@ -1043,6 +1067,43 @@ class TestTaskSynchronizer(SynchronizerRestTestMixin,
         self.assertNotIn(task_fixture["items"][0]['id'], synced_task_ids)
         self.assertIn(fixtures.API_TASK["items"][0]['id'], synced_task_ids)
         patch.stop()
+
+
+class TestLicenseTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.LicenseTypeSynchronizer
+    model_class = models.LicenseTypeTracker
+    fixture = fixtures.API_LICENSE_TYPE_FIELD
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_license_types_call(return_data)
+
+
+class TestUseTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.UseTypeSynchronizer
+    model_class = models.UseTypeTracker
+    fixture = fixtures.API_USE_TYPE_FIELD
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_use_types_call(return_data)
+
+
+class TestTaskTypeLinkSynchronizer(PicklistSynchronizerRestTestMixin,
+                                   TestCase):
+    synchronizer_class = sync_rest.TaskTypeLinkSynchronizer
+    model_class = models.TaskTypeLinkTracker
+    fixture = fixtures.API_TASK_TYPE_LINK_FIELD
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_task_type_links_call(return_data)
+
+
+class TestAccountTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.AccountTypeSynchronizer
+    model_class = models.AccountTypeTracker
+    fixture = fixtures.API_ACCOUNT_TYPE_FIELD
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_account_types_call(return_data)
 
 
 class TestTaskSecondaryResourceSynchronizer(SynchronizerTestMixin, TestCase):
@@ -1329,93 +1390,50 @@ class TestAllocationCodeSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(allocation_code_qset.count(), 0)
 
 
-class TestRoleSynchronizer(SynchronizerTestMixin, TestCase):
+class TestRoleSynchronizer(SynchronizerRestTestMixin,
+                           TestCase):
+    synchronizer_class = sync_rest.RoleSynchronizer
     model_class = models.RoleTracker
     fixture = fixtures.API_ROLE
-    update_field = "Name"
+    update_field = 'description'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.RoleSynchronizer()
-        fixture_utils.init_roles()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.name, object_data['Name'])
-        self.assertEqual(instance.description, object_data['Description'])
-        self.assertEqual(instance.active, object_data['Active'])
-        self.assertEqual(instance.hourly_factor, object_data['HourlyFactor'])
-        self.assertEqual(instance.hourly_rate, object_data['HourlyRate'])
-        self.assertEqual(instance.role_type, object_data['RoleType'])
-        self.assertEqual(instance.system_role, object_data['SystemRole'])
+    def _call_api(self, return_data):
+        return mocks.service_api_get_roles_call(return_data)
 
-    def test_sync_role(self):
-        """
-        Test to ensure role synchronizer saves a Role instance locally.
-        """
-        self.assertGreater(models.Role.objects.all().count(), 0)
-
-        instance = models.Role.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_stale_roles(self):
-        """
-        Local Roles should be deleted if not returned during a full sync
-        """
-        role_id = fixtures.API_ROLE['id']
-        qs = models.Role.objects.filter(id=role_id)
-        self.assertEqual(qs.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.RoleSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(qs.count(), 0)
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.description, json_data['description'])
+        self.assertEqual(instance.active, json_data['isActive'])
+        self.assertEqual(instance.hourly_factor, json_data['hourlyFactor'])
+        self.assertEqual(instance.hourly_rate, json_data['hourlyRate'])
+        self.assertEqual(instance.role_type, json_data['roleType'])
+        self.assertEqual(instance.system_role, json_data['isSystemRole'])
 
 
-class TestDepartmentSynchronizer(SynchronizerTestMixin, TestCase):
+class TestDepartmentSynchronizer(SynchronizerRestTestMixin,
+                                 TestCase):
+    synchronizer_class = sync_rest.DepartmentSynchronizer
     model_class = models.DepartmentTracker
     fixture = fixtures.API_DEPARTMENT
-    update_field = "Name"
+    update_field = 'description'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.DepartmentSynchronizer()
-        fixture_utils.init_departments()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.name, object_data['Name'])
-        self.assertEqual(instance.description, object_data['Description'])
-        self.assertEqual(instance.number, object_data['Number'])
+    def _call_api(self, return_data):
+        return mocks.service_api_get_departments_call(return_data)
 
-    def test_sync_department(self):
-        """
-        Test to ensure department synchronizer saves a Department instance
-        locally.
-        """
-        self.assertGreater(models.Department.objects.all().count(), 0)
-
-        instance = models.Department.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_stale_departments(self):
-        """
-        Local Departments should be deleted if not returned during a full sync
-        """
-        department_id = fixtures.API_DEPARTMENT['id']
-        qs = models.Department.objects.filter(id=department_id)
-        self.assertEqual(qs.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.DepartmentSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(qs.count(), 0)
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.name, json_data['name'])
+        self.assertEqual(instance.description, json_data['description'])
+        self.assertEqual(instance.number, json_data['number'])
 
 
 class TestResourceRoleDepartmentSynchronizer(SynchronizerTestMixin, TestCase):

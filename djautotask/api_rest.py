@@ -278,7 +278,7 @@ class AutotaskAPIClient(object):
         return body
 
     def fetch_resource(self, next_url=None, retry_counter=None, method='get',
-                       *args, **kwargs):
+                       endpoint=None, *args, **kwargs):
         """
         retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
@@ -329,10 +329,11 @@ class AutotaskAPIClient(object):
         if not self.QUERYSTR:
             self.build_query_string(**kwargs)
 
-        if next_url:
-            endpoint = next_url
-        else:
-            endpoint = self._endpoint()
+        if not endpoint:
+            if next_url:
+                endpoint = next_url
+            else:
+                endpoint = self._endpoint()
 
         body = self.QUERYSTR if method == 'post' else None
 
@@ -396,6 +397,9 @@ class AutotaskAPIClient(object):
             self._log_failed(response)
             raise AutotaskAPIError(response)
 
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, *args, **kwargs)
+
     def get_instance(self, instance_id):
         endpoint_url = '{}{}'.format(self.api_base_url, instance_id)
         return self.fetch_resource(endpoint_url)
@@ -411,6 +415,14 @@ class ContactsAPIClient(AutotaskAPIClient):
 
     def get_contacts(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
+
+
+class RolesAPIClient(AutotaskAPIClient):
+    API = 'Roles'
+
+
+class DepartmentsAPIClient(AutotaskAPIClient):
+    API = 'Departments'
 
 
 class TicketsAPIClient(AutotaskAPIClient):
@@ -469,6 +481,33 @@ class ProjectsAPIClient(AutotaskAPIClient):
         return '{}{}'.format(self.api_base_url, self.POST_QUERY)
 
 
+class AutotaskPicklistAPIClient(AutotaskAPIClient):
+
+    def __init__(self, **kwargs):
+        self.API = '{}/entityinformation/fields'.format(self.API_ENTITY)
+        super().__init__(**kwargs)
+
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(
+            next_url, endpoint=self.api_base_url, *args, **kwargs)
+
+
+class LicenseTypesAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'Resources'
+
+
+class UseTypesAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'BillingCodes'
+
+
+class TaskTypeLinksAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'TimeEntries'
+
+
+class AccountTypesAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'Companies'
+
+    
 class TicketChecklistItemsAPIClient(AutotaskAPIClient):
     API = 'ChecklistItems'
     PARENT_API = 'Ticket'
