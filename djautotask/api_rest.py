@@ -507,7 +507,7 @@ class TaskTypeLinksAPIClient(AutotaskPicklistAPIClient):
 class AccountTypesAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Companies'
 
-    
+
 class TicketChecklistItemsAPIClient(AutotaskAPIClient):
     API = 'ChecklistItems'
     PARENT_API = 'Ticket'

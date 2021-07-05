@@ -795,7 +795,7 @@ class AccountTypeSynchronizer(PicklistSynchronizer):
     model_class = models.AccountTypeTracker
     lookup_name = 'companyType'
 
-    
+
 ###################################################################
 # Dummy Synchronizers                                             #
 ###################################################################
