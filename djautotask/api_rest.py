@@ -537,3 +537,12 @@ class TicketChecklistItemsAPIClient(AutotaskAPIClient):
             self.API
         )
         return self.request('post', endpoint_url, kwargs)
+
+    def delete(self, parent, **kwargs):
+        endpoint_url = '{}{}/{}/{}'.format(
+            self.build_api_base_url('tickets'),
+            parent,
+            self.API,
+            kwargs.get("id")
+        )
+        return self.request('delete', endpoint_url)
