@@ -829,7 +829,18 @@ class DummySynchronizer:
             if not next_url:
                 break
 
-        return records
+        inverted = {v: k for k, v in self.FIELDS.items()}
+        formatted_records = []
+
+        # Convert the results from camelCase back to snake_case
+        for record in records:
+            converted = {}
+            for k, v in record.items():
+                if inverted.get(k, None):
+                    converted[inverted[k]] = v
+            formatted_records.append(converted)
+
+        return formatted_records
 
     def update(self, parent=None, **kwargs):
         raise NotImplementedError
@@ -837,10 +848,14 @@ class DummySynchronizer:
     def create(self, parent=None, **kwargs):
         raise NotImplementedError
 
+    def delete(self, parent=None, **kwargs):
+        raise NotImplementedError
+
     def _get_page(self, next_url, conditions, parent=None):
         raise NotImplementedError
 
     def _format_record(self, **kwargs):
+        # Convert records from snake_case to camelCase
         record = {}
         for key, value in kwargs.items():
             # Only consider fields of the record, discard anything else
@@ -857,6 +872,7 @@ class TicketChecklistItemsSynchronizer(DummySynchronizer):
         'item_name': 'itemName',
         'important': 'isImportant',
         'completed': 'isCompleted',
+        'position': 'position',
     }
     client_class = api.TicketChecklistItemsAPIClient
     record_name = "TicketChecklistItems"
@@ -871,6 +887,9 @@ class TicketChecklistItemsSynchronizer(DummySynchronizer):
         record = self._format_record(**kwargs)
 
         return self.client.create(parent, **record)
+
+    def delete(self, parent=None, **kwargs):
+        return self.client.delete(parent, **kwargs)
 
     def _get_page(self, next_url, conditions, parent=None):
         if parent:
