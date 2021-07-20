@@ -139,7 +139,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         'project': 'projectID',
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
-        'account': 'company',
+        'account': 'companyID',
     }
 
     class Meta:
