@@ -873,6 +873,8 @@ class TicketChecklistItemsSynchronizer(DummySynchronizer):
         'important': 'isImportant',
         'completed': 'isCompleted',
         'position': 'position',
+        'resource': 'completedByResourceID',
+        'completed_time': 'completedDateTime',
     }
     client_class = api.TicketChecklistItemsAPIClient
     record_name = "TicketChecklistItems"
