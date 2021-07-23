@@ -140,6 +140,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
         'account': 'companyID',
+        'contact': 'contactID',
     }
 
     class Meta:
@@ -395,8 +396,10 @@ class TaskNote(TimeStampedModel, Note):
 
 class Contact(TimeStampedModel):
 
-    first_name = models.CharField(blank=True, null=True, max_length=200)
-    last_name = models.CharField(blank=True, null=True, max_length=200)
+    first_name = models.CharField(blank=True, null=True, max_length=200,
+                                  db_index=True)
+    last_name = models.CharField(blank=True, null=True, max_length=200,
+                                 db_index=True)
     email_address = models.CharField(blank=True, null=True, max_length=200)
     email_address2 = models.CharField(blank=True, null=True, max_length=200)
     email_address3 = models.CharField(blank=True, null=True, max_length=200)
@@ -413,7 +416,8 @@ class Contact(TimeStampedModel):
 
 
 class Account(TimeStampedModel):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,
+                            db_index=True)
     number = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
