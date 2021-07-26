@@ -410,6 +410,9 @@ class Contact(TimeStampedModel):
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
 
+    class Meta:
+        ordering = ('first_name', 'last_name')
+
     def __str__(self):
         return '{} {}'.format(self.first_name,
                               self.last_name if self.last_name else '')
