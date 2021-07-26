@@ -1,6 +1,8 @@
 import datetime
 import json
 import logging
+from json import JSONDecodeError
+
 import pytz
 import requests
 
@@ -311,7 +313,10 @@ class AutotaskAPIClient(object):
                 raise AutotaskAPIError('{}'.format(e))
 
             if 200 <= response.status_code < 300:
-                return response.json()
+                try:
+                    return response.json()
+                except JSONDecodeError as e:
+                    raise AutotaskAPIError('{}'.format(e))
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
                 raise AutotaskAPIClientError(
