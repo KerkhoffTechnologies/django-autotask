@@ -551,6 +551,8 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
             (TicketSecondaryResourceSynchronizer(), query_params)
         )
 
+        TicketChecklistItemsSynchronizer().sync_items(instance)
+
         self.sync_children(*sync_classes)
 
 
@@ -892,6 +894,19 @@ class TicketChecklistItemsSynchronizer(DummySynchronizer):
 
     def delete(self, parent=None, **kwargs):
         return self.client.delete(parent, **kwargs)
+
+    def sync(self):
+        ticket_qs = models.Ticket.objects.all().order_by('id')
+
+        for ticket in ticket_qs:
+            self.sync_items(ticket)
+
+    def sync_items(self, instance):
+        tasks = self.get(parent=instance.id)
+        instance.checklist_total = len(tasks)
+        instance.checklist_completed = sum(task['completed'] for task in tasks)
+
+        instance.save()
 
     def _get_page(self, next_url, conditions, parent=None):
         if parent:
