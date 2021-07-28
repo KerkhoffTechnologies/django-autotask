@@ -72,6 +72,9 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     service_level_agreement_has_been_met = models.BooleanField(default=False)
     service_level_agreement_paused_next_event_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
+    checklist_completed = models.PositiveSmallIntegerField(
+        blank=True, null=True)
+    checklist_total = models.PositiveSmallIntegerField(blank=True, null=True)
 
     status = models.ForeignKey(
         'Status', blank=True, null=True, on_delete=models.SET_NULL
