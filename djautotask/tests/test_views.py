@@ -37,9 +37,14 @@ class TestCallBackView(TestCase):
 
         fixture_utils.init_statuses()
         _, patch = mocks.service_api_get_ticket_call(fixtures.API_TICKET_BY_ID)
+        _, _checklist_patch = mocks.create_mock_call(
+            "djautotask.sync_rest.TicketChecklistItemsSynchronizer.sync_items",
+            None
+        )
 
         self._test_synced(fixtures.API_TICKET_BY_ID['item'])
         patch.stop()
+        _checklist_patch.stop()
 
     def test_update(self):
         fixture_utils.init_statuses()
@@ -52,6 +57,11 @@ class TestCallBackView(TestCase):
         t.description = 'foobar'
         t.save()
         _, patch = mocks.service_api_get_ticket_call(fixtures.API_TICKET_BY_ID)
+        _, _checklist_patch = mocks.create_mock_call(
+            "djautotask.sync_rest.TicketChecklistItemsSynchronizer.sync_items",
+            None
+        )
 
         self._test_synced(fixtures.API_TICKET_BY_ID['item'])
         patch.stop()
+        _checklist_patch.stop()

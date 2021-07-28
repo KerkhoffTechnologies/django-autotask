@@ -438,6 +438,10 @@ class TestTicketSynchronizer(
             'fetch_records',
             None
         )
+        _, _checklist_patch = mocks.create_mock_call(
+            "djautotask.sync_rest.TicketChecklistItemsSynchronizer.sync_items",
+            None
+        )
 
         self.synchronizer.sync_related(ticket)
 
@@ -447,6 +451,7 @@ class TestTicketSynchronizer(
         time_patch.stop()
         note_patch.stop()
         resource_patch.stop()
+        _checklist_patch.stop()
 
 
 class PicklistSynchronizerTestMixin:
