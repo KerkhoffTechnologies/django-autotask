@@ -24,7 +24,7 @@ class Command(BaseCommand):
         # now.
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
-            ('status', sync.StatusSynchronizer, _('Status')),
+            ('status', syncrest.StatusSynchronizer, _('Status')),
             (
                 'license_type',
                 syncrest.LicenseTypeSynchronizer,
@@ -34,8 +34,8 @@ class Command(BaseCommand):
             ('ticket_secondary_resource',
              sync.TicketSecondaryResourceSynchronizer,
              _('Ticket Secondary Resource')),
-            ('priority', sync.PrioritySynchronizer, _('Priority')),
-            ('queue', sync.QueueSynchronizer, _('Queue')),
+            ('priority', syncrest.PrioritySynchronizer, _('Priority')),
+            ('queue', syncrest.QueueSynchronizer, _('Queue')),
             (
                 'account_type',
                 syncrest.AccountTypeSynchronizer,
@@ -57,12 +57,12 @@ class Command(BaseCommand):
              sync.TaskSecondaryResourceSynchronizer,
              _('Task Secondary Resource')),
             ('task', syncrest.TaskSynchronizer, _('Task')),
-            ('display_color', sync.DisplayColorSynchronizer,
+            ('display_color', syncrest.DisplayColorSynchronizer,
              _('Display Color')),
             ('ticket_category', sync.TicketCategorySynchronizer,
              _('Ticket Category')),
-            ('source', sync.SourceSynchronizer, _('Source')),
-            ('issue_type', sync.IssueTypeSynchronizer, _('Issue Type')),
+            ('source', syncrest.SourceSynchronizer, _('Source')),
+            ('issue_type', syncrest.IssueTypeSynchronizer, _('Issue Type')),
             ('ticket_type', sync.TicketTypeSynchronizer, _('Ticket Type')),
             ('sub_issue_type', sync.SubIssueTypeSynchronizer,
              _('Sub Issue Type')),
