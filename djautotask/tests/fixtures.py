@@ -263,95 +263,282 @@ API_RESOURCE = {
 
 API_RESOURCE_LIST = [API_RESOURCE]
 
-API_QUEUE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Client Portal',
-        'SortOrder': 0,
-        'Value': 5,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Post Sale',
-        'SortOrder': 1,
-        'Value': 6,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Monitoring Alert',
-        'SortOrder': 2,
-        'Value': 8,
-        'parentValue': None,
-    },
-]
+API_SOURCE_FIELD = {
+    "fields": [
+        {
+            "name": "source",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "2",
+                    "label": "Insourced",
+                    "isDefaultValue": False,
+                    "sortOrder": 8,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
 
-API_PRIORITY_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'High',
-        'SortOrder': 2,
-        'Value': 1,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Medium',
-        'SortOrder': 3,
-        'Value': 2,
-        'parentValue': None,
-    }
-]
+API_ISSUE_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "issueType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "2",
+                    "label": "Hardware",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
 
-API_STATUS_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Waiting Materials',
-        'SortOrder': 6,
-        'Value': 9,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Scheduled',
-        'SortOrder': 3,
-        'Value': 10,
-        'parentValue': None
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Escalate',
-        'SortOrder': 5,
-        'Value': 11,
-        'parentValue': None
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Waiting Vendor',
-        'SortOrder': 8,
-        'Value': 12,
-        'parentValue': None
-    }
-]
+API_QUEUE_FIELD = {
+    "fields": [
+        {
+            "name": "queueID",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "5",
+                    "label": "Client Portal",
+                    "isDefaultValue": False,
+                    "sortOrder": 0,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
+API_PRIORITY_FIELD = {
+    "fields": [
+        {
+            "name": "priority",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "1",
+                    "label": "High",
+                    "isDefaultValue": False,
+                    "sortOrder": 2,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
+API_STATUS_FIELD = {
+    "fields": [
+        {
+            "name": "status",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "9",
+                    "label": "Waiting Materials",
+                    "isDefaultValue": False,
+                    "sortOrder": 6,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+                {
+                    "value": "10",
+                    "label": "Scheduled",
+                    "isDefaultValue": False,
+                    "sortOrder": 3,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+                {
+                    "value": "11",
+                    "label": "Escalate",
+                    "isDefaultValue": False,
+                    "sortOrder": 5,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+                {
+                    "value": "12",
+                    "label": "Waiting Vendor",
+                    "isDefaultValue": False,
+                    "sortOrder": 8,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        },
+        {
+            "name": "priority",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "1",
+                    "label": "High",
+                    "isDefaultValue": False,
+                    "sortOrder": 2,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        },
+        {
+            "name": "queueID",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "5",
+                    "label": "Client Portal",
+                    "isDefaultValue": False,
+                    "sortOrder": 0,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        },
+        {
+            "name": "issueType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "2",
+                    "label": "Hardware",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        },
+        {
+            "name": "source",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "2",
+                    "label": "Insourced",
+                    "isDefaultValue": False,
+                    "sortOrder": 8,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
+API_TICKET_PICKLIST_FIELD = {
+    "fields":
+        API_STATUS_FIELD['fields']
+        + API_PRIORITY_FIELD['fields']
+        + API_QUEUE_FIELD['fields']
+        + API_ISSUE_TYPE_FIELD['fields']
+        + API_SOURCE_FIELD['fields']
+}
 
 API_TICKET_CATEGORY_LIST = [
     {
@@ -376,69 +563,34 @@ API_TICKET_CATEGORY_LIST = [
     }
 ]
 
-API_DISPLAY_COLOR_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': '#ff6666',
-        'SortOrder': 1,
-        'Value': 19,
-        'parentValue': None
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': '#ff855d',
-        'SortOrder': 2,
-        'Value': 21,
-        'parentValue': None
-    },
-]
-
-API_SOURCE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Monitoring Alert',
-        'SortOrder': 8,
-        'Value': 2,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Web Portal',
-        'SortOrder': 6,
-        'Value': 9,
-        'parentValue': None,
-    },
-
-]
-
-API_ISSUE_TYPE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Hardware',
-        'SortOrder': 1,
-        'Value': 2,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Internal',
-        'SortOrder': 2,
-        'Value': 3,
-        'parentValue': None,
-    },
-]
+API_DISPLAY_COLOR_FIELD = {
+    "fields": [
+        {
+            "name": "displayColorRgb",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "19",
+                    "label": "#ff6666",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
 
 API_TICKET_TYPE_LIST = [
     {

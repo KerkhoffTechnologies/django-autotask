@@ -799,13 +799,13 @@ class AccountTypeSynchronizer(PicklistSynchronizer):
 
 
 class DisplayColorSynchronizer(PicklistSynchronizer):
-    client_class = api.TicketsCategoryAPIClient
+    client_class = api.TicketCategoryPicklistAPIClient
     model_class = models.DisplayColorTracker
     lookup_name = 'displayColorRgb'
 
 
 class TicketPicklistSynchronizer(PicklistSynchronizer):
-    client_class = api.TicketsPicklistAPIClient
+    client_class = api.TicketPicklistAPIClient
 
 
 class StatusSynchronizer(TicketPicklistSynchronizer):

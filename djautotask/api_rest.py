@@ -433,7 +433,6 @@ class DepartmentsAPIClient(AutotaskAPIClient):
 class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 
-
     def get_ticket(self, ticket_id):
         return self.get_instance(ticket_id)
 
@@ -514,11 +513,11 @@ class AccountTypesAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Companies'
 
 
-class TicketsCategoryAPIClient(AutotaskPicklistAPIClient):
+class TicketCategoryPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'TicketCategories'
 
 
-class TicketsPicklistAPIClient(AutotaskPicklistAPIClient):
+class TicketPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Tickets'
 
 
