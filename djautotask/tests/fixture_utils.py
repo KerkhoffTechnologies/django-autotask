@@ -178,9 +178,9 @@ def manage_full_sync_return_data(value):
         'AllocationCode': fixtures.API_ALLOCATION_CODE_LIST,
         'Role': fixtures.API_ROLE,
         'Department': fixtures.API_DEPARTMENT,
-        'ResourceRoleDepartment': fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
+        'ResourceRoleDepartment': fixtures.API_RESOURCE_ROLE_DEPARTMENT,
         'ResourceServiceDeskRole':
-            fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
+            fixtures.API_RESOURCE_SERVICE_DESK_ROLE,
         'Contract': fixtures.API_CONTRACT_LIST,
         'ServiceCall': fixtures.API_SERVICE_CALL_LIST,
         'ServiceCallTicket': fixtures.API_SERVICE_CALL_TICKET_LIST,
@@ -550,20 +550,20 @@ def init_departments():
     return synchronizer.sync()
 
 
+def init_resource_service_desk_roles():
+    models.ResourceServiceDeskRole.objects.all().delete()
+    mocks.service_api_get_resource_service_desk_roles_call(
+        fixtures.API_RESOURCE_SERVICE_DESK_ROLE)
+    synchronizer = syncrest.ResourceServiceDeskRoleSynchronizer()
+    return synchronizer.sync()
+
+
 def init_resource_role_departments():
-    sync_objects(
-        'ResourceRoleDepartment',
-        fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
-        sync.ResourceRoleDepartmentSynchronizer
-    )
-
-
-def init_resource_service_desk_role():
-    sync_objects(
-        'ResourceServiceDeskRole',
-        fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
-        sync.ResourceServiceDeskRoleSynchronizer
-    )
+    models.ResourceRoleDepartment.objects.all().delete()
+    mocks.service_api_get_resource_role_departments_call(
+        fixtures.API_RESOURCE_ROLE_DEPARTMENT)
+    synchronizer = syncrest.ResourceRoleDepartmentSynchronizer()
+    return synchronizer.sync()
 
 
 def init_contracts():

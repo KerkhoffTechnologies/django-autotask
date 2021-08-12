@@ -482,9 +482,26 @@ class TestSyncDepartmentCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_departments()
 
 
-class TestResourceRoleDepartmentCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncResourceServiceDeskRoleCommand(AbstractBaseSyncRestTest,
+                                             TestCase):
     args = (
-        fixtures.API_RESOURCE_ROLE_DEPARTMENT_LIST,
+        mocks.service_api_get_resource_service_desk_roles_call,
+        fixtures.API_RESOURCE_SERVICE_DESK_ROLE,
+        'resource_service_desk_role',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_roles()
+        fixture_utils.init_resources()
+        fixture_utils.init_resource_service_desk_roles()
+
+
+class TestSyncResourceRoleDepartmentCommand(AbstractBaseSyncRestTest,
+                                            TestCase):
+    args = (
+        mocks.service_api_get_resource_role_departments_call,
+        fixtures.API_RESOURCE_ROLE_DEPARTMENT,
         'resource_role_department',
     )
 
@@ -493,18 +510,7 @@ class TestResourceRoleDepartmentCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_departments()
         fixture_utils.init_roles()
         fixture_utils.init_resources()
-
-
-class TestResourceServiceDeskRoleCommand(AbstractBaseSyncTest, TestCase):
-    args = (
-        fixtures.API_RESOURCE_SERVICE_DESK_ROLE_LIST,
-        'resource_service_desk_role',
-    )
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_roles()
-        fixture_utils.init_resources()
+        fixture_utils.init_resource_role_departments()
 
 
 class TestContractCommand(AbstractBaseSyncTest, TestCase):
@@ -665,8 +671,8 @@ class TestSyncAllCommand(TestCase):
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
             TestAllocationCodeCommand,
-            TestResourceRoleDepartmentCommand,
-            TestResourceServiceDeskRoleCommand,
+            TestSyncResourceRoleDepartmentCommand,
+            TestSyncResourceServiceDeskRoleCommand,
             TestContractCommand,
             TestSyncServiceCallStatusCommand,
             TestSyncServiceCallCommand,
@@ -801,6 +807,10 @@ class TestSyncAllCommand(TestCase):
     def _call_service_api(self):
         mocks.service_api_get_roles_call(fixtures.API_ROLE)
         mocks.service_api_get_departments_call(fixtures.API_DEPARTMENT)
+        mocks.service_api_get_resource_service_desk_roles_call(
+            fixtures.API_RESOURCE_SERVICE_DESK_ROLE)
+        mocks.service_api_get_resource_role_departments_call(
+            fixtures.API_RESOURCE_ROLE_DEPARTMENT)
         mocks.service_api_get_license_types_call(
             fixtures.API_LICENSE_TYPE_FIELD)
         mocks.service_api_get_use_types_call(fixtures.API_USE_TYPE_FIELD)
@@ -820,6 +830,10 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_projects_call(fixtures.API_EMPTY)
         mocks.service_api_get_roles_call(fixtures.API_EMPTY)
         mocks.service_api_get_departments_call(fixtures.API_EMPTY)
+        mocks.service_api_get_resource_service_desk_roles_call(
+            fixtures.API_EMPTY)
+        mocks.service_api_get_resource_role_departments_call(
+            fixtures.API_EMPTY)
         mocks.service_api_get_license_types_call({"fields": []})
         mocks.service_api_get_use_types_call({"fields": []})
         mocks.service_api_get_task_type_links_call({"fields": []})

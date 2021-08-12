@@ -1035,44 +1035,6 @@ class AllocationCodeSynchronizer(Synchronizer):
         return instance
 
 
-class ResourceRoleDepartmentSynchronizer(Synchronizer):
-    model_class = models.ResourceRoleDepartmentTracker
-
-    related_meta = {
-        'ResourceID': (models.Resource, 'resource'),
-        'RoleID': (models.Role, 'role'),
-        'DepartmentID': (models.Department, 'department'),
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.active = object_data.get('Active')
-        instance.default = object_data.get('Default')
-        instance.department_lead = object_data.get('DepartmentLead')
-
-        self.set_relations(instance, object_data)
-
-        return instance
-
-
-class ResourceServiceDeskRoleSynchronizer(Synchronizer):
-    model_class = models.ResourceServiceDeskRoleTracker
-
-    related_meta = {
-        'ResourceID': (models.Resource, 'resource'),
-        'RoleID': (models.Role, 'role'),
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.active = object_data.get('Active')
-        instance.default = object_data.get('Default')
-
-        self.set_relations(instance, object_data)
-
-        return instance
-
-
 class ContractSynchronizer(Synchronizer):
     model_class = models.ContractTracker
 

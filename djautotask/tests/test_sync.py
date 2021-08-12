@@ -86,7 +86,13 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         instance_id = json_data[self.lookup_key]
         original = self.model_class.objects.get(id=instance_id)
 
-        new_val = 'Some New Value'
+        new_val = None
+        update_field_type = type(getattr(original, self.update_field))
+        if update_field_type is str:
+            new_val = 'Some New Value'
+        elif update_field_type is bool:
+            new_val = not getattr(original, self.update_field)
+
         new_json = deepcopy(self.fixture_items[0])
         new_json[self.update_field] = new_val
         new_json_list = [new_json]
@@ -1395,8 +1401,7 @@ class TestAllocationCodeSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(allocation_code_qset.count(), 0)
 
 
-class TestRoleSynchronizer(SynchronizerRestTestMixin,
-                           TestCase):
+class TestRoleSynchronizer(SynchronizerRestTestMixin, TestCase):
     synchronizer_class = sync_rest.RoleSynchronizer
     model_class = models.RoleTracker
     fixture = fixtures.API_ROLE
@@ -1441,99 +1446,58 @@ class TestDepartmentSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.number, json_data['number'])
 
 
-class TestResourceRoleDepartmentSynchronizer(SynchronizerTestMixin, TestCase):
+class TestResourceRoleDepartmentSynchronizer(SynchronizerRestTestMixin,
+                                             TestCase):
+    synchronizer_class = sync_rest.ResourceRoleDepartmentSynchronizer
     model_class = models.ResourceRoleDepartmentTracker
     fixture = fixtures.API_RESOURCE_ROLE_DEPARTMENT
+    update_field = 'active'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.ResourceRoleDepartmentSynchronizer()
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_departments()
         fixture_utils.init_roles()
         fixture_utils.init_resources()
-        fixture_utils.init_resource_role_departments()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.active, object_data['Active'])
-        self.assertEqual(instance.default, object_data['Default'])
+    def _call_api(self, return_data):
+        return mocks.service_api_get_resource_role_departments_call(
+            return_data)
+
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.active, json_data['isActive'])
+        self.assertEqual(instance.default, json_data['isDefault'])
+        self.assertEqual(instance.resource.id, json_data['resourceID'])
+        self.assertEqual(instance.role.id, json_data['roleID'])
+        self.assertEqual(instance.department.id, json_data['departmentID'])
         self.assertEqual(instance.department_lead,
-                         object_data['DepartmentLead'])
-        self.assertEqual(instance.resource.id, object_data['ResourceID'])
-        self.assertEqual(instance.role.id, object_data['RoleID'])
-        self.assertEqual(instance.department.id, object_data['DepartmentID'])
-
-    def test_sync_resource_role_department(self):
-        """
-        Test to ensure synchronizer saves an instance locally.
-        """
-        self.assertGreater(
-            models.ResourceRoleDepartment.objects.all().count(), 0)
-
-        instance = \
-            models.ResourceRoleDepartment.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_skips(self):
-        updated_instance = deepcopy(self.fixture)
-        updated_instance['Active'] = False
-
-        a, updated_count, skipped_count, _ = self._sync(updated_instance)
-        self.assertEqual(updated_count, 1)
-        self.assertEqual(skipped_count, 0)
-
-        _, updated_count, skipped_count, _ = self._sync(updated_instance)
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
+                         json_data['isDepartmentLead'])
 
 
-class TestResourceServiceDeskRoleSynchronizer(SynchronizerTestMixin, TestCase):
+class TestResourceServiceDeskRoleSynchronizer(SynchronizerRestTestMixin,
+                                              TestCase):
+    synchronizer_class = sync_rest.ResourceServiceDeskRoleSynchronizer
     model_class = models.ResourceServiceDeskRoleTracker
     fixture = fixtures.API_RESOURCE_SERVICE_DESK_ROLE
+    update_field = 'active'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.ResourceServiceDeskRoleSynchronizer()
-
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_roles()
         fixture_utils.init_resources()
-        fixture_utils.init_resource_service_desk_role()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.active, object_data['Active'])
-        self.assertEqual(instance.default, object_data['Default'])
-        self.assertEqual(instance.resource.id, object_data['ResourceID'])
-        self.assertEqual(instance.role.id, object_data['RoleID'])
+    def _call_api(self, return_data):
+        return mocks.service_api_get_resource_service_desk_roles_call(
+            return_data)
 
-    def test_sync_resource_service_desk_role(self):
-        """
-        Test to ensure synchronizer saves an instance locally.
-        """
-        self.assertGreater(
-            models.ResourceServiceDeskRole.objects.all().count(), 0)
-
-        instance = \
-            models.ResourceServiceDeskRole.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_skips(self):
-        updated_instance = deepcopy(self.fixture)
-        updated_instance['Active'] = False
-
-        _, updated_count, skipped_count, _ = self._sync(updated_instance)
-        self.assertEqual(updated_count, 1)
-        self.assertEqual(skipped_count, 0)
-
-        _, updated_count, skipped_count, _ = self._sync(updated_instance)
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
+    def _assert_fields(self, instance, json_data):
+        self.assertEqual(instance.id, json_data['id'])
+        self.assertEqual(instance.active, json_data['isActive'])
+        self.assertEqual(instance.default, json_data['isDefault'])
+        self.assertEqual(instance.resource.id, json_data['resourceID'])
+        self.assertEqual(instance.role.id, json_data['roleID'])
 
 
 class TestContractSynchronizer(SynchronizerTestMixin, TestCase):
