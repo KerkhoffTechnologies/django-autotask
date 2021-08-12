@@ -616,6 +616,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'start_date': 'startDateTime',
         'end_date': 'endDateTime',
         'estimated_hours': 'estimatedHours',
+        'remaining_hours': 'remainingHours',
         'status': 'status',
         'department': 'departmentID',
         'allocation_code': 'billingCodeID',
