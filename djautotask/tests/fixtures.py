@@ -965,25 +965,33 @@ API_DEPARTMENT = {
     "pageDetails": API_PAGE_DETAILS
 }
 
+API_RESOURCE_ROLE_DEPARTMENT_ITEM = {
+    "id": 32,
+    "departmentID": 29683384,
+    "isActive": True,
+    "isDefault": True,
+    "isDepartmentLead": True,
+    "resourceID": 29683794,
+    "roleID": 29683396,
+}
+API_RESOURCE_ROLE_DEPARTMENT_ITEMS = [API_RESOURCE_ROLE_DEPARTMENT_ITEM]
 API_RESOURCE_ROLE_DEPARTMENT = {
-    'id': 32,
-    'Default': True,
-    'DepartmentID': 29683384,
-    'Active': True,
-    'ResourceID': 29683794,
-    'RoleID': 29683396,
-    'DepartmentLead': True,
+    "items": API_RESOURCE_ROLE_DEPARTMENT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_RESOURCE_ROLE_DEPARTMENT_LIST = [API_RESOURCE_ROLE_DEPARTMENT]
 
-API_RESOURCE_SERVICE_DESK_ROLE = {
-    'id': 32,
-    'Default': True,
-    'Active': True,
-    'ResourceID': 29683794,
-    'RoleID': 29683396,
+API_RESOURCE_SERVICE_DESK_ROLE_ITEM = {
+    "id": 32,
+    "isActive": True,
+    "isDefault": True,
+    "resourceID": 29683794,
+    "roleID": 29683396,
 }
-API_RESOURCE_SERVICE_DESK_ROLE_LIST = [API_RESOURCE_SERVICE_DESK_ROLE]
+API_RESOURCE_SERVICE_DESK_ROLE_ITEMS = [API_RESOURCE_SERVICE_DESK_ROLE_ITEM]
+API_RESOURCE_SERVICE_DESK_ROLE = {
+    "items": API_RESOURCE_SERVICE_DESK_ROLE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
 
 API_CONTRACT = {
     'id': 29684183,

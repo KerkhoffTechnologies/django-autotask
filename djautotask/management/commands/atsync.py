@@ -80,12 +80,12 @@ class Command(BaseCommand):
             ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
             (
                 'resource_role_department',
-                sync.ResourceRoleDepartmentSynchronizer,
+                syncrest.ResourceRoleDepartmentSynchronizer,
                 _('Resource Role Department')
             ),
             (
                 'resource_service_desk_role',
-                sync.ResourceServiceDeskRoleSynchronizer,
+                syncrest.ResourceServiceDeskRoleSynchronizer,
                 _('Resource Service Desk Role')
             ),
             (

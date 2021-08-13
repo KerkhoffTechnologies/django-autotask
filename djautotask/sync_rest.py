@@ -415,6 +415,46 @@ class DepartmentSynchronizer(Synchronizer):
         return instance
 
 
+class ResourceServiceDeskRoleSynchronizer(Synchronizer):
+    client_class = api.ResourceServiceDeskRolesAPIClient
+    model_class = models.ResourceServiceDeskRoleTracker
+
+    related_meta = {
+        'resourceID': (models.Resource, 'resource'),
+        'roleID': (models.Role, 'role'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.active = json_data.get('isActive')
+        instance.default = json_data.get('isDefault')
+
+        self.set_relations(instance, json_data)
+
+        return instance
+
+
+class ResourceRoleDepartmentSynchronizer(Synchronizer):
+    client_class = api.ResourceRoleDepartmentsAPIClient
+    model_class = models.ResourceRoleDepartmentTracker
+
+    related_meta = {
+        'resourceID': (models.Resource, 'resource'),
+        'roleID': (models.Role, 'role'),
+        'departmentID': (models.Department, 'department'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.active = json_data.get('isActive')
+        instance.default = json_data.get('isDefault')
+        instance.department_lead = json_data.get('isDepartmentLead')
+
+        self.set_relations(instance, json_data)
+
+        return instance
+
+
 class TicketTaskMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

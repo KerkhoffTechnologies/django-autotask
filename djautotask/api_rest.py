@@ -430,6 +430,14 @@ class DepartmentsAPIClient(AutotaskAPIClient):
     API = 'Departments'
 
 
+class ResourceServiceDeskRolesAPIClient(AutotaskAPIClient):
+    API = 'ResourceServiceDeskRoles'
+
+
+class ResourceRoleDepartmentsAPIClient(AutotaskAPIClient):
+    API = 'ResourceRoleDepartments'
+
+
 class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 
