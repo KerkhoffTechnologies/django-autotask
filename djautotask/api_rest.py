@@ -489,7 +489,7 @@ class ProjectsAPIClient(AutotaskAPIClient):
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
 
     def __init__(self, **kwargs):
-        self.API = '{}/entityinformation/fields'.format(self.API_ENTITY)
+        self.API = '{}/entityInformation/fields'.format(self.API_ENTITY)
         super().__init__(**kwargs)
 
     def get(self, next_url, *args, **kwargs):
@@ -511,6 +511,14 @@ class TaskTypeLinksAPIClient(AutotaskPicklistAPIClient):
 
 class AccountTypesAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Companies'
+
+
+class TicketCategoryPicklistAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'TicketCategories'
+
+
+class TicketPicklistAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'Tickets'
 
 
 class TicketChecklistItemsAPIClient(AutotaskAPIClient):

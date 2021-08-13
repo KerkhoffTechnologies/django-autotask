@@ -619,31 +619,6 @@ class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
 
 
-class StatusSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.StatusTracker
-    picklist_field = 'Status'
-
-
-class PrioritySynchronizer(TicketPicklistSynchronizer):
-    model_class = models.PriorityTracker
-    picklist_field = 'Priority'
-
-
-class QueueSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.QueueTracker
-    picklist_field = 'QueueID'
-
-
-class SourceSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.SourceTracker
-    picklist_field = 'Source'
-
-
-class IssueTypeSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.IssueTypeTracker
-    picklist_field = 'IssueType'
-
-
 class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
     model_class = models.SubIssueTypeTracker
     picklist_field = 'SubIssueType'
@@ -675,12 +650,6 @@ class ProjectTypeSynchronizer(PicklistSynchronizer):
     model_class = models.ProjectTypeTracker
     entity_type = 'Project'
     picklist_field = 'Type'
-
-
-class DisplayColorSynchronizer(PicklistSynchronizer):
-    model_class = models.DisplayColorTracker
-    entity_type = 'TicketCategory'
-    picklist_field = 'DisplayColorRGB'
 
 
 class NoteTypeSynchronizer(PicklistSynchronizer):

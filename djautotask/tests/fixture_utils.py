@@ -232,20 +232,12 @@ def manage_sync_picklist_return_data(wrapper, entity):
     """
     fixture_dict = {
         'Ticket': {
-            'Status': fixtures.API_STATUS_LIST,
-            'Priority': fixtures.API_PRIORITY_LIST,
-            'QueueID': fixtures.API_QUEUE_LIST,
-            'Source': fixtures.API_SOURCE_LIST,
-            'IssueType': fixtures.API_ISSUE_TYPE_LIST,
             'SubIssueType': fixtures.API_SUB_ISSUE_TYPE_LIST,
             'TicketType': fixtures.API_TICKET_TYPE_LIST,
         },
         'Project': {
             'Status': fixtures.API_PROJECT_STATUS_LIST,
             'Type': fixtures.API_PROJECT_TYPE_LIST,
-        },
-        'TicketCategory': {
-            'DisplayColorRGB': fixtures.API_DISPLAY_COLOR_LIST,
         },
         'TicketNote': {
             'NoteType': fixtures.API_NOTE_TYPE_LIST,
@@ -295,30 +287,6 @@ def mock_udfs():
     mocks.api_udf_call(field_info)
 
 
-def init_statuses():
-    sync_picklist_objects(
-        'Status',
-        fixtures.API_STATUS_LIST,
-        sync.StatusSynchronizer
-    )
-
-
-def init_priorities():
-    sync_picklist_objects(
-        'Priority',
-        fixtures.API_PRIORITY_LIST,
-        sync.PrioritySynchronizer
-    )
-
-
-def init_queues():
-    sync_picklist_objects(
-        'QueueID',
-        fixtures.API_QUEUE_LIST,
-        sync.QueueSynchronizer
-    )
-
-
 def init_project_statuses():
     sync_picklist_objects(
         'Status',
@@ -332,22 +300,6 @@ def init_project_types():
         'Type',
         fixtures.API_PROJECT_TYPE_LIST,
         sync.ProjectTypeSynchronizer
-    )
-
-
-def init_sources():
-    sync_picklist_objects(
-        'Source',
-        fixtures.API_SOURCE_LIST,
-        sync.SourceSynchronizer
-    )
-
-
-def init_issue_types():
-    sync_picklist_objects(
-        'IssueType',
-        fixtures.API_ISSUE_TYPE_LIST,
-        sync.IssueTypeSynchronizer
     )
 
 
@@ -368,11 +320,46 @@ def init_ticket_types():
 
 
 def init_display_colors():
-    sync_picklist_objects(
-        'DisplayColorRGB',
-        fixtures.API_DISPLAY_COLOR_LIST,
-        sync.DisplayColorSynchronizer
-    )
+    models.DisplayColor.objects.all().delete()
+    mocks.service_api_get_ticket_category_picklist_call(
+        fixtures.API_DISPLAY_COLOR_FIELD)
+    synchronizer = syncrest.DisplayColorSynchronizer()
+    return synchronizer.sync()
+
+
+def init_issue_types():
+    models.IssueType.objects.all().delete()
+    mocks.service_api_get_ticket_picklist_call(fixtures.API_ISSUE_TYPE_FIELD)
+    synchronizer = syncrest.IssueTypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_statuses():
+    models.Status.objects.all().delete()
+    mocks.service_api_get_ticket_picklist_call(fixtures.API_STATUS_FIELD)
+    synchronizer = syncrest.StatusSynchronizer()
+    return synchronizer.sync()
+
+
+def init_priorities():
+    models.Priority.objects.all().delete()
+    mocks.service_api_get_ticket_picklist_call(fixtures.API_PRIORITY_FIELD)
+    synchronizer = syncrest.PrioritySynchronizer()
+    return synchronizer.sync()
+
+
+def init_queues():
+    models.Queue.objects.all().delete()
+    mocks.service_api_get_ticket_picklist_call(fixtures.API_QUEUE_FIELD)
+    synchronizer = syncrest.QueueSynchronizer()
+    return synchronizer.sync()
+
+
+def init_sources():
+    models.Source.objects.all().delete()
+    mocks.service_api_get_ticket_picklist_call(fixtures.API_SOURCE_FIELD)
+    synchronizer = syncrest.SourceSynchronizer()
+    return synchronizer.sync()
 
 
 def init_license_types():
