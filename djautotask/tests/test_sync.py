@@ -175,7 +175,7 @@ class PicklistSynchronizerRestTestMixin(SynchronizerRestTestMixin):
         _, updated_count, skipped_count, _ = \
             self._sync_with_results(return_value)
 
-        self.assertEqual(skipped_count, 1)
+        self.assertGreater(skipped_count, 0)
         self.assertEqual(updated_count, 0)
 
     def test_sync_update(self):
@@ -532,34 +532,31 @@ class PicklistSynchronizerTestMixin:
         assert qset.exists()
 
 
-class TestStatusSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestStatusSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.StatusSynchronizer
     model_class = models.StatusTracker
-    fixture = fixtures.API_STATUS_LIST
-    synchronizer = sync.StatusSynchronizer
+    fixture = fixtures.API_STATUS_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_statuses()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestPrioritySynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestPrioritySynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.PrioritySynchronizer
     model_class = models.PriorityTracker
-    fixture = fixtures.API_PRIORITY_LIST
-    synchronizer = sync.PrioritySynchronizer
+    fixture = fixtures.API_PRIORITY_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_priorities()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestQueueSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestQueueSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.QueueSynchronizer
     model_class = models.QueueTracker
-    fixture = fixtures.API_QUEUE_LIST
-    synchronizer = sync.QueueSynchronizer
+    fixture = fixtures.API_QUEUE_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_queues()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
 class TestProjectStatusSynchronizer(PicklistSynchronizerTestMixin, TestCase):
@@ -594,24 +591,22 @@ class TestProjectTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
         fixture_utils.init_project_types()
 
 
-class TestSourceSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestSourceSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.SourceSynchronizer
     model_class = models.SourceTracker
-    fixture = fixtures.API_SOURCE_LIST
-    synchronizer = sync.SourceSynchronizer
+    fixture = fixtures.API_SOURCE_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_sources()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestIssueTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestIssueTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.IssueTypeSynchronizer
     model_class = models.IssueTypeTracker
-    fixture = fixtures.API_ISSUE_TYPE_LIST
-    synchronizer = sync.IssueTypeSynchronizer
+    fixture = fixtures.API_ISSUE_TYPE_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_issue_types()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
 class TestSubIssueTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
@@ -634,14 +629,14 @@ class TestTicketTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
         fixture_utils.init_ticket_types()
 
 
-class TestDisplayColorSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestDisplayColorSynchronizer(PicklistSynchronizerRestTestMixin,
+                                   TestCase):
+    synchronizer_class = sync_rest.DisplayColorSynchronizer
     model_class = models.DisplayColorTracker
-    fixture = fixtures.API_DISPLAY_COLOR_LIST
-    synchronizer = sync.DisplayColorSynchronizer
+    fixture = fixtures.API_DISPLAY_COLOR_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_display_colors()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_category_picklist_call(return_data)
 
 
 class TestServiceCallStatusSynchronizer(PicklistSynchronizerTestMixin,

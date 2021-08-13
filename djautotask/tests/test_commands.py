@@ -188,32 +188,40 @@ class TestSyncTicketCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_tickets()
 
 
-class TestSyncStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'Status'
-
+class TestSyncStatusCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_STATUS_LIST,
+        mocks.service_api_get_ticket_picklist_call,
+        fixtures.API_STATUS_FIELD,
         'status',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_statuses()
 
-class TestSyncPriorityCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'Priority'
 
+class TestSyncPriorityCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_PRIORITY_LIST,
+        mocks.service_api_get_ticket_picklist_call,
+        fixtures.API_PRIORITY_FIELD,
         'priority',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_priorities()
 
-class TestSyncQueueCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'QueueID'
 
+class TestSyncQueueCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_QUEUE_LIST,
+        mocks.service_api_get_ticket_picklist_call,
+        fixtures.API_QUEUE_FIELD,
         'queue',
-
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_queues()
 
 
 class TestSyncProjectStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
@@ -234,22 +242,28 @@ class TestSyncProjectTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
     )
 
 
-class TestSyncSourceCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'Source'
-
+class TestSyncSourceCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_SOURCE_LIST,
+        mocks.service_api_get_ticket_picklist_call,
+        fixtures.API_SOURCE_FIELD,
         'source',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_sources()
 
-class TestSyncIssueTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'IssueType'
 
+class TestSyncIssueTypeCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_ISSUE_TYPE_LIST,
+        mocks.service_api_get_ticket_picklist_call,
+        fixtures.API_ISSUE_TYPE_FIELD,
         'issue_type',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_issue_types()
 
 
 class TestSyncSubIssueTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
@@ -292,13 +306,16 @@ class TestSyncServiceCallStatusCommand(AbstractPicklistSyncCommandTest,
     )
 
 
-class TestDisplayColorCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'DisplayColorRGB'
-
+class TestSyncDisplayColorCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_DISPLAY_COLOR_LIST,
+        mocks.service_api_get_ticket_category_picklist_call,
+        fixtures.API_DISPLAY_COLOR_FIELD,
         'display_color',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_display_colors()
 
 
 class TestSyncLicenseTypeCommand(PicklistSyncTest, TestCase):
@@ -664,7 +681,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncIssueTypeCommand,
             TestSyncSubIssueTypeCommand,
             TestSyncTicketTypeCommand,
-            TestDisplayColorCommand,
+            TestSyncDisplayColorCommand,
             TestSyncTaskSecondaryResourceCommand,
             TestSyncPhaseCommand,
             TestSyncTicketNoteCommand,
@@ -727,22 +744,22 @@ class TestSyncAllCommand(TestCase):
             'role': models.Role,
             'department': models.Department,
             'status': models.Status,
+            'priority': models.Priority,
+            'queue': models.Queue,
+            'source': models.Source,
+            'issue_type': models.IssueType,
+            'display_color': models.DisplayColor,
             'ticket': models.Ticket,
             'resource': models.Resource,
             'ticket_secondary_resource': models.TicketSecondaryResource,
-            'priority': models.Priority,
-            'queue': models.Queue,
             'account': models.Account,
             'account_physical_location': models.AccountPhysicalLocation,
             'project': models.Project,
             'project_status': models.ProjectStatus,
             'project_type': models.ProjectType,
             'ticket_category': models.TicketCategory,
-            'source': models.Source,
-            'issue_type': models.IssueType,
             'sub_issue_type': models.SubIssueType,
             'ticket_type': models.TicketType,
-            'display_color': models.DisplayColor,
             'license_type': models.LicenseType,
             'task': models.Task,
             'task_secondary_resource': models.TaskSecondaryResource,
@@ -818,6 +835,10 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_TASK_TYPE_LINK_FIELD)
         mocks.service_api_get_account_types_call(
             fixtures.API_ACCOUNT_TYPE_FIELD)
+        mocks.service_api_get_ticket_category_picklist_call(
+            fixtures.API_DISPLAY_COLOR_FIELD)
+        mocks.service_api_get_ticket_picklist_call(
+            fixtures.API_TICKET_PICKLIST_FIELD)
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
         mocks.service_api_get_tickets_call(fixtures.API_TICKET)
         mocks.service_api_get_tasks_call(fixtures.API_TASK)
@@ -838,3 +859,5 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_use_types_call({"fields": []})
         mocks.service_api_get_task_type_links_call({"fields": []})
         mocks.service_api_get_account_types_call({"fields": []})
+        mocks.service_api_get_ticket_category_picklist_call({"fields": []})
+        mocks.service_api_get_ticket_picklist_call({"fields": []})
