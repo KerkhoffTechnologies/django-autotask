@@ -619,31 +619,6 @@ class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
 
 
-class StatusSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.StatusTracker
-    picklist_field = 'Status'
-
-
-class PrioritySynchronizer(TicketPicklistSynchronizer):
-    model_class = models.PriorityTracker
-    picklist_field = 'Priority'
-
-
-class QueueSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.QueueTracker
-    picklist_field = 'QueueID'
-
-
-class SourceSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.SourceTracker
-    picklist_field = 'Source'
-
-
-class IssueTypeSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.IssueTypeTracker
-    picklist_field = 'IssueType'
-
-
 class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
     model_class = models.SubIssueTypeTracker
     picklist_field = 'SubIssueType'
@@ -675,12 +650,6 @@ class ProjectTypeSynchronizer(PicklistSynchronizer):
     model_class = models.ProjectTypeTracker
     entity_type = 'Project'
     picklist_field = 'Type'
-
-
-class DisplayColorSynchronizer(PicklistSynchronizer):
-    model_class = models.DisplayColorTracker
-    entity_type = 'TicketCategory'
-    picklist_field = 'DisplayColorRGB'
 
 
 class NoteTypeSynchronizer(PicklistSynchronizer):
@@ -1029,44 +998,6 @@ class AllocationCodeSynchronizer(Synchronizer):
         instance.name = object_data.get('Name')
         instance.description = object_data.get('Description')
         instance.active = object_data.get('Active')
-
-        self.set_relations(instance, object_data)
-
-        return instance
-
-
-class ResourceRoleDepartmentSynchronizer(Synchronizer):
-    model_class = models.ResourceRoleDepartmentTracker
-
-    related_meta = {
-        'ResourceID': (models.Resource, 'resource'),
-        'RoleID': (models.Role, 'role'),
-        'DepartmentID': (models.Department, 'department'),
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.active = object_data.get('Active')
-        instance.default = object_data.get('Default')
-        instance.department_lead = object_data.get('DepartmentLead')
-
-        self.set_relations(instance, object_data)
-
-        return instance
-
-
-class ResourceServiceDeskRoleSynchronizer(Synchronizer):
-    model_class = models.ResourceServiceDeskRoleTracker
-
-    related_meta = {
-        'ResourceID': (models.Resource, 'resource'),
-        'RoleID': (models.Role, 'role'),
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.active = object_data.get('Active')
-        instance.default = object_data.get('Default')
 
         self.set_relations(instance, object_data)
 

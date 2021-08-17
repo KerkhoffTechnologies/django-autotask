@@ -415,6 +415,46 @@ class DepartmentSynchronizer(Synchronizer):
         return instance
 
 
+class ResourceServiceDeskRoleSynchronizer(Synchronizer):
+    client_class = api.ResourceServiceDeskRolesAPIClient
+    model_class = models.ResourceServiceDeskRoleTracker
+
+    related_meta = {
+        'resourceID': (models.Resource, 'resource'),
+        'roleID': (models.Role, 'role'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.active = json_data.get('isActive')
+        instance.default = json_data.get('isDefault')
+
+        self.set_relations(instance, json_data)
+
+        return instance
+
+
+class ResourceRoleDepartmentSynchronizer(Synchronizer):
+    client_class = api.ResourceRoleDepartmentsAPIClient
+    model_class = models.ResourceRoleDepartmentTracker
+
+    related_meta = {
+        'resourceID': (models.Resource, 'resource'),
+        'roleID': (models.Role, 'role'),
+        'departmentID': (models.Department, 'department'),
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.active = json_data.get('isActive')
+        instance.default = json_data.get('isDefault')
+        instance.department_lead = json_data.get('isDepartmentLead')
+
+        self.set_relations(instance, json_data)
+
+        return instance
+
+
 class TicketTaskMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -796,6 +836,41 @@ class AccountTypeSynchronizer(PicklistSynchronizer):
     client_class = api.AccountTypesAPIClient
     model_class = models.AccountTypeTracker
     lookup_name = 'companyType'
+
+
+class DisplayColorSynchronizer(PicklistSynchronizer):
+    client_class = api.TicketCategoryPicklistAPIClient
+    model_class = models.DisplayColorTracker
+    lookup_name = 'displayColorRgb'
+
+
+class TicketPicklistSynchronizer(PicklistSynchronizer):
+    client_class = api.TicketPicklistAPIClient
+
+
+class StatusSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.StatusTracker
+    lookup_name = 'status'
+
+
+class PrioritySynchronizer(TicketPicklistSynchronizer):
+    model_class = models.PriorityTracker
+    lookup_name = 'priority'
+
+
+class QueueSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.QueueTracker
+    lookup_name = 'queueID'
+
+
+class SourceSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.SourceTracker
+    lookup_name = 'source'
+
+
+class IssueTypeSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.IssueTypeTracker
+    lookup_name = 'issueType'
 
 
 ###################################################################
