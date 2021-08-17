@@ -8,7 +8,7 @@ from django.utils import timezone
 from . import mocks as mk
 
 from .. import api_rest as api
-from ..api_rest import AutotaskAPIError, AutotaskAPIClientError
+from ..api_rest import AutotaskAPIError, AutotaskAPIClientError, ApiCondition
 
 
 class TestAutotaskAPIClient(TestCase):
@@ -21,13 +21,11 @@ class TestAutotaskAPIClient(TestCase):
 
     def test_build_query_string_single(self):
         kwargs = {}
-        kwargs['conditions'] = [
-            ['IsActive', 'true']
-        ]
+        kwargs['conditions'] = ApiCondition('isActive', 'true')
         self.client.build_query_string(**kwargs)
         self.assertEqual(
             self.client.QUERYSTR,
-            '{"filter": [{"op": "eq", "field": "IsActive", "value": "true"}]}'
+            '{"filter": [{"op": "eq", "field": "isActive", "value": "true"}]}'
         )
 
     def test_build_query_string_multiple(self):
@@ -35,15 +33,19 @@ class TestAutotaskAPIClient(TestCase):
                                           tzinfo=timezone.utc)
 
         kwargs = {}
-        kwargs['conditions'] = [
-            ['IsActive', 'true'],
-            ['lastActivityDate', test_datetime.strftime(
-                '%Y-%m-%dT%H:%M:%S.%fZ'), 'gt']
-        ]
+        kwargs['conditions'] = ApiCondition(
+            operands=[
+                ApiCondition('isActive', 'true'),
+                ApiCondition('lastActivityDate', test_datetime.strftime(
+                    '%Y-%m-%dT%H:%M:%S.%fZ'), op='>')
+            ]
+        )
+
         self.client.build_query_string(**kwargs)
-        str_built = '{"filter": [{"op": "eq", "field": "IsActive", "value": ' \
-                    '"true"}, {"op": "gt", "field": "lastActivityDate", ' \
-                    '"value": "2019-06-22T02:00:00.000000Z"}]}'
+        str_built = '{"filter": [{"op": "and", "items": [{"op": "eq", ' \
+                    '"field": "isActive", "value": "true"}, {"op": "gt", ' \
+                    '"field": "lastActivityDate", "value": ' \
+                    '"2019-06-22T02:00:00.000000Z"}]}]}'
         self.assertEqual(self.client.QUERYSTR, str_built)
 
     @responses.activate

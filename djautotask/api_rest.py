@@ -118,6 +118,40 @@ def get_zone_info(username):
         )
 
 
+class ApiCondition:
+    OP_OPTIONS = {
+        'and': 'and',
+        'or': 'or',
+        '==': 'eq',
+        '!=': 'noteq',
+        '>': 'gt',
+        '>=': 'gte',
+        '<': 'lt',
+        '<=': 'lte',
+        '^=': 'beginsWith',
+        '=$': 'endsWith',
+        'contains': 'contains',
+        'exists': 'exist',
+        'not exists ': 'notExist',
+        'in': 'in',
+        'not in': 'notIn',
+    }
+
+    # 2 types of api condition exist
+    def __init__(self, *args, op=None, operands=None):
+        if operands:
+            self.operands = operands
+            self.op = op if op else 'and'
+        else:
+            self.field = args[0]
+            self.value = args[1]
+            self.op = op if op else '=='
+
+    @property
+    def operator(self):
+        return self.OP_OPTIONS[self.op]
+
+
 class AutotaskAPIClient(object):
     API = None
     GET_QUERY = 'query?search='
@@ -223,32 +257,42 @@ class AutotaskAPIClient(object):
         return headers
 
     def build_query_string(self, **kwargs):
-        filter_array = self._build_filter(**kwargs)
+        filter_array = self._build_filters(**kwargs)
         query_obj = {'filter': filter_array}
         self.QUERYSTR = json.dumps(query_obj)
 
-    def _build_filter(self, **kwargs):
+    def _build_filters(self, **kwargs):
         filter_array = []
 
         if 'conditions' in kwargs:
 
-            for condition in kwargs['conditions']:
+            conditions = kwargs['conditions']
 
-                if type(condition[0]) == dict:
-                    sub_kwargs = {'conditions': condition[0]['operands']}
-                    filter_obj = {
-                        "op": condition[0]['op'],
-                        "items": self._build_filter(**sub_kwargs)
-                    }
-                    filter_array.append(filter_obj)
-                else:
-                    filter_obj = self._build_filter_obj(*condition)
-                    filter_array.append(filter_obj)
+            if hasattr(conditions, 'operands'):
+                filter_obj = {
+                    "op": conditions.operator,
+                    "items": [
+                        self._build_filter_unit(c)
+                        for c in conditions.operands
+                    ]
+                }
+                filter_array.append(filter_obj)
+            else:
+                filter_obj = self._build_filter_unit(conditions)
+                filter_array.append(filter_obj)
 
         return filter_array
 
-    def _build_filter_obj(self, field, value, op='eq'):
-        filter_obj = {"op": op, "field": field, "value": value}
+    def _build_filter_unit(self, condition):
+        if hasattr(condition, 'operands'):
+            sub_kwargs = {'conditions': condition}
+            return self._build_filters(**sub_kwargs)[0]
+
+        filter_obj = {
+            "op": condition.operator,
+            "field": condition.field,
+            "value": condition.value
+        }
         return filter_obj
 
     def _format_request_body(self, api_entity, changed_fields):
@@ -410,7 +454,7 @@ class AutotaskAPIClient(object):
         return self.fetch_resource(endpoint_url)
 
     def update_instance(self, instance, changed_fields):
-        endpoint_url = '{}'.format(self.api_base_url)
+        endpoint_url = self.api_base_url
         body = self._format_request_body(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
