@@ -145,7 +145,7 @@ class TestAPISettings(TestCase):
     def test_no_retry_attempts_in_400_range(self):
         client = api.ContactsAPIClient()
         client.build_query_string(**{})
-        endpoint = client._endpoint()
+        endpoint = client.get_http_uri_endpoint()
 
         tested_status_codes = []
         http_400_range = list(range(400, 499))

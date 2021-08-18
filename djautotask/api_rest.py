@@ -191,12 +191,31 @@ class AutotaskAPIClient(object):
 
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
-        self.api_base_url = self.build_api_base_url()
+        self.api_url = self.get_api_url()
 
-    def _endpoint(self):
-        return '{0}{1}{2}'.format(self.api_base_url,
+    @property
+    def api_base_url(self):
+        return '{0}v{1}/'.format(
+            self.server_url,
+            settings.AUTOTASK_CREDENTIALS['rest_api_version'],
+        )
+
+    def get_api_url(self, endpoint=None):
+        if not endpoint:
+            endpoint = self.API
+
+        return '{0}{1}/'.format(
+            self.api_base_url,
+            endpoint,
+        )
+
+    def get_http_uri_endpoint(self):
+        return '{0}{1}{2}'.format(self.api_url,
                                   self.GET_QUERY,
                                   self.QUERYSTR)
+
+    def get_parent_api_endpoint(self):
+        raise NotImplementedError
 
     def _log_failed(self, response):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
@@ -233,16 +252,6 @@ class AutotaskAPIClient(object):
             msg = 'An error occurred: {} {}'.format(response.status_code,
                                                     error)
         return msg
-
-    def build_api_base_url(self, endpoint=None):
-        if not endpoint:
-            endpoint = self.API
-
-        return '{0}v{1}/{2}/'.format(
-            self.server_url,
-            settings.AUTOTASK_CREDENTIALS['rest_api_version'],
-            endpoint,
-        )
 
     def get_headers(self):
         headers = {'Content-Type': 'application/json'}
@@ -382,7 +391,7 @@ class AutotaskAPIClient(object):
             if next_url:
                 endpoint = next_url
             else:
-                endpoint = self._endpoint()
+                endpoint = self.get_http_uri_endpoint()
 
         body = self.QUERYSTR if method == 'post' else None
 
@@ -450,11 +459,11 @@ class AutotaskAPIClient(object):
         return self.fetch_resource(next_url, *args, **kwargs)
 
     def get_instance(self, instance_id):
-        endpoint_url = '{}{}'.format(self.api_base_url, instance_id)
+        endpoint_url = '{}{}'.format(self.get_api_url(), instance_id)
         return self.fetch_resource(endpoint_url)
 
     def update_instance(self, instance, changed_fields):
-        endpoint_url = self.api_base_url
+        endpoint_url = self.get_api_url()
         body = self._format_request_body(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
@@ -507,9 +516,12 @@ class TasksAPIClient(AutotaskAPIClient):
         """
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
+    def get_parent_api_endpoint(self):
+        return self.PARENT_API
+
     def update_task(self, task, changed_fields):
         endpoint_url = '{}{}/{}'.format(
-            self.build_api_base_url(self.PARENT_API),
+            self.get_api_url(self.get_parent_api_endpoint()),
             task.project.id,
             self.API
         )
@@ -517,8 +529,8 @@ class TasksAPIClient(AutotaskAPIClient):
         result = self.request('patch', endpoint_url, body)
         return result
 
-    def _endpoint(self):
-        return '{}{}'.format(self.api_base_url, self.POST_QUERY)
+    def get_http_uri_endpoint(self):
+        return '{}{}'.format(self.get_api_url(), self.POST_QUERY)
 
 
 class ProjectsAPIClient(AutotaskAPIClient):
@@ -534,8 +546,8 @@ class ProjectsAPIClient(AutotaskAPIClient):
     def update_project(self, project, changed_fields):
         return self.update_instance(project, changed_fields)
 
-    def _endpoint(self):
-        return '{}{}'.format(self.api_base_url, self.POST_QUERY)
+    def get_http_uri_endpoint(self):
+        return '{}{}'.format(self.get_api_url(), self.POST_QUERY)
 
 
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
@@ -546,7 +558,7 @@ class AutotaskPicklistAPIClient(AutotaskAPIClient):
 
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(
-            next_url, endpoint=self.api_base_url, *args, **kwargs)
+            next_url, endpoint=self.get_api_url(), *args, **kwargs)
 
 
 class LicenseTypesAPIClient(AutotaskPicklistAPIClient):
@@ -583,13 +595,15 @@ class TicketChecklistItemsAPIClient(AutotaskAPIClient):
             #  parent API pattern in this issue, this method needs to be
             #  updated in issue #2142. Uses of `PARENT_API` should be in
             #  AutotaskAPIClient
-            self.api_base_url = self.build_api_base_url(
-                "{}{}".format(self.PARENT_API, self.API))
+            self.api_url = self.get_api_url(self.get_parent_api_endpoint())
         return self.fetch_resource(next_url, conditions=conditions)
+
+    def get_parent_api_endpoint(self):
+        return "{}{}".format(self.PARENT_API, self.API)
 
     def update(self, parent, **kwargs):
         endpoint_url = '{}{}/{}'.format(
-            self.build_api_base_url('tickets'),
+            self.get_api_url('tickets'),
             parent,
             self.API
         )
@@ -597,7 +611,7 @@ class TicketChecklistItemsAPIClient(AutotaskAPIClient):
 
     def create(self, parent, **kwargs):
         endpoint_url = '{}{}/{}'.format(
-            self.build_api_base_url('tickets'),
+            self.get_api_url('tickets'),
             parent,
             self.API
         )
@@ -605,7 +619,7 @@ class TicketChecklistItemsAPIClient(AutotaskAPIClient):
 
     def delete(self, parent, **kwargs):
         endpoint_url = '{}{}/{}/{}'.format(
-            self.build_api_base_url('tickets'),
+            self.get_api_url('tickets'),
             parent,
             self.API,
             kwargs.get("id")
