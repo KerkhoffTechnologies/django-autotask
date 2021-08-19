@@ -459,12 +459,22 @@ class AutotaskAPIClient(object):
         endpoint_url = '{}{}'.format(self.get_api_url(), instance_id)
         return self.fetch_resource(endpoint_url)
 
+    def _build_endpoint(self, parent_id=None):
+        if not parent_id:
+            endpoint_url = self.get_api_url()
+        else:
+            endpoint_url = '{}{}/{}'.format(
+                self.get_api_url(self.PARENT_API),
+                parent_id,
+                self.API
+            )
+        return endpoint_url
+
 
 class UpdateEntityMixin:
 
-    def update(self, instance, changed_fields, endpoint_url=None):
-        if not endpoint_url:
-            endpoint_url = self.get_api_url()
+    def update(self, instance, changed_fields, parent_id=None):
+        endpoint_url = self._build_endpoint(parent_id)
         body = self._format_request_body(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
@@ -506,12 +516,8 @@ class TasksAPIClient(UpdateEntityMixin, AutotaskAPIClient):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
     def update(self, task, changed_fields, **kwargs):
-        endpoint_url = '{}{}/{}'.format(
-            self.get_api_url(self.PARENT_API),
-            task.project.id,
-            self.API
-        )
-        return super().update(task, changed_fields, endpoint_url)
+        kwargs['parent_id'] = task.project.id
+        return super().update(task, changed_fields)
 
     def get_http_uri_endpoint(self):
         return '{}{}'.format(self.get_api_url(), self.POST_QUERY)
@@ -569,10 +575,6 @@ class TicketChecklistItemsAPIClient(AutotaskAPIClient):
 
     def get(self, next_url, conditions):
         if not next_url:
-            # TODO following similar pattern to current rather than rewriting
-            #  parent API pattern in this issue, this method needs to be
-            #  updated in issue #2142. Uses of `PARENT_API` should be in
-            #  AutotaskAPIClient
             self.api_url = self.get_api_url(
                 "{}{}".format(self.PARENT_API, self.API)
             )
