@@ -76,7 +76,8 @@ API_ACCOUNT_PHYSICAL_LOCATION = {
     'id': 55,
     'Name': 'Primary Location',
     'AccountID': 174,
-    'Active': True
+    'Active': True,
+    'Primary': True
 }
 
 API_ACCOUNT_PHYSICAL_LOCATION_LIST = [API_ACCOUNT_PHYSICAL_LOCATION]
@@ -1126,7 +1127,8 @@ API_CONTACT = {
 }
 
 API_TICKET_ITEM = {
-        'companyID': 29683561,
+        'companyID': 174,
+        'companyLocationID': 55,
         'billingCodeID': 29683407,
         'assignedResourceID': 29683794,
         'assignedResourceRoleID': 29683396,

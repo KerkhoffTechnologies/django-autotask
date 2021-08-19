@@ -783,6 +783,7 @@ class AccountPhysicalLocationSynchronizer(BatchQueryMixin, Synchronizer):
         instance.id = object_data['id']
         instance.name = object_data.get('Name')
         instance.active = object_data.get('Active')
+        instance.primary = object_data.get('Primary')
         self.set_relations(instance, object_data)
 
         return instance

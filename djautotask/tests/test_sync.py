@@ -401,6 +401,7 @@ class TestTicketSynchronizer(
         fixture_utils.init_contracts()
         fixture_utils.init_statuses()
         fixture_utils.init_resources()
+        fixture_utils.init_account_physical_locations()
         self._sync(self.fixture)
 
     def _call_api(self, return_data):
@@ -835,6 +836,7 @@ class TestAccountPhysicalLocationSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(instance.account.id, object_data['AccountID'])
         self.assertEqual(instance.name, object_data['Name'])
         self.assertEqual(instance.active, object_data['Active'])
+        self.assertEqual(instance.primary, object_data['Primary'])
 
     def test_sync_account_location(self):
         self.assertGreater(
