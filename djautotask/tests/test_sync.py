@@ -401,6 +401,7 @@ class TestTicketSynchronizer(
         fixture_utils.init_contracts()
         fixture_utils.init_statuses()
         fixture_utils.init_resources()
+        fixture_utils.init_accounts()
         fixture_utils.init_account_physical_locations()
         self._sync(self.fixture)
 
@@ -426,6 +427,9 @@ class TestTicketSynchronizer(
         self.assertEqual(instance.assigned_resource.id,
                          object_data['assignedResourceID'])
         self.assertEqual(instance.contract.id, object_data['contractID'])
+        self.assertEqual(instance.account.id, object_data['companyID'])
+        self.assertEqual(instance.account_physical_location.id,
+                         object_data['companyLocationID'])
 
     def test_sync_ticket_related_records(self):
         """
