@@ -154,7 +154,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api_rest.TicketsAPIClient()
-        return api_client.update_ticket(
+        return api_client.update(
             self,
             self.get_updated_object(**kwargs)
         )
@@ -531,7 +531,7 @@ class Project(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api_rest.ProjectsAPIClient()
-        return api_client.update_project(
+        return api_client.update(
             self,
             self.get_updated_object(**kwargs)
         )
@@ -631,7 +631,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
     def update_at(self, **kwargs):
 
         api_client = api_rest.TasksAPIClient()
-        return api_client.update_task(
+        return api_client.update(
             self,
             self.get_updated_object(**kwargs)
         )

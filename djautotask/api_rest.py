@@ -214,9 +214,6 @@ class AutotaskAPIClient(object):
                                   self.GET_QUERY,
                                   self.QUERYSTR)
 
-    def get_parent_api_endpoint(self):
-        raise NotImplementedError
-
     def _log_failed(self, response):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
@@ -273,7 +270,7 @@ class AutotaskAPIClient(object):
     def _build_filters(self, **kwargs):
         filter_array = []
 
-        if 'conditions' in kwargs:
+        if 'conditions' in kwargs and kwargs['conditions']:
 
             conditions = kwargs['conditions']
 
@@ -458,21 +455,22 @@ class AutotaskAPIClient(object):
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
 
-    def get_instance(self, instance_id):
+    def get_single(self, instance_id):
         endpoint_url = '{}{}'.format(self.get_api_url(), instance_id)
         return self.fetch_resource(endpoint_url)
 
-    def update_instance(self, instance, changed_fields):
-        endpoint_url = self.get_api_url()
+
+class UpdateEntityMixin:
+
+    def update(self, instance, changed_fields, endpoint_url=None):
+        if not endpoint_url:
+            endpoint_url = self.get_api_url()
         body = self._format_request_body(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
 
 class ContactsAPIClient(AutotaskAPIClient):
     API = 'Contacts'
-
-    def get_contacts(self, next_url, *args, **kwargs):
-        return self.fetch_resource(next_url, *args, **kwargs)
 
 
 class RolesAPIClient(AutotaskAPIClient):
@@ -491,24 +489,15 @@ class ResourceRoleDepartmentsAPIClient(AutotaskAPIClient):
     API = 'ResourceRoleDepartments'
 
 
-class TicketsAPIClient(AutotaskAPIClient):
+class TicketsAPIClient(UpdateEntityMixin, AutotaskAPIClient):
     API = 'Tickets'
 
-    def get_ticket(self, ticket_id):
-        return self.get_instance(ticket_id)
 
-    def get_tickets(self, next_url, *args, **kwargs):
-        return self.fetch_resource(next_url, *args, **kwargs)
-
-    def update_ticket(self, ticket, changed_fields):
-        return self.update_instance(ticket, changed_fields)
-
-
-class TasksAPIClient(AutotaskAPIClient):
+class TasksAPIClient(UpdateEntityMixin, AutotaskAPIClient):
     API = 'Tasks'
     PARENT_API = 'Projects'
 
-    def get_tasks(self, next_url, *args, **kwargs):
+    def get(self, next_url, *args, **kwargs):
         """
         Fetch tasks from the API. We use a POST request to avoid URL length
         issues for cases where there are a large number of open projects in
@@ -516,35 +505,24 @@ class TasksAPIClient(AutotaskAPIClient):
         """
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
-    def get_parent_api_endpoint(self):
-        return self.PARENT_API
-
-    def update_task(self, task, changed_fields):
+    def update(self, task, changed_fields, **kwargs):
         endpoint_url = '{}{}/{}'.format(
-            self.get_api_url(self.get_parent_api_endpoint()),
+            self.get_api_url(self.PARENT_API),
             task.project.id,
             self.API
         )
-        body = self._format_request_body(task, changed_fields)
-        result = self.request('patch', endpoint_url, body)
-        return result
+        return super().update(task, changed_fields, endpoint_url)
 
     def get_http_uri_endpoint(self):
         return '{}{}'.format(self.get_api_url(), self.POST_QUERY)
 
 
-class ProjectsAPIClient(AutotaskAPIClient):
+class ProjectsAPIClient(UpdateEntityMixin, AutotaskAPIClient):
     API = 'Projects'
 
-    def get_project(self, project_id):
-        return self.get_instance(project_id)
-
     # use POST method because of IN-clause query string
-    def get_projects(self, next_url, *args, **kwargs):
+    def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
-
-    def update_project(self, project, changed_fields):
-        return self.update_instance(project, changed_fields)
 
     def get_http_uri_endpoint(self):
         return '{}{}'.format(self.get_api_url(), self.POST_QUERY)
@@ -595,11 +573,10 @@ class TicketChecklistItemsAPIClient(AutotaskAPIClient):
             #  parent API pattern in this issue, this method needs to be
             #  updated in issue #2142. Uses of `PARENT_API` should be in
             #  AutotaskAPIClient
-            self.api_url = self.get_api_url(self.get_parent_api_endpoint())
+            self.api_url = self.get_api_url(
+                "{}{}".format(self.PARENT_API, self.API)
+            )
         return self.fetch_resource(next_url, conditions=conditions)
-
-    def get_parent_api_endpoint(self):
-        return "{}{}".format(self.PARENT_API, self.API)
 
     def update(self, parent, **kwargs):
         endpoint_url = '{}{}/{}'.format(

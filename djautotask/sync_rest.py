@@ -174,10 +174,11 @@ class Synchronizer:
         return results
 
     def get_page(self, next_url=None, *args, **kwargs):
+        kwargs['conditions'] = self.api_conditions
         return self.client.get(next_url, *args, **kwargs)
 
-    def get_single(self, *args, **kwargs):
-        raise NotImplementedError
+    def get_single(self, instance_id):
+        return self.client.get_single(instance_id)
 
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
@@ -378,14 +379,11 @@ class ContactSynchronizer(Synchronizer):
 
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_contacts(next_url, *args, **kwargs)
-
 
 class RoleSynchronizer(Synchronizer):
     client_class = api.RolesAPIClient
     model_class = models.RoleTracker
+    last_updated_field = None
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -406,10 +404,14 @@ class RoleSynchronizer(Synchronizer):
 
         return instance
 
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get(next_url, *args, **kwargs)
+
 
 class DepartmentSynchronizer(Synchronizer):
     client_class = api.DepartmentsAPIClient
     model_class = models.DepartmentTracker
+    last_updated_field = None
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -419,10 +421,14 @@ class DepartmentSynchronizer(Synchronizer):
 
         return instance
 
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get(next_url, *args, **kwargs)
+
 
 class ResourceServiceDeskRoleSynchronizer(Synchronizer):
     client_class = api.ResourceServiceDeskRolesAPIClient
     model_class = models.ResourceServiceDeskRoleTracker
+    last_updated_field = None
 
     related_meta = {
         'resourceID': (models.Resource, 'resource'),
@@ -438,10 +444,14 @@ class ResourceServiceDeskRoleSynchronizer(Synchronizer):
 
         return instance
 
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get(next_url, *args, **kwargs)
+
 
 class ResourceRoleDepartmentSynchronizer(Synchronizer):
     client_class = api.ResourceRoleDepartmentsAPIClient
     model_class = models.ResourceRoleDepartmentTracker
+    last_updated_field = None
 
     related_meta = {
         'resourceID': (models.Resource, 'resource'),
@@ -458,6 +468,9 @@ class ResourceRoleDepartmentSynchronizer(Synchronizer):
         self.set_relations(instance, json_data)
 
         return instance
+
+    def get_page(self, next_url=None, *args, **kwargs):
+        return self.client.get(next_url, *args, **kwargs)
 
 
 class TicketTaskMixin:
@@ -562,13 +575,6 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
 
         self.set_relations(instance, json_data)
         return instance
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_tickets(next_url, *args, **kwargs)
-
-    def get_single(self, ticket_id):
-        return self.client.get_ticket(ticket_id)
 
     def fetch_sync_by_id(self, instance_id):
         instance = super().fetch_sync_by_id(instance_id)
@@ -683,10 +689,6 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
         self.set_relations(instance, json_data)
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_tasks(next_url, *args, **kwargs)
-
 
 class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
                           ParentSynchronizer):
@@ -775,10 +777,6 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         self.set_relations(instance, object_data)
 
         return instance
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_projects(next_url, *args, **kwargs)
 
 
 class PicklistSynchronizer(Synchronizer):
