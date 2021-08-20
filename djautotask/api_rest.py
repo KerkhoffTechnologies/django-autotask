@@ -122,7 +122,7 @@ def get_zone_info(username):
 class ApiCondition:
 
     def __init__(self, *args, op=None, field=None, value=None):
-        self.items = []
+        self._items = []
         self.op = op
         self.field = field
         self.value = value
@@ -135,11 +135,11 @@ class ApiCondition:
                         "Grouped conditions must also be "
                         "instances of {}".format(self.__class__.__name__)
                     )
-                self.items.append(condition)
+                self._items.append(condition)
 
     def __repr__(self):
-        if len(self.items):
-            return self.items.__repr__()
+        if len(self._items):
+            return self._items.__repr__()
         return '{{op: {}, field: {}, value: {}}}'.format(
             self.op,
             self.field,
@@ -147,13 +147,13 @@ class ApiCondition:
         )
 
     def format_condition(self):
-        if len(self.items):
+        if len(self._items):
             # Grouping Query
             condition = {
                 "op": self.op,
                 "items": [
                     api_condition.format_condition()
-                    for api_condition in self.items
+                    for api_condition in self._items
                 ]
             }
         else:
