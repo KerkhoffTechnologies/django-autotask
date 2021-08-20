@@ -466,9 +466,7 @@ class TicketTaskMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request_settings = DjautotaskSettings().get_settings()
-        # TODO why is completed date saved to instance? Check if that is
-        #  necessary, if not dont save it as self, just a var in local scope
-        self.completed_date = (timezone.now() - timezone.timedelta(
+        completed_date = (timezone.now() - timezone.timedelta(
                 hours=request_settings.get('keep_completed_hours')
             )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         self.client.add_condition(
@@ -476,7 +474,7 @@ class TicketTaskMixin:
                 A(
                     op='gt',
                     field=self.completed_date_field,
-                    value=self.completed_date
+                    value=completed_date
                 ),
                 A(op='noteq', field='status', value=models.Status.COMPLETE_ID),
                 op='or'
@@ -623,8 +621,6 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
         self.last_updated_field = 'lastActivityDateTime'
         self.condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
-        # TODO Is this all that is needed to change in tasks for batching
-        #  to work?
         self.client.add_condition(
             A(
                 op='in',
@@ -632,13 +628,6 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
                 value=self.condition_pool
             )
         )
-        # operands = [
-        #     A(self.condition_field_name, self.condition_pool,
-        #                  op='in')
-        # ]
-        # if self.api_conditions:
-        #     operands.append(self.api_conditions)
-        # self.api_conditions = A(operands=operands)
 
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
