@@ -139,7 +139,7 @@ class ApiCondition:
     def __repr__(self):
         if len(self.items):
             return self.items.__repr__()
-        return 'op: {}, field: {}, value: {}'.format(
+        return '{{op: {}, field: {}, value: {}}}'.format(
             self.op,
             self.field,
             self.value
@@ -216,8 +216,6 @@ class ApiConditionList:
             raise TypeError("Conditions must be instances of ApiCondition.")
 
         self._list.append(condition)
-
-    # TODO refactor API conditions in sync_rest
 
 
 class AutotaskAPIClient(object):
