@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from djautotask import api_rest as api
 from djautotask import models
-from .api_rest import ApiCondition
+from .api_rest import ApiCondition as A
 from .sync import InvalidObjectException, SyncResults, log_sync_job, \
     TicketNoteSynchronizer, TimeEntrySynchronizer, \
     TicketSecondaryResourceSynchronizer, ParentSynchronizer
@@ -44,6 +44,7 @@ class BatchQueryMixin:
         while field_ids:
             batch_condition = field_ids[:batch_query_size]
             del field_ids[:batch_query_size]
+            # TODO needs to be refactored to work with new API conditions
             self._replace_batch_conditions(self.api_conditions,
                                            batch_condition)
             self.fetch_records(results)
@@ -64,6 +65,7 @@ class Synchronizer:
     last_updated_field = 'lastActivityDate'
 
     def __init__(self, full=False, *args, **kwargs):
+        # TODO
         self.api_conditions = None
         self.client = self.client_class()
         self.full = full
@@ -174,6 +176,7 @@ class Synchronizer:
         return results
 
     def get_page(self, next_url=None, *args, **kwargs):
+        # TODO remove self.api_conditions
         kwargs['conditions'] = self.api_conditions
         return self.client.get(next_url, *args, **kwargs)
 
@@ -282,9 +285,13 @@ class Synchronizer:
         if sync_job_qset.count() > 1 and not self.full:
             last_sync_job_time = sync_job_qset.last().start_time.strftime(
                 '%Y-%m-%dT%H:%M:%S.%fZ')
-            self.api_conditions = \
-                ApiCondition(self.last_updated_field, last_sync_job_time,
-                             op=">")
+            self.client.conditions.add(
+                A(
+                    field=self.last_updated_field,
+                    value=last_sync_job_time,
+                    op=">"
+                )
+            )
         results = SyncResults()
         results = self.get(results)
 
@@ -362,7 +369,8 @@ class ContactSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions = ApiCondition('isActive', 'true')
+        # TODO
+        # self.api_conditions = ApiCondition('isActive', 'true')
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -477,16 +485,21 @@ class TicketTaskMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request_settings = DjautotaskSettings().get_settings()
+        # TODO why is completed date saved to instance?
         self.completed_date = (timezone.now() - timezone.timedelta(
                 hours=request_settings.get('keep_completed_hours')
             )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        self.api_conditions = ApiCondition(
-            op='or',
-            operands=[
-                ApiCondition(self.completed_date_field, self.completed_date,
-                             op='>'),
-                ApiCondition('status', models.Status.COMPLETE_ID, '!=')
-            ])
+        self.client.conditions.add(
+            A(
+                A(
+                    op='gt',
+                    field=self.completed_date_field,
+                    value=self.completed_date
+                ),
+                A(op='noteq', field='status', value=models.Status.COMPLETE_ID),
+                op='or'
+            )
+        )
 
 
 # ParentSynchronizer: using SOAP API
@@ -626,13 +639,14 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
         self.last_updated_field = 'lastActivityDateTime'
         self.condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
-        operands = [
-            ApiCondition(self.condition_field_name, self.condition_pool,
-                         op='in')
-        ]
-        if self.api_conditions:
-            operands.append(self.api_conditions)
-        self.api_conditions = ApiCondition(operands=operands)
+        # TODO
+        # operands = [
+        #     A(self.condition_field_name, self.condition_pool,
+        #                  op='in')
+        # ]
+        # if self.api_conditions:
+        #     operands.append(self.api_conditions)
+        # self.api_conditions = A(operands=operands)
 
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
@@ -708,13 +722,14 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        operands = [
-            ApiCondition('status', models.ProjectStatus.COMPLETE_ID, op='!='),
-            ApiCondition('status', list(self.get_active_ids()), op='in')
-        ]
-        if self.api_conditions:
-            operands.append(self.api_conditions)
-        self.api_conditions = ApiCondition(operands=operands)
+        # TODO
+        # operands = [
+        #     ApiCondition('status', models.ProjectStatus.COMPLETE_ID, op='!='),
+        #     ApiCondition('status', list(self.get_active_ids()), op='in')
+        # ]
+        # if self.api_conditions:
+        #     operands.append(self.api_conditions)
+        # self.api_conditions = ApiCondition(operands=operands)
 
     def get_active_ids(self):
         active_project_statuses = models.ProjectStatus.objects.exclude(
@@ -903,6 +918,7 @@ class DummySynchronizer:
             logger.info(
                 'Fetching {} records'.format(self.record_name)
             )
+            # TODO needs to be refactored for conditions living on client
             conditions = conditions if conditions else self.api_conditions
             api_return = self._get_page(
                 next_url, conditions, parent=parent)
@@ -991,9 +1007,12 @@ class TicketChecklistItemsSynchronizer(DummySynchronizer):
 
     def _get_page(self, next_url, conditions, parent=None):
         if parent:
-            operands = [ApiCondition('ticketID', parent)]
-            if conditions:
-                operands.append(conditions)
-            conditions = ApiCondition(operands=operands)
+            # TODO
+            # operands = [ApiCondition('ticketID', parent)]
+            # if conditions:
+            #     operands.append(conditions)
+            # conditions = ApiCondition(operands=operands)
+            self.client.conditions.add(
+                A(op='eq', field='ticketID', value=parent))
 
         return self.client.get(next_url, conditions)

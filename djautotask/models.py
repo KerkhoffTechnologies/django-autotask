@@ -630,10 +630,12 @@ class Task(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
 
+        # TODO Catch AttributeError, can we accidentally have null project?
         api_client = api_rest.TasksAPIClient()
         return api_client.update(
             self,
-            self.get_updated_object(**kwargs)
+            self.get_updated_object(**kwargs),
+            self.project.id
         )
 
 
