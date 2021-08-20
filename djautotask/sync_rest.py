@@ -65,8 +65,6 @@ class Synchronizer:
     last_updated_field = 'lastActivityDate'
 
     def __init__(self, full=False, *args, **kwargs):
-        # TODO
-        self.api_conditions = None
         self.client = self.client_class()
         self.full = full
 
@@ -176,8 +174,6 @@ class Synchronizer:
         return results
 
     def get_page(self, next_url=None, *args, **kwargs):
-        # TODO remove self.api_conditions
-        kwargs['conditions'] = self.api_conditions
         return self.client.get(next_url, *args, **kwargs)
 
     def get_single(self, instance_id):
@@ -285,11 +281,11 @@ class Synchronizer:
         if sync_job_qset.count() > 1 and not self.full:
             last_sync_job_time = sync_job_qset.last().start_time.strftime(
                 '%Y-%m-%dT%H:%M:%S.%fZ')
-            self.client.conditions.add(
+            self.client.add_condition(
                 A(
                     field=self.last_updated_field,
                     value=last_sync_job_time,
-                    op=">"
+                    op="gt"
                 )
             )
         results = SyncResults()
@@ -369,8 +365,7 @@ class ContactSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # TODO
-        # self.api_conditions = ApiCondition('isActive', 'true')
+        self.client.add_condition(A(op='eq', field='isActive', value='true'))
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -485,11 +480,12 @@ class TicketTaskMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request_settings = DjautotaskSettings().get_settings()
-        # TODO why is completed date saved to instance?
+        # TODO why is completed date saved to instance? Check if that is
+        #  necessary, if not dont save it as self, just a var in local scope
         self.completed_date = (timezone.now() - timezone.timedelta(
                 hours=request_settings.get('keep_completed_hours')
             )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        self.client.conditions.add(
+        self.client.add_condition(
             A(
                 A(
                     op='gt',
@@ -639,7 +635,14 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
         self.last_updated_field = 'lastActivityDateTime'
         self.condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
-        # TODO
+        # TODO Is this all that is needed to change in tasks for batching to work?
+        self.client.add_condition(
+            A(
+                op='in',
+                field=self.condition_field_name,
+                value=self.condition_pool
+            )
+        )
         # operands = [
         #     A(self.condition_field_name, self.condition_pool,
         #                  op='in')
@@ -722,14 +725,21 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # TODO
-        # operands = [
-        #     ApiCondition('status', models.ProjectStatus.COMPLETE_ID, op='!='),
-        #     ApiCondition('status', list(self.get_active_ids()), op='in')
-        # ]
-        # if self.api_conditions:
-        #     operands.append(self.api_conditions)
-        # self.api_conditions = ApiCondition(operands=operands)
+        self.client.add_condition(
+            A(
+                A(
+                    op='noteq',
+                    field='status',
+                    value=models.ProjectStatus.COMPLETE_ID
+                ),
+                A(
+                    op='in',
+                    field='status',
+                    value=list(self.get_active_ids())
+                ),
+                op="and"
+            )
+        )
 
     def get_active_ids(self):
         active_project_statuses = models.ProjectStatus.objects.exclude(
@@ -906,20 +916,19 @@ class DummySynchronizer:
     FIELDS = {}
 
     def __init__(self):
-        self.api_conditions = None
         self.client = self.client_class()
 
     def get(self, parent=None, conditions=None):
 
         records = []
         next_url = None
+        conditions = conditions or []
 
         while True:
             logger.info(
                 'Fetching {} records'.format(self.record_name)
             )
-            # TODO needs to be refactored for conditions living on client
-            conditions = conditions if conditions else self.api_conditions
+
             api_return = self._get_page(
                 next_url, conditions, parent=parent)
             records += api_return.get("items")
@@ -1007,12 +1016,10 @@ class TicketChecklistItemsSynchronizer(DummySynchronizer):
 
     def _get_page(self, next_url, conditions, parent=None):
         if parent:
-            # TODO
-            # operands = [ApiCondition('ticketID', parent)]
-            # if conditions:
-            #     operands.append(conditions)
-            # conditions = ApiCondition(operands=operands)
-            self.client.conditions.add(
+            self.client.add_condition(
                 A(op='eq', field='ticketID', value=parent))
+
+        for condition in conditions:
+            self.client.add_condition(condition)
 
         return self.client.get(next_url, conditions)

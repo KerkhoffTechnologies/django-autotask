@@ -139,7 +139,7 @@ class ApiCondition:
     def __repr__(self):
         if len(self.items):
             return self.items.__repr__()
-        return 'operation: {}, field: {}, value: {}'.format(
+        return 'op: {}, field: {}, value: {}'.format(
             self.op,
             self.field,
             self.value
@@ -178,6 +178,23 @@ class ApiConditionList:
 
     def __repr__(self):
         return self._list.__repr__()
+
+    def __len__(self):
+        return len(self._list)
+
+    def __getitem__(self, i):
+        return self._list[i]
+
+    def __setitem__(self, i, value):
+        if type(value) is not ApiCondition:
+            raise TypeError("Conditions must be instances of ApiCondition.")
+        self._list[i] = value
+
+    def __delitem__(self, i):
+        del self._list[i]
+
+    def __iter__(self):
+        return self._list.__iter__()
 
     def build_query(self, method="get"):
         queries = []
@@ -239,7 +256,6 @@ class AutotaskAPIClient(object):
 
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
-        self.api_url = self.get_api_url()
         self.conditions = ApiConditionList()
 
         self.cached_body = None
@@ -454,6 +470,18 @@ class AutotaskAPIClient(object):
         else:
             self._log_failed(response)
             raise AutotaskAPIError(response)
+
+    def add_condition(self, condition):
+        self.conditions.add(condition)
+
+    def get_conditions(self):
+        return self.conditions
+
+    def remove_condtion(self, index):
+        del self.conditions[index]
+
+    def clear_conditions(self):
+        self.conditions = ApiConditionList()
 
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
