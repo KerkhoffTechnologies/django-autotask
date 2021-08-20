@@ -44,8 +44,7 @@ class BatchQueryMixin:
         while field_ids:
             batch_condition = field_ids[:batch_query_size]
             del field_ids[:batch_query_size]
-            # TODO needs to be refactored to work with new API conditions
-            self._replace_batch_conditions(self.api_conditions,
+            self._replace_batch_conditions(self.client.conditions,
                                            batch_condition)
             self.fetch_records(results)
             self.client.QUERYSTR = None
@@ -53,11 +52,9 @@ class BatchQueryMixin:
         return results
 
     def _replace_batch_conditions(self, conditions, batch_condition):
-        if hasattr(conditions, 'operands'):
-            for i, c in enumerate(conditions.operands):
-                self._replace_batch_conditions(c, batch_condition)
-        elif conditions.field == self.condition_field_name:
-            conditions.value = batch_condition
+        for c in conditions:
+            if c.field == self.condition_field_name:
+                c.value = batch_condition
 
 
 class Synchronizer:
@@ -278,7 +275,8 @@ class Synchronizer:
     def sync(self):
         sync_job_qset = self.get_sync_job_qset().filter(success=True)
 
-        if sync_job_qset.count() > 1 and not self.full:
+        if sync_job_qset.count() > 1 and self.last_updated_field \
+                and not self.full:
             last_sync_job_time = sync_job_qset.last().start_time.strftime(
                 '%Y-%m-%dT%H:%M:%S.%fZ')
             self.client.add_condition(
@@ -407,9 +405,6 @@ class RoleSynchronizer(Synchronizer):
 
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get(next_url, *args, **kwargs)
-
 
 class DepartmentSynchronizer(Synchronizer):
     client_class = api.DepartmentsAPIClient
@@ -423,9 +418,6 @@ class DepartmentSynchronizer(Synchronizer):
         instance.number = json_data.get('number')
 
         return instance
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get(next_url, *args, **kwargs)
 
 
 class ResourceServiceDeskRoleSynchronizer(Synchronizer):
@@ -446,9 +438,6 @@ class ResourceServiceDeskRoleSynchronizer(Synchronizer):
         self.set_relations(instance, json_data)
 
         return instance
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get(next_url, *args, **kwargs)
 
 
 class ResourceRoleDepartmentSynchronizer(Synchronizer):
@@ -471,9 +460,6 @@ class ResourceRoleDepartmentSynchronizer(Synchronizer):
         self.set_relations(instance, json_data)
 
         return instance
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        return self.client.get(next_url, *args, **kwargs)
 
 
 class TicketTaskMixin:
@@ -635,7 +621,8 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
         self.last_updated_field = 'lastActivityDateTime'
         self.condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
-        # TODO Is this all that is needed to change in tasks for batching to work?
+        # TODO Is this all that is needed to change in tasks for batching
+        #  to work?
         self.client.add_condition(
             A(
                 op='in',

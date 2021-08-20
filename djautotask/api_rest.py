@@ -550,9 +550,6 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         """
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
-    def get_http_uri_endpoint(self):
-        return '{}{}'.format(self.get_api_url(), self.POST_QUERY)
-
 
 class ProjectsAPIClient(AutotaskAPIClient):
     API = 'Projects'
@@ -560,9 +557,6 @@ class ProjectsAPIClient(AutotaskAPIClient):
     # use POST method because of IN-clause query string
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
-
-    def get_http_uri_endpoint(self):
-        return '{}{}'.format(self.get_api_url(), self.POST_QUERY)
 
 
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
