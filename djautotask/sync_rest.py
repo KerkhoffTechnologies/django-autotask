@@ -494,6 +494,8 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
 
     related_meta = {
         'companyID': (models.Account, 'account'),
+        'companyLocationID': (models.AccountPhysicalLocation,
+                              'account_physical_location'),
         'status': (models.Status, 'status'),
         'assignedResourceID': (models.Resource, 'assigned_resource'),
         'priority': (models.Priority, 'priority'),

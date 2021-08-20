@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import json
 import logging
 from json import JSONDecodeError
@@ -343,6 +344,12 @@ class AutotaskAPIClient(object):
                     body.update({
                         key: value.id
                     })
+
+                elif isinstance(value, decimal.Decimal):
+                    body.update(
+                        {key: str(value) if value else '0'}
+                    )
+
                 else:
                     body.update(
                         {key: str(value) if value else ''}

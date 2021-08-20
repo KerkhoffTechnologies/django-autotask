@@ -98,6 +98,10 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
+    account_physical_location = models.ForeignKey(
+        'AccountPhysicalLocation', blank=True, null=True,
+        on_delete=models.SET_NULL
+    )
     project = models.ForeignKey(
         'Project', blank=True, null=True, on_delete=models.SET_NULL
     )
@@ -143,6 +147,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
         'account': 'companyID',
+        'account_physical_location': 'companyLocationID',
         'contact': 'contactID',
     }
 
@@ -444,7 +449,7 @@ class Account(TimeStampedModel):
 class AccountPhysicalLocation(models.Model):
     name = models.CharField(max_length=100)
     active = models.BooleanField(default=True)
-
+    primary = models.BooleanField(default=True)
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
@@ -616,6 +621,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'start_date': 'startDateTime',
         'end_date': 'endDateTime',
         'estimated_hours': 'estimatedHours',
+        'remaining_hours': 'remainingHours',
         'status': 'status',
         'department': 'departmentID',
         'allocation_code': 'billingCodeID',
