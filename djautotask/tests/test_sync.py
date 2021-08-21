@@ -828,6 +828,7 @@ class TestAccountPhysicalLocationSynchronizer(SynchronizerTestMixin, TestCase):
     model_class = models.AccountPhysicalLocationTracker
     fixture = fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST[0]
     update_field = "Name"
+    last_updated_field = None
 
     def setUp(self):
         super().setUp()

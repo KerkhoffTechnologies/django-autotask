@@ -89,8 +89,13 @@ def init_api_rest_connection(return_value=None):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_ticket_call(return_value):
+    method_name = 'djautotask.api_rest.TicketsAPIClient.get_single'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_contacts_call(return_value):
-    method_name = 'djautotask.api_rest.ContactsAPIClient.get_contacts'
+    method_name = 'djautotask.api_rest.ContactsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
@@ -115,22 +120,17 @@ def service_api_get_resource_role_departments_call(return_value):
 
 
 def service_api_get_tickets_call(return_value):
-    method_name = 'djautotask.api_rest.TicketsAPIClient.get_tickets'
-    return create_mock_call(method_name, return_value)
-
-
-def service_api_get_ticket_call(return_value):
-    method_name = 'djautotask.api_rest.TicketsAPIClient.get_ticket'
+    method_name = 'djautotask.api_rest.TicketsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_tasks_call(return_value):
-    method_name = 'djautotask.api_rest.TasksAPIClient.get_tasks'
+    method_name = 'djautotask.api_rest.TasksAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_projects_call(return_value):
-    method_name = 'djautotask.api_rest.ProjectsAPIClient.get_projects'
+    method_name = 'djautotask.api_rest.ProjectsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 

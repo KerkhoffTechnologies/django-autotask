@@ -119,11 +119,108 @@ def get_zone_info(username):
         )
 
 
+class ApiCondition:
+
+    def __init__(self, *args, op=None, field=None, value=None):
+        self._items = []
+        self.op = op
+        self.field = field
+        self.value = value
+
+        if op in ("and", "or"):
+            # Grouping query
+            for condition in args:
+                if type(condition) != self.__class__:
+                    raise TypeError(
+                        "Grouped conditions must also be "
+                        "instances of {}".format(self.__class__.__name__)
+                    )
+                self._items.append(condition)
+
+    def __repr__(self):
+        if len(self._items):
+            return self._items.__repr__()
+        return '{{op: {}, field: {}, value: {}}}'.format(
+            self.op,
+            self.field,
+            self.value
+        )
+
+    def format_condition(self):
+        if len(self._items):
+            # Grouping Query
+            condition = {
+                "op": self.op,
+                "items": [
+                    api_condition.format_condition()
+                    for api_condition in self._items
+                ]
+            }
+        else:
+            condition = {
+                "op": self.op,
+                "field": self.field
+            }
+            if self.value:
+                # value is not required for non-comparison queries
+                condition['value'] = self.value
+
+        return condition
+
+
+class ApiConditionList:
+    METHODS = {
+        'get': 'query?search=',
+        'post': 'query'
+    }
+
+    def __init__(self):
+        self._list = list()
+
+    def __repr__(self):
+        return self._list.__repr__()
+
+    def __len__(self):
+        return len(self._list)
+
+    def __getitem__(self, i):
+        return self._list[i]
+
+    def __setitem__(self, i, value):
+        if type(value) is not ApiCondition:
+            raise TypeError("Conditions must be instances of ApiCondition.")
+        self._list[i] = value
+
+    def __delitem__(self, i):
+        del self._list[i]
+
+    def __iter__(self):
+        return self._list.__iter__()
+
+    def build_query(self, method="get"):
+        queries = []
+        for condition in self._list:
+            queries.append(condition.format_condition())
+
+        endpoint = self.METHODS[method]
+        filters = json.dumps({'filter': queries})
+
+        if method == "get":
+            endpoint += filters
+            filters = None
+        elif method != "post":
+            raise TypeError("Unsupported method")
+        return endpoint, filters
+
+    def add(self, condition):
+        if type(condition) is not ApiCondition:
+            raise TypeError("Conditions must be instances of ApiCondition.")
+
+        self._list.append(condition)
+
+
 class AutotaskAPIClient(object):
     API = None
-    GET_QUERY = 'query?search='
-    POST_QUERY = 'query'
-    QUERYSTR = None
 
     def __init__(
         self,
@@ -158,12 +255,25 @@ class AutotaskAPIClient(object):
 
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
-        self.api_base_url = self.build_api_base_url()
+        self.conditions = ApiConditionList()
 
-    def _endpoint(self):
-        return '{0}{1}{2}'.format(self.api_base_url,
-                                  self.GET_QUERY,
-                                  self.QUERYSTR)
+        self.cached_body = None
+
+    @property
+    def api_base_url(self):
+        return '{0}v{1}/'.format(
+            self.server_url,
+            settings.AUTOTASK_CREDENTIALS['rest_api_version'],
+        )
+
+    def get_api_url(self, endpoint=None):
+        if not endpoint:
+            endpoint = self.API
+
+        return '{0}{1}/'.format(
+            self.api_base_url,
+            endpoint,
+        )
 
     def _log_failed(self, response):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
@@ -201,16 +311,6 @@ class AutotaskAPIClient(object):
                                                     error)
         return msg
 
-    def build_api_base_url(self, endpoint=None):
-        if not endpoint:
-            endpoint = self.API
-
-        return '{0}v{1}/{2}/'.format(
-            self.server_url,
-            settings.AUTOTASK_CREDENTIALS['rest_api_version'],
-            endpoint,
-        )
-
     def get_headers(self):
         headers = {'Content-Type': 'application/json'}
 
@@ -222,35 +322,6 @@ class AutotaskAPIClient(object):
             headers['ApiIntegrationCode'] = self.integration_code
 
         return headers
-
-    def build_query_string(self, **kwargs):
-        filter_array = self._build_filter(**kwargs)
-        query_obj = {'filter': filter_array}
-        self.QUERYSTR = json.dumps(query_obj)
-
-    def _build_filter(self, **kwargs):
-        filter_array = []
-
-        if 'conditions' in kwargs:
-
-            for condition in kwargs['conditions']:
-
-                if type(condition[0]) == dict:
-                    sub_kwargs = {'conditions': condition[0]['operands']}
-                    filter_obj = {
-                        "op": condition[0]['op'],
-                        "items": self._build_filter(**sub_kwargs)
-                    }
-                    filter_array.append(filter_obj)
-                else:
-                    filter_obj = self._build_filter_obj(*condition)
-                    filter_array.append(filter_obj)
-
-        return filter_array
-
-    def _build_filter_obj(self, field, value, op='eq'):
-        filter_obj = {"op": op, "field": field, "value": value}
-        return filter_obj
 
     def _format_request_body(self, api_entity, changed_fields):
         body = {
@@ -287,7 +358,7 @@ class AutotaskAPIClient(object):
         return body
 
     def fetch_resource(self, next_url=None, retry_counter=None, method='get',
-                       endpoint=None, *args, **kwargs):
+                       *args, **kwargs):
         """
         retry_counter is a dict in the form {'count': 0} that is passed in
         to verify the number of attempts that were made.
@@ -337,21 +408,17 @@ class AutotaskAPIClient(object):
                 raise AutotaskAPIError(
                     self._prepare_error_response(response))
 
-        # QUERYSTR should be the same through the all the requests of any page
-        if not self.QUERYSTR:
-            self.build_query_string(**kwargs)
-
-        if not endpoint:
-            if next_url:
-                endpoint = next_url
-            else:
-                endpoint = self._endpoint()
-
-        body = self.QUERYSTR if method == 'post' else None
+        if next_url:
+            url = next_url
+        else:
+            # Query endpoint is different between GET and POST
+            query_endpoint, self.cached_body = \
+                self.conditions.build_query(method=method)
+            url = "{}{}".format(self.get_api_url(), query_endpoint)
 
         return _fetch_resource(
-            endpoint, request_retry_counter=retry_counter,
-            request_method=method, request_body=body, **kwargs)
+            url, request_retry_counter=retry_counter,
+            request_method=method, request_body=self.cached_body, **kwargs)
 
     def log_message(self, endpoint, method, body):
         body = body if body else ''
@@ -409,24 +476,51 @@ class AutotaskAPIClient(object):
             self._log_failed(response)
             raise AutotaskAPIError(response)
 
+    def add_condition(self, condition):
+        self.conditions.add(condition)
+
+    def get_conditions(self):
+        return self.conditions
+
+    def remove_condtion(self, index):
+        del self.conditions[index]
+
+    def clear_conditions(self):
+        self.conditions = ApiConditionList()
+
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, *args, **kwargs)
 
-    def get_instance(self, instance_id):
-        endpoint_url = '{}{}'.format(self.api_base_url, instance_id)
+    def get_single(self, instance_id):
+        endpoint_url = '{}{}'.format(self.get_api_url(), instance_id)
         return self.fetch_resource(endpoint_url)
 
-    def update_instance(self, instance, changed_fields):
-        endpoint_url = '{}'.format(self.api_base_url)
+    def update(self, instance, changed_fields):
+        body = self._format_request_body(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
+
+
+class ChildAPIMixin:
+    PARENT_API = None
+    CHILD_API = None
+
+    def get_child_url(self, parent_id):
+        return '{}{}/{}/{}'.format(
+            self.api_base_url,
+            self.PARENT_API,
+            parent_id,
+            self.CHILD_API
+        )
+
+    def update(self, instance, changed_fields, parent_id=None):
+        # Only for updating records with models in the DB, not Dummy syncs
+        endpoint_url = self.get_child_url(parent_id)
         body = self._format_request_body(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
 
 class ContactsAPIClient(AutotaskAPIClient):
     API = 'Contacts'
-
-    def get_contacts(self, next_url, *args, **kwargs):
-        return self.fetch_resource(next_url, *args, **kwargs)
 
 
 class RolesAPIClient(AutotaskAPIClient):
@@ -448,21 +542,14 @@ class ResourceRoleDepartmentsAPIClient(AutotaskAPIClient):
 class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 
-    def get_ticket(self, ticket_id):
-        return self.get_instance(ticket_id)
 
-    def get_tickets(self, next_url, *args, **kwargs):
-        return self.fetch_resource(next_url, *args, **kwargs)
-
-    def update_ticket(self, ticket, changed_fields):
-        return self.update_instance(ticket, changed_fields)
-
-
-class TasksAPIClient(AutotaskAPIClient):
+class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'Tasks'
     PARENT_API = 'Projects'
+    CHILD_API = API
+    # For tasks, child API endpoint is the same
 
-    def get_tasks(self, next_url, *args, **kwargs):
+    def get(self, next_url, *args, **kwargs):
         """
         Fetch tasks from the API. We use a POST request to avoid URL length
         issues for cases where there are a large number of open projects in
@@ -470,35 +557,13 @@ class TasksAPIClient(AutotaskAPIClient):
         """
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
-    def update_task(self, task, changed_fields):
-        endpoint_url = '{}{}/{}'.format(
-            self.build_api_base_url(self.PARENT_API),
-            task.project.id,
-            self.API
-        )
-        body = self._format_request_body(task, changed_fields)
-        result = self.request('patch', endpoint_url, body)
-        return result
-
-    def _endpoint(self):
-        return '{}{}'.format(self.api_base_url, self.POST_QUERY)
-
 
 class ProjectsAPIClient(AutotaskAPIClient):
     API = 'Projects'
 
-    def get_project(self, project_id):
-        return self.get_instance(project_id)
-
     # use POST method because of IN-clause query string
-    def get_projects(self, next_url, *args, **kwargs):
+    def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
-
-    def update_project(self, project, changed_fields):
-        return self.update_instance(project, changed_fields)
-
-    def _endpoint(self):
-        return '{}{}'.format(self.api_base_url, self.POST_QUERY)
 
 
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
@@ -508,8 +573,10 @@ class AutotaskPicklistAPIClient(AutotaskAPIClient):
         super().__init__(**kwargs)
 
     def get(self, next_url, *args, **kwargs):
+        # Get either the next_url provided by the AT response or build the
+        # initial url.
         return self.fetch_resource(
-            next_url, endpoint=self.api_base_url, *args, **kwargs)
+            next_url or self.get_api_url(), *args, **kwargs)
 
 
 class LicenseTypesAPIClient(AutotaskPicklistAPIClient):
@@ -536,41 +603,22 @@ class TicketPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Tickets'
 
 
-class TicketChecklistItemsAPIClient(AutotaskAPIClient):
-    API = 'ChecklistItems'
-    PARENT_API = 'Ticket'
-
-    def get(self, next_url, conditions):
-        if not next_url:
-            # TODO following similar pattern to current rather than rewriting
-            #  parent API pattern in this issue, this method needs to be
-            #  updated in issue #2142. Uses of `PARENT_API` should be in
-            #  AutotaskAPIClient
-            self.api_base_url = self.build_api_base_url(
-                "{}{}".format(self.PARENT_API, self.API))
-        return self.fetch_resource(next_url, conditions=conditions)
+class TicketChecklistItemsAPIClient(ChildAPIMixin, AutotaskAPIClient):
+    API = 'TicketChecklistItems'
+    PARENT_API = 'Tickets'
+    CHILD_API = 'ChecklistItems'
 
     def update(self, parent, **kwargs):
-        endpoint_url = '{}{}/{}'.format(
-            self.build_api_base_url('tickets'),
-            parent,
-            self.API
-        )
+        endpoint_url = self.get_child_url(parent)
         return self.request('patch', endpoint_url, kwargs)
 
     def create(self, parent, **kwargs):
-        endpoint_url = '{}{}/{}'.format(
-            self.build_api_base_url('tickets'),
-            parent,
-            self.API
-        )
+        endpoint_url = self.get_child_url(parent)
         return self.request('post', endpoint_url, kwargs)
 
     def delete(self, parent, **kwargs):
-        endpoint_url = '{}{}/{}/{}'.format(
-            self.build_api_base_url('tickets'),
-            parent,
-            self.API,
+        endpoint_url = '{}/{}'.format(
+            self.get_child_url(parent),
             kwargs.get("id")
         )
         return self.request('delete', endpoint_url)
