@@ -47,7 +47,6 @@ class BatchQueryMixin:
             self._replace_batch_conditions(self.client.conditions,
                                            batch_condition)
             self.fetch_records(results)
-            self.client.QUERYSTR = None
 
         return results
 
