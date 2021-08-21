@@ -16,6 +16,10 @@ from retrying import retry
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
 # wait before retrying a request.
 RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
+FORBIDDEN_ERROR_MESSAGE = \
+    'The logged in Resource does not have the adequate ' \
+    'permissions to create this entity type.'
+
 
 logger = logging.getLogger(__name__)
 
@@ -324,6 +328,11 @@ class AutotaskAPIClient(object):
                     return response.json()
                 except JSONDecodeError as e:
                     raise AutotaskAPIError('{}'.format(e))
+            elif response.status_code == 403:
+                self._log_failed(response)
+                raise AutotaskSecurityPermissionsException(
+                    self._prepare_error_response(response),
+                    response.status_code)
             elif 400 <= response.status_code < 499:
                 self._log_failed(response)
                 raise AutotaskAPIClientError(
@@ -403,8 +412,18 @@ class AutotaskAPIClient(object):
                 self._prepare_error_response(response))
         elif response.status_code == 500:
             self._log_failed(response)
-            raise AutotaskAPIServerError(
-                self._prepare_error_response(response))
+            prepared_error = self._prepare_error_response(response)
+
+            # As of Aug. 2021, the REST API returns HTTP 500 for some
+            # insufficient permission cases (updating checklist items)
+            # even though the docs state that HTTP 403 should be returned.
+            # https://webservices2.autotask.net/atservicesrest/swagger/ui/index#/TicketChecklistItemsChild/TicketChecklistItemsChild_CreateEntity # noqa
+            # Until this is fixed in the API, check for the message indicating
+            # a permission error and raise an appropriate exception.
+            if FORBIDDEN_ERROR_MESSAGE in prepared_error:
+                raise AutotaskSecurityPermissionsException(prepared_error, 403)
+            else:
+                raise AutotaskAPIServerError(prepared_error)
         else:
             self._log_failed(response)
             raise AutotaskAPIError(response)
