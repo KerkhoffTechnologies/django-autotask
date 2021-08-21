@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from djautotask import api_rest as api
 from djautotask import models
+from .api_rest import ApiCondition as A
 from .sync import InvalidObjectException, SyncResults, log_sync_job, \
     TicketNoteSynchronizer, TimeEntrySynchronizer, \
     TicketSecondaryResourceSynchronizer, ParentSynchronizer
@@ -43,15 +44,16 @@ class BatchQueryMixin:
         while field_ids:
             batch_condition = field_ids[:batch_query_size]
             del field_ids[:batch_query_size]
-
-            for idx, c in enumerate(self.api_conditions):
-                if isinstance(c[0], str) and c[0] == self.condition_field_name:
-                    self.api_conditions[idx][1] = batch_condition
-
+            self._replace_batch_conditions(self.client.conditions,
+                                           batch_condition)
             self.fetch_records(results)
-            self.client.QUERYSTR = None
 
         return results
+
+    def _replace_batch_conditions(self, conditions, batch_condition):
+        for c in conditions:
+            if c.field == self.condition_field_name:
+                c.value = batch_condition
 
 
 class Synchronizer:
@@ -59,7 +61,6 @@ class Synchronizer:
     last_updated_field = 'lastActivityDate'
 
     def __init__(self, full=False, *args, **kwargs):
-        self.api_conditions = []
         self.client = self.client_class()
         self.full = full
 
@@ -171,8 +172,8 @@ class Synchronizer:
     def get_page(self, next_url=None, *args, **kwargs):
         return self.client.get(next_url, *args, **kwargs)
 
-    def get_single(self, *args, **kwargs):
-        raise NotImplementedError
+    def get_single(self, instance_id):
+        return self.client.get_single(instance_id)
 
     def _assign_field_data(self, instance, api_instance):
         raise NotImplementedError
@@ -273,11 +274,16 @@ class Synchronizer:
     def sync(self):
         sync_job_qset = self.get_sync_job_qset().filter(success=True)
 
-        if sync_job_qset.count() > 1 and not self.full:
+        if sync_job_qset.count() > 1 and self.last_updated_field \
+                and not self.full:
             last_sync_job_time = sync_job_qset.last().start_time.strftime(
                 '%Y-%m-%dT%H:%M:%S.%fZ')
-            self.api_conditions.append(
-                [self.last_updated_field, last_sync_job_time, "gt"]
+            self.client.add_condition(
+                A(
+                    field=self.last_updated_field,
+                    value=last_sync_job_time,
+                    op="gt"
+                )
             )
         results = SyncResults()
         results = self.get(results)
@@ -356,7 +362,7 @@ class ContactSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions = [['IsActive', 'true']]
+        self.client.add_condition(A(op='eq', field='isActive', value='true'))
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -373,14 +379,11 @@ class ContactSynchronizer(Synchronizer):
 
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_contacts(next_url, *args, **kwargs)
-
 
 class RoleSynchronizer(Synchronizer):
     client_class = api.RolesAPIClient
     model_class = models.RoleTracker
+    last_updated_field = None
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -405,6 +408,7 @@ class RoleSynchronizer(Synchronizer):
 class DepartmentSynchronizer(Synchronizer):
     client_class = api.DepartmentsAPIClient
     model_class = models.DepartmentTracker
+    last_updated_field = None
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
@@ -418,6 +422,7 @@ class DepartmentSynchronizer(Synchronizer):
 class ResourceServiceDeskRoleSynchronizer(Synchronizer):
     client_class = api.ResourceServiceDeskRolesAPIClient
     model_class = models.ResourceServiceDeskRoleTracker
+    last_updated_field = None
 
     related_meta = {
         'resourceID': (models.Resource, 'resource'),
@@ -437,6 +442,7 @@ class ResourceServiceDeskRoleSynchronizer(Synchronizer):
 class ResourceRoleDepartmentSynchronizer(Synchronizer):
     client_class = api.ResourceRoleDepartmentsAPIClient
     model_class = models.ResourceRoleDepartmentTracker
+    last_updated_field = None
 
     related_meta = {
         'resourceID': (models.Resource, 'resource'),
@@ -459,20 +465,20 @@ class TicketTaskMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request_settings = DjautotaskSettings().get_settings()
-        self.completed_date = (timezone.now() - timezone.timedelta(
+        completed_date = (timezone.now() - timezone.timedelta(
                 hours=request_settings.get('keep_completed_hours')
             )).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        self.api_conditions = [
-            [
-                {
-                    "op": "or",
-                    "operands": [
-                        [self.completed_date_field, self.completed_date, 'gt'],
-                        ['status', models.Status.COMPLETE_ID, 'noteq']
-                    ]
-                }
-            ]
-        ]
+        self.client.add_condition(
+            A(
+                A(
+                    op='gt',
+                    field=self.completed_date_field,
+                    value=completed_date
+                ),
+                A(op='noteq', field='status', value=models.Status.COMPLETE_ID),
+                op='or'
+            )
+        )
 
 
 # ParentSynchronizer: using SOAP API
@@ -564,13 +570,6 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
         self.set_relations(instance, json_data)
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_tickets(next_url, *args, **kwargs)
-
-    def get_single(self, ticket_id):
-        return self.client.get_ticket(ticket_id)
-
     def fetch_sync_by_id(self, instance_id):
         instance = super().fetch_sync_by_id(instance_id)
         if not instance.status or \
@@ -621,9 +620,13 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
         self.last_updated_field = 'lastActivityDateTime'
         self.condition_pool = list(self.get_active_ids())
         super().__init__(*args, **kwargs)
-        self.api_conditions += [
-            [self.condition_field_name, self.condition_pool, 'in']
-        ]
+        self.client.add_condition(
+            A(
+                op='in',
+                field=self.condition_field_name,
+                value=self.condition_pool
+            )
+        )
 
     def get_active_ids(self):
         active_projects = models.Project.objects.exclude(
@@ -680,10 +683,6 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
         self.set_relations(instance, json_data)
         return instance
 
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_tasks(next_url, *args, **kwargs)
-
 
 class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
                           ParentSynchronizer):
@@ -703,10 +702,21 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_conditions += [
-            ['status', models.ProjectStatus.COMPLETE_ID, 'noteq'],
-            ['status', list(self.get_active_ids()), 'in']
-        ]
+        self.client.add_condition(
+            A(
+                A(
+                    op='noteq',
+                    field='status',
+                    value=models.ProjectStatus.COMPLETE_ID
+                ),
+                A(
+                    op='in',
+                    field='status',
+                    value=list(self.get_active_ids())
+                ),
+                op="and"
+            )
+        )
 
     def get_active_ids(self):
         active_project_statuses = models.ProjectStatus.objects.exclude(
@@ -769,10 +779,6 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         self.set_relations(instance, object_data)
 
         return instance
-
-    def get_page(self, next_url=None, *args, **kwargs):
-        kwargs['conditions'] = self.api_conditions
-        return self.client.get_projects(next_url, *args, **kwargs)
 
 
 class PicklistSynchronizer(Synchronizer):
@@ -887,19 +893,19 @@ class DummySynchronizer:
     FIELDS = {}
 
     def __init__(self):
-        self.api_conditions = []
         self.client = self.client_class()
 
     def get(self, parent=None, conditions=None):
 
         records = []
         next_url = None
+        conditions = conditions or []
 
         while True:
             logger.info(
                 'Fetching {} records'.format(self.record_name)
             )
-            conditions = conditions if conditions else self.api_conditions
+
             api_return = self._get_page(
                 next_url, conditions, parent=parent)
             records += api_return.get("items")
@@ -987,7 +993,10 @@ class TicketChecklistItemsSynchronizer(DummySynchronizer):
 
     def _get_page(self, next_url, conditions, parent=None):
         if parent:
-            conditions += [
-                ['ticketID', parent, 'eq']
-            ]
+            self.client.add_condition(
+                A(op='eq', field='ticketID', value=parent))
+
+        for condition in conditions:
+            self.client.add_condition(condition)
+
         return self.client.get(next_url, conditions)

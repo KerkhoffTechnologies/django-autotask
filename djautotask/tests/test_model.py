@@ -27,14 +27,14 @@ class TestTicket(TestCase):
                    'TicketsAPIClient') as mock_ticketapiclient:
             instance = mock_ticketapiclient.return_value
             ticket.save()
-            self.assertFalse(instance.update_ticket.called)
+            self.assertFalse(instance.update.called)
             ticket.save(update_at=True)
-            self.assertFalse(instance.update_ticket.called)
+            self.assertFalse(instance.update.called)
 
             # 'update_at' is called
             ticket.save(update_at=True,
                         changed_fields=['title', 'due_date_time'])
-            self.assertTrue(instance.update_ticket.called)
+            self.assertTrue(instance.update.called)
 
 
 class TestTimeEntry(TestCase):
