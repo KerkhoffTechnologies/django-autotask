@@ -585,6 +585,26 @@ class ProjectsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
 
+class ServiceCallsAPIClient(AutotaskAPIClient):
+    API = 'ServiceCalls'
+
+
+class ServiceCallTicketsAPIClient(AutotaskAPIClient):
+    API = 'ServiceCallTickets'
+
+
+class ServiceCallTicketResourcesAPIClient(AutotaskAPIClient):
+    API = 'ServiceCallTicketResources'
+
+
+class ServiceCallTasksAPIClient(AutotaskAPIClient):
+    API = 'ServiceCallTasks'
+
+
+class ServiceCallTaskResourcesAPIClient(AutotaskAPIClient):
+    API = 'ServiceCallTaskResources'
+
+
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
 
     def __init__(self, **kwargs):
@@ -616,6 +636,10 @@ class AccountTypesAPIClient(AutotaskPicklistAPIClient):
 
 class TicketCategoryPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'TicketCategories'
+
+
+class ServiceCallStatusPicklistAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'ServiceCalls'
 
 
 class TicketPicklistAPIClient(AutotaskPicklistAPIClient):

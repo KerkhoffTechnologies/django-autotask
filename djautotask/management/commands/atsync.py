@@ -90,32 +90,32 @@ class Command(BaseCommand):
             ),
             (
                 'service_call_status',
-                sync.ServiceCallStatusSynchronizer,
+                syncrest.ServiceCallStatusSynchronizer,
                 _('Service Call Status')
             ),
             (
                 'service_call',
-                sync.ServiceCallSynchronizer,
+                syncrest.ServiceCallSynchronizer,
                 _('Service Call')
             ),
             (
                 'service_call_ticket',
-                sync.ServiceCallTicketSynchronizer,
+                syncrest.ServiceCallTicketSynchronizer,
                 _('Service Call Ticket')
             ),
             (
                 'service_call_task',
-                sync.ServiceCallTaskSynchronizer,
+                syncrest.ServiceCallTaskSynchronizer,
                 _('Service Call Task')
             ),
             (
                 'service_call_ticket_resource',
-                sync.ServiceCallTicketResourceSynchronizer,
+                syncrest.ServiceCallTicketResourceSynchronizer,
                 _('Service Call Ticket Resource')
             ),
             (
                 'service_call_task_resource',
-                sync.ServiceCallTaskResourceSynchronizer,
+                syncrest.ServiceCallTaskResourceSynchronizer,
                 _('Service Call Task Resource')
             ),
             ('task_predecessor', sync.TaskPredecessorSynchronizer,
