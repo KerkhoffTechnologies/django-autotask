@@ -322,6 +322,44 @@ API_ISSUE_TYPE_FIELD = {
     ]
 }
 
+API_SERVICE_CALL_STATUS_FIELD = {
+    "fields": [
+        {
+            "name": "status",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "3",
+                    "label": "New",
+                    "isDefaultValue": False,
+                    "sortOrder": 5,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                },
+                {
+                    "value": "2",
+                    "label": "Complete",
+                    "isDefaultValue": False,
+                    "sortOrder": 6,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": False
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
 API_QUEUE_FIELD = {
     "fields": [
         {
@@ -664,27 +702,6 @@ API_ACCOUNT_TYPE_FIELD = {
     ]
 }
 
-API_SERVICE_CALL_STATUS_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'New',
-        'SortOrder': 5,
-        'Value': 3,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Complete',
-        'SortOrder': 6,
-        'Value': 2,
-        'parentValue': None,
-    },
-]
-
 API_PHASE = {
     'EstimatedHours': 23.0,
     'StartDate': datetime(2012, 8, 27, 5, 0, tzinfo=tzoffset(None, 3600)),
@@ -1020,51 +1037,75 @@ API_CONTRACT = {
 }
 API_CONTRACT_LIST = [API_CONTRACT]
 
+API_SERVICE_CALL_ITEMS = [
+    {
+        'id': 2,
+        'description': 'Email just in, printer is down.',
+        'isComplete': 0,
+        'duration': 1.0000,
+        'createDateTime': '2020-01-22T13:00:00Z',
+        'startDateTime': '2020-02-23T13:00:00Z',
+        'endDateTime': '2020-03-23T13:00:00Z',
+        'canceledDateTime': None,
+        'lastModifiedDateTime': None,
+        'companyID': 174,
+        'status': 2,
+        'creatorResourceID': 29683794,
+        'canceledByResourceID': 29683794,
+    }
+]
 API_SERVICE_CALL = {
-    'id': 2,
-    'Description': 'Email just in, printer is down.',
-    'Complete': False,
-    'Duration': 1,
-    'CreateDateTime': datetime(
-        2020, 1, 22, 13, 0, tzinfo=tzoffset(None, 3600)),
-    'StartDateTime': datetime(2020, 2, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
-    'EndDateTime': datetime(2020, 3, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
-    'CanceledDateTime': None,
-    'LastModifiedDateTime': None,
-    'AccountID': 174,
-    'Status': 2,
-    'CreatorResourceID': 29683794,
-    'CanceledByResource': 29683794,
+    "items": API_SERVICE_CALL_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_SERVICE_CALL_LIST = [API_SERVICE_CALL]
 
+API_SERVICE_CALL_TICKET_ITEMS = [
+    {
+        'id': 4,
+        'serviceCallID': 2,
+        'ticketID': 7688,
+    }
+]
 API_SERVICE_CALL_TICKET = {
-    'id': 4,
-    'ServiceCallID': 2,
-    'TicketID': 7688,
+    "items": API_SERVICE_CALL_TICKET_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_SERVICE_CALL_TICKET_LIST = [API_SERVICE_CALL_TICKET]
 
+API_SERVICE_CALL_TASK_ITEMS = [
+    {
+        'id': 4,
+        'serviceCallID': 2,
+        'taskID': 7733,
+    }
+]
 API_SERVICE_CALL_TASK = {
-    'id': 4,
-    'ServiceCallID': 2,
-    'TaskID': 7733,
+    "items": API_SERVICE_CALL_TASK_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_SERVICE_CALL_TASK_LIST = [API_SERVICE_CALL_TASK]
 
+API_SERVICE_CALL_TICKET_RESOURCE_ITEMS = [
+    {
+        'id': 4,
+        'serviceCallTicketID': 4,
+        'resourceID': 29683794,
+    }
+]
 API_SERVICE_CALL_TICKET_RESOURCE = {
-    'id': 4,
-    'ServiceCallTicketID': 4,
-    'ResourceID': 29683794,
+    "items": API_SERVICE_CALL_TICKET_RESOURCE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_SERVICE_CALL_TICKET_RESOURCE_LIST = [API_SERVICE_CALL_TICKET_RESOURCE]
 
+API_SERVICE_CALL_TASK_RESOURCE_ITEMS = [
+    {
+        'id': 4,
+        'serviceCallTaskID': 4,
+        'resourceID': 29683794,
+    }
+]
 API_SERVICE_CALL_TASK_RESOURCE = {
-    'id': 4,
-    'ServiceCallTaskID': 4,
-    'ResourceID': 29683794,
+    "items": API_SERVICE_CALL_TASK_RESOURCE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_SERVICE_CALL_TASK_RESOURCE_LIST = [API_SERVICE_CALL_TASK_RESOURCE]
 
 API_TASK_PREDECESSOR = {
     'id': 1,

@@ -327,37 +327,49 @@ class AutotaskAPIClient(object):
 
         return headers
 
-    def _format_request_body(self, api_entity, changed_fields):
+    def _format_changed_fields(self, api_entity, changed_fields):
         body = {
             'id': api_entity.id
         }
 
         for field, value in changed_fields.items():
-
             if field in api_entity.EDITABLE_FIELDS:
                 key = api_entity.EDITABLE_FIELDS[field]
 
-                if isinstance(value, datetime.datetime):
-                    body.update({
-                        key: value.astimezone(
-                            pytz.timezone('UTC')).strftime(
-                                "%Y-%m-%dT%H:%M:%SZ")
-                    })
+            body = self._format_request_body(body, key, value)
 
-                elif isinstance(value, models.Model):
-                    body.update({
-                        key: value.id
-                    })
+        return body
 
-                elif isinstance(value, decimal.Decimal):
-                    body.update(
-                        {key: str(value) if value else '0'}
-                    )
+    def _format_inserted_fields(self, inserted_fields):
+        body = dict()
 
-                else:
-                    body.update(
-                        {key: str(value) if value else ''}
-                    )
+        for key, value in inserted_fields.items():
+            body = self._format_request_body(body, key, value)
+
+        return body
+
+    def _format_request_body(self, body, key, value):
+        if isinstance(value, datetime.datetime):
+            body.update({
+                key: value.astimezone(
+                    pytz.timezone('UTC')).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ")
+            })
+
+        elif isinstance(value, models.Model):
+            body.update({
+                key: value.id
+            })
+
+        elif isinstance(value, decimal.Decimal):
+            body.update(
+                {key: str(value) if value else '0'}
+            )
+
+        else:
+            body.update(
+                {key: str(value) if value else ''}
+            )
 
         return body
 
@@ -515,8 +527,12 @@ class AutotaskAPIClient(object):
         return self.fetch_resource(endpoint_url)
 
     def update(self, instance, changed_fields):
-        body = self._format_request_body(instance, changed_fields)
+        body = self._format_changed_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
+
+    def create(self, inserted_fields, parent_id):
+        body = self._format_inserted_fields(inserted_fields)
+        return self.request('post', self.get_api_url(), body)
 
 
 class ChildAPIMixin:
@@ -534,8 +550,13 @@ class ChildAPIMixin:
     def update(self, instance, changed_fields, parent_id=None):
         # Only for updating records with models in the DB, not Dummy syncs
         endpoint_url = self.get_child_url(parent_id)
-        body = self._format_request_body(instance, changed_fields)
+        body = self._format_changed_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
+
+    def create(self, inserted_fields, parent_id):
+        endpoint_url = self.get_child_url(parent_id)
+        body = self._format_inserted_fields(inserted_fields)
+        return self.request('post', endpoint_url, body)
 
 
 class ContactsAPIClient(AutotaskAPIClient):
@@ -589,20 +610,28 @@ class ServiceCallsAPIClient(AutotaskAPIClient):
     API = 'ServiceCalls'
 
 
-class ServiceCallTicketsAPIClient(AutotaskAPIClient):
+class ServiceCallTicketsAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTickets'
+    PARENT_API = 'ServiceCalls'
+    CHILD_API = 'Tickets'
 
 
-class ServiceCallTicketResourcesAPIClient(AutotaskAPIClient):
+class ServiceCallTicketResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTicketResources'
+    PARENT_API = 'ServiceCallTickets'
+    CHILD_API = 'Resources'
 
 
-class ServiceCallTasksAPIClient(AutotaskAPIClient):
+class ServiceCallTasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTasks'
+    PARENT_API = 'ServiceCalls'
+    CHILD_API = 'Tasks'
 
 
-class ServiceCallTaskResourcesAPIClient(AutotaskAPIClient):
+class ServiceCallTaskResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTaskResources'
+    PARENT_API = 'ServiceCallTasks'
+    CHILD_API = 'Resources'
 
 
 class AutotaskPicklistAPIClient(AutotaskAPIClient):

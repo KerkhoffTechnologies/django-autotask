@@ -92,6 +92,8 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
             new_val = 'Some New Value'
         elif update_field_type is bool:
             new_val = not getattr(original, self.update_field)
+        elif update_field_type is int:
+            new_val = getattr(original, self.update_field) + 1
 
         new_json = deepcopy(self.fixture_items[0])
         new_json[self.update_field] = new_val
@@ -644,15 +646,14 @@ class TestDisplayColorSynchronizer(PicklistSynchronizerRestTestMixin,
         return mocks.service_api_get_ticket_category_picklist_call(return_data)
 
 
-class TestServiceCallStatusSynchronizer(PicklistSynchronizerTestMixin,
+class TestServiceCallStatusSynchronizer(PicklistSynchronizerRestTestMixin,
                                         TestCase):
+    synchronizer_class = sync_rest.ServiceCallStatusSynchronizer
     model_class = models.ServiceCallStatusTracker
-    fixture = fixtures.API_SERVICE_CALL_STATUS_LIST
-    synchronizer = sync.ServiceCallStatusSynchronizer
+    fixture = fixtures.API_SERVICE_CALL_STATUS_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_service_call_statuses()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_service_call_statuses_call(return_data)
 
 
 class TestTicketCategorySynchronizer(SynchronizerTestMixin, TestCase):
@@ -1534,58 +1535,170 @@ class TestContractSynchronizer(SynchronizerTestMixin, TestCase):
         self.assert_sync_job()
 
 
-class TestServiceCallSynchronizer(SynchronizerTestMixin, TestCase):
+class TestServiceCallSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.ServiceCallSynchronizer
     model_class = models.ServiceCallTracker
     fixture = fixtures.API_SERVICE_CALL
-    update_field = 'Description'
+    update_field = 'description'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.ServiceCallSynchronizer()
-
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_service_call_statuses()
         fixture_utils.init_resources()
         fixture_utils.init_account_types()
         fixture_utils.init_accounts()
-        fixture_utils.init_service_calls()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_service_calls_call(return_data)
 
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.description, object_data['Description'])
-        self.assertEqual(instance.duration, object_data['Duration'])
-        self.assertEqual(instance.complete, object_data['Complete'])
+        self.assertEqual(instance.description, object_data['description'])
+        self.assertEqual(instance.duration, object_data['duration'])
+        self.assertEqual(instance.complete, object_data['isComplete'])
         self.assertEqual(
-            instance.create_date_time, object_data['CreateDateTime'])
+            instance.create_date_time,
+            self._parse_datetime(object_data['createDateTime'])
+        )
         self.assertEqual(
-            instance.start_date_time, object_data['StartDateTime'])
-        self.assertEqual(instance.end_date_time, object_data['EndDateTime'])
+            instance.start_date_time,
+            self._parse_datetime(object_data['startDateTime'])
+        )
         self.assertEqual(
-            instance.canceled_date_time, object_data['CanceledDateTime'])
+            instance.end_date_time,
+            self._parse_datetime(object_data['endDateTime'])
+        )
+        self.assertEqual(
+            instance.canceled_date_time,
+            self._parse_datetime(object_data['canceledDateTime'])
+        )
         self.assertEqual(
             instance.last_modified_date_time,
-            object_data['LastModifiedDateTime']
+            self._parse_datetime(object_data['lastModifiedDateTime'])
         )
-        self.assertEqual(instance.status.id, object_data['Status'])
-        self.assertEqual(instance.account.id, object_data['AccountID'])
+        self.assertEqual(instance.status.id, object_data['status'])
+        self.assertEqual(instance.account.id, object_data['companyID'])
         self.assertEqual(
-            instance.creator_resource.id, object_data['CreatorResourceID'])
+            instance.creator_resource.id, object_data['creatorResourceID'])
         self.assertEqual(
             instance.canceled_by_resource.id,
-            object_data['CanceledByResource']
+            object_data['canceledByResourceID']
         )
 
-    def test_sync_service_call(self):
-        """
-        Test to ensure synchronizer saves a service call instance locally.
-        """
-        self.assertGreater((models.ServiceCall.objects.count()), 0)
 
-        instance = models.ServiceCall.objects.get(id=self.fixture['id'])
+class TestServiceCallTicketSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.ServiceCallTicketSynchronizer
+    model_class = models.ServiceCallTicketTracker
+    fixture = fixtures.API_SERVICE_CALL_TICKET
+    update_field = 'ticket_id'
 
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_tickets()
+        fixture_utils.init_service_call_statuses()
+        fixture_utils.init_accounts()
+        fixture_utils.init_service_calls()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_service_call_tickets_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.service_call.id,
+                         object_data['serviceCallID'])
+        self.assertEqual(instance.ticket.id, object_data['ticketID'])
+
+    def test_sync_update(self):
+        ticket = models.Ticket.objects.first()
+        extra_ticket = deepcopy(ticket)
+        extra_ticket.id = extra_ticket.id + 1
+        extra_ticket.save()
+        super().test_sync_update()
+
+
+class TestServiceCallTaskSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.ServiceCallTaskSynchronizer
+    model_class = models.ServiceCallTaskTracker
+    fixture = fixtures.API_SERVICE_CALL_TASK
+    update_field = 'task_id'
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_projects()
+        fixture_utils.init_tasks()
+        fixture_utils.init_service_call_statuses()
+        fixture_utils.init_accounts()
+        fixture_utils.init_service_calls()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_service_call_tasks_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.service_call.id,
+                         object_data['serviceCallID'])
+        self.assertEqual(instance.task.id, object_data['taskID'])
+
+    def test_sync_update(self):
+        task = models.Task.objects.first()
+        extra_task = deepcopy(task)
+        extra_task.id = extra_task.id + 1
+        extra_task.save()
+        super().test_sync_update()
+
+
+class TestServiceCallTicketResourceSynchronizer(SynchronizerRestTestMixin,
+                                                TestCase):
+    synchronizer_class = sync_rest.ServiceCallTicketResourceSynchronizer
+    model_class = models.ServiceCallTicketResourceTracker
+    fixture = fixtures.API_SERVICE_CALL_TICKET_RESOURCE
+    update_field = 'resource_id'
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_tickets()
+        fixture_utils.init_resources()
+        fixture_utils.init_service_call_tickets()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_service_call_ticket_resources_call(
+            return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.service_call_ticket.id,
+                         object_data['serviceCallTicketID'])
+        self.assertEqual(instance.resource.id, object_data['resourceID'])
+
+
+class TestServiceCallTaskResourceSynchronizer(SynchronizerRestTestMixin,
+                                              TestCase):
+    synchronizer_class = sync_rest.ServiceCallTaskResourceSynchronizer
+    model_class = models.ServiceCallTaskResourceTracker
+    fixture = fixtures.API_SERVICE_CALL_TASK_RESOURCE
+    update_field = 'resource_id'
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_projects()
+        fixture_utils.init_tasks()
+        fixture_utils.init_resources()
+        fixture_utils.init_service_call_tasks()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_service_call_task_resources_call(
+            return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.service_call_task.id,
+                         object_data['serviceCallTaskID'])
+        self.assertEqual(instance.resource.id, object_data['resourceID'])
 
 
 class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):

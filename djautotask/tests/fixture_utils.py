@@ -182,13 +182,13 @@ def manage_full_sync_return_data(value):
         'ResourceServiceDeskRole':
             fixtures.API_RESOURCE_SERVICE_DESK_ROLE,
         'Contract': fixtures.API_CONTRACT_LIST,
-        'ServiceCall': fixtures.API_SERVICE_CALL_LIST,
-        'ServiceCallTicket': fixtures.API_SERVICE_CALL_TICKET_LIST,
-        'ServiceCallTask': fixtures.API_SERVICE_CALL_TASK_LIST,
+        'ServiceCall': fixtures.API_SERVICE_CALL,
+        'ServiceCallTicket': fixtures.API_SERVICE_CALL_TICKET,
+        'ServiceCallTask': fixtures.API_SERVICE_CALL_TASK,
         'ServiceCallTicketResource':
-            fixtures.API_SERVICE_CALL_TICKET_RESOURCE_LIST,
+            fixtures.API_SERVICE_CALL_TICKET_RESOURCE,
         'ServiceCallTaskResource':
-            fixtures.API_SERVICE_CALL_TASK_RESOURCE_LIST,
+            fixtures.API_SERVICE_CALL_TASK_RESOURCE,
         'TaskPredecessor': fixtures.API_TASK_PREDECESSOR_LIST,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
@@ -242,9 +242,6 @@ def manage_sync_picklist_return_data(wrapper, entity):
         'TicketNote': {
             'NoteType': fixtures.API_NOTE_TYPE_LIST,
         },
-        'ServiceCall': {
-            'Status': fixtures.API_SERVICE_CALL_STATUS_LIST,
-        }
     }
     client = API_CLIENT
     array_of_field = client.factory.create('ArrayOfField')
@@ -393,11 +390,11 @@ def init_account_types():
 
 
 def init_service_call_statuses():
-    sync_picklist_objects(
-        'Status',
-        fixtures.API_SERVICE_CALL_STATUS_LIST,
-        sync.ServiceCallStatusSynchronizer
-    )
+    models.ServiceCallStatus.objects.all().delete()
+    mocks.service_api_get_service_call_statuses_call(
+        fixtures.API_SERVICE_CALL_STATUS_FIELD)
+    synchronizer = syncrest.ServiceCallStatusSynchronizer()
+    return synchronizer.sync()
 
 
 def init_ticket_categories():
@@ -562,27 +559,42 @@ def init_contracts():
 
 
 def init_service_calls():
-    sync_objects(
-        'ServiceCall',
-        fixtures.API_SERVICE_CALL_LIST,
-        sync.ServiceCallSynchronizer
-    )
+    models.ServiceCall.objects.all().delete()
+    mocks.service_api_get_service_calls_call(fixtures.API_SERVICE_CALL)
+    synchronizer = syncrest.ServiceCallSynchronizer()
+    return synchronizer.sync()
 
 
 def init_service_call_tickets():
-    sync_objects(
-        'ServiceCallTicket',
-        fixtures.API_SERVICE_CALL_TICKET_LIST,
-        sync.ServiceCallTicketSynchronizer
-    )
+    models.ServiceCallTicket.objects.all().delete()
+    mocks.service_api_get_service_call_tickets_call(
+        fixtures.API_SERVICE_CALL_TICKET)
+    synchronizer = syncrest.ServiceCallTicketSynchronizer()
+    return synchronizer.sync()
 
 
 def init_service_call_tasks():
-    sync_objects(
-        'ServiceCallTask',
-        fixtures.API_SERVICE_CALL_TASK_LIST,
-        sync.ServiceCallTaskSynchronizer
-    )
+    models.ServiceCallTask.objects.all().delete()
+    mocks.service_api_get_service_call_tasks_call(
+        fixtures.API_SERVICE_CALL_TASK)
+    synchronizer = syncrest.ServiceCallTaskSynchronizer()
+    return synchronizer.sync()
+
+
+def init_service_call_ticket_resources():
+    models.ServiceCallTicketResource.objects.all().delete()
+    mocks.service_api_get_service_call_ticket_resources_call(
+        fixtures.API_SERVICE_CALL_TICKET_RESOURCE)
+    synchronizer = syncrest.ServiceCallTicketResourceSynchronizer()
+    return synchronizer.sync()
+
+
+def init_service_call_task_resources():
+    models.ServiceCallTaskResource.objects.all().delete()
+    mocks.service_api_get_service_call_task_resources_call(
+        fixtures.API_SERVICE_CALL_TASK_RESOURCE)
+    synchronizer = syncrest.ServiceCallTaskResourceSynchronizer()
+    return synchronizer.sync()
 
 
 def init_task_predecessors():

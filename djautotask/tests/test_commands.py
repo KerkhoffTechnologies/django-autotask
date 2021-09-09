@@ -296,14 +296,17 @@ class TestSyncAccountTypeCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_account_types()
 
 
-class TestSyncServiceCallStatusCommand(AbstractPicklistSyncCommandTest,
+class TestSyncServiceCallStatusCommand(PicklistSyncTest,
                                        TestCase):
-    field_name = 'Status'
-
     args = (
-        fixtures.API_SERVICE_CALL_STATUS_LIST,
+        mocks.service_api_get_service_call_statuses_call,
+        fixtures.API_SERVICE_CALL_STATUS_FIELD,
         'service_call_status',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_service_call_statuses()
 
 
 class TestSyncDisplayColorCommand(PicklistSyncTest, TestCase):
@@ -537,9 +540,10 @@ class TestContractCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncServiceCallCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncServiceCallCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_SERVICE_CALL_LIST,
+        mocks.service_api_get_service_calls_call,
+        fixtures.API_SERVICE_CALL,
         'service_call',
     )
 
@@ -551,9 +555,10 @@ class TestSyncServiceCallCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_accounts()
 
 
-class TestSyncServiceCallTicketCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncServiceCallTicketCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_SERVICE_CALL_TICKET_LIST,
+        mocks.service_api_get_service_call_tickets_call,
+        fixtures.API_SERVICE_CALL_TICKET,
         'service_call_ticket',
     )
 
@@ -568,9 +573,10 @@ class TestSyncServiceCallTicketCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_tickets()
 
 
-class TestSyncServiceCallTaskCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncServiceCallTaskCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_SERVICE_CALL_TASK_LIST,
+        mocks.service_api_get_service_call_tasks_call,
+        fixtures.API_SERVICE_CALL_TASK,
         'service_call_task',
     )
 
@@ -585,9 +591,11 @@ class TestSyncServiceCallTaskCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_tasks()
 
 
-class TestSyncServiceCallTicketResourceCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncServiceCallTicketResourceCommand(AbstractBaseSyncRestTest,
+                                               TestCase):
     args = (
-        fixtures.API_SERVICE_CALL_TICKET_RESOURCE_LIST,
+        mocks.service_api_get_service_call_ticket_resources_call,
+        fixtures.API_SERVICE_CALL_TICKET_RESOURCE,
         'service_call_ticket_resource',
     )
 
@@ -603,9 +611,11 @@ class TestSyncServiceCallTicketResourceCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_service_call_tickets()
 
 
-class TestSyncServiceCallTaskResourceCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncServiceCallTaskResourceCommand(AbstractBaseSyncRestTest,
+                                             TestCase):
     args = (
-        fixtures.API_SERVICE_CALL_TASK_RESOURCE_LIST,
+        mocks.service_api_get_service_call_task_resources_call,
+        fixtures.API_SERVICE_CALL_TASK_RESOURCE,
         'service_call_task_resource',
     )
 
@@ -839,10 +849,21 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_DISPLAY_COLOR_FIELD)
         mocks.service_api_get_ticket_picklist_call(
             fixtures.API_TICKET_PICKLIST_FIELD)
+        mocks.service_api_get_service_call_statuses_call(
+            fixtures.API_SERVICE_CALL_STATUS_FIELD)
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
         mocks.service_api_get_tickets_call(fixtures.API_TICKET)
         mocks.service_api_get_tasks_call(fixtures.API_TASK)
         mocks.service_api_get_projects_call(fixtures.API_PROJECT)
+        mocks.service_api_get_service_calls_call(fixtures.API_SERVICE_CALL)
+        mocks.service_api_get_service_call_tickets_call(
+            fixtures.API_SERVICE_CALL_TICKET)
+        mocks.service_api_get_service_call_ticket_resources_call(
+            fixtures.API_SERVICE_CALL_TICKET_RESOURCE)
+        mocks.service_api_get_service_call_tasks_call(
+            fixtures.API_SERVICE_CALL_TASK)
+        mocks.service_api_get_service_call_task_resources_call(
+            fixtures.API_SERVICE_CALL_TASK_RESOURCE)
 
     def _call_empty_service_api(self):
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
@@ -855,9 +876,17 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_EMPTY)
         mocks.service_api_get_resource_role_departments_call(
             fixtures.API_EMPTY)
+        mocks.service_api_get_service_calls_call(fixtures.API_EMPTY)
+        mocks.service_api_get_service_call_tickets_call(fixtures.API_EMPTY)
+        mocks.service_api_get_service_call_ticket_resources_call(
+            fixtures.API_EMPTY)
+        mocks.service_api_get_service_call_tasks_call(fixtures.API_EMPTY)
+        mocks.service_api_get_service_call_task_resources_call(
+            fixtures.API_EMPTY)
         mocks.service_api_get_license_types_call({"fields": []})
         mocks.service_api_get_use_types_call({"fields": []})
         mocks.service_api_get_task_type_links_call({"fields": []})
         mocks.service_api_get_account_types_call({"fields": []})
         mocks.service_api_get_ticket_category_picklist_call({"fields": []})
         mocks.service_api_get_ticket_picklist_call({"fields": []})
+        mocks.service_api_get_service_call_statuses_call({"fields": []})
