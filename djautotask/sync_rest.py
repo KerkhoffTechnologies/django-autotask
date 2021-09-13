@@ -27,10 +27,16 @@ class BatchQueryMixin:
     condition_field_name = None
     batch_query_size = None
     client = None
+    force_batch_query_size = None
 
     def __init__(self, full=False, *args, **kwargs):
         settings = DjautotaskSettings().get_settings()
         self.batch_query_size = settings.get('batch_query_size')
+        if self.force_batch_query_size:
+            self.batch_query_size = min(
+                self.force_batch_query_size,
+                self.batch_query_size
+            )
         self.condition_pool = list(self.active_ids)
         super().__init__(full, *args, **kwargs)
         self.client.add_condition(
@@ -795,6 +801,7 @@ class ServiceCallSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTracker
     condition_field_name = 'companyID'
     last_updated_field = 'lastModifiedDateTime'
+    force_batch_query_size = 169
 
     related_meta = {
         'companyID': (models.Account, 'account'),
@@ -859,6 +866,7 @@ class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTicketTracker
     condition_field_name = 'ticketID'
     last_updated_field = None
+    force_batch_query_size = 240
 
     related_meta = {
         'serviceCallID': (models.ServiceCall, 'service_call'),
@@ -898,6 +906,12 @@ class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
     condition_field_name = 'taskID'
     last_updated_field = None
 
+    # service_call_task shows errors w/ the value of batch_query_size
+    # larger than 215. The error: 404 - File or directory not found.</h2>
+    # <h3>The resource you are looking for might have been removed,
+    # had its name changed, or is temporarily unavailable.
+    force_batch_query_size = 215
+
     related_meta = {
         'serviceCallID': (models.ServiceCall, 'service_call'),
         'taskID': (models.Task, 'task')
@@ -936,6 +950,7 @@ class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTicketResourceTracker
     condition_field_name = 'serviceCallTicketID'
     last_updated_field = None
+    force_batch_query_size = 304
 
     related_meta = {
         'serviceCallTicketID':
@@ -975,6 +990,7 @@ class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ServiceCallTaskResourceTracker
     condition_field_name = 'serviceCallTaskID'
     last_updated_field = None
+    force_batch_query_size = 277
 
     related_meta = {
         'serviceCallTaskID':
