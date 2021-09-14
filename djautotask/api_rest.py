@@ -533,7 +533,9 @@ class AutotaskAPIClient(object):
 
     def create(self, instance, **kwargs):
         body = self._format_inserted_fields(instance, kwargs)
-        return self.request('post', self.get_api_url(), body)
+        # API returns the newly created id
+        response = self.request('post', self.get_api_url(), body)
+        return response.get('itemId'), body
 
 
 class ChildAPIMixin:
@@ -558,7 +560,8 @@ class ChildAPIMixin:
         parent = kwargs.pop('parent')
         endpoint_url = self.get_child_url(parent.id)
         body = self._format_inserted_fields(instance, kwargs)
-        return self.request('post', endpoint_url, body)
+        response = self.request('post', endpoint_url, body)
+        return response.get('itemId'), body
 
 
 class ContactsAPIClient(AutotaskAPIClient):

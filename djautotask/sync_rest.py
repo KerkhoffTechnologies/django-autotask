@@ -216,11 +216,11 @@ class Synchronizer:
         """
         instance = self.model_class()
         api_client = self.client_class()
-        api_response = api_client.create(instance, **kwargs)
+        created_id, body = api_client.create(instance, **kwargs)
 
-        # api_response has only item id, and get_single retrieves other
-        # generated/calculated fields info at AT-side
-        created_instance = self.get_single(api_response['itemId'])
+        created_instance = {
+            'item': {'id': created_id, **body}
+        }
 
         return self.update_or_create_instance(created_instance['item'])
 
@@ -850,6 +850,20 @@ class ServiceCallSynchronizer(BatchQueryMixin, Synchronizer):
 
         return instance
 
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create an entity.
+        """
+        instance = self.model_class()
+        api_client = self.client_class()
+        created_id, _ = api_client.create(instance, **kwargs)
+
+        # get_single retrieves other generated/calculated fields info
+        # from AT-side
+        created_instance = self.get_single(created_id)
+
+        return self.update_or_create_instance(created_instance['item'])
+
 
 class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.ServiceCallTicketsAPIClient
@@ -875,6 +889,12 @@ class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+    def create(self, **kwargs):
+        kwargs.update({
+            'parent': kwargs.get('service_call')
+        })
+        return super().create(**kwargs)
 
 
 class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
@@ -908,6 +928,12 @@ class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
 
         return instance
 
+    def create(self, **kwargs):
+        kwargs.update({
+            'parent': kwargs.get('service_call')
+        })
+        return super().create(**kwargs)
+
 
 class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.ServiceCallTicketResourcesAPIClient
@@ -935,6 +961,12 @@ class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
 
         return instance
 
+    def create(self, **kwargs):
+        kwargs.update({
+            'parent': kwargs.get('service_call_ticket')
+        })
+        return super().create(**kwargs)
+
 
 class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.ServiceCallTaskResourcesAPIClient
@@ -961,6 +993,12 @@ class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+    def create(self, **kwargs):
+        kwargs.update({
+            'parent': kwargs.get('service_call_task')
+        })
+        return super().create(**kwargs)
 
 
 class PicklistSynchronizer(Synchronizer):
