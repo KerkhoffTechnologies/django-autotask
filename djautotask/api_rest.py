@@ -335,16 +335,17 @@ class AutotaskAPIClient(object):
         for field, value in changed_fields.items():
             if field in api_entity.EDITABLE_FIELDS:
                 key = api_entity.EDITABLE_FIELDS[field]
-
-            body = self._format_request_body(body, key, value)
+                body = self._format_request_body(body, key, value)
 
         return body
 
-    def _format_inserted_fields(self, inserted_fields):
+    def _format_inserted_fields(self, api_entity, inserted_fields):
         body = dict()
 
-        for key, value in inserted_fields.items():
-            body = self._format_request_body(body, key, value)
+        for field, value in inserted_fields.items():
+            if field in api_entity.AUTOTASK_FIELDS:
+                key = api_entity.AUTOTASK_FIELDS[field]
+                body = self._format_request_body(body, key, value)
 
         return body
 
@@ -530,8 +531,8 @@ class AutotaskAPIClient(object):
         body = self._format_changed_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
-    def create(self, inserted_fields, parent_id):
-        body = self._format_inserted_fields(inserted_fields)
+    def create(self, instance, **kwargs):
+        body = self._format_inserted_fields(instance, kwargs)
         return self.request('post', self.get_api_url(), body)
 
 
@@ -553,9 +554,10 @@ class ChildAPIMixin:
         body = self._format_changed_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
-    def create(self, inserted_fields, parent_id):
-        endpoint_url = self.get_child_url(parent_id)
-        body = self._format_inserted_fields(inserted_fields)
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('parent')
+        endpoint_url = self.get_child_url(parent.id)
+        body = self._format_inserted_fields(instance, kwargs)
         return self.request('post', endpoint_url, body)
 
 

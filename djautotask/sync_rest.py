@@ -210,11 +210,19 @@ class Synchronizer:
             self.update_or_create_instance(api_instance['item'])
         return instance
 
-    def create(self, body, parent_id=None):
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create an entity.
+        """
+        instance = self.model_class()
         api_client = self.client_class()
-        created_id = api_client.create(body, parent_id)
-        body.update({'id': created_id['itemId']})
-        return body
+        api_response = api_client.create(instance, **kwargs)
+
+        # api_response has only item id, and get_single retrieves other
+        # generated/calculated fields info at AT-side
+        created_instance = self.get_single(api_response['itemId'])
+
+        return self.update_or_create_instance(created_instance['item'])
 
     def update_or_create_instance(self, api_instance):
         """
@@ -842,24 +850,6 @@ class ServiceCallSynchronizer(BatchQueryMixin, Synchronizer):
 
         return instance
 
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create a ServiceCall.
-        """
-
-        body = {
-            'companyID': kwargs['account'].id,
-            'companyLocationID': kwargs['location'].id,
-            'startDateTime': kwargs['start_date_time'],
-            'endDateTime': kwargs['end_date_time'],
-            'status': kwargs['status'].id,
-            'description': kwargs['description'],
-        }
-        instance = super().create(body)
-        created_item = self.get_single(instance['id'])
-
-        return self.update_or_create_instance(created_item['item'])
-
 
 class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.ServiceCallTicketsAPIClient
@@ -885,19 +875,6 @@ class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
-
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create a ServiceCallTicket.
-        """
-
-        body = {
-            'ticketID': kwargs['ticket'].id,
-        }
-        instance = super().create(body, kwargs['service_call'].id)
-        created_item = self.get_single(instance['id'])
-
-        return self.update_or_create_instance(created_item['item'])
 
 
 class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
@@ -931,19 +908,6 @@ class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
 
         return instance
 
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create a ServiceCallTask.
-        """
-
-        body = {
-            'taskID': kwargs['task'].id,
-        }
-        instance = super().create(body, kwargs['service_call'].id)
-        created_item = self.get_single(instance['id'])
-
-        return self.update_or_create_instance(created_item['item'])
-
 
 class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.ServiceCallTicketResourcesAPIClient
@@ -971,19 +935,6 @@ class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
 
         return instance
 
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create a ServiceCallTicketResource.
-        """
-
-        body = {
-            'resourceID': kwargs['resource'].id,
-        }
-        instance = super().create(body, kwargs['service_call_ticket'].id)
-        created_item = self.get_single(instance['id'])
-
-        return self.update_or_create_instance(created_item['item'])
-
 
 class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.ServiceCallTaskResourcesAPIClient
@@ -1010,19 +961,6 @@ class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
-
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create a ServiceCallTaskResource.
-        """
-
-        body = {
-            'resourceID': kwargs['resource'].id,
-        }
-        instance = super().create(body, kwargs['service_call_task'].id)
-        created_item = self.get_single(instance['id'])
-
-        return self.update_or_create_instance(created_item['item'])
 
 
 class PicklistSynchronizer(Synchronizer):
