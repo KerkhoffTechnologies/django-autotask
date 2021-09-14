@@ -131,7 +131,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
-    EDITABLE_FIELDS = {
+    AUTOTASK_FIELDS = {
         'title': 'title',
         'description': 'description',
         'queue': 'queueID',
@@ -150,7 +150,6 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         'account_physical_location': 'companyLocationID',
         'contact': 'contactID',
     }
-    AUTOTASK_FIELDS = EDITABLE_FIELDS
 
     class Meta:
         verbose_name = 'Ticket'
@@ -514,7 +513,7 @@ class Project(ATUpdateMixin, TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
-    EDITABLE_FIELDS = {
+    AUTOTASK_FIELDS = {
         'name': 'projectName',
         'status': 'status',
         'description': 'description',
@@ -525,7 +524,6 @@ class Project(ATUpdateMixin, TimeStampedModel):
         'department': 'department',
         'status_detail': 'statusDetail',
     }
-    AUTOTASK_FIELDS = EDITABLE_FIELDS
 
     objects = models.Manager()
     available_objects = AvailableProjectManager()
@@ -617,7 +615,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
-    EDITABLE_FIELDS = {
+    AUTOTASK_FIELDS = {
         'title': 'title',
         'description': 'description',
         'start_date': 'startDateTime',
@@ -632,7 +630,6 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
     }
-    AUTOTASK_FIELDS = EDITABLE_FIELDS
 
     def __str__(self):
         return self.title

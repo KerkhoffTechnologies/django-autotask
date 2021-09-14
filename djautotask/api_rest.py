@@ -327,20 +327,8 @@ class AutotaskAPIClient(object):
 
         return headers
 
-    def _format_changed_fields(self, api_entity, changed_fields):
-        body = {
-            'id': api_entity.id
-        }
-
-        for field, value in changed_fields.items():
-            if field in api_entity.EDITABLE_FIELDS:
-                key = api_entity.EDITABLE_FIELDS[field]
-                body = self._format_request_body(body, key, value)
-
-        return body
-
-    def _format_inserted_fields(self, api_entity, inserted_fields):
-        body = dict()
+    def _format_fields(self, api_entity, inserted_fields):
+        body = {'id': api_entity.id} if api_entity else dict()
 
         for field, value in inserted_fields.items():
             if field in api_entity.AUTOTASK_FIELDS:
@@ -528,11 +516,11 @@ class AutotaskAPIClient(object):
         return self.fetch_resource(endpoint_url)
 
     def update(self, instance, changed_fields):
-        body = self._format_changed_fields(instance, changed_fields)
+        body = self._format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
     def create(self, instance, **kwargs):
-        body = self._format_inserted_fields(instance, kwargs)
+        body = self._format_fields(instance, kwargs)
         # API returns the newly created id
         response = self.request('post', self.get_api_url(), body)
         return response.get('itemId'), body
@@ -553,13 +541,13 @@ class ChildAPIMixin:
     def update(self, instance, changed_fields, parent_id=None):
         # Only for updating records with models in the DB, not Dummy syncs
         endpoint_url = self.get_child_url(parent_id)
-        body = self._format_changed_fields(instance, changed_fields)
+        body = self._format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
     def create(self, instance, **kwargs):
         parent = kwargs.pop('parent')
         endpoint_url = self.get_child_url(parent.id)
-        body = self._format_inserted_fields(instance, kwargs)
+        body = self._format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
         return response.get('itemId'), body
 
