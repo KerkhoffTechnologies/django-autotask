@@ -328,7 +328,7 @@ class AutotaskAPIClient(object):
         return headers
 
     def _format_fields(self, api_entity, inserted_fields):
-        body = {'id': api_entity.id} if api_entity else dict()
+        body = {'id': api_entity.id} if api_entity.id else dict()
 
         for field, value in inserted_fields.items():
             if field in api_entity.AUTOTASK_FIELDS:
@@ -523,7 +523,7 @@ class AutotaskAPIClient(object):
         body = self._format_fields(instance, kwargs)
         # API returns the newly created id
         response = self.request('post', self.get_api_url(), body)
-        return response.get('itemId'), body
+        return response.get('itemId')
 
 
 class ChildAPIMixin:
@@ -549,7 +549,7 @@ class ChildAPIMixin:
         endpoint_url = self.get_child_url(parent.id)
         body = self._format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
-        return response.get('itemId'), body
+        return response.get('itemId')
 
 
 class ContactsAPIClient(AutotaskAPIClient):
