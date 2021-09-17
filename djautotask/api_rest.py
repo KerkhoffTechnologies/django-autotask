@@ -521,7 +521,7 @@ class AutotaskAPIClient(object):
 
     def create(self, instance, **kwargs):
         body = self._format_fields(instance, kwargs)
-        # API returns the newly created id
+        # API returns only newly created id
         response = self.request('post', self.get_api_url(), body)
         return response.get('itemId')
 
@@ -548,7 +548,6 @@ class ChildAPIMixin:
         endpoint_url = self.get_child_url(parent.id)
         body = self._format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
-
         return response.get('itemId')
 
 

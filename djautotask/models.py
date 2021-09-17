@@ -639,8 +639,8 @@ class Task(ATUpdateMixin, TimeStampedModel):
         api_client = api_rest.TasksAPIClient()
         return api_client.update(
             self,
+            self.project,
             self.get_updated_object(**kwargs),
-            self.project
         )
 
 
