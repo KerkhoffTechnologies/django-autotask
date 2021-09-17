@@ -327,37 +327,38 @@ class AutotaskAPIClient(object):
 
         return headers
 
-    def _format_request_body(self, api_entity, changed_fields):
-        body = {
-            'id': api_entity.id
-        }
+    def _format_fields(self, api_entity, inserted_fields):
+        body = {'id': api_entity.id} if api_entity.id else dict()
 
-        for field, value in changed_fields.items():
+        for field, value in inserted_fields.items():
+            if field in api_entity.AUTOTASK_FIELDS:
+                key = api_entity.AUTOTASK_FIELDS[field]
+                body = self._format_request_body(body, key, value)
 
-            if field in api_entity.EDITABLE_FIELDS:
-                key = api_entity.EDITABLE_FIELDS[field]
+        return body
 
-                if isinstance(value, datetime.datetime):
-                    body.update({
-                        key: value.astimezone(
-                            pytz.timezone('UTC')).strftime(
-                                "%Y-%m-%dT%H:%M:%SZ")
-                    })
+    def _format_request_body(self, body, key, value):
+        if isinstance(value, datetime.datetime):
+            body.update({
+                key: value.astimezone(
+                    pytz.timezone('UTC')).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ")
+            })
 
-                elif isinstance(value, models.Model):
-                    body.update({
-                        key: value.id
-                    })
+        elif isinstance(value, models.Model):
+            body.update({
+                key: value.id
+            })
 
-                elif isinstance(value, decimal.Decimal):
-                    body.update(
-                        {key: str(value) if value else '0'}
-                    )
+        elif isinstance(value, decimal.Decimal):
+            body.update(
+                {key: str(value) if value else '0'}
+            )
 
-                else:
-                    body.update(
-                        {key: str(value) if value else ''}
-                    )
+        else:
+            body.update(
+                {key: str(value) if value else ''}
+            )
 
         return body
 
@@ -515,8 +516,14 @@ class AutotaskAPIClient(object):
         return self.fetch_resource(endpoint_url)
 
     def update(self, instance, changed_fields):
-        body = self._format_request_body(instance, changed_fields)
+        body = self._format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
+
+    def create(self, instance, **kwargs):
+        body = self._format_fields(instance, kwargs)
+        # API returns only newly created id
+        response = self.request('post', self.get_api_url(), body)
+        return response.get('itemId')
 
 
 class ChildAPIMixin:
@@ -531,11 +538,17 @@ class ChildAPIMixin:
             self.CHILD_API
         )
 
-    def update(self, instance, changed_fields, parent_id=None):
+    def update(self, instance, parent, changed_fields):
         # Only for updating records with models in the DB, not Dummy syncs
-        endpoint_url = self.get_child_url(parent_id)
-        body = self._format_request_body(instance, changed_fields)
+        endpoint_url = self.get_child_url(parent.id)
+        body = self._format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
+
+    def create(self, instance, parent, **kwargs):
+        endpoint_url = self.get_child_url(parent.id)
+        body = self._format_fields(instance, kwargs)
+        response = self.request('post', endpoint_url, body)
+        return response.get('itemId')
 
 
 class ContactsAPIClient(AutotaskAPIClient):
@@ -585,6 +598,50 @@ class ProjectsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
 
+class ServiceCallsAPIClient(AutotaskAPIClient):
+    API = 'ServiceCalls'
+
+
+class ServiceCallTicketsAPIClient(ChildAPIMixin, AutotaskAPIClient):
+    API = 'ServiceCallTickets'
+    PARENT_API = 'ServiceCalls'
+    CHILD_API = 'Tickets'
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('service_call')
+        return super().create(instance, parent, **kwargs)
+
+
+class ServiceCallTicketResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
+    API = 'ServiceCallTicketResources'
+    PARENT_API = 'ServiceCallTickets'
+    CHILD_API = 'Resources'
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('service_call_ticket')
+        return super().create(instance, parent, **kwargs)
+
+
+class ServiceCallTasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
+    API = 'ServiceCallTasks'
+    PARENT_API = 'ServiceCalls'
+    CHILD_API = 'Tasks'
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('service_call')
+        return super().create(instance, parent, **kwargs)
+
+
+class ServiceCallTaskResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
+    API = 'ServiceCallTaskResources'
+    PARENT_API = 'ServiceCallTasks'
+    CHILD_API = 'Resources'
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('service_call_task')
+        return super().create(instance, parent, **kwargs)
+
+
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
 
     def __init__(self, **kwargs):
@@ -616,6 +673,10 @@ class AccountTypesAPIClient(AutotaskPicklistAPIClient):
 
 class TicketCategoryPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'TicketCategories'
+
+
+class ServiceCallStatusPicklistAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'ServiceCalls'
 
 
 class TicketPicklistAPIClient(AutotaskPicklistAPIClient):

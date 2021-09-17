@@ -149,6 +149,36 @@ def service_api_get_license_types_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_service_call_statuses_call(return_value):
+    method_name = 'djautotask.api_rest.ServiceCallStatusPicklistAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_service_calls_call(return_value):
+    method_name = 'djautotask.api_rest.ServiceCallsAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_service_call_tickets_call(return_value):
+    method_name = 'djautotask.api_rest.ServiceCallTicketsAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_service_call_ticket_resources_call(return_value):
+    method_name = 'djautotask.api_rest.ServiceCallTicketResourcesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_service_call_tasks_call(return_value):
+    method_name = 'djautotask.api_rest.ServiceCallTasksAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_service_call_task_resources_call(return_value):
+    method_name = 'djautotask.api_rest.ServiceCallTaskResourcesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_use_types_call(return_value):
     method_name = 'djautotask.api_rest.UseTypesAPIClient.get'
     return create_mock_call(method_name, return_value)

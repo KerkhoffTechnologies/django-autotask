@@ -131,7 +131,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
-    EDITABLE_FIELDS = {
+    AUTOTASK_FIELDS = {
         'title': 'title',
         'description': 'description',
         'queue': 'queueID',
@@ -513,7 +513,7 @@ class Project(ATUpdateMixin, TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
-    EDITABLE_FIELDS = {
+    AUTOTASK_FIELDS = {
         'name': 'projectName',
         'status': 'status',
         'description': 'description',
@@ -615,7 +615,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
-    EDITABLE_FIELDS = {
+    AUTOTASK_FIELDS = {
         'title': 'title',
         'description': 'description',
         'start_date': 'startDateTime',
@@ -639,8 +639,8 @@ class Task(ATUpdateMixin, TimeStampedModel):
         api_client = api_rest.TasksAPIClient()
         return api_client.update(
             self,
+            self.project,
             self.get_updated_object(**kwargs),
-            self.project.id
         )
 
 
@@ -859,6 +859,22 @@ class ServiceCall(TimeStampedModel):
         related_name='task_service_calls'
     )
 
+    AUTOTASK_FIELDS = {
+        'description': 'description',
+        'duration': 'duration',
+        'complete': 'isComplete',
+        'create_date_time': 'createDateTime',
+        'start_date_time': 'startDateTime',
+        'end_date_time': 'endDateTime',
+        'canceled_date_time': 'canceledDateTime',
+        'last_modified_date_time': 'lastModifiedDateTime',
+        'account': 'companyID',
+        'location': 'companyLocationID',
+        'status': 'status',
+        'creator_resource': 'creatorResourceID',
+        'canceled_by_resource': 'canceledByResourceID',
+    }
+
     def __str__(self):
         return str(self.id)
 
@@ -875,6 +891,11 @@ class ServiceCallTicket(TimeStampedModel):
         'Resource', through='ServiceCallTicketResource',
         related_name='resource_service_call_ticket'
     )
+
+    AUTOTASK_FIELDS = {
+        'service_call': 'serviceCallID',
+        'ticket': 'ticketID',
+    }
 
     def __str__(self):
         return str(self.id)
@@ -893,6 +914,11 @@ class ServiceCallTask(TimeStampedModel):
         related_name='resource_service_call_task'
     )
 
+    AUTOTASK_FIELDS = {
+        'service_call': 'serviceCallID',
+        'task': 'taskID',
+    }
+
     def __str__(self):
         return str(self.id)
 
@@ -902,6 +928,11 @@ class ServiceCallTicketResource(TimeStampedModel):
         'ServiceCallTicket', on_delete=models.CASCADE)
     resource = models.ForeignKey('Resource', on_delete=models.CASCADE)
 
+    AUTOTASK_FIELDS = {
+        'resource': 'resourceID',
+        'service_call_ticket': 'serviceCallTicketID',
+    }
+
     def __str__(self):
         return str(self.id)
 
@@ -910,6 +941,11 @@ class ServiceCallTaskResource(TimeStampedModel):
     service_call_task = models.ForeignKey(
         'ServiceCallTask', on_delete=models.CASCADE)
     resource = models.ForeignKey('Resource', on_delete=models.CASCADE)
+
+    AUTOTASK_FIELDS = {
+        'resource': 'resourceID',
+        'service_call_task': 'serviceCallTaskID',
+    }
 
     def __str__(self):
         return str(self.id)

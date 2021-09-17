@@ -26,11 +26,26 @@ class BatchQueryMixin:
     condition_pool = None
     condition_field_name = None
     batch_query_size = None
+    client = None
+    force_batch_query_size = None
 
     def __init__(self, full=False, *args, **kwargs):
         settings = DjautotaskSettings().get_settings()
         self.batch_query_size = settings.get('batch_query_size')
+        if self.force_batch_query_size:
+            self.batch_query_size = min(
+                self.force_batch_query_size,
+                self.batch_query_size
+            )
+        self.condition_pool = list(self.active_ids)
         super().__init__(full, *args, **kwargs)
+        self.client.add_condition(
+            A(
+                op='in',
+                field=self.condition_field_name,
+                value=self.condition_pool
+            )
+        )
 
     # another approach for sync to resolve an issue of AT REST API
     # query limitation(up to 500), especially when OR & IN conditions are used.
@@ -54,6 +69,10 @@ class BatchQueryMixin:
         for c in conditions:
             if c.field == self.condition_field_name:
                 c.value = batch_condition
+
+    @property
+    def active_ids(self):
+        raise NotImplementedError
 
 
 class Synchronizer:
@@ -270,6 +289,9 @@ class Synchronizer:
             entity_name=self.model_class.__bases__[0].__name__
         )
 
+    def create(self, **kwargs):
+        raise NotImplementedError()
+
     @log_sync_job
     def sync(self):
         sync_job_qset = self.get_sync_job_qset().filter(success=True)
@@ -350,6 +372,22 @@ class SyncRestRecordUDFMixin:
                     'KeyError when trying to access UDF '
                     'picklist label. {}'.format(e)
                 )
+
+
+class CreateRecordMixin:
+
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create an entity.
+        """
+        instance = self.model_class()
+        created_id = self.client.create(instance, **kwargs)
+
+        # get_single retrieves the newly created entity info, which includes
+        # generated/calculated fields from AT-side
+        created_instance = self.get_single(created_id)
+
+        return self.update_or_create_instance(created_instance['item'])
 
 
 class ContactSynchronizer(Synchronizer):
@@ -604,6 +642,7 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
     udf_class = models.TaskUDF
     completed_date_field = 'completedDateTime'
     condition_field_name = 'projectId'
+    last_updated_field = 'lastActivityDateTime'
 
     related_meta = {
         'assignedResourceID': (models.Resource, 'assigned_resource'),
@@ -616,19 +655,8 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
         'status': (models.Status, 'status'),
     }
 
-    def __init__(self, *args, **kwargs):
-        self.last_updated_field = 'lastActivityDateTime'
-        self.condition_pool = list(self.get_active_ids())
-        super().__init__(*args, **kwargs)
-        self.client.add_condition(
-            A(
-                op='in',
-                field=self.condition_field_name,
-                value=self.condition_pool
-            )
-        )
-
-    def get_active_ids(self):
+    @property
+    def active_ids(self):
         active_projects = models.Project.objects.exclude(
             Q(status__is_active=False) |
             Q(status__id=models.ProjectStatus.COMPLETE_ID)
@@ -781,6 +809,175 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         return instance
 
 
+class ServiceCallSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
+    client_class = api.ServiceCallsAPIClient
+    model_class = models.ServiceCallTracker
+    condition_field_name = 'companyID'
+    last_updated_field = 'lastModifiedDateTime'
+    force_batch_query_size = 169
+
+    related_meta = {
+        'companyID': (models.Account, 'account'),
+        'companyLocationID':
+            (models.AccountPhysicalLocation, 'location'),
+        'status': (models.ServiceCallStatus, 'status'),
+        'creatorResourceID': (models.Resource, 'creator_resource'),
+        'canceledByResourceID': (models.Resource, 'canceled_by_resource')
+    }
+
+    @property
+    def active_ids(self):
+        active_ids = models.Account.objects.filter(
+            active=True
+        ).values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.description = object_data.get('description')
+        instance.duration = Decimal(str(object_data.get('duration')))
+        instance.complete = object_data.get('isComplete')
+        instance.create_date_time = object_data.get('createDateTime')
+        instance.start_date_time = object_data.get('startDateTime')
+        instance.end_date_time = object_data.get('endDateTime')
+        instance.canceled_date_time = object_data.get('canceledDateTime')
+        instance.last_modified_date_time = \
+            object_data.get('lastModifiedDateTime')
+
+        self._set_datetime_attribute(instance, 'create_date_time')
+        self._set_datetime_attribute(instance, 'start_date_time')
+        self._set_datetime_attribute(instance, 'end_date_time')
+        self._set_datetime_attribute(instance, 'canceled_date_time')
+        self._set_datetime_attribute(instance, 'last_modified_date_time')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class ServiceCallTicketSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
+    client_class = api.ServiceCallTicketsAPIClient
+    model_class = models.ServiceCallTicketTracker
+    condition_field_name = 'ticketID'
+    last_updated_field = None
+    force_batch_query_size = 240
+
+    related_meta = {
+        'serviceCallID': (models.ServiceCall, 'service_call'),
+        'ticketID': (models.Ticket, 'ticket')
+    }
+
+    @property
+    def active_ids(self):
+        active_ids = models.Ticket.objects.all().\
+            values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class ServiceCallTaskSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
+    client_class = api.ServiceCallTasksAPIClient
+    model_class = models.ServiceCallTaskTracker
+    condition_field_name = 'taskID'
+    last_updated_field = None
+
+    # service_call_task shows errors w/ the value of batch_query_size
+    # larger than 215. The error: 404 - File or directory not found.</h2>
+    # <h3>The resource you are looking for might have been removed,
+    # had its name changed, or is temporarily unavailable.
+    force_batch_query_size = 215
+
+    related_meta = {
+        'serviceCallID': (models.ServiceCall, 'service_call'),
+        'taskID': (models.Task, 'task')
+    }
+
+    @property
+    def active_ids(self):
+        active_ids = models.Task.objects.exclude(
+            status=models.Status.COMPLETE_ID
+        ).values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class ServiceCallTicketResourceSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
+    client_class = api.ServiceCallTicketResourcesAPIClient
+    model_class = models.ServiceCallTicketResourceTracker
+    condition_field_name = 'serviceCallTicketID'
+    last_updated_field = None
+    force_batch_query_size = 304
+
+    related_meta = {
+        'serviceCallTicketID':
+            (models.ServiceCallTicket, 'service_call_ticket'),
+        'resourceID': (models.Resource, 'resource')
+    }
+
+    @property
+    def active_ids(self):
+        active_ids = models.ServiceCallTicket.objects.all().\
+            values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class ServiceCallTaskResourceSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
+    client_class = api.ServiceCallTaskResourcesAPIClient
+    model_class = models.ServiceCallTaskResourceTracker
+    condition_field_name = 'serviceCallTaskID'
+    last_updated_field = None
+    force_batch_query_size = 277
+
+    related_meta = {
+        'serviceCallTaskID':
+            (models.ServiceCallTask, 'service_call_task'),
+        'resourceID': (models.Resource, 'resource')
+    }
+
+    @property
+    def active_ids(self):
+        active_ids = models.ServiceCallTask.objects.all().\
+            values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
 class PicklistSynchronizer(Synchronizer):
     lookup_name = None
     lookup_key = 'value'
@@ -850,6 +1047,12 @@ class DisplayColorSynchronizer(PicklistSynchronizer):
     client_class = api.TicketCategoryPicklistAPIClient
     model_class = models.DisplayColorTracker
     lookup_name = 'displayColorRgb'
+
+
+class ServiceCallStatusSynchronizer(PicklistSynchronizer):
+    client_class = api.ServiceCallStatusPicklistAPIClient
+    model_class = models.ServiceCallStatusTracker
+    lookup_name = 'status'
 
 
 class TicketPicklistSynchronizer(PicklistSynchronizer):
