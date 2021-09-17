@@ -210,20 +210,6 @@ class Synchronizer:
             self.update_or_create_instance(api_instance['item'])
         return instance
 
-    def create(self, parent=None, **kwargs):
-        """
-        Make a request to Autotask to create an entity.
-        """
-        instance = self.model_class()
-        api_client = self.client_class()
-        created_id = api_client.create(instance, parent=parent, **kwargs)
-
-        # get_single retrieves the newly created entity info, which includes
-        # generated/calculated fields from AT-side
-        created_instance = self.get_single(created_id)
-
-        return self.update_or_create_instance(created_instance['item'])
-
     def update_or_create_instance(self, api_instance):
         """
         Creates and returns an instance if it does not already exist.
@@ -302,6 +288,9 @@ class Synchronizer:
         return models.SyncJob.objects.filter(
             entity_name=self.model_class.__bases__[0].__name__
         )
+
+    def create(self, **kwargs):
+        raise NotImplementedError()
 
     @log_sync_job
     def sync(self):
@@ -383,6 +372,22 @@ class SyncRestRecordUDFMixin:
                     'KeyError when trying to access UDF '
                     'picklist label. {}'.format(e)
                 )
+
+
+class CreateRecordMixin:
+
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create an entity.
+        """
+        instance = self.model_class()
+        created_id = self.client.create(instance, **kwargs)
+
+        # get_single retrieves the newly created entity info, which includes
+        # generated/calculated fields from AT-side
+        created_instance = self.get_single(created_id)
+
+        return self.update_or_create_instance(created_instance['item'])
 
 
 class ContactSynchronizer(Synchronizer):
@@ -804,7 +809,9 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         return instance
 
 
-class ServiceCallSynchronizer(BatchQueryMixin, Synchronizer):
+class ServiceCallSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
     client_class = api.ServiceCallsAPIClient
     model_class = models.ServiceCallTracker
     condition_field_name = 'companyID'
@@ -851,7 +858,9 @@ class ServiceCallSynchronizer(BatchQueryMixin, Synchronizer):
         return instance
 
 
-class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
+class ServiceCallTicketSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
     client_class = api.ServiceCallTicketsAPIClient
     model_class = models.ServiceCallTicketTracker
     condition_field_name = 'ticketID'
@@ -877,7 +886,9 @@ class ServiceCallTicketSynchronizer(BatchQueryMixin, Synchronizer):
         return instance
 
 
-class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
+class ServiceCallTaskSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
     client_class = api.ServiceCallTasksAPIClient
     model_class = models.ServiceCallTaskTracker
     condition_field_name = 'taskID'
@@ -909,7 +920,9 @@ class ServiceCallTaskSynchronizer(BatchQueryMixin, Synchronizer):
         return instance
 
 
-class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
+class ServiceCallTicketResourceSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
     client_class = api.ServiceCallTicketResourcesAPIClient
     model_class = models.ServiceCallTicketResourceTracker
     condition_field_name = 'serviceCallTicketID'
@@ -936,7 +949,9 @@ class ServiceCallTicketResourceSynchronizer(BatchQueryMixin, Synchronizer):
         return instance
 
 
-class ServiceCallTaskResourceSynchronizer(BatchQueryMixin, Synchronizer):
+class ServiceCallTaskResourceSynchronizer(
+        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
     client_class = api.ServiceCallTaskResourcesAPIClient
     model_class = models.ServiceCallTaskResourceTracker
     condition_field_name = 'serviceCallTaskID'

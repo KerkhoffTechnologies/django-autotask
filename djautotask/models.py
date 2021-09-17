@@ -640,7 +640,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         return api_client.update(
             self,
             self.get_updated_object(**kwargs),
-            self.project.id
+            self.project
         )
 
 

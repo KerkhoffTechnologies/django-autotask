@@ -538,17 +538,17 @@ class ChildAPIMixin:
             self.CHILD_API
         )
 
-    def update(self, instance, changed_fields, parent_id=None):
+    def update(self, instance, parent, changed_fields):
         # Only for updating records with models in the DB, not Dummy syncs
-        endpoint_url = self.get_child_url(parent_id)
+        endpoint_url = self.get_child_url(parent.id)
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
-    def create(self, instance, **kwargs):
-        parent = kwargs.pop('parent')
+    def create(self, instance, parent, **kwargs):
         endpoint_url = self.get_child_url(parent.id)
         body = self._format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
+
         return response.get('itemId')
 
 
@@ -608,11 +608,19 @@ class ServiceCallTicketsAPIClient(ChildAPIMixin, AutotaskAPIClient):
     PARENT_API = 'ServiceCalls'
     CHILD_API = 'Tickets'
 
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('service_call')
+        return super().create(instance, parent, **kwargs)
+
 
 class ServiceCallTicketResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTicketResources'
     PARENT_API = 'ServiceCallTickets'
     CHILD_API = 'Resources'
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('service_call_ticket')
+        return super().create(instance, parent, **kwargs)
 
 
 class ServiceCallTasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
@@ -620,11 +628,19 @@ class ServiceCallTasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     PARENT_API = 'ServiceCalls'
     CHILD_API = 'Tasks'
 
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('service_call')
+        return super().create(instance, parent, **kwargs)
+
 
 class ServiceCallTaskResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTaskResources'
     PARENT_API = 'ServiceCallTasks'
     CHILD_API = 'Resources'
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('service_call_task')
+        return super().create(instance, parent, **kwargs)
 
 
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
