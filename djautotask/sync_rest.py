@@ -181,6 +181,9 @@ class Synchronizer:
                     results.updated_count += 1
                 else:
                     results.skipped_count += 1
+            except TypeError as e:
+                logger.warning('{}'.format(e))
+                continue
             except InvalidObjectException as e:
                 logger.warning('{}'.format(e))
 
@@ -206,8 +209,13 @@ class Synchronizer:
 
     def fetch_sync_by_id(self, instance_id):
         api_instance = self.get_single(instance_id)
-        instance, created = \
-            self.update_or_create_instance(api_instance['item'])
+        try:
+            instance, created = \
+                self.update_or_create_instance(api_instance['item'])
+        except TypeError as e:
+            logger.warning('{}'.format(e))
+            instance = None
+
         return instance
 
     def update_or_create_instance(self, api_instance):
@@ -610,7 +618,7 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
 
     def fetch_sync_by_id(self, instance_id):
         instance = super().fetch_sync_by_id(instance_id)
-        if not instance.status or \
+        if instance and not instance.status or \
                 instance.status.id != models.Status.COMPLETE_ID:
             self.sync_related(instance)
         return instance
