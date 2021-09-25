@@ -208,13 +208,11 @@ class Synchronizer:
                     )
 
     def fetch_sync_by_id(self, instance_id):
+        instance = None
         api_instance = self.get_single(instance_id)
-        try:
+        if api_instance['item']:
             instance, created = \
                 self.update_or_create_instance(api_instance['item'])
-        except TypeError as e:
-            logger.warning('{}'.format(e))
-            instance = None
 
         return instance
 
