@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from djautotask import api_rest as api
 from djautotask import models
-from .api_rest import ApiCondition as A, AutotaskRecordNotFoundError
+from .api_rest import ApiCondition as A
 from .sync import InvalidObjectException, SyncResults, log_sync_job, \
     TicketNoteSynchronizer, TimeEntrySynchronizer, \
     TicketSecondaryResourceSynchronizer, ParentSynchronizer
