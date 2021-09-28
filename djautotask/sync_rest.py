@@ -208,7 +208,6 @@ class Synchronizer:
         api_instance = self.get_single(instance_id)
         instance, created = \
             self.update_or_create_instance(api_instance['item'])
-
         return instance
 
     def update_or_create_instance(self, api_instance):
