@@ -513,7 +513,12 @@ class AutotaskAPIClient(object):
 
     def get_single(self, instance_id):
         endpoint_url = '{}{}'.format(self.get_api_url(), instance_id)
-        return self.fetch_resource(endpoint_url)
+        response = self.fetch_resource(endpoint_url)
+        if not response['item']:
+            msg = 'Resource not found: {}'.format(endpoint_url)
+            logger.warning(msg)
+            raise AutotaskRecordNotFoundError(msg)
+        return response
 
     def update(self, instance, changed_fields):
         body = self._format_fields(instance, changed_fields)

@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from djautotask import api_rest as api
 from djautotask import models
-from .api_rest import ApiCondition as A
+from .api_rest import ApiCondition as A, AutotaskRecordNotFoundError
 from .sync import InvalidObjectException, SyncResults, log_sync_job, \
     TicketNoteSynchronizer, TimeEntrySynchronizer, \
     TicketSecondaryResourceSynchronizer, ParentSynchronizer
@@ -181,9 +181,6 @@ class Synchronizer:
                     results.updated_count += 1
                 else:
                     results.skipped_count += 1
-            except TypeError as e:
-                logger.warning('{}'.format(e))
-                continue
             except InvalidObjectException as e:
                 logger.warning('{}'.format(e))
 
@@ -208,11 +205,9 @@ class Synchronizer:
                     )
 
     def fetch_sync_by_id(self, instance_id):
-        instance = None
         api_instance = self.get_single(instance_id)
-        if api_instance['item']:
-            instance, created = \
-                self.update_or_create_instance(api_instance['item'])
+        instance, created = \
+            self.update_or_create_instance(api_instance['item'])
 
         return instance
 
@@ -616,7 +611,7 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
 
     def fetch_sync_by_id(self, instance_id):
         instance = super().fetch_sync_by_id(instance_id)
-        if instance and not instance.status or \
+        if not instance.status or \
                 instance.status.id != models.Status.COMPLETE_ID:
             self.sync_related(instance)
         return instance
