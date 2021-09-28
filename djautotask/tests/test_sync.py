@@ -616,24 +616,23 @@ class TestIssueTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestSubIssueTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestSubIssueTypeSynchronizer(PicklistSynchronizerRestTestMixin,
+                                   TestCase):
+    synchronizer_class = sync_rest.SubIssueTypeSynchronizer
     model_class = models.SubIssueTypeTracker
-    fixture = fixtures.API_SUB_ISSUE_TYPE_LIST
-    synchronizer = sync.SubIssueTypeSynchronizer
+    fixture = fixtures.API_SUB_ISSUE_TYPE_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_sub_issue_types()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestTicketTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestTicketTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.TicketTypeSynchronizer
     model_class = models.TicketTypeTracker
-    fixture = fixtures.API_TICKET_TYPE_LIST
-    synchronizer = sync.TicketTypeSynchronizer
+    fixture = fixtures.API_TICKET_TYPE_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_ticket_types()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
 class TestDisplayColorSynchronizer(PicklistSynchronizerRestTestMixin,
@@ -825,43 +824,28 @@ class TestAccountSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(account_qset.count(), 0)
 
 
-class TestAccountPhysicalLocationSynchronizer(SynchronizerTestMixin, TestCase):
+class TestAccountPhysicalLocationSynchronizer(SynchronizerRestTestMixin,
+                                              TestCase):
+    synchronizer_class = sync_rest.AccountPhysicalLocationSynchronizer
     model_class = models.AccountPhysicalLocationTracker
-    fixture = fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST[0]
-    update_field = "Name"
-    last_updated_field = None
+    fixture = fixtures.API_ACCOUNT_PHYSICAL_LOCATION
+    update_field = 'name'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.AccountPhysicalLocationSynchronizer()
         fixture_utils.init_accounts()
-        fixture_utils.init_account_physical_locations()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_account_physical_locations_call(
+            return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.account.id, object_data['AccountID'])
-        self.assertEqual(instance.name, object_data['Name'])
-        self.assertEqual(instance.active, object_data['Active'])
-        self.assertEqual(instance.primary, object_data['Primary'])
-
-    def test_sync_account_location(self):
-        self.assertGreater(
-            models.AccountPhysicalLocation.objects.all().count(), 0)
-        instance = \
-            models.AccountPhysicalLocation.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_stale_account_location(self):
-        account_qset = models.AccountPhysicalLocation.objects.all()
-        self.assertEqual(account_qset.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.AccountPhysicalLocationSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(account_qset.count(), 0)
+        self.assertEqual(instance.account.id, object_data['companyID'])
+        self.assertEqual(instance.name, object_data['name'])
+        self.assertEqual(instance.active, object_data['isActive'])
+        self.assertEqual(instance.primary, object_data['isPrimary'])
 
 
 class FilterProjectTestCase(TestCase):
@@ -1365,43 +1349,26 @@ class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(updated_count, 0)
 
 
-class TestAllocationCodeSynchronizer(SynchronizerTestMixin, TestCase):
+class TestAllocationCodeSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.AllocationCodeSynchronizer
     model_class = models.AllocationCodeTracker
     fixture = fixtures.API_ALLOCATION_CODE
-    update_field = "Name"
+    update_field = 'name'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.AllocationCodeSynchronizer()
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_use_types()
-        fixture_utils.init_allocation_codes()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_allocation_codes_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.name, object_data.get('Name'))
-        self.assertEqual(instance.description, object_data.get('Description'))
-        self.assertEqual(instance.active, object_data.get('Active'))
-        self.assertEqual(instance.use_type.id, object_data.get('UseType'))
-
-    def test_sync_allocation_code(self):
-
-        self.assertGreater(models.AllocationCode.objects.all().count(), 0)
-        instance = models.AllocationCode.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_allocation_code(self):
-        allocation_code_qset = models.AllocationCode.objects.all()
-        self.assertEqual(allocation_code_qset.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.AllocationCodeSynchronizer(full=True)
-        synchronizer.sync()
-
-        self.assertEqual(allocation_code_qset.count(), 0)
+        self.assertEqual(instance.name, object_data.get('name'))
+        self.assertEqual(instance.description, object_data.get('description'))
+        self.assertEqual(instance.active, object_data.get('isActive'))
+        self.assertEqual(instance.use_type.id, object_data.get('useType'))
 
 
 class TestRoleSynchronizer(SynchronizerRestTestMixin, TestCase):
@@ -1503,36 +1470,26 @@ class TestResourceServiceDeskRoleSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.role.id, json_data['roleID'])
 
 
-class TestContractSynchronizer(SynchronizerTestMixin, TestCase):
+class TestContractSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.ContractSynchronizer
     model_class = models.ContractTracker
-    synchronizer = sync.ContractSynchronizer()
     fixture = fixtures.API_CONTRACT
-    update_field = "ContractName"
+    update_field = 'name'
 
     def setUp(self):
         super().setUp()
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_accounts()
-        fixture_utils.init_contracts()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_contracts_call(return_data)
 
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.name, object_data['ContractName'])
-        self.assertEqual(instance.number, object_data['ContractNumber'])
-        self.assertEqual(instance.status, str(object_data['Status']))
-        self.assertEqual(instance.account.id, object_data['AccountID'])
-
-    def test_sync_contract(self):
-        """
-        Test to ensure synchronizer saves a contract instance locally.
-        """
-        self.assertGreater((models.Contract.objects.count()), 0)
-
-        instance = models.Contract.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
+        self.assertEqual(instance.name, object_data['contractName'])
+        self.assertEqual(instance.number, object_data['contractNumber'])
+        self.assertEqual(instance.status, str(object_data['status']))
+        self.assertEqual(instance.account.id, object_data['companyID'])
 
 
 class TestServiceCallSynchronizer(SynchronizerRestTestMixin, TestCase):
