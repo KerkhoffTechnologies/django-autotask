@@ -502,7 +502,7 @@ class AutotaskAPIClient(object):
     def get_conditions(self):
         return self.conditions
 
-    def remove_condtion(self, index):
+    def remove_condition(self, index):
         del self.conditions[index]
 
     def clear_conditions(self):
@@ -578,6 +578,18 @@ class ResourceRoleDepartmentsAPIClient(AutotaskAPIClient):
 
 class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
+
+
+class AllocationCodesAPIClient(AutotaskAPIClient):
+    API = 'BillingCodes'
+
+
+class ContractsAPIClient(AutotaskAPIClient):
+    API = 'Contracts'
+
+
+class AccountPhysicalLocationsAPIClient(AutotaskAPIClient):
+    API = 'CompanyLocations'
 
 
 class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):

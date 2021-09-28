@@ -619,27 +619,6 @@ class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
 
 
-class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.SubIssueTypeTracker
-    picklist_field = 'SubIssueType'
-
-    related_meta = {
-        'parentValue': (models.IssueType, 'parent_value'),
-    }
-
-    def _assign_field_data(self, instance, object_data):
-
-        self.set_relations(instance, object_data)
-        super()._assign_field_data(instance, object_data)
-
-        return instance
-
-
-class TicketTypeSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.TicketTypeTracker
-    picklist_field = 'TicketType'
-
-
 class ProjectStatusSynchronizer(PicklistSynchronizer):
     model_class = models.ProjectStatusTracker
     entity_type = 'Project'
@@ -764,29 +743,6 @@ class AccountSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
-
-
-class AccountPhysicalLocationSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.AccountPhysicalLocationTracker
-
-    related_meta = {
-        'AccountID': (models.Account, 'account'),
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.name = object_data.get('Name')
-        instance.active = object_data.get('Active')
-        instance.primary = object_data.get('Primary')
-        self.set_relations(instance, object_data)
-
-        return instance
-
-    def build_batch_queries(self, sync_job_qset):
-        batch_query_list = self._build_fk_batch(
-            models.Account, 'AccountID', sync_job_qset)
-
-        return batch_query_list
 
 
 class PhaseSynchronizer(Synchronizer):
@@ -978,43 +934,6 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer, ChildSynchronizer):
         instance = api.create_object('TimeEntry', entry_body)
 
         return self.update_or_create_instance(instance)
-
-
-class AllocationCodeSynchronizer(Synchronizer):
-    model_class = models.AllocationCodeTracker
-    last_updated_field = None
-
-    related_meta = {
-        'UseType': (models.UseType, 'use_type')
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.name = object_data.get('Name')
-        instance.description = object_data.get('Description')
-        instance.active = object_data.get('Active')
-
-        self.set_relations(instance, object_data)
-
-        return instance
-
-
-class ContractSynchronizer(Synchronizer):
-    model_class = models.ContractTracker
-
-    related_meta = {
-        'AccountID': (models.Account, 'account')
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.name = object_data.get('ContractName')
-        instance.number = object_data.get('ContractNumber')
-        instance.status = str(object_data.get('Status'))
-
-        self.set_relations(instance, object_data)
-
-        return instance
 
 
 class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
