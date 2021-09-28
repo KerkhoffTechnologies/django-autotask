@@ -266,13 +266,17 @@ class TestSyncIssueTypeCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_issue_types()
 
 
-class TestSyncSubIssueTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'SubIssueType'
-
+class TestSyncSubIssueTypeCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_SUB_ISSUE_TYPE_LIST,
+        mocks.service_api_get_ticket_picklist_call,
+        fixtures.API_SUB_ISSUE_TYPE_FIELD,
         'sub_issue_type',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_issue_types()
+        fixture_utils.init_sub_issue_types()
 
 
 class TestSyncTicketTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
@@ -385,15 +389,17 @@ class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncAccountLocationCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncAccountLocationCommand(AbstractBaseSyncRestTest, TestCase):
+    args = (
+        mocks.service_api_get_account_physical_locations_call,
+        fixtures.API_ACCOUNT_PHYSICAL_LOCATION,
+        'account_physical_location',
+    )
+
     def setUp(self):
         super().setUp()
         fixture_utils.init_accounts()
-
-    args = (
-        fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST,
-        'account_physical_location',
-    )
+        fixture_utils.init_account_physical_locations()
 
 
 class TestSyncProjectCommand(AbstractBaseSyncRestTest, TestCase):
@@ -471,11 +477,16 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_tickets()
 
 
-class TestAllocationCodeCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncAllocationCodeCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_ALLOCATION_CODE_LIST,
+        mocks.service_api_get_allocation_codes_call,
+        fixtures.API_ALLOCATION_CODE,
         'allocation_code',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_allocation_codes()
 
 
 class TestSyncRoleCommand(AbstractBaseSyncRestTest, TestCase):
@@ -533,11 +544,16 @@ class TestSyncResourceRoleDepartmentCommand(AbstractBaseSyncRestTest,
         fixture_utils.init_resource_role_departments()
 
 
-class TestContractCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncContractCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_CONTRACT_LIST,
+        mocks.service_api_get_contracts_call,
+        fixtures.API_CONTRACT,
         'contract',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_contracts()
 
 
 class TestSyncServiceCallCommand(AbstractBaseSyncRestTest, TestCase):
@@ -697,10 +713,10 @@ class TestSyncAllCommand(TestCase):
             TestSyncTicketNoteCommand,
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
-            TestAllocationCodeCommand,
+            TestSyncAllocationCodeCommand,
             TestSyncResourceRoleDepartmentCommand,
             TestSyncResourceServiceDeskRoleCommand,
-            TestContractCommand,
+            TestSyncContractCommand,
             TestSyncServiceCallStatusCommand,
             TestSyncServiceCallCommand,
             TestSyncServiceCallTicketCommand,
@@ -852,6 +868,11 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_service_call_statuses_call(
             fixtures.API_SERVICE_CALL_STATUS_FIELD)
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
+        mocks.service_api_get_contracts_call(fixtures.API_CONTRACT)
+        mocks.service_api_get_allocation_codes_call(
+            fixtures.API_ALLOCATION_CODE)
+        mocks.service_api_get_account_physical_locations_call(
+            fixtures.API_ACCOUNT_PHYSICAL_LOCATION)
         mocks.service_api_get_tickets_call(fixtures.API_TICKET)
         mocks.service_api_get_tasks_call(fixtures.API_TASK)
         mocks.service_api_get_projects_call(fixtures.API_PROJECT)
@@ -867,6 +888,10 @@ class TestSyncAllCommand(TestCase):
 
     def _call_empty_service_api(self):
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
+        mocks.service_api_get_contracts_call(fixtures.API_EMPTY)
+        mocks.service_api_get_allocation_codes_call(fixtures.API_EMPTY)
+        mocks.service_api_get_account_physical_locations_call(
+            fixtures.API_EMPTY)
         mocks.service_api_get_tickets_call(fixtures.API_EMPTY)
         mocks.service_api_get_tasks_call(fixtures.API_EMPTY)
         mocks.service_api_get_projects_call(fixtures.API_EMPTY)
@@ -883,10 +908,10 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_service_call_tasks_call(fixtures.API_EMPTY)
         mocks.service_api_get_service_call_task_resources_call(
             fixtures.API_EMPTY)
+        mocks.service_api_get_ticket_category_picklist_call({"fields": []})
+        mocks.service_api_get_ticket_picklist_call({"fields": []})
         mocks.service_api_get_license_types_call({"fields": []})
         mocks.service_api_get_use_types_call({"fields": []})
         mocks.service_api_get_task_type_links_call({"fields": []})
         mocks.service_api_get_account_types_call({"fields": []})
-        mocks.service_api_get_ticket_category_picklist_call({"fields": []})
-        mocks.service_api_get_ticket_picklist_call({"fields": []})
         mocks.service_api_get_service_call_statuses_call({"fields": []})

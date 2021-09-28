@@ -72,15 +72,19 @@ API_ACCOUNT_LIST = [
     }
 ]
 
+API_ACCOUNT_PHYSICAL_LOCATION_ITEMS = [
+    {
+        'id': 55,
+        'name': 'Primary Location',
+        'companyID': 174,
+        'isActive': True,
+        'isPrimary': True
+    }
+]
 API_ACCOUNT_PHYSICAL_LOCATION = {
-    'id': 55,
-    'Name': 'Primary Location',
-    'AccountID': 174,
-    'Active': True,
-    'Primary': True
+    "items": API_ACCOUNT_PHYSICAL_LOCATION_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-
-API_ACCOUNT_PHYSICAL_LOCATION_LIST = [API_ACCOUNT_PHYSICAL_LOCATION]
 
 API_PROJECT_STATUS_LIST = [
     {
@@ -317,6 +321,44 @@ API_ISSUE_TYPE_FIELD = {
                 },
             ],
             "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
+API_SUB_ISSUE_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "subIssueType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    'isActive': True,
+                    'isDefaultValue': False,
+                    'isSystem': False,
+                    'label': 'Rapid Response',
+                    'sortOrder': 5,
+                    'value': 2,
+                    'parentValue': None,
+                },
+                {
+                    'isActive': True,
+                    'isDefaultValue': False,
+                    'isSystem': False,
+                    'label': 'Hardware Request',
+                    'sortOrder': 7,
+                    'value': 3,
+                    'parentValue': None,
+                },
+            ],
+            "picklistParentValueField": "IssueType",
             "isSupportedWebhookField": False
         }
     ]
@@ -576,6 +618,7 @@ API_TICKET_PICKLIST_FIELD = {
         + API_PRIORITY_FIELD['fields']
         + API_QUEUE_FIELD['fields']
         + API_ISSUE_TYPE_FIELD['fields']
+        + API_SUB_ISSUE_TYPE_FIELD['fields']
         + API_SOURCE_FIELD['fields']
 }
 
@@ -648,27 +691,6 @@ API_TICKET_TYPE_LIST = [
         'Label': 'Incident',
         'SortOrder': 6,
         'Value': 2,
-        'parentValue': None,
-    },
-]
-
-API_SUB_ISSUE_TYPE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Rapid Response',
-        'SortOrder': 5,
-        'Value': 2,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Hardware Request',
-        'SortOrder': 7,
-        'Value': 3,
         'parentValue': None,
     },
 ]
@@ -941,19 +963,22 @@ API_USE_TYPE_FIELD = {
     ]
 }
 
+API_ALLOCATION_CODE_ITEMS = [
+    {
+        'id': 2,
+        'name': 'Finance',
+        'useType': 2,
+        'isActive': True,
+        'unitCost': 0.0000,
+        'unitPrice': 0.0000,
+        'externalNumber': 0,
+        'isExcludedFromNewContracts': False,
+    }
+]
 API_ALLOCATION_CODE = {
-    'id': 2,
-    'UserDefinedFields': None,
-    'Name': 'Finance',
-    'Type': 1,
-    'UseType': 2,
-    'Active': True,
-    'UnitCost': 0.0000,
-    'UnitPrice': 0.0000,
-    'ExternalNumber': 0,
-    'IsExcludedFromNewContracts': False,
+    "items": API_ALLOCATION_CODE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_ALLOCATION_CODE_LIST = [API_ALLOCATION_CODE]
 
 API_ROLE_ITEM = {
     'id': 29683396,
@@ -1011,31 +1036,35 @@ API_RESOURCE_SERVICE_DESK_ROLE = {
     "pageDetails": API_PAGE_DETAILS
 }
 
+API_CONTRACT_ITEMS = [
+    {
+        'id': 29684183,
+        'userDefinedFields': "",
+        'companyID': 174,
+        'billingPreference': 2,
+        'contractCategory': 15,
+        'contractName': "Upstate Document Providers - Hosted SaaS",
+        'contractNumber': "2343451",
+        'contractPeriodType': "m",
+        'contractType': 7,
+        'isDefaultContract': True,
+        'endDate': '2020-02-23T13:00:00Z',
+        'estimatedCost': 0.0000,
+        'estimatedHours': 0.0000,
+        'estimatedRevenue': 5795.00,
+        'setupFee': 995.0000,
+        'startDate': '2020-02-23T13:00:00Z',
+        'status': 1,
+        'timeReportingRequiresStartAndStopTimes': 1,
+        'serviceLevelAgreementID': 1,
+        'purchaseOrderNumber': "",
+        'internalCurrencySetupFee': 995.0000,
+    }
+]
 API_CONTRACT = {
-    'id': 29684183,
-    'UserDefinedFields': "",
-    'AccountID': 174,
-    'BillingPreference': 2,
-    'Compliance': True,
-    'ContractCategory': 15,
-    'ContractName': "Upstate Document Providers - Hosted SaaS",
-    'ContractNumber': "2343451",
-    'ContractPeriodType': "m",
-    'ContractType': 7,
-    'IsDefaultContract': True,
-    'EndDate': datetime(2020, 2, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
-    'EstimatedCost': 0.0000,
-    'EstimatedHours': 0.0000,
-    'EstimatedRevenue': 5795.00,
-    'SetupFee': 995.0000,
-    'StartDate': datetime(2020, 2, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
-    'Status': 1,
-    'TimeReportingRequiresStartAndStopTimes': 1,
-    'ServiceLevelAgreementID': 1,
-    'PurchaseOrderNumber': "",
-    'InternalCurrencySetupFee': 995.0000,
+    "items": API_CONTRACT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_CONTRACT_LIST = [API_CONTRACT]
 
 API_SERVICE_CALL_ITEMS = [
     {

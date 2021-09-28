@@ -978,6 +978,82 @@ class ServiceCallTaskResourceSynchronizer(
         return instance
 
 
+class AllocationCodeSynchronizer(Synchronizer):
+    client_class = api.AllocationCodesAPIClient
+    model_class = models.AllocationCodeTracker
+    last_updated_field = None
+
+    related_meta = {
+        'useType': (models.UseType, 'use_type')
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client.add_condition(A(op='eq', field='isActive', value=True))
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('name')
+        instance.description = object_data.get('description')
+        instance.active = object_data.get('isActive')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class ContractSynchronizer(Synchronizer):
+    client_class = api.ContractsAPIClient
+    model_class = models.ContractTracker
+    last_updated_field = None
+
+    related_meta = {
+        'companyID': (models.Account, 'account')
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client.add_condition(A(op='eq', field='status', value='1'))
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('contractName')
+        instance.number = object_data.get('contractNumber')
+        instance.status = str(object_data.get('status'))
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class AccountPhysicalLocationSynchronizer(BatchQueryMixin, Synchronizer):
+    client_class = api.AccountPhysicalLocationsAPIClient
+    model_class = models.AccountPhysicalLocationTracker
+    condition_field_name = 'companyID'
+    last_updated_field = None
+    force_batch_query_size = 165
+
+    related_meta = {
+        'companyID': (models.Account, 'account'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('name')
+        instance.active = object_data.get('isActive')
+        instance.primary = object_data.get('isPrimary')
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    @property
+    def active_ids(self):
+        active_ids = models.Account.objects.all().\
+            values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
+
 class PicklistSynchronizer(Synchronizer):
     lookup_name = None
     lookup_key = 'value'
@@ -1082,6 +1158,11 @@ class SourceSynchronizer(TicketPicklistSynchronizer):
 class IssueTypeSynchronizer(TicketPicklistSynchronizer):
     model_class = models.IssueTypeTracker
     lookup_name = 'issueType'
+
+
+class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.SubIssueTypeTracker
+    lookup_name = 'subIssueType'
 
 
 ###################################################################

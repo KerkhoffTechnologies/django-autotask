@@ -99,6 +99,21 @@ def service_api_get_contacts_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_contracts_call(return_value):
+    method_name = 'djautotask.api_rest.ContractsAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_allocation_codes_call(return_value):
+    method_name = 'djautotask.api_rest.AllocationCodesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_account_physical_locations_call(return_value):
+    method_name = 'djautotask.api_rest.AccountPhysicalLocationsAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_roles_call(return_value):
     method_name = 'djautotask.api_rest.RolesAPIClient.get'
     return create_mock_call(method_name, return_value)

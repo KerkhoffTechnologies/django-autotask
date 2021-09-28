@@ -166,7 +166,7 @@ def manage_full_sync_return_data(value):
         'Resource': fixtures.API_RESOURCE_LIST,
         'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST,
         'Account': fixtures.API_ACCOUNT_LIST,
-        'AccountPhysicalLocation': fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST,
+        'AccountPhysicalLocation': fixtures.API_ACCOUNT_PHYSICAL_LOCATION,
         'Project': fixtures.API_PROJECT,
         'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
         'Task': fixtures.API_TASK,
@@ -175,13 +175,13 @@ def manage_full_sync_return_data(value):
         'TicketNote': fixtures.API_TICKET_NOTE_LIST,
         'TaskNote': fixtures.API_TASK_NOTE_LIST,
         'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
-        'AllocationCode': fixtures.API_ALLOCATION_CODE_LIST,
+        'AllocationCode': fixtures.API_ALLOCATION_CODE,
         'Role': fixtures.API_ROLE,
         'Department': fixtures.API_DEPARTMENT,
         'ResourceRoleDepartment': fixtures.API_RESOURCE_ROLE_DEPARTMENT,
         'ResourceServiceDeskRole':
             fixtures.API_RESOURCE_SERVICE_DESK_ROLE,
-        'Contract': fixtures.API_CONTRACT_LIST,
+        'Contract': fixtures.API_CONTRACT,
         'ServiceCall': fixtures.API_SERVICE_CALL,
         'ServiceCallTicket': fixtures.API_SERVICE_CALL_TICKET,
         'ServiceCallTask': fixtures.API_SERVICE_CALL_TASK,
@@ -231,10 +231,6 @@ def manage_sync_picklist_return_data(wrapper, entity):
     specified in the query.
     """
     fixture_dict = {
-        'Ticket': {
-            'SubIssueType': fixtures.API_SUB_ISSUE_TYPE_LIST,
-            'TicketType': fixtures.API_TICKET_TYPE_LIST,
-        },
         'Project': {
             'Status': fixtures.API_PROJECT_STATUS_LIST,
             'Type': fixtures.API_PROJECT_TYPE_LIST,
@@ -300,14 +296,6 @@ def init_project_types():
     )
 
 
-def init_sub_issue_types():
-    sync_picklist_objects(
-        'SubIssueType',
-        fixtures.API_SUB_ISSUE_TYPE_LIST,
-        sync.SubIssueTypeSynchronizer
-    )
-
-
 def init_ticket_types():
     sync_picklist_objects(
         'TicketType',
@@ -328,6 +316,14 @@ def init_issue_types():
     models.IssueType.objects.all().delete()
     mocks.service_api_get_ticket_picklist_call(fixtures.API_ISSUE_TYPE_FIELD)
     synchronizer = syncrest.IssueTypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_sub_issue_types():
+    models.SubIssueType.objects.all().delete()
+    mocks.service_api_get_ticket_picklist_call(
+        fixtures.API_SUB_ISSUE_TYPE_FIELD)
+    synchronizer = syncrest.SubIssueTypeSynchronizer()
     return synchronizer.sync()
 
 
@@ -437,11 +433,12 @@ def init_accounts():
 
 
 def init_account_physical_locations():
-    sync_objects(
-        'AccountPhysicalLocation',
-        fixtures.API_ACCOUNT_PHYSICAL_LOCATION_LIST,
-        sync.AccountPhysicalLocationSynchronizer
+    models.AccountPhysicalLocation.objects.all().delete()
+    mocks.service_api_get_account_physical_locations_call(
+        fixtures.API_ACCOUNT_PHYSICAL_LOCATION
     )
+    synchronizer = syncrest.AccountPhysicalLocationSynchronizer()
+    return synchronizer.sync()
 
 
 def init_projects():
@@ -513,11 +510,10 @@ def init_time_entries():
 
 
 def init_allocation_codes():
-    sync_objects(
-        'AllocationCode',
-        fixtures.API_ALLOCATION_CODE_LIST,
-        sync.AllocationCodeSynchronizer
-    )
+    models.AllocationCode.objects.all().delete()
+    mocks.service_api_get_allocation_codes_call(fixtures.API_ALLOCATION_CODE)
+    synchronizer = syncrest.AllocationCodeSynchronizer()
+    return synchronizer.sync()
 
 
 def init_roles():
@@ -551,11 +547,10 @@ def init_resource_role_departments():
 
 
 def init_contracts():
-    sync_objects(
-        'Contract',
-        fixtures.API_CONTRACT_LIST,
-        sync.ContractSynchronizer
-    )
+    models.Contract.objects.all().delete()
+    mocks.service_api_get_contracts_call(fixtures.API_CONTRACT)
+    synchronizer = syncrest.ContractSynchronizer()
+    return synchronizer.sync()
 
 
 def init_service_calls():
