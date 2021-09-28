@@ -619,11 +619,6 @@ class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
 
 
-class TicketTypeSynchronizer(TicketPicklistSynchronizer):
-    model_class = models.TicketTypeTracker
-    picklist_field = 'TicketType'
-
-
 class ProjectStatusSynchronizer(PicklistSynchronizer):
     model_class = models.ProjectStatusTracker
     entity_type = 'Project'

@@ -63,7 +63,7 @@ class Command(BaseCommand):
              _('Ticket Category')),
             ('source', syncrest.SourceSynchronizer, _('Source')),
             ('issue_type', syncrest.IssueTypeSynchronizer, _('Issue Type')),
-            ('ticket_type', sync.TicketTypeSynchronizer, _('Ticket Type')),
+            ('ticket_type', syncrest.TicketTypeSynchronizer, _('Ticket Type')),
             ('sub_issue_type', syncrest.SubIssueTypeSynchronizer,
              _('Sub Issue Type')),
             ('ticket', syncrest.TicketSynchronizer, _('Ticket')),

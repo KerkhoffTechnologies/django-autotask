@@ -296,14 +296,6 @@ def init_project_types():
     )
 
 
-def init_ticket_types():
-    sync_picklist_objects(
-        'TicketType',
-        fixtures.API_TICKET_TYPE_LIST,
-        sync.TicketTypeSynchronizer
-    )
-
-
 def init_display_colors():
     models.DisplayColor.objects.all().delete()
     mocks.service_api_get_ticket_category_picklist_call(
@@ -324,6 +316,14 @@ def init_sub_issue_types():
     mocks.service_api_get_ticket_picklist_call(
         fixtures.API_SUB_ISSUE_TYPE_FIELD)
     synchronizer = syncrest.SubIssueTypeSynchronizer()
+    return synchronizer.sync()
+
+
+def init_ticket_types():
+    models.TicketType.objects.all().delete()
+    mocks.service_api_get_ticket_picklist_call(
+        fixtures.API_TICKET_TYPE_FIELD)
+    synchronizer = syncrest.TicketTypeSynchronizer()
     return synchronizer.sync()
 
 

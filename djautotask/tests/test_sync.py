@@ -626,14 +626,13 @@ class TestSubIssueTypeSynchronizer(PicklistSynchronizerRestTestMixin,
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestTicketTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestTicketTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.TicketTypeSynchronizer
     model_class = models.TicketTypeTracker
-    fixture = fixtures.API_TICKET_TYPE_LIST
-    synchronizer = sync.TicketTypeSynchronizer
+    fixture = fixtures.API_TICKET_TYPE_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_ticket_types()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
 class TestDisplayColorSynchronizer(PicklistSynchronizerRestTestMixin,

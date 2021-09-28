@@ -364,6 +364,44 @@ API_SUB_ISSUE_TYPE_FIELD = {
     ]
 }
 
+API_TICKET_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "ticketType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    'isActive': True,
+                    'isDefaultValue': False,
+                    'isSystem': False,
+                    'label': 'Service Request',
+                    'sortOrder': 5,
+                    'value': 3,
+                    'parentValue': None,
+                },
+                {
+                    'isActive': True,
+                    'isDefaultValue': False,
+                    'isSystem': False,
+                    'label': 'Incident',
+                    'sortOrder': 6,
+                    'value': 2,
+                    'parentValue': None,
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
 API_SERVICE_CALL_STATUS_FIELD = {
     "fields": [
         {
@@ -619,6 +657,7 @@ API_TICKET_PICKLIST_FIELD = {
         + API_QUEUE_FIELD['fields']
         + API_ISSUE_TYPE_FIELD['fields']
         + API_SUB_ISSUE_TYPE_FIELD['fields']
+        + API_TICKET_TYPE_FIELD['fields']
         + API_SOURCE_FIELD['fields']
 }
 
@@ -673,27 +712,6 @@ API_DISPLAY_COLOR_FIELD = {
         }
     ]
 }
-
-API_TICKET_TYPE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Service Request',
-        'SortOrder': 5,
-        'Value': 3,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': False,
-        'Label': 'Incident',
-        'SortOrder': 6,
-        'Value': 2,
-        'parentValue': None,
-    },
-]
 
 API_ACCOUNT_TYPE_FIELD = {
     "fields": [

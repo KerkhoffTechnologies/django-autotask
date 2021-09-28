@@ -1165,6 +1165,11 @@ class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
     lookup_name = 'subIssueType'
 
 
+class TicketTypeSynchronizer(TicketPicklistSynchronizer):
+    model_class = models.TicketTypeTracker
+    lookup_name = 'ticketType'
+
+
 ###################################################################
 # Dummy Synchronizers                                             #
 ###################################################################

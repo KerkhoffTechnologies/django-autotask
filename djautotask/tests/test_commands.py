@@ -279,13 +279,16 @@ class TestSyncSubIssueTypeCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_sub_issue_types()
 
 
-class TestSyncTicketTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'TicketType'
-
+class TestSyncTicketTypeCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_TICKET_TYPE_LIST,
+        mocks.service_api_get_ticket_picklist_call,
+        fixtures.API_TICKET_TYPE_FIELD,
         'ticket_type',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_ticket_types()
 
 
 class TestSyncAccountTypeCommand(PicklistSyncTest, TestCase):
