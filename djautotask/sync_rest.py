@@ -1164,6 +1164,10 @@ class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
     model_class = models.SubIssueTypeTracker
     lookup_name = 'subIssueType'
 
+    related_meta = {
+        'parentValue': (models.IssueType, 'parent_value'),
+    }
+
 
 class TicketTypeSynchronizer(TicketPicklistSynchronizer):
     model_class = models.TicketTypeTracker
