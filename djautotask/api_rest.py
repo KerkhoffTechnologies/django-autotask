@@ -700,6 +700,10 @@ class TicketPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Tickets'
 
 
+class ProjectPicklistAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'Projects'
+
+
 class TicketChecklistItemsAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'TicketChecklistItems'
     PARENT_API = 'Tickets'

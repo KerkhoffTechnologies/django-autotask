@@ -231,10 +231,6 @@ def manage_sync_picklist_return_data(wrapper, entity):
     specified in the query.
     """
     fixture_dict = {
-        'Project': {
-            'Status': fixtures.API_PROJECT_STATUS_LIST,
-            'Type': fixtures.API_PROJECT_TYPE_LIST,
-        },
         'TicketNote': {
             'NoteType': fixtures.API_NOTE_TYPE_LIST,
         },
@@ -281,19 +277,19 @@ def mock_udfs():
 
 
 def init_project_statuses():
-    sync_picklist_objects(
-        'Status',
-        fixtures.API_PROJECT_STATUS_LIST,
-        sync.ProjectStatusSynchronizer
-    )
+    models.ProjectStatus.objects.all().delete()
+    mocks.service_api_get_project_picklist_call(
+        fixtures.API_PROJECT_STATUS_FIELD)
+    synchronizer = syncrest.ProjectStatusSynchronizer()
+    return synchronizer.sync()
 
 
 def init_project_types():
-    sync_picklist_objects(
-        'Type',
-        fixtures.API_PROJECT_TYPE_LIST,
-        sync.ProjectTypeSynchronizer
-    )
+    models.ProjectType.objects.all().delete()
+    mocks.service_api_get_project_picklist_call(
+        fixtures.API_PROJECT_TYPE_FIELD)
+    synchronizer = syncrest.ProjectTypeSynchronizer()
+    return synchronizer.sync()
 
 
 def init_display_colors():

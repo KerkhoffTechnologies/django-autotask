@@ -619,18 +619,6 @@ class TicketPicklistSynchronizer(PicklistSynchronizer):
     entity_type = 'Ticket'
 
 
-class ProjectStatusSynchronizer(PicklistSynchronizer):
-    model_class = models.ProjectStatusTracker
-    entity_type = 'Project'
-    picklist_field = 'Status'
-
-
-class ProjectTypeSynchronizer(PicklistSynchronizer):
-    model_class = models.ProjectTypeTracker
-    entity_type = 'Project'
-    picklist_field = 'Type'
-
-
 class NoteTypeSynchronizer(PicklistSynchronizer):
     # We are using ticket note to get the picklist, but like Ticket Status
     # and Task Status both use one status type, so do Ticket and Task notes
