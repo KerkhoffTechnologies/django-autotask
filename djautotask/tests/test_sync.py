@@ -566,36 +566,23 @@ class TestQueueSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestProjectStatusSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestProjectStatusSynchronizer(PicklistSynchronizerRestTestMixin,
+                                    TestCase):
+    synchronizer_class = sync_rest.ProjectStatusSynchronizer
     model_class = models.ProjectStatusTracker
-    fixture = fixtures.API_PROJECT_STATUS_LIST
-    synchronizer = sync.ProjectStatusSynchronizer
+    fixture = fixtures.API_PROJECT_STATUS_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_project_statuses()
-
-    def test_skips(self):
-        updated_instance = deepcopy(self.fixture[1])
-        updated_instance['Label'] = 'New Data'
-
-        a, updated_count, skipped_count, d = self._sync(updated_instance)
-        self.assertEqual(updated_count, 1)
-        self.assertEqual(skipped_count, 0)
-
-        a, updated_count, skipped_count, d = self._sync(updated_instance)
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
+    def _call_api(self, return_data):
+        return mocks.service_api_get_project_picklist_call(return_data)
 
 
-class TestProjectTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+class TestProjectTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.ProjectTypeSynchronizer
     model_class = models.ProjectTypeTracker
-    fixture = fixtures.API_PROJECT_TYPE_LIST
-    synchronizer = sync.ProjectTypeSynchronizer
+    fixture = fixtures.API_PROJECT_TYPE_FIELD
 
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_project_types()
+    def _call_api(self, return_data):
+        return mocks.service_api_get_project_picklist_call(return_data)
 
 
 class TestSourceSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
@@ -851,6 +838,7 @@ class TestAccountPhysicalLocationSynchronizer(SynchronizerRestTestMixin,
 class FilterProjectTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
+        fixture_utils.init_project_statuses()
         cls.inactive_status = models.ProjectStatus.objects.create(
             label='New (Inactive)', is_active=False, id=9)
         cls.inactive_project = \
@@ -859,8 +847,8 @@ class FilterProjectTestCase(TestCase):
         cls.inactive_project.save()
 
 
-class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerRestTestMixin,
-                              TestCase):
+class TestProjectSynchronizer(SynchronizerRestTestMixin,
+                              FilterProjectTestCase):
     synchronizer_class = sync_rest.ProjectSynchronizer
     model_class = models.ProjectTracker
     fixture = fixtures.API_PROJECT
@@ -872,7 +860,6 @@ class TestProjectSynchronizer(FilterProjectTestCase, SynchronizerRestTestMixin,
         fixture_utils.init_resources()
         fixture_utils.init_accounts()
         fixture_utils.init_departments()
-        fixture_utils.init_project_statuses()
         fixture_utils.init_project_types()
         self._sync(self.fixture)
 

@@ -86,57 +86,6 @@ API_ACCOUNT_PHYSICAL_LOCATION = {
     "pageDetails": API_PAGE_DETAILS
 }
 
-API_PROJECT_STATUS_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Inactive',
-        'SortOrder': 1,
-        'Value': 0,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'New',
-        'SortOrder': 2,
-        'Value': 1,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Complete',
-        'SortOrder': 8,
-        'Value': 5,
-        'parentValue': None,
-    }
-]
-
-API_PROJECT_TYPE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Client',
-        'SortOrder': 5,
-        'Value': 5,
-        'parentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Internal',
-        'SortOrder': 4,
-        'Value': 4,
-        'parentValue': None,
-    }
-]
-
 API_PROJECT_ITEM = {
         'id': 4,
         'projectName': 'Software Project',
@@ -683,6 +632,97 @@ API_TICKET_CATEGORY_LIST = [
         'ApiOnly': False
     }
 ]
+
+API_PROJECT_STATUS_FIELD = {
+    "fields": [
+        {
+            "name": "status",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    'isActive': True,
+                    'isDefaultValue': False,
+                    'isSystem': True,
+                    'label': 'Inactive',
+                    'sortOrder': 1,
+                    'value': 2,
+                    'parentValue': None,
+                },
+                {
+                    'isActive': True,
+                    'isDefaultValue': False,
+                    'isSystem': True,
+                    'label': 'New',
+                    'sortOrder': 2,
+                    'value': 1,
+                    'parentValue': None,
+                },
+                {
+                    'isActive': False,
+                    'isDefaultValue': False,
+                    'isSystem': True,
+                    'label': 'Complete',
+                    'sortOrder': 8,
+                    'value': 5,
+                    'parentValue': None,
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
+API_PROJECT_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "projectType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    'isActive': True,
+                    'isDefaultValue': False,
+                    'isSystem': True,
+                    'label': 'Client',
+                    'sortOrder': 5,
+                    'value': 5,
+                    'parentValue': None,
+                },
+                {
+                    'isActive': True,
+                    'isDefaultValue': False,
+                    'isSystem': True,
+                    'label': 'Internal',
+                    'sortOrder': 4,
+                    'value': 4,
+                    'parentValue': None,
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
+API_PROJECT_PICKLIST_FIELD = {
+    "fields":
+        API_PROJECT_STATUS_FIELD['fields']
+        + API_PROJECT_TYPE_FIELD['fields']
+}
 
 API_DISPLAY_COLOR_FIELD = {
     "fields": [

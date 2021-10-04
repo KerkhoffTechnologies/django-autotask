@@ -218,7 +218,7 @@ class Synchronizer:
         api_instance = self.remove_null_characters(api_instance)
         try:
             instance_pk = api_instance[self.lookup_key]
-            instance = self.model_class.objects.get(pk=instance_pk)
+            instance = self.model_class.objects.get(pk=int(instance_pk))
         except self.model_class.DoesNotExist:
             instance = self.model_class()
             result = CREATED
@@ -1172,6 +1172,20 @@ class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
 class TicketTypeSynchronizer(TicketPicklistSynchronizer):
     model_class = models.TicketTypeTracker
     lookup_name = 'ticketType'
+
+
+class ProjectPicklistSynchronizer(PicklistSynchronizer):
+    client_class = api.ProjectPicklistAPIClient
+
+
+class ProjectStatusSynchronizer(ProjectPicklistSynchronizer):
+    model_class = models.ProjectStatusTracker
+    lookup_name = 'status'
+
+
+class ProjectTypeSynchronizer(ProjectPicklistSynchronizer):
+    model_class = models.ProjectTypeTracker
+    lookup_name = 'projectType'
 
 
 ###################################################################

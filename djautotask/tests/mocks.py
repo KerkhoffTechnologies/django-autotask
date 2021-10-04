@@ -159,6 +159,11 @@ def service_api_get_ticket_picklist_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_project_picklist_call(return_value):
+    method_name = 'djautotask.api_rest.ProjectPicklistAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_license_types_call(return_value):
     method_name = 'djautotask.api_rest.LicenseTypesAPIClient.get'
     return create_mock_call(method_name, return_value)

@@ -224,22 +224,28 @@ class TestSyncQueueCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_queues()
 
 
-class TestSyncProjectStatusCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'Status'
-
+class TestSyncProjectStatusCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_PROJECT_STATUS_LIST,
+        mocks.service_api_get_project_picklist_call,
+        fixtures.API_PROJECT_STATUS_FIELD,
         'project_status',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_statuses()
 
-class TestSyncProjectTypeCommand(AbstractPicklistSyncCommandTest, TestCase):
-    field_name = 'Type'
 
+class TestSyncProjectTypeCommand(PicklistSyncTest, TestCase):
     args = (
-        fixtures.API_PROJECT_TYPE_LIST,
+        mocks.service_api_get_project_picklist_call,
+        fixtures.API_PROJECT_TYPE_FIELD,
         'project_type',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_types()
 
 
 class TestSyncSourceCommand(PicklistSyncTest, TestCase):
@@ -868,6 +874,8 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_DISPLAY_COLOR_FIELD)
         mocks.service_api_get_ticket_picklist_call(
             fixtures.API_TICKET_PICKLIST_FIELD)
+        mocks.service_api_get_project_picklist_call(
+            fixtures.API_PROJECT_PICKLIST_FIELD)
         mocks.service_api_get_service_call_statuses_call(
             fixtures.API_SERVICE_CALL_STATUS_FIELD)
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
@@ -913,6 +921,7 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_EMPTY)
         mocks.service_api_get_ticket_category_picklist_call({"fields": []})
         mocks.service_api_get_ticket_picklist_call({"fields": []})
+        mocks.service_api_get_project_picklist_call({"fields": []})
         mocks.service_api_get_license_types_call({"fields": []})
         mocks.service_api_get_use_types_call({"fields": []})
         mocks.service_api_get_task_type_links_call({"fields": []})
