@@ -615,6 +615,18 @@ class ProjectsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
 
+class TicketCategoriesAPIClient(AutotaskAPIClient):
+    API = 'TicketCategories'
+
+
+class TaskPredecessorsAPIClient(AutotaskAPIClient):
+    API = 'TaskPredecessors'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
 class ServiceCallsAPIClient(AutotaskAPIClient):
     API = 'ServiceCalls'
 

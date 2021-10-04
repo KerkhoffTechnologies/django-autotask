@@ -610,28 +610,21 @@ API_TICKET_PICKLIST_FIELD = {
         + API_SOURCE_FIELD['fields']
 }
 
-API_TICKET_CATEGORY_LIST = [
+API_TICKET_CATEGORY_ITEMS = [
     {
         'id': 5,
-        'UserDefinedFields': '',
-        'Name': 'Standard (non-editable)',
-        'Nickname': '',
-        'Active': False,
-        'DisplayColorRGB': 19,
-        'GlobalDefault': False,
-        'ApiOnly': False
+        'name': 'Standard (non-editable)',
+        'nickname': '',
+        'isActive': False,
+        'displayColorRGB': 19,
+        'isGlobalDefault': False,
+        'isApiOnly': False
     },
-    {
-        'id': 3,
-        'UserDefinedFields': '',
-        'Name': '',
-        'Nickname': 'AEM Alert',
-        'Active': False,
-        'DisplayColorRGB': 21,
-        'GlobalDefault': False,
-        'ApiOnly': False
-    }
 ]
+API_TICKET_CATEGORY = {
+    "items": API_TICKET_CATEGORY_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
 
 API_PROJECT_STATUS_FIELD = {
     "fields": [
@@ -1194,14 +1187,18 @@ API_SERVICE_CALL_TASK_RESOURCE = {
     "pageDetails": API_PAGE_DETAILS
 }
 
+API_TASK_PREDECESSOR_ITEMS = [
+    {
+        'id': 1,
+        'lagDays': 0,
+        'predecessorTaskID': API_TASK_ITEM['id'],
+        'successorTaskID': 7755,
+    }
+]
 API_TASK_PREDECESSOR = {
-    'id': 1,
-    'UserDefinedFields': None,
-    'LagDays': 0,
-    'PredecessorTaskID': API_TASK_ITEM['id'],
-    'SuccessorTaskID': 7755,
+    "items": API_TASK_PREDECESSOR_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_TASK_PREDECESSOR_LIST = [API_TASK_PREDECESSOR]
 
 API_UDF_LIST = [
     {

@@ -168,7 +168,7 @@ def manage_full_sync_return_data(value):
         'Account': fixtures.API_ACCOUNT_LIST,
         'AccountPhysicalLocation': fixtures.API_ACCOUNT_PHYSICAL_LOCATION,
         'Project': fixtures.API_PROJECT,
-        'TicketCategory': fixtures.API_TICKET_CATEGORY_LIST,
+        'TicketCategory': fixtures.API_TICKET_CATEGORY,
         'Task': fixtures.API_TASK,
         'Phase': fixtures.API_PHASE_LIST,
         'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
@@ -189,7 +189,7 @@ def manage_full_sync_return_data(value):
             fixtures.API_SERVICE_CALL_TICKET_RESOURCE,
         'ServiceCallTaskResource':
             fixtures.API_SERVICE_CALL_TASK_RESOURCE,
-        'TaskPredecessor': fixtures.API_TASK_PREDECESSOR_LIST,
+        'TaskPredecessor': fixtures.API_TASK_PREDECESSOR,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
@@ -390,11 +390,17 @@ def init_service_call_statuses():
 
 
 def init_ticket_categories():
-    sync_objects(
-        'TicketCategory',
-        fixtures.API_TICKET_CATEGORY_LIST,
-        sync.TicketCategorySynchronizer
-    )
+    models.TicketCategory.objects.all().delete()
+    mocks.service_api_get_ticket_categories_call(fixtures.API_TICKET_CATEGORY)
+    synchronizer = syncrest.TicketCategorySynchronizer()
+    return synchronizer.sync()
+
+
+def init_task_predecessors():
+    models.TaskPredecessor.objects.all().delete()
+    mocks.service_api_get_task_predecessors_call(fixtures.API_TASK_PREDECESSOR)
+    synchronizer = syncrest.TaskPredecessorSynchronizer()
+    return synchronizer.sync()
 
 
 def init_tickets():
@@ -586,11 +592,3 @@ def init_service_call_task_resources():
         fixtures.API_SERVICE_CALL_TASK_RESOURCE)
     synchronizer = syncrest.ServiceCallTaskResourceSynchronizer()
     return synchronizer.sync()
-
-
-def init_task_predecessors():
-    sync_objects(
-        'TaskPredecessor',
-        fixtures.API_TASK_PREDECESSOR_LIST,
-        sync.TaskPredecessorSynchronizer
-    )
