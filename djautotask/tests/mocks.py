@@ -149,6 +149,16 @@ def service_api_get_projects_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_ticket_categories_call(return_value):
+    method_name = 'djautotask.api_rest.TicketCategoriesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_task_predecessors_call(return_value):
+    method_name = 'djautotask.api_rest.TaskPredecessorsAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_ticket_category_picklist_call(return_value):
     method_name = 'djautotask.api_rest.TicketCategoryPicklistAPIClient.get'
     return create_mock_call(method_name, return_value)

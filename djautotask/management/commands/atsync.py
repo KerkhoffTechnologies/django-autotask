@@ -60,7 +60,7 @@ class Command(BaseCommand):
             ('task', syncrest.TaskSynchronizer, _('Task')),
             ('display_color', syncrest.DisplayColorSynchronizer,
              _('Display Color')),
-            ('ticket_category', sync.TicketCategorySynchronizer,
+            ('ticket_category', syncrest.TicketCategorySynchronizer,
              _('Ticket Category')),
             ('source', syncrest.SourceSynchronizer, _('Source')),
             ('issue_type', syncrest.IssueTypeSynchronizer, _('Issue Type')),
@@ -119,7 +119,7 @@ class Command(BaseCommand):
                 syncrest.ServiceCallTaskResourceSynchronizer,
                 _('Service Call Task Resource')
             ),
-            ('task_predecessor', sync.TaskPredecessorSynchronizer,
+            ('task_predecessor', syncrest.TaskPredecessorSynchronizer,
              _('Task Predecessor')),
             ('ticket_udf', sync.TicketUDFSynchronizer, _('Ticket UDF')),
             ('task_udf', sync.TaskUDFSynchronizer, _('Task UDF')),

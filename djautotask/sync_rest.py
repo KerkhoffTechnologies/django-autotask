@@ -809,6 +809,55 @@ class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
         return instance
 
 
+class TicketCategorySynchronizer(Synchronizer):
+    client_class = api.TicketCategoriesAPIClient
+    model_class = models.TicketCategoryTracker
+    last_updated_field = None
+
+    related_meta = {
+        'displayColorRGB': (models.DisplayColor, 'display_color')
+    }
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.name = json_data.get('name')
+        instance.active = json_data.get('isActive')
+
+        self.set_relations(instance, json_data)
+
+        return instance
+
+
+class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
+    client_class = api.TaskPredecessorsAPIClient
+    model_class = models.TaskPredecessorTracker
+    condition_field_name = 'predecessorTaskID'
+    last_updated_field = None
+    force_batch_query_size = 224
+
+    related_meta = {
+        'predecessorTaskID': (models.Task, 'predecessor_task'),
+        'successorTaskID': (models.Task, 'successor_task'),
+    }
+
+    @property
+    def active_ids(self):
+        active_tasks = models.Task.objects.exclude(
+            Q(status__is_active=False) |
+            Q(status__id=models.Status.COMPLETE_ID)
+        ).values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_tasks
+
+    def _assign_field_data(self, instance, json_data):
+        instance.id = json_data['id']
+        instance.lag_days = json_data.get('lagDays')
+
+        self.set_relations(instance, json_data)
+
+        return instance
+
+
 class ServiceCallSynchronizer(
         CreateRecordMixin, BatchQueryMixin, Synchronizer):
 

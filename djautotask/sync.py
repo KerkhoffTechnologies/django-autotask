@@ -649,24 +649,6 @@ class ResourceSynchronizer(Synchronizer):
         return instance
 
 
-class TicketCategorySynchronizer(Synchronizer):
-    model_class = models.TicketCategoryTracker
-    last_updated_field = None
-
-    related_meta = {
-        'DisplayColorRGB': (models.DisplayColor, 'display_color')
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.name = object_data.get('Name')
-        instance.active = object_data.get('Active')
-
-        self.set_relations(instance, object_data)
-
-        return instance
-
-
 class SecondaryResourceSyncronizer(Synchronizer):
     def create(self, resource, role, entity):
         """
@@ -922,46 +904,6 @@ class TimeEntrySynchronizer(BatchQueryMixin, Synchronizer, ChildSynchronizer):
         instance = api.create_object('TimeEntry', entry_body)
 
         return self.update_or_create_instance(instance)
-
-
-class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
-    model_class = models.TaskPredecessorTracker
-
-    related_meta = {
-        'PredecessorTaskID': (models.Task, 'predecessor_task'),
-        'SuccessorTaskID': (models.Task, 'successor_task'),
-    }
-
-    def build_batch_queries(self, sync_job_qset):
-        object_id_fields = ['PredecessorTaskID', 'SuccessorTaskID']
-
-        batch_query_list = self._build_fk_batch(
-            models.Task, object_id_fields, sync_job_qset)
-
-        return batch_query_list
-
-    def get_batch_size(self):
-        # We limit the amount of query conditions on each query to 400
-        # by default. Autotask says they won't support any more than
-        # 500 conditions but we've observed queries fail with 470
-        # conditions. Since we are applying two OR conditions we need
-        # to half the size of our regular batch size that only applies
-        # one OR condition.
-        return int(self.batch_size / 2)
-
-    def _set_or_conditions(self, batch, object_id_fields, query):
-        # Create queries from batches of records
-        for object_id in batch:
-            query.OR(object_id_fields[0], query.Equals, object_id)
-            query.OR(object_id_fields[1], query.Equals, object_id)
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.lag_days = object_data.get('LagDays')
-
-        self.set_relations(instance, object_data)
-
-        return instance
 
 
 class TicketUDFSynchronizer(UDFSynchronizer):
