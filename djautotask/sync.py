@@ -1,6 +1,7 @@
 import logging
 
 from suds.client import Client
+from atws.connection import ATWSAuthException
 from atws.wrapper import AutotaskProcessException, AutotaskAPIException
 from atws import Query, helpers, picklist
 from django.db import transaction, IntegrityError
@@ -53,6 +54,9 @@ def log_sync_job(f):
             sync_job.message = api.parse_autotaskapiexception(e)
             sync_job.success = False
             raise
+        except ATWSAuthException as e:
+            sync_job.message = e
+            sync_job.success = False
         except Exception as e:
             sync_job.message = str(e.args[0])
             sync_job.success = False
