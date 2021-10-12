@@ -9,9 +9,7 @@ from django.utils import timezone
 from djautotask import api_rest as api
 from djautotask import models
 from .api_rest import ApiCondition as A
-from .sync import InvalidObjectException, SyncResults, log_sync_job, \
-    TicketNoteSynchronizer, TimeEntrySynchronizer, \
-    TicketSecondaryResourceSynchronizer, ParentSynchronizer
+from .sync import InvalidObjectException, SyncResults, log_sync_job
 from .utils import DjautotaskSettings
 
 CREATED = 1
@@ -19,6 +17,70 @@ UPDATED = 2
 SKIPPED = 3
 
 logger = logging.getLogger(__name__)
+
+
+class ParentSynchronizer:
+
+    def sync_related(self, instance):
+        raise NotImplementedError
+
+    def sync_children(self, *args):
+        for synchronizer, query_params in args:
+            created_count, updated_count, skipped_count, deleted_count = \
+                synchronizer.callback_sync(
+                    query_params
+                )
+            msg = '{} Child Sync - Created: {},' \
+                  ' Updated: {}, Skipped: {}, Deleted: {}'.format(
+                    synchronizer.model_class.__bases__[0].__name__,
+                    created_count,
+                    updated_count,
+                    skipped_count,
+                    deleted_count
+                  )
+
+            logger.info(msg)
+
+
+class ChildSynchronizer:
+
+    def _child_instance_ids(self, query_params):
+        ids = self.model_class.objects.filter(
+            ticket__id=query_params[1]
+        ).order_by('id').values_list('id', flat=True)
+
+        return set(ids)
+
+    def _get_children(self, results, query_params):
+        parent_field, parent_id = query_params
+        self.client.add_condition(
+            A(
+                op='eq',
+                field=parent_field,
+                value=parent_id
+            )
+        )
+
+        logger.info('Fetching {} records.'.format(
+            self.model_class.__bases__[0].__name__))
+        return self.fetch_records(results)
+
+    def callback_sync(self, query_params):
+        results = SyncResults()
+
+        # Set of IDs of all records prior to sync,
+        # to find stale records for deletion.
+        initial_ids = self._child_instance_ids(query_params)
+
+        results = self._get_children(results, query_params)
+
+        results.deleted_count = self.prune_stale_records(
+            initial_ids,
+            results.synced_ids
+        )
+
+        return results.created_count, results.updated_count, \
+            results.skipped_count, results.deleted_count
 
 
 class BatchQueryMixin:
@@ -37,8 +99,11 @@ class BatchQueryMixin:
                 self.force_batch_query_size,
                 self.batch_query_size
             )
-        self.condition_pool = list(self.active_ids)
         super().__init__(full, *args, **kwargs)
+        self._add_conditions()
+
+    def _add_conditions(self):
+        self.condition_pool = list(self.active_ids)
         self.client.add_condition(
             A(
                 op='in',
@@ -60,19 +125,60 @@ class BatchQueryMixin:
             batch_condition = field_ids[:batch_query_size]
             del field_ids[:batch_query_size]
             self._replace_batch_conditions(self.client.conditions,
-                                           batch_condition)
+                                           batch_condition,
+                                           self.condition_field_name)
             self.fetch_records(results)
 
         return results
 
-    def _replace_batch_conditions(self, conditions, batch_condition):
+    def _replace_batch_conditions(self, conditions, batch_condition,
+                                  condition_field_name):
         for c in conditions:
-            if c.field == self.condition_field_name:
+            if c.field == condition_field_name:
                 c.value = batch_condition
 
     @property
     def active_ids(self):
         raise NotImplementedError
+
+
+class MultiConditionBatchQueryMixin(BatchQueryMixin):
+
+    def _add_conditions(self):
+        self.multi_conditions = {}
+        for field_name, active_ids in self.active_ids.items():
+            self.multi_conditions.update({
+                field_name: A(
+                    op='in',
+                    field=field_name,
+                    value=active_ids
+                )
+            })
+
+    def get(self, results):
+
+        for condition_field_name, condition in self.multi_conditions.items():
+            field_ids = condition.value
+            batch_query_size = self.batch_query_size
+            idx_condition = self.client.add_condition(
+                A(
+                    op='in',
+                    field=condition_field_name,
+                    value=[]
+                )
+            )
+
+            while field_ids:
+                batch_condition = field_ids[:batch_query_size]
+                del field_ids[:batch_query_size]
+                self._replace_batch_conditions(self.client.conditions,
+                                               batch_condition,
+                                               condition_field_name)
+                self.fetch_records(results)
+
+            self.client.remove_condition(idx_condition)
+
+        return results
 
 
 class Synchronizer:
@@ -519,7 +625,6 @@ class TicketTaskMixin:
         )
 
 
-# ParentSynchronizer: using SOAP API
 class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
                          ParentSynchronizer):
     client_class = api.TicketsAPIClient
@@ -615,10 +720,9 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
             self.sync_related(instance)
         return instance
 
-    # method in ParentSynchronizer: using SOAP API
     def sync_related(self, instance):
         sync_classes = []
-        query_params = ('TicketID', instance.id)
+        query_params = ('ticketID', instance.id)
 
         sync_classes.append(
             (TicketNoteSynchronizer(), query_params)
@@ -710,6 +814,241 @@ class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
 
         self.set_relations(instance, json_data)
         return instance
+
+
+class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client.add_condition(
+            A(op='noteq', field='noteType',
+              value=models.NoteType.WORKFLOW_RULE_NOTE_ID)
+        )
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('title')
+        instance.description = object_data.get('description')
+        instance.create_date_time = object_data.get('createDateTime')
+        instance.last_activity_date = object_data.get('lastActivityDate')
+
+        self._set_datetime_attribute(instance, 'create_date_time')
+        self._set_datetime_attribute(instance, 'last_activity_date')
+
+        if instance.description:
+            # Autotask docs say the max description length is 3200
+            # characters but we've seen descriptions that are longer than that.
+            # So truncate the field to 3200 characters just in case.
+            instance.description = instance.description[:3200]
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+    # def create(self, **kwargs):
+    #     """
+    #     Make a request to Autotask to create a Note.
+    #     """
+    #
+    #     description = "{}\n\nNote was added by {} {}.".format(
+    #         kwargs['description'],
+    #         kwargs['resource'].first_name,
+    #         kwargs['resource'].last_name
+    #     )
+    #
+    #     body = {
+    #         'Title': kwargs['title'],
+    #         'Description': description,
+    #         'NoteType': kwargs['note_type'],
+    #         'Publish': kwargs['publish'],
+    #         self.related_model_field: kwargs['object_id'],
+    #     }
+    #     instance = api.create_object(self.model_name, body)
+    #
+    #     return self.update_or_create_instance(instance)
+
+
+class TicketNoteSynchronizer(NoteSynchronizer, ChildSynchronizer):
+    client_class = api.TicketNotesAPIClient
+    model_class = models.TicketNoteTracker
+    condition_field_name = 'ticketID'
+
+    # related_model_field = 'ticketID'
+    # model_name = 'TicketNote'
+
+    related_meta = {
+        'noteType': (models.NoteType, 'note_type'),
+        'creatorResourceID': (models.Resource, 'creator_resource'),
+        'ticketID': (models.Ticket, 'ticket'),
+    }
+
+    @property
+    def active_ids(self):
+        active_ids = models.Ticket.objects.all().\
+            values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
+
+class TaskNoteSynchronizer(NoteSynchronizer):
+    client_class = api.TaskNotesAPIClient
+    model_class = models.TaskNoteTracker
+    condition_field_name = 'taskID'
+
+    # related_model_field = 'taskID'
+    # model_name = 'TaskNote'
+
+    related_meta = {
+        'noteType': (models.NoteType, 'note_type'),
+        'creatorResourceID': (models.Resource, 'creator_resource'),
+        'taskID': (models.Task, 'task'),
+    }
+
+    @property
+    def active_ids(self):
+        active_ids = models.Task.objects.exclude(
+            status=models.Status.COMPLETE_ID
+        ).values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
+
+class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
+                            Synchronizer,
+                            ChildSynchronizer):
+    client_class = api.TimeEntriesAPIClient
+    model_class = models.TimeEntryTracker
+    last_updated_field = 'lastModifiedDateTime'
+
+    related_meta = {
+        'resourceID': (models.Resource, 'resource'),
+        'ticketID': (models.Ticket, 'ticket'),
+        'taskID': (models.Task, 'task'),
+        'timeEntryType': (models.TaskTypeLink, 'type'),
+        'billingCodeID': (models.AllocationCode, 'allocation_code'),
+        'roleID': (models.Role, 'role'),
+        'contractID': (models.Contract, 'contract'),
+    }
+
+    @property
+    def active_ids(self):
+        active_tickets = models.Ticket.objects.all().\
+            values_list('id', flat=True).order_by(self.lookup_key)
+        active_tasks = models.Task.objects.exclude(
+            status=models.Status.COMPLETE_ID
+        ).values_list('id', flat=True).order_by(self.lookup_key)
+
+        active_ids = {
+            'ticketID': list(active_tickets),
+            'taskID': list(active_tasks)
+        }
+        return active_ids
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.date_worked = object_data.get('dateWorked')
+        instance.start_date_time = object_data.get('startDateTime')
+        instance.end_date_time = object_data.get('endDateTime')
+        instance.summary_notes = object_data.get('SummaryNotes')
+        instance.internal_notes = object_data.get('internalNotes')
+        instance.non_billable = object_data.get('isNonBillable')
+        instance.hours_worked = object_data.get('hoursWorked')
+        instance.hours_to_bill = object_data.get('hoursToBill')
+        instance.offset_hours = object_data.get('offsetHours')
+
+        self._set_datetime_attribute(instance, 'date_worked')
+        self._set_datetime_attribute(instance, 'start_date_time')
+        self._set_datetime_attribute(instance, 'end_date_time')
+
+        if instance.hours_worked:
+            instance.hours_worked = \
+                Decimal(str(round(instance.hours_worked, 4)))
+        if instance.hours_to_bill:
+            instance.hours_to_bill = \
+                Decimal(str(round(instance.hours_to_bill, 4)))
+        if instance.offset_hours:
+            instance.offset_hours = \
+                Decimal(str(round(instance.offset_hours, 4)))
+
+        self.set_relations(instance, object_data)
+        return instance
+
+    # def create_new_entry(self, entry_body):
+    #     """
+    #     Accepts a time entry dictionary which is then used to create a
+    #     time entry Autotask object and created via the API.
+    #     """
+    #     instance = api.create_object('TimeEntry', entry_body)
+    #
+    #     return self.update_or_create_instance(instance)
+
+
+class SecondaryResourceSyncronizer(Synchronizer):
+    def create(self, resource, role, entity):
+        """
+        Make a request to Autotask to create a SecondaryResource.
+        """
+
+        body = {
+            'resourceID': resource,
+            'roleID': role,
+            self.id_type: entity
+        }
+        instance = api.create_object(self.model_name, body)
+
+        return self.update_or_create_instance(instance)
+
+    def delete(self, instances):
+        """
+        Takes a queryset of instances and deletes them from the remote
+        Autotask instance and the local database.
+        """
+
+        api.delete_objects(self.model_name, instances)
+
+        instances.delete()
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
+        return instance
+
+
+class TicketSecondaryResourceSynchronizer(SecondaryResourceSyncronizer,
+                                          ChildSynchronizer):
+    client_class = api.TicketSecondaryResourcesAPIClient
+    model_class = models.TicketSecondaryResourceTracker
+    last_updated_field = None
+
+    # model_name = 'TicketSecondaryResource'
+    # id_type = 'ticketID'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Without this, AT returns empty instances
+        self.client.add_condition(A(op='gt', field='id', value='0'))
+
+    related_meta = {
+        'resourceID': (models.Resource, 'resource'),
+        'roleID': (models.Role, 'role'),
+        'ticketID': (models.Ticket, 'ticket'),
+    }
+
+
+class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
+    client_class = api.TaskSecondaryResourcesAPIClient
+    model_class = models.TaskSecondaryResourceTracker
+    last_updated_field = None
+
+    # model_name = 'TaskSecondaryResource'
+    # id_type = 'taskID'
+
+    related_meta = {
+        'resourceID': (models.Resource, 'resource'),
+        'roleID': (models.Role, 'role'),
+        'taskID': (models.Task, 'task'),
+    }
 
 
 class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,

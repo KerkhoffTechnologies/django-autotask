@@ -498,6 +498,7 @@ class AutotaskAPIClient(object):
 
     def add_condition(self, condition):
         self.conditions.add(condition)
+        return len(self.conditions) - 1
 
     def get_conditions(self):
         return self.conditions
@@ -605,6 +606,38 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         the database.
         """
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
+class TicketNotesAPIClient(AutotaskAPIClient):
+    API = 'TicketNotes'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
+class TaskNotesAPIClient(AutotaskAPIClient):
+    API = 'TaskNotes'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
+class TimeEntriesAPIClient(AutotaskAPIClient):
+    API = 'TimeEntries'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
+class TicketSecondaryResourcesAPIClient(AutotaskAPIClient):
+    API = 'TicketSecondaryResources'
+
+
+class TaskSecondaryResourcesAPIClient(AutotaskAPIClient):
+    API = 'TaskSecondaryResources'
 
 
 class ProjectsAPIClient(AutotaskAPIClient):
