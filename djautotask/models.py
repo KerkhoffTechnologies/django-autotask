@@ -359,6 +359,12 @@ class Note:
     INTERNAL_USERS = 2
     PUBLISH_CHOICES = ((ALL_USERS, 'All Autotask Users'),
                        (INTERNAL_USERS, 'Internal Users'))
+    AUTOTASK_FIELDS = {
+        'title': 'title',
+        'description': 'description',
+        'note_type': 'noteType',
+        'publish': 'publish',
+    }
 
 
 class TicketNote(TimeStampedModel, Note):
@@ -381,6 +387,12 @@ class TicketNote(TimeStampedModel, Note):
         'Ticket', blank=True, null=True, on_delete=models.SET_NULL
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        super().AUTOTASK_FIELDS.update({
+            'ticket': 'ticketID',
+        })
+
 
 class TaskNote(TimeStampedModel, Note):
     title = models.CharField(max_length=250)
@@ -400,6 +412,12 @@ class TaskNote(TimeStampedModel, Note):
     task = models.ForeignKey(
         'Task', blank=True, null=True, on_delete=models.SET_NULL
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        super().AUTOTASK_FIELDS.update({
+            'task': 'taskID',
+        })
 
 
 class Contact(TimeStampedModel):
@@ -689,6 +707,22 @@ class TimeEntry(TimeStampedModel):
     contract = models.ForeignKey(
         'Contract', blank=True, null=True, on_delete=models.SET_NULL
     )
+
+    AUTOTASK_FIELDS = {
+        'ticket': 'ticketID',
+        'task': 'taskID',
+        'date_worked': 'dateWorked',
+        'start_date_time': 'startDateTime',
+        'end_date_time': 'endDateTime',
+        'summary_notes': 'summaryNotes',
+        'internal_notes': 'internalNotes',
+        'hours_worked': 'hoursWorked',
+        'offset_hours': 'offsetHours',
+        'role': 'roleID',
+        'resource': 'resourceID',
+        'allocation_code': 'billingCodeID',
+        'contract': 'contractID',
+    }
 
     class Meta:
         verbose_name_plural = 'Time entries'

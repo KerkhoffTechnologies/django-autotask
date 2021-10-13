@@ -281,113 +281,67 @@ class SynchronizerTestMixin:
         assert qset.exists()
 
 
-class TestTicketNoteSynchronizer(SynchronizerTestMixin, TestCase):
+class TestTicketNoteSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.TicketNoteSynchronizer
     model_class = models.TicketNoteTracker
     fixture = fixtures.API_TICKET_NOTE
-    update_field = 'Title'
+    update_field = 'title'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.TicketNoteSynchronizer()
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_resources()
         fixture_utils.init_tickets()
         fixture_utils.init_note_types()
         fixture_utils.init_ticket_notes()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_notes_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.title, object_data['Title'])
-        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(instance.title, object_data['title'])
+        self.assertEqual(instance.description, object_data['description'])
+        self.assertEqual(instance.create_date_time,
+                         self._parse_datetime(object_data['createDateTime']))
+        self.assertEqual(instance.last_activity_date,
+                         self._parse_datetime(object_data['lastActivityDate']))
+        self.assertEqual(instance.ticket.id, object_data['ticketID'])
         self.assertEqual(
-            instance.create_date_time, object_data['CreateDateTime'])
-        self.assertEqual(
-            instance.last_activity_date, object_data['LastActivityDate'])
-        self.assertEqual(instance.ticket.id, object_data['TicketID'])
-        self.assertEqual(
-            instance.creator_resource.id, object_data['CreatorResourceID'])
-        self.assertEqual(instance.note_type.id, object_data['NoteType'])
-
-    def test_sync_ticket_note(self):
-        """
-        Test to ensure note synchronizer saves a TicketNote instance locally.
-        """
-        self.assertGreater(models.TicketNote.objects.all().count(), 0)
-
-        object_data = fixtures.API_TICKET_NOTE
-        instance = models.TicketNote.objects.get(id=object_data['id'])
-
-        self._assert_sync(instance, object_data)
-        self.assert_sync_job()
-
-    def test_delete_stale_ticket_notes(self):
-        """
-        Local notes should be deleted if not returned during a full sync
-        """
-        note_id = fixtures.API_TICKET_NOTE['id']
-        qs = models.TicketNote.objects.filter(id=note_id)
-        self.assertEqual(qs.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.TicketNoteSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(qs.count(), 0)
+            instance.creator_resource.id, object_data['creatorResourceID'])
+        self.assertEqual(instance.note_type.id, object_data['noteType'])
 
 
-class TestTaskNoteSynchronizer(SynchronizerTestMixin, TestCase):
+class TestTaskNoteSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.TaskNoteSynchronizer
     model_class = models.TaskNoteTracker
     fixture = fixtures.API_TASK_NOTE
-    update_field = 'Title'
+    update_field = 'title'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.TaskNoteSynchronizer()
-        mocks.init_api_connection(Wrapper)
         fixture_utils.init_resources()
         fixture_utils.init_projects()
         fixture_utils.init_tasks()
         fixture_utils.init_note_types()
         fixture_utils.init_task_notes()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_task_notes_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.title, object_data['Title'])
-        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(instance.title, object_data['title'])
+        self.assertEqual(instance.description, object_data['description'])
+        self.assertEqual(instance.create_date_time,
+                         self._parse_datetime(object_data['createDateTime']))
+        self.assertEqual(instance.last_activity_date,
+                         self._parse_datetime(object_data['lastActivityDate']))
+        self.assertEqual(instance.task.id, object_data['taskID'])
         self.assertEqual(
-            instance.create_date_time, object_data['CreateDateTime'])
-        self.assertEqual(
-            instance.last_activity_date, object_data['LastActivityDate'])
-        self.assertEqual(instance.task.id, object_data['TaskID'])
-        self.assertEqual(
-            instance.creator_resource.id, object_data['CreatorResourceID'])
-        self.assertEqual(instance.note_type.id, object_data['NoteType'])
-
-    def test_sync_task_note(self):
-        """
-        Test to ensure note synchronizer saves a TaskNote instance locally.
-        """
-        self.assertGreater(models.TaskNote.objects.all().count(), 0)
-
-        object_data = fixtures.API_TASK_NOTE
-        instance = models.TaskNote.objects.get(id=object_data['id'])
-
-        self._assert_sync(instance, object_data)
-        self.assert_sync_job()
-
-    def test_delete_stale_task_notes(self):
-        """
-        Local notes should be deleted if not returned during a full sync
-        """
-        note_id = fixtures.API_TASK_NOTE['id']
-        qs = models.TaskNote.objects.filter(id=note_id)
-        self.assertEqual(qs.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.TaskNoteSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(qs.count(), 0)
+            instance.creator_resource.id, object_data['creatorResourceID'])
+        self.assertEqual(instance.note_type.id, object_data['noteType'])
 
 
 class TestTicketSynchronizer(
@@ -441,14 +395,13 @@ class TestTicketSynchronizer(
         ticket = models.Ticket.objects.first()
         ticket.status = models.Status.objects.first()
         time_mock, time_patch = mocks.create_mock_call(
-            'djautotask.sync.TimeEntrySynchronizer.fetch_records',
+            'djautotask.sync_rest.TimeEntrySynchronizer.get',
             None
         )
         note_mock, note_patch = mocks.create_mock_call(
-            'djautotask.sync.TicketNoteSynchronizer.fetch_records', None)
+            'djautotask.sync_rest.TicketNoteSynchronizer.get', None)
         resource_mock, resource_patch = mocks.create_mock_call(
-            'djautotask.sync.TicketSecondaryResourceSynchronizer.'
-            'fetch_records',
+            'djautotask.sync_rest.TicketSecondaryResourceSynchronizer.get',
             None
         )
         _, _checklist_patch = mocks.create_mock_call(
@@ -709,47 +662,6 @@ class TestResourceSynchronizer(SynchronizerTestMixin, TestCase):
         synchronizer = sync.ResourceSynchronizer(full=True)
         synchronizer.sync()
         self.assertEqual(resource_qset.count(), 0)
-
-
-class TestTicketSecondaryResourceSynchronizer(SynchronizerTestMixin, TestCase):
-    model_class = models.TicketSecondaryResourceTracker
-    fixture = fixtures.API_SECONDARY_RESOURCE_LIST[0]
-
-    def setUp(self):
-        super().setUp()
-        self.synchronizer = sync.TicketSecondaryResourceSynchronizer()
-        fixture_utils.init_resources()
-        fixture_utils.init_tickets()
-        fixture_utils.init_secondary_resources()
-
-    def _assert_sync(self, instance, object_data):
-        self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.ticket.id, object_data['TicketID'])
-        self.assertEqual(instance.resource.id, object_data['ResourceID'])
-
-    def test_sync_ticket_secondary_resource(self):
-        self.assertGreater(
-            models.TicketSecondaryResource.objects.all().count(), 0)
-        instance = \
-            models.TicketSecondaryResource.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_ticket_secondary_resource(self):
-        secondary_resources_qset = models.TicketSecondaryResource.objects.all()
-        self.assertEqual(secondary_resources_qset.count(), 2)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.TicketSecondaryResourceSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(secondary_resources_qset.count(), 0)
-
-    def test_skips(self):
-        _, updated_count, skipped_count, _ = self._sync(self.fixture)
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
 
 
 class TestAccountSynchronizer(SynchronizerTestMixin, TestCase):
@@ -1069,46 +981,54 @@ class TestAccountTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_account_types_call(return_data)
 
 
-class TestTaskSecondaryResourceSynchronizer(SynchronizerTestMixin, TestCase):
-    model_class = models.TaskSecondaryResourceTracker
-    fixture = fixtures.API_TASK_SECONDARY_RESOURCE
+class TestTicketSecondaryResourceSynchronizer(SynchronizerRestTestMixin,
+                                              TestCase):
+    synchronizer_class = sync_rest.TicketSecondaryResourceSynchronizer
+    model_class = models.TicketSecondaryResourceTracker
+    fixture = fixtures.API_TICKET_SECONDARY_RESOURCE
+    update_field = 'resource_id'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.TaskSecondaryResourceSynchronizer()
+        fixture_utils.init_tickets()
         fixture_utils.init_resources()
+        fixture_utils.init_roles()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_secondary_resources_call(
+            return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.ticket.id, object_data['ticketID'])
+        self.assertEqual(instance.resource.id, object_data['resourceID'])
+        self.assertEqual(instance.role.id, object_data['roleID'])
+
+
+class TestTaskSecondaryResourceSynchronizer(SynchronizerRestTestMixin,
+                                            TestCase):
+    synchronizer_class = sync_rest.TaskSecondaryResourceSynchronizer
+    model_class = models.TaskSecondaryResourceTracker
+    fixture = fixtures.API_TASK_SECONDARY_RESOURCE
+    update_field = 'resource_id'
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_resources()
+        fixture_utils.init_roles()
         fixture_utils.init_projects()
         fixture_utils.init_tasks()
-        fixture_utils.init_task_secondary_resources()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_task_secondary_resources_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.resource.id, object_data['ResourceID'])
-        self.assertEqual(instance.task.id, object_data['TaskID'])
-
-    def test_sync_task_secondary_resource(self):
-        self.assertGreater(
-            models.TaskSecondaryResource.objects.all().count(), 0)
-        instance = \
-            models.TaskSecondaryResource.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_task_secondary_resource(self):
-        secondary_resources_qset = models.TaskSecondaryResource.objects.all()
-        self.assertEqual(secondary_resources_qset.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.TaskSecondaryResourceSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(secondary_resources_qset.count(), 0)
-
-    def test_skips(self):
-        _, updated_count, skipped_count, _ = self._sync(self.fixture)
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
+        self.assertEqual(instance.resource.id, object_data['resourceID'])
+        self.assertEqual(instance.task.id, object_data['taskID'])
+        self.assertEqual(instance.role.id, object_data['roleID'])
 
 
 class TestPhaseSynchronizer(SynchronizerTestMixin, TestCase):
@@ -1161,60 +1081,37 @@ class TestPhaseSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(qset.count(), 0)
 
 
-class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
+class TestTimeEntrySynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.TimeEntrySynchronizer
     model_class = models.TimeEntryTracker
-    fixture = fixtures.API_TIME_ENTRY_TICKET
+    fixture = fixtures.API_TIME_ENTRY
+    update_field = 'summaryNotes'
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.TimeEntrySynchronizer()
-
-        mocks.init_api_connection(Wrapper)
-        mocks.init_api_rest_connection()
-
         fixture_utils.init_resources()
         fixture_utils.init_tickets()
         fixture_utils.init_tasks()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_time_entries_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.date_worked, object_data['DateWorked'])
+        self.assertEqual(instance.date_worked, object_data['dateWorked'])
         self.assertEqual(instance.start_date_time,
-                         object_data['StartDateTime'])
-        self.assertEqual(instance.end_date_time, object_data['EndDateTime'])
-        self.assertEqual(instance.summary_notes, object_data['SummaryNotes'])
-        self.assertEqual(instance.internal_notes, object_data['InternalNotes'])
-        self.assertEqual(instance.non_billable, object_data['NonBillable'])
-        self.assertEqual(instance.hours_worked, object_data['HoursWorked'])
-        self.assertEqual(instance.hours_to_bill, object_data['HoursToBill'])
-        self.assertEqual(instance.offset_hours, object_data['OffsetHours'])
-        self.assertEqual(instance.ticket.id, object_data['TicketID'])
-        self.assertEqual(instance.resource.id, object_data['ResourceID'])
-
-    def test_sync_time_entry(self):
-        """
-        Test to ensure synchronizer saves a time entry instance locally.
-        """
-        time_entries = fixture_utils.generate_objects(
-            'TimeEntry', fixtures.API_TIME_ENTRY_LIST)
-        mocks.api_query_call(time_entries)
-        synchronizer = sync.TimeEntrySynchronizer()
-        synchronizer.sync()
-
-        self.assertGreater(models.TimeEntry.objects.all().count(), 0)
-
-        instance = models.TimeEntry.objects.get(id=self.fixture['id'])
-
-        ticket = models.Ticket.objects.first()
-        ticket.id = self.fixture['TicketID']
-        instance.ticket = ticket
-
-        resource = models.Resource.objects.first()
-        resource.id = self.fixture['ResourceID']
-        instance.resource = resource
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
+                         self._parse_datetime(object_data['startDateTime']))
+        self.assertEqual(instance.end_date_time,
+                         self._parse_datetime(object_data['endDateTime']))
+        self.assertEqual(instance.summary_notes, object_data['summaryNotes'])
+        self.assertEqual(instance.internal_notes, object_data['internalNotes'])
+        self.assertEqual(instance.non_billable, object_data['isNonBillable'])
+        self.assertEqual(instance.hours_worked, object_data['hoursWorked'])
+        self.assertEqual(instance.hours_to_bill, object_data['hoursToBill'])
+        self.assertEqual(instance.offset_hours, object_data['offsetHours'])
+        self.assertEqual(instance.ticket.id, object_data['ticketID'])
+        self.assertEqual(instance.resource.id, object_data['resourceID'])
 
     def test_sync_time_entry_dropped(self):
         """
@@ -1223,7 +1120,7 @@ class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
         """
         time_entry_count = models.TimeEntry.objects.all().count()
 
-        synchronizer = sync.TimeEntrySynchronizer(full=True)
+        synchronizer = sync_rest.TimeEntrySynchronizer(full=True)
         synchronizer.sync()
         sync_job = models.SyncJob.objects.last()
 
@@ -1234,27 +1131,6 @@ class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(sync_job.updated, 0)
         self.assertEqual(sync_job.deleted, time_entry_count)
 
-    def test_delete_stale_time_entries(self):
-        """
-        Verify that time entry is deleted if not returned during a full sync
-        """
-        time_entries = fixture_utils.generate_objects(
-            'TimeEntry', fixtures.API_TIME_ENTRY_LIST)
-        mocks.api_query_call(time_entries)
-        synchronizer = sync.TimeEntrySynchronizer()
-        synchronizer.sync()
-
-        qset = models.TimeEntry.objects.all()
-        self.assertEqual(qset.count(), len(fixtures.API_TIME_ENTRY_LIST))
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.TimeEntrySynchronizer(full=True)
-        synchronizer.sync()
-
-        qset = models.TimeEntry.objects.all()
-        self.assertEqual(qset.count(), 0)
-
     def test_batch_queries_creates_multiple_batches(self):
         """
         Verify that build batch query method returns multiple batches
@@ -1264,54 +1140,36 @@ class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
         settings = DjautotaskSettings().get_settings()
         batch_size = settings.get('batch_query_size')
 
-        synchronizer = sync.TimeEntrySynchronizer()
-        sync_job = models.SyncJob.objects.filter(entity_name='TimeEntry')
-
         # Simulate ticket IDs
         object_ids = random.sample(range(1, max_id_limit), batch_size + 50)
         _, _patch = mocks.create_mock_call(
-            'django.db.models.query.QuerySet.values_list', object_ids
+            'djautotask.sync_rest.TimeEntrySynchronizer.active_ids',
+            {'ticketID': object_ids}
+        )
+        time_entry_mock, time_entry_patch = mocks.create_mock_call(
+            'djautotask.sync_rest.TimeEntrySynchronizer.get', None
         )
 
-        batch_query_list = synchronizer.build_batch_queries(sync_job)
-
         # With a max batch size of 400, a set of 450 object IDs should result
-        # in 4 Query objects being returned in the list. (2 for tickets, 2 for
-        # tasks)
-        self.assertEqual(len(batch_query_list), 4)
+        # in 4 Query objects being returned in the list.
+        # (2 for tickets, 2 for tasks)
+        self.assertEqual(time_entry_mock.call_count, 4)
 
         _patch.stop()
+        time_entry_patch.stop()
 
     def test_batch_queries_returns_query_list(self):
         """
-        Verify that an empty list is returned when no tickets or
-        tasks are present in the database.
+        Verify that an empty list is returned
+        when no tickets or tasks are present in the database.
         """
         _, _patch = mocks.create_mock_call(
-            'django.db.models.query.QuerySet.values_list', []
+            'djautotask.sync_rest.TimeEntrySynchronizer.active_ids', {}
         )
-        synchronizer = sync.TimeEntrySynchronizer()
-        sync_job = models.SyncJob.objects.filter(entity_name='TimeEntry')
-
-        batch_query_list = synchronizer.build_batch_queries(sync_job)
-
-        self.assertEqual(len(batch_query_list), 0)
-
-        _patch.stop()
-
-    def test_skips(self):
-        self._sync(self.fixture)
-
-        updated_instance = deepcopy(self.fixture)
-        updated_instance["HoursWorked"] = 3.000
-
-        _, updated_count, skipped_count, _ = self._sync(updated_instance)
-        self.assertEqual(updated_count, 1)
-        self.assertEqual(skipped_count, 0)
-
-        _, updated_count, skipped_count, _ = self._sync(updated_instance)
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
+        time_entry_mock, time_entry_patch = mocks.create_mock_call(
+            'djautotask.sync_rest.TimeEntrySynchronizer.get', None
+        )
+        self.assertEqual(len(self.synchronizer.active_ids), 0)
 
 
 class TestAllocationCodeSynchronizer(SynchronizerRestTestMixin, TestCase):

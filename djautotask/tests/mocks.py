@@ -1,6 +1,4 @@
 from mock import patch
-from atws.query import Query
-from djautotask.tests import fixtures
 import json
 import responses
 from django.core.cache import cache
@@ -56,31 +54,6 @@ def get_field_info_api_calls(side_effect=None):
     """
     _patch = patch(GET_FIELD_INFO_METHOD, side_effect=side_effect)
     _patch.start()
-
-
-def generate_time_entry_queries(model_class, id_field, sync_job):
-    query = Query('TimeEntry')
-    query.WHERE('id', query.GreaterThanorEquals, 0)
-
-    if id_field == 'TicketID':
-        fixture_id = fixtures.API_TIME_ENTRY_TICKET['id']
-    else:
-        fixture_id = fixtures.API_TIME_ENTRY_TASK['id']
-
-    query.open_bracket('AND')
-    query.OR(id_field, query.Equals, fixture_id)
-    query.close_bracket()
-    return [query]
-
-
-def build_batch_query(side_effect=None):
-
-    mock_call, _patch = create_mock_call(
-        'djautotask.sync.TimeEntrySynchronizer.build_batch_queries',
-        [],
-        side_effect=side_effect
-    )
-    return mock_call, _patch
 
 
 def init_api_rest_connection(return_value=None):
@@ -151,6 +124,31 @@ def service_api_get_projects_call(return_value):
 
 def service_api_get_ticket_categories_call(return_value):
     method_name = 'djautotask.api_rest.TicketCategoriesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_ticket_secondary_resources_call(return_value):
+    method_name = 'djautotask.api_rest.TicketSecondaryResourcesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_task_secondary_resources_call(return_value):
+    method_name = 'djautotask.api_rest.TaskSecondaryResourcesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_ticket_notes_call(return_value):
+    method_name = 'djautotask.api_rest.TicketNotesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_task_notes_call(return_value):
+    method_name = 'djautotask.api_rest.TaskNotesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_time_entries_call(return_value):
+    method_name = 'djautotask.api_rest.TimeEntriesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 

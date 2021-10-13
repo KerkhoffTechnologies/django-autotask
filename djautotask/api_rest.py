@@ -608,12 +608,18 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
 
-class TicketNotesAPIClient(AutotaskAPIClient):
+class TicketNotesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'TicketNotes'
+    PARENT_API = 'Tickets'
+    CHILD_API = 'Notes'
 
     # use POST method because of IN-clause query string
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('ticket')
+        return super().create(instance, parent, **kwargs)
 
 
 class TaskNotesAPIClient(AutotaskAPIClient):

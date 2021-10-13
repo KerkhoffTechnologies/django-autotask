@@ -164,17 +164,17 @@ def manage_full_sync_return_data(value):
     fixture_dict = {
         'Ticket': fixtures.API_TICKET,
         'Resource': fixtures.API_RESOURCE_LIST,
-        'TicketSecondaryResource': fixtures.API_SECONDARY_RESOURCE_LIST,
+        'TicketSecondaryResource': fixtures.API_TICKET_SECONDARY_RESOURCE,
         'Account': fixtures.API_ACCOUNT_LIST,
         'AccountPhysicalLocation': fixtures.API_ACCOUNT_PHYSICAL_LOCATION,
         'Project': fixtures.API_PROJECT,
         'TicketCategory': fixtures.API_TICKET_CATEGORY,
         'Task': fixtures.API_TASK,
         'Phase': fixtures.API_PHASE_LIST,
-        'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
-        'TicketNote': fixtures.API_TICKET_NOTE_LIST,
-        'TaskNote': fixtures.API_TASK_NOTE_LIST,
-        'TimeEntry': fixtures.API_TIME_ENTRY_LIST,
+        'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE,
+        'TicketNote': fixtures.API_TICKET_NOTE,
+        'TaskNote': fixtures.API_TASK_NOTE,
+        'TimeEntry': fixtures.API_TIME_ENTRY,
         'AllocationCode': fixtures.API_ALLOCATION_CODE,
         'Role': fixtures.API_ROLE,
         'Department': fixtures.API_DEPARTMENT,
@@ -193,17 +193,6 @@ def manage_full_sync_return_data(value):
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
-
-    if object_type == 'TimeEntry':
-        condition = xml_value.find('query').find('condition')
-
-        # Ensure that a time entry gets returned with either an associated
-        # task or ticket but not both.
-        if condition.find('condition')[0].text == 'TaskID':
-            fixture_dict['TimeEntry'] = [fixtures.API_TIME_ENTRY_TASK]
-        else:
-            fixture_dict['TimeEntry'] = [fixtures.API_TIME_ENTRY_TICKET]
-
     fixture = fixture_dict.get(object_type)
     return_value = generate_objects(object_type, fixture)
 
@@ -418,12 +407,20 @@ def init_resources():
     )
 
 
-def init_secondary_resources():
-    sync_objects(
-        'TicketSecondaryResource',
-        fixtures.API_SECONDARY_RESOURCE_LIST,
-        sync.TicketSecondaryResourceSynchronizer
-    )
+def init_ticket_secondary_resources():
+    models.TicketSecondaryResource.objects.all().delete()
+    mocks.service_api_get_ticket_secondary_resources_call(
+        fixtures.API_TICKET_SECONDARY_RESOURCE)
+    synchronizer = syncrest.TicketSecondaryResourceSynchronizer()
+    return synchronizer.sync()
+
+
+def init_task_secondary_resources():
+    models.TaskSecondaryResource.objects.all().delete()
+    mocks.service_api_get_task_secondary_resources_call(
+        fixtures.API_TASK_SECONDARY_RESOURCE)
+    synchronizer = syncrest.TaskSecondaryResourceSynchronizer()
+    return synchronizer.sync()
 
 
 def init_accounts():
@@ -465,34 +462,24 @@ def init_tasks():
     return synchronizer.sync()
 
 
-def init_task_secondary_resources():
-    sync_objects(
-        'TaskSecondaryResource',
-        fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
-        sync.TaskSecondaryResourceSynchronizer
-    )
-
-
 def init_ticket_notes():
     mocks.create_mock_call(
-        'djautotask.sync.TicketNoteSynchronizer._get_query_conditions', None)
+        'djautotask.sync_rest.TicketNoteSynchronizer.create', None)
 
-    sync_objects(
-        'TicketNote',
-        fixtures.API_TICKET_NOTE_LIST,
-        sync.TicketNoteSynchronizer
-    )
+    models.TicketNote.objects.all().delete()
+    mocks.service_api_get_ticket_notes_call(fixtures.API_TICKET_NOTE)
+    synchronizer = syncrest.TicketNoteSynchronizer()
+    return synchronizer.sync()
 
 
 def init_task_notes():
     mocks.create_mock_call(
-        'djautotask.sync.TaskNoteSynchronizer._get_query_conditions', None)
+        'djautotask.sync_rest.TaskNoteSynchronizer.create', None)
 
-    sync_objects(
-        'TaskNote',
-        fixtures.API_TASK_NOTE_LIST,
-        sync.TaskNoteSynchronizer
-    )
+    models.TaskNote.objects.all().delete()
+    mocks.service_api_get_task_notes_call(fixtures.API_TASK_NOTE)
+    synchronizer = syncrest.TaskNoteSynchronizer()
+    return synchronizer.sync()
 
 
 def init_note_types():
@@ -504,11 +491,10 @@ def init_note_types():
 
 
 def init_time_entries():
-    sync_objects(
-        'TimeEntry',
-        fixtures.API_TIME_ENTRY_LIST,
-        sync.TimeEntrySynchronizer
-    )
+    models.TimeEntry.objects.all().delete()
+    mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY)
+    synchronizer = syncrest.TimeEntrySynchronizer()
+    return synchronizer.sync()
 
 
 def init_allocation_codes():

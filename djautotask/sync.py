@@ -6,7 +6,6 @@ from atws.wrapper import AutotaskProcessException, AutotaskAPIException
 from atws import Query, helpers, picklist
 from django.db import transaction, IntegrityError
 from django.utils import timezone
-from djautotask.utils import DjautotaskSettings
 
 from djautotask import api, models
 
@@ -479,70 +478,6 @@ class PicklistSynchronizer(Synchronizer):
         instance.is_system = object_data.get('IsSystem')
 
         return instance
-
-
-class BatchQueryMixin:
-    """
-    Fetch records from the API only fetching records if the related model(s)
-    are already in the database.
-    """
-
-    def __init__(self, *args, **kwargs):
-        settings = DjautotaskSettings().get_settings()
-        self.batch_size = settings.get('batch_query_size')
-        super().__init__(*args, **kwargs)
-
-    def build_batch_queries(self, sync_job_qset):
-        raise NotImplementedError
-
-    def get(self, results):
-
-        sync_job_qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__bases__[0].__name__
-        )
-        object_queries = self.build_batch_queries(sync_job_qset)
-
-        logger.info(
-            'Fetching {} records.'.format(self.model_class)
-        )
-        for query in object_queries:
-            # Apply extra conditions if they exist, and then run the query.
-            self._get_query_conditions(query)
-            self.fetch_records(query, results)
-
-        return results
-
-    def _build_fk_batch(self, model_class, object_id_fields, sync_job_qset):
-        """
-        Generic batching method for batching based off of the fk relation of
-        an object currently present in the local DB.
-        """
-        queries = []
-        object_ids = list(model_class.objects.order_by(self.db_lookup_key)
-                          .values_list('id', flat=True))
-
-        while object_ids:
-            query = self.build_base_query(sync_job_qset)
-            query.open_bracket('AND')
-
-            batch_size = self.get_batch_size()
-            batch = object_ids[:batch_size]
-            del object_ids[:batch_size]
-
-            self._set_or_conditions(batch, object_id_fields, query)
-
-            query.close_bracket()
-            queries.append(query)
-
-        return queries
-
-    def get_batch_size(self):
-        return self.batch_size
-
-    def _set_or_conditions(self, batch, object_id_field, query):
-        # Create queries from batches of records
-        for object_id in batch:
-            query.OR(object_id_field, query.Equals, object_id)
 
 
 class TicketPicklistSynchronizer(PicklistSynchronizer):

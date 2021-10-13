@@ -846,36 +846,28 @@ class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
 
         return instance
 
-    # def create(self, **kwargs):
-    #     """
-    #     Make a request to Autotask to create a Note.
-    #     """
-    #
-    #     description = "{}\n\nNote was added by {} {}.".format(
-    #         kwargs['description'],
-    #         kwargs['resource'].first_name,
-    #         kwargs['resource'].last_name
-    #     )
-    #
-    #     body = {
-    #         'Title': kwargs['title'],
-    #         'Description': description,
-    #         'NoteType': kwargs['note_type'],
-    #         'Publish': kwargs['publish'],
-    #         self.related_model_field: kwargs['object_id'],
-    #     }
-    #     instance = api.create_object(self.model_name, body)
-    #
-    #     return self.update_or_create_instance(instance)
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a Note.
+        """
+        description = "{}\n\nNote was added by {} {}.".format(
+            kwargs['description'],
+            kwargs['resource'].first_name,
+            kwargs['resource'].last_name
+        )
+        kwargs.update({
+            self.related_instance_name: kwargs.pop('card'),
+            'description': description
+        })
+
+        return super().create(**kwargs)
 
 
 class TicketNoteSynchronizer(NoteSynchronizer, ChildSynchronizer):
     client_class = api.TicketNotesAPIClient
     model_class = models.TicketNoteTracker
     condition_field_name = 'ticketID'
-
-    # related_model_field = 'ticketID'
-    # model_name = 'TicketNote'
+    related_instance_name = 'ticket'
 
     related_meta = {
         'noteType': (models.NoteType, 'note_type'),
@@ -895,9 +887,7 @@ class TaskNoteSynchronizer(NoteSynchronizer):
     client_class = api.TaskNotesAPIClient
     model_class = models.TaskNoteTracker
     condition_field_name = 'taskID'
-
-    # related_model_field = 'taskID'
-    # model_name = 'TaskNote'
+    related_instance_name = 'task'
 
     related_meta = {
         'noteType': (models.NoteType, 'note_type'),
@@ -939,10 +929,11 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
             status=models.Status.COMPLETE_ID
         ).values_list('id', flat=True).order_by(self.lookup_key)
 
-        active_ids = {
-            'ticketID': list(active_tickets),
-            'taskID': list(active_tasks)
-        }
+        active_ids = dict()
+        if len(active_tickets):
+            active_ids.update({'ticketID': list(active_tickets)})
+        if len(active_tasks):
+            active_ids.update({'taskID': list(active_tasks)})
         return active_ids
 
     def _assign_field_data(self, instance, object_data):
@@ -973,15 +964,6 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
 
         self.set_relations(instance, object_data)
         return instance
-
-    # def create_new_entry(self, entry_body):
-    #     """
-    #     Accepts a time entry dictionary which is then used to create a
-    #     time entry Autotask object and created via the API.
-    #     """
-    #     instance = api.create_object('TimeEntry', entry_body)
-    #
-    #     return self.update_or_create_instance(instance)
 
 
 class SecondaryResourceSyncronizer(Synchronizer):
@@ -1022,7 +1004,7 @@ class TicketSecondaryResourceSynchronizer(SecondaryResourceSyncronizer,
     last_updated_field = None
 
     # model_name = 'TicketSecondaryResource'
-    # id_type = 'ticketID'
+    id_type = 'ticketID'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1042,7 +1024,7 @@ class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     last_updated_field = None
 
     # model_name = 'TaskSecondaryResource'
-    # id_type = 'taskID'
+    id_type = 'taskID'
 
     related_meta = {
         'resourceID': (models.Resource, 'resource'),

@@ -389,13 +389,6 @@ class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
     )
 
 
-class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
-    args = (
-        fixtures.API_SECONDARY_RESOURCE_LIST,
-        'ticket_secondary_resource',
-    )
-
-
 class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
     args = (
         fixtures.API_ACCOUNT_LIST,
@@ -448,16 +441,27 @@ class TestSyncTaskCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_tasks()
 
 
-class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncRestTest,
+                                             TestCase):
     args = (
-        fixtures.API_TASK_SECONDARY_RESOURCE_LIST,
+        mocks.service_api_get_ticket_secondary_resources_call,
+        fixtures.API_TICKET_SECONDARY_RESOURCE,
+        'ticket_secondary_resource',
+    )
+
+
+class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncRestTest, TestCase):
+    args = (
+        mocks.service_api_get_task_secondary_resources_call,
+        fixtures.API_TASK_SECONDARY_RESOURCE,
         'task_secondary_resource',
     )
 
 
-class TestSyncTicketNoteCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncTicketNoteCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_TICKET_NOTE_LIST,
+        mocks.service_api_get_ticket_notes_call,
+        fixtures.API_TICKET_NOTE,
         'ticket_note',
     )
 
@@ -467,9 +471,10 @@ class TestSyncTicketNoteCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_ticket_notes()
 
 
-class TestSyncTaskNoteCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncTaskNoteCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_TASK_NOTE_LIST,
+        mocks.service_api_get_task_notes_call,
+        fixtures.API_TASK_NOTE,
         'task_note',
     )
 
@@ -480,15 +485,18 @@ class TestSyncTaskNoteCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_task_notes()
 
 
-class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncTimeEntryCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_TIME_ENTRY_LIST,
+        mocks.service_api_get_time_entries_call,
+        fixtures.API_TIME_ENTRY,
         'time_entry',
     )
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_resources()
         fixture_utils.init_tickets()
+        fixture_utils.init_tasks()
 
 
 class TestSyncAllocationCodeCommand(AbstractBaseSyncRestTest, TestCase):
@@ -681,14 +689,14 @@ class TestSyncAllCommand(TestCase):
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
-        mocks.create_mock_call(
-            'djautotask.sync.TicketNoteSynchronizer._get_query_conditions',
-            None
-        )
-        mocks.create_mock_call(
-            'djautotask.sync.TaskNoteSynchronizer._get_query_conditions',
-            None
-        )
+        # mocks.create_mock_call(
+        #     'djautotask.sync.TicketNoteSynchronizer._get_query_conditions',
+        #     None
+        # )
+        # mocks.create_mock_call(
+        #     'djautotask.sync.TaskNoteSynchronizer._get_query_conditions',
+        #     None
+        # )
         fixture_utils.mock_udfs()
         self._call_service_api()
 
@@ -829,14 +837,14 @@ class TestSyncAllCommand(TestCase):
 
         mocks.wrapper_query_api_calls()
         mocks.get_field_info_api_calls()
-        _, _patch = mocks.build_batch_query()
+        # _, _patch = mocks.build_batch_query()
 
         self._call_empty_service_api()
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
         output = run_sync_command(full_option=True)
-        _patch.stop()
+        # _patch.stop()
 
         # Verify the rest of sync classes summaries.
         for mock_call, fixture, at_object in self.test_args:
@@ -903,6 +911,13 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_SERVICE_CALL_TICKET_RESOURCE)
         mocks.service_api_get_service_call_tasks_call(
             fixtures.API_SERVICE_CALL_TASK)
+        mocks.service_api_get_ticket_secondary_resources_call(
+            fixtures.API_TICKET_SECONDARY_RESOURCE)
+        mocks.service_api_get_task_secondary_resources_call(
+            fixtures.API_TASK_SECONDARY_RESOURCE)
+        mocks.service_api_get_ticket_notes_call(fixtures.API_TICKET_NOTE)
+        mocks.service_api_get_task_notes_call(fixtures.API_TASK_NOTE)
+        mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY)
         mocks.service_api_get_service_call_task_resources_call(
             fixtures.API_SERVICE_CALL_TASK_RESOURCE)
         mocks.service_api_get_task_predecessors_call(
@@ -930,6 +945,13 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_service_call_ticket_resources_call(
             fixtures.API_EMPTY)
         mocks.service_api_get_service_call_tasks_call(fixtures.API_EMPTY)
+        mocks.service_api_get_ticket_secondary_resources_call(
+            fixtures.API_EMPTY)
+        mocks.service_api_get_task_secondary_resources_call(
+            fixtures.API_EMPTY)
+        mocks.service_api_get_ticket_notes_call(fixtures.API_EMPTY)
+        mocks.service_api_get_task_notes_call(fixtures.API_EMPTY)
+        mocks.service_api_get_time_entries_call(fixtures.API_EMPTY)
         mocks.service_api_get_service_call_task_resources_call(
             fixtures.API_EMPTY)
         mocks.service_api_get_ticket_category_picklist_call({"fields": []})
