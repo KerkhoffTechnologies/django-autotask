@@ -591,6 +591,10 @@ class ContractsAPIClient(AutotaskAPIClient):
 class AccountPhysicalLocationsAPIClient(AutotaskAPIClient):
     API = 'CompanyLocations'
 
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
 
 class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'Tasks'
@@ -630,6 +634,10 @@ class TaskPredecessorsAPIClient(AutotaskAPIClient):
 class ServiceCallsAPIClient(AutotaskAPIClient):
     API = 'ServiceCalls'
 
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
 
 class ServiceCallTicketsAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTickets'
@@ -639,6 +647,10 @@ class ServiceCallTicketsAPIClient(ChildAPIMixin, AutotaskAPIClient):
     def create(self, instance, **kwargs):
         parent = kwargs.pop('service_call')
         return super().create(instance, parent, **kwargs)
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
 
 class ServiceCallTicketResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
@@ -650,6 +662,10 @@ class ServiceCallTicketResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
         parent = kwargs.pop('service_call_ticket')
         return super().create(instance, parent, **kwargs)
 
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
 
 class ServiceCallTasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTasks'
@@ -660,6 +676,10 @@ class ServiceCallTasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         parent = kwargs.pop('service_call')
         return super().create(instance, parent, **kwargs)
 
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
 
 class ServiceCallTaskResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTaskResources'
@@ -669,6 +689,10 @@ class ServiceCallTaskResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     def create(self, instance, **kwargs):
         parent = kwargs.pop('service_call_task')
         return super().create(instance, parent, **kwargs)
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
 
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
