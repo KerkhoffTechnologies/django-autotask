@@ -152,6 +152,11 @@ def service_api_get_time_entries_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_ticket_time_entries_call(return_value):
+    method_name = 'djautotask.api_rest.TimeEntriesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_task_predecessors_call(return_value):
     method_name = 'djautotask.api_rest.TaskPredecessorsAPIClient.get'
     return create_mock_call(method_name, return_value)

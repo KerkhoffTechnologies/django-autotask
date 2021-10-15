@@ -29,6 +29,9 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
     def setUp(self):
         super().setUp()
+        # TODO remove init_api_connection(Wrapper) when SOAP API is gone
+        mocks.init_api_connection(Wrapper)
+        mocks.init_api_rest_connection()
         self.fixture_items = self.fixture["items"]
 
     def _call_api(self, return_data):

@@ -162,34 +162,9 @@ def manage_full_sync_return_data(value):
     Generate and return objects based on the entity specified in the query.
     """
     fixture_dict = {
-        'Ticket': fixtures.API_TICKET,
         'Resource': fixtures.API_RESOURCE_LIST,
-        'TicketSecondaryResource': fixtures.API_TICKET_SECONDARY_RESOURCE,
         'Account': fixtures.API_ACCOUNT_LIST,
-        'AccountPhysicalLocation': fixtures.API_ACCOUNT_PHYSICAL_LOCATION,
-        'Project': fixtures.API_PROJECT,
-        'TicketCategory': fixtures.API_TICKET_CATEGORY,
-        'Task': fixtures.API_TASK,
         'Phase': fixtures.API_PHASE_LIST,
-        'TaskSecondaryResource': fixtures.API_TASK_SECONDARY_RESOURCE,
-        'TicketNote': fixtures.API_TICKET_NOTE,
-        'TaskNote': fixtures.API_TASK_NOTE,
-        'TimeEntry': fixtures.API_TIME_ENTRY,
-        'AllocationCode': fixtures.API_ALLOCATION_CODE,
-        'Role': fixtures.API_ROLE,
-        'Department': fixtures.API_DEPARTMENT,
-        'ResourceRoleDepartment': fixtures.API_RESOURCE_ROLE_DEPARTMENT,
-        'ResourceServiceDeskRole':
-            fixtures.API_RESOURCE_SERVICE_DESK_ROLE,
-        'Contract': fixtures.API_CONTRACT,
-        'ServiceCall': fixtures.API_SERVICE_CALL,
-        'ServiceCallTicket': fixtures.API_SERVICE_CALL_TICKET,
-        'ServiceCallTask': fixtures.API_SERVICE_CALL_TASK,
-        'ServiceCallTicketResource':
-            fixtures.API_SERVICE_CALL_TICKET_RESOURCE,
-        'ServiceCallTaskResource':
-            fixtures.API_SERVICE_CALL_TASK_RESOURCE,
-        'TaskPredecessor': fixtures.API_TASK_PREDECESSOR,
     }
     xml_value = ElementTree.fromstring(value.get_query_xml())
     object_type = xml_value.find('entity').text
