@@ -3,11 +3,10 @@ from dateutil.parser import parse
 from django.test import TestCase
 from atws.wrapper import Wrapper
 
-import random
 from copy import deepcopy
 from djautotask import models
 from djautotask import sync, sync_rest
-from djautotask.utils import DjautotaskSettings
+from djautotask.sync import SyncResults
 from djautotask.tests import fixtures, mocks, fixture_utils
 
 
@@ -64,7 +63,7 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
         self.assert_sync_job()
 
-    def test_save_instace(self):
+    def test_save_instance(self):
         """
         Test to ensure synchronizer saves a instance locally.
         """
@@ -142,7 +141,7 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         _, updated_count, skipped_count, _ = \
             self._sync_with_results(return_value)
 
-        self.assertEqual(skipped_count, 1)
+        self.assertGreater(skipped_count, 0)
         self.assertEqual(updated_count, 0)
 
 
@@ -394,15 +393,19 @@ class TestTicketSynchronizer(
         """
         ticket = models.Ticket.objects.first()
         ticket.status = models.Status.objects.first()
+        results = SyncResults()
         time_mock, time_patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TimeEntrySynchronizer.get',
-            None
+            'djautotask.sync_rest.TimeEntrySynchronizer.fetch_records',
+            results
         )
         note_mock, note_patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TicketNoteSynchronizer.get', None)
+            'djautotask.sync_rest.TicketNoteSynchronizer.fetch_records',
+            results
+        )
         resource_mock, resource_patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TicketSecondaryResourceSynchronizer.get',
-            None
+            'djautotask.sync_rest.TicketSecondaryResourceSynchronizer.'
+            'fetch_records',
+            results
         )
         _, _checklist_patch = mocks.create_mock_call(
             "djautotask.sync_rest.TicketChecklistItemsSynchronizer.sync_items",
@@ -1085,12 +1088,13 @@ class TestTimeEntrySynchronizer(SynchronizerRestTestMixin, TestCase):
     synchronizer_class = sync_rest.TimeEntrySynchronizer
     model_class = models.TimeEntryTracker
     fixture = fixtures.API_TIME_ENTRY
-    update_field = 'summaryNotes'
+    update_field = 'summary_notes'
 
     def setUp(self):
         super().setUp()
         fixture_utils.init_resources()
         fixture_utils.init_tickets()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
         self._sync(self.fixture)
 
@@ -1099,7 +1103,8 @@ class TestTimeEntrySynchronizer(SynchronizerRestTestMixin, TestCase):
 
     def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.date_worked, object_data['dateWorked'])
+        self.assertEqual(instance.date_worked,
+                         self._parse_datetime(object_data['dateWorked']))
         self.assertEqual(instance.start_date_time,
                          self._parse_datetime(object_data['startDateTime']))
         self.assertEqual(instance.end_date_time,
@@ -1110,66 +1115,11 @@ class TestTimeEntrySynchronizer(SynchronizerRestTestMixin, TestCase):
         self.assertEqual(instance.hours_worked, object_data['hoursWorked'])
         self.assertEqual(instance.hours_to_bill, object_data['hoursToBill'])
         self.assertEqual(instance.offset_hours, object_data['offsetHours'])
-        self.assertEqual(instance.ticket.id, object_data['ticketID'])
+        if object_data['ticketID']:
+            self.assertEqual(instance.ticket.id, object_data['ticketID'])
+        if object_data['taskID']:
+            self.assertEqual(instance.task.id, object_data['taskID'])
         self.assertEqual(instance.resource.id, object_data['resourceID'])
-
-    def test_sync_time_entry_dropped(self):
-        """
-        Verify that a time entry does not get saved locally if its ticket
-        does not already exist in the local database.
-        """
-        time_entry_count = models.TimeEntry.objects.all().count()
-
-        synchronizer = sync_rest.TimeEntrySynchronizer(full=True)
-        synchronizer.sync()
-        sync_job = models.SyncJob.objects.last()
-
-        # Time entry for time entry ticket is not saved locally
-        # and is subsequently removed.
-        self.assertEqual(models.TimeEntry.objects.all().count(), 0)
-        self.assertEqual(sync_job.added, 0)
-        self.assertEqual(sync_job.updated, 0)
-        self.assertEqual(sync_job.deleted, time_entry_count)
-
-    def test_batch_queries_creates_multiple_batches(self):
-        """
-        Verify that build batch query method returns multiple batches
-        ticket and task queries.
-        """
-        max_id_limit = 500
-        settings = DjautotaskSettings().get_settings()
-        batch_size = settings.get('batch_query_size')
-
-        # Simulate ticket IDs
-        object_ids = random.sample(range(1, max_id_limit), batch_size + 50)
-        _, _patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TimeEntrySynchronizer.active_ids',
-            {'ticketID': object_ids}
-        )
-        time_entry_mock, time_entry_patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TimeEntrySynchronizer.get', None
-        )
-
-        # With a max batch size of 400, a set of 450 object IDs should result
-        # in 4 Query objects being returned in the list.
-        # (2 for tickets, 2 for tasks)
-        self.assertEqual(time_entry_mock.call_count, 4)
-
-        _patch.stop()
-        time_entry_patch.stop()
-
-    def test_batch_queries_returns_query_list(self):
-        """
-        Verify that an empty list is returned
-        when no tickets or tasks are present in the database.
-        """
-        _, _patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TimeEntrySynchronizer.active_ids', {}
-        )
-        time_entry_mock, time_entry_patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TimeEntrySynchronizer.get', None
-        )
-        self.assertEqual(len(self.synchronizer.active_ids), 0)
 
 
 class TestAllocationCodeSynchronizer(SynchronizerRestTestMixin, TestCase):

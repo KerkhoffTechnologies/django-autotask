@@ -350,6 +350,12 @@ class TicketSecondaryResource(TimeStampedModel):
         'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
 
+    AUTOTASK_FIELDS = {
+        'resource': 'resourceID',
+        'ticket': 'ticketID',
+        'role': 'roleID',
+    }
+
     def __str__(self):
         return '{} {}'.format(self.resource, self.ticket)
 
@@ -672,6 +678,12 @@ class TaskSecondaryResource(TimeStampedModel):
     role = models.ForeignKey(
         'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    AUTOTASK_FIELDS = {
+        'resource': 'resourceID',
+        'task': 'taskID',
+        'role': 'roleID',
+    }
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.task)

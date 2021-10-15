@@ -932,7 +932,7 @@ API_TASK_TYPE_LINK_FIELD = {
     ]
 }
 
-API_TIME_ENTRY_TICKET = {
+API_TIME_ENTRY_TICKET_ITEM = {
     'id': 4,
     'ticketID': 7688,
     'taskID': None,
@@ -948,7 +948,7 @@ API_TIME_ENTRY_TICKET = {
     'internalNotes': 'We will need to get more information',
     'roleID': 29683396,
     'createDateTime': '2018-01-23T09:50:00.00Z',
-    'resourceID': 28,
+    'resourceID': 29683794,
     'creatorUserID': 29683794,
     'lastModifiedUserID': 29683794,
     'lastModifiedDateTime': '2018-01-23T13:00:00.00Z',
@@ -959,12 +959,12 @@ API_TIME_ENTRY_TICKET = {
     'billingApprovalLevelMostRecent': 0,
 }
 
-API_TIME_ENTRY_TASK = {
+API_TIME_ENTRY_TASK_ITEM = {
     'id': 5,
     'ticketID': None,
     'taskID': 7733,
     'internalBillingCodeID': 29683403,
-    'timeEntryType': 10,
+    'timeEntryType': 6,
     'dateWorked': '2018-01-23T00:00:00.00Z',
     'startDateTime': '2018-01-23T10:00:00.00Z',
     'endDateTime': '2018-01-23T12:30:00.00Z',
@@ -975,7 +975,7 @@ API_TIME_ENTRY_TASK = {
     'internalNotes': 'We will need to get more information',
     'roleID': 29683396,
     'createDateTime': '2018-01-23T09:50:00.00Z',
-    'resourceID': 28,
+    'resourceID': 29683794,
     'creatorUserID': 29683794,
     'lastModifiedUserID': 29683794,
     'lastModifiedDateTime': '2018-01-23T13:00:00.00Z',
@@ -985,12 +985,19 @@ API_TIME_ENTRY_TASK = {
     'isNonBillable': False,
     'billingApprovalLevelMostRecent': 0,
 }
-API_TIME_ENTRY_ITEMS = [API_TIME_ENTRY_TICKET, API_TIME_ENTRY_TASK]
+API_TIME_ENTRY_ITEMS = [API_TIME_ENTRY_TICKET_ITEM, API_TIME_ENTRY_TASK_ITEM]
+API_TIME_ENTRY_TICKET = {
+    "items": [API_TIME_ENTRY_TICKET_ITEM],
+    "pageDetails": API_PAGE_DETAILS
+}
+API_TIME_ENTRY_TASK = {
+    "items": [API_TIME_ENTRY_TASK_ITEM],
+    "pageDetails": API_PAGE_DETAILS
+}
 API_TIME_ENTRY = {
     "items": API_TIME_ENTRY_ITEMS,
     "pageDetails": API_PAGE_DETAILS
 }
-
 
 API_USE_TYPE_FIELD = {
     "fields": [

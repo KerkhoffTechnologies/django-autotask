@@ -495,8 +495,10 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncRestTest, TestCase):
     def setUp(self):
         super().setUp()
         fixture_utils.init_resources()
-        fixture_utils.init_tickets()
+        fixture_utils.init_projects()
         fixture_utils.init_tasks()
+        fixture_utils.init_tickets()
+        fixture_utils.init_time_entries()
 
 
 class TestSyncAllocationCodeCommand(AbstractBaseSyncRestTest, TestCase):
@@ -689,14 +691,6 @@ class TestSyncAllCommand(TestCase):
     def setUp(self):
         super().setUp()
         mocks.init_api_connection(Wrapper)
-        # mocks.create_mock_call(
-        #     'djautotask.sync.TicketNoteSynchronizer._get_query_conditions',
-        #     None
-        # )
-        # mocks.create_mock_call(
-        #     'djautotask.sync.TaskNoteSynchronizer._get_query_conditions',
-        #     None
-        # )
         fixture_utils.mock_udfs()
         self._call_service_api()
 
@@ -736,7 +730,6 @@ class TestSyncAllCommand(TestCase):
             TestSyncPhaseCommand,
             TestSyncTicketNoteCommand,
             TestSyncTaskNoteCommand,
-            TestSyncTimeEntryCommand,
             TestSyncAllocationCodeCommand,
             TestSyncResourceRoleDepartmentCommand,
             TestSyncResourceServiceDeskRoleCommand,
@@ -750,6 +743,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncAccountLocationCommand,
             TestSyncTaskPredecessor,
             TestSyncContactCommand,
+            TestSyncTimeEntryCommand,
         ]
 
         self.test_args = []
@@ -837,14 +831,12 @@ class TestSyncAllCommand(TestCase):
 
         mocks.wrapper_query_api_calls()
         mocks.get_field_info_api_calls()
-        # _, _patch = mocks.build_batch_query()
 
         self._call_empty_service_api()
         for key, model_class in at_object_map.items():
             pre_full_sync_counts[key] = model_class.objects.all().count()
 
         output = run_sync_command(full_option=True)
-        # _patch.stop()
 
         # Verify the rest of sync classes summaries.
         for mock_call, fixture, at_object in self.test_args:

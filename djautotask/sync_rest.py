@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from djautotask import api_rest as api
 from djautotask import models
-from .api_rest import ApiCondition as A
+from .api_rest import ApiCondition as A, AutotaskRecordNotFoundError
 from .sync import InvalidObjectException, SyncResults, log_sync_job
 from .utils import DjautotaskSettings
 
@@ -89,16 +89,10 @@ class BatchQueryMixin:
     condition_field_name = None
     batch_query_size = None
     client = None
-    force_batch_query_size = None
 
     def __init__(self, full=False, *args, **kwargs):
         settings = DjautotaskSettings().get_settings()
         self.batch_query_size = settings.get('batch_query_size')
-        if self.force_batch_query_size:
-            self.batch_query_size = min(
-                self.force_batch_query_size,
-                self.batch_query_size
-            )
         super().__init__(full, *args, **kwargs)
         self._add_conditions()
 
@@ -494,6 +488,21 @@ class CreateRecordMixin:
         created_instance = self.get_single(created_id)
 
         return self.update_or_create_instance(created_instance['item'])
+
+
+class DeleteRecordMixin:
+
+    def delete(self, instance, parent=None):
+        """
+        Make a request to Autotask to delete an entity.
+        """
+        try:
+            deleted_instance_id = self.client.delete(instance, parent)
+            if deleted_instance_id:
+                instance.delete()
+        except AutotaskRecordNotFoundError:
+            # We can safely delete instance to sync
+            instance.delete()
 
 
 class ContactSynchronizer(Synchronizer):
@@ -941,7 +950,7 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
         instance.date_worked = object_data.get('dateWorked')
         instance.start_date_time = object_data.get('startDateTime')
         instance.end_date_time = object_data.get('endDateTime')
-        instance.summary_notes = object_data.get('SummaryNotes')
+        instance.summary_notes = object_data.get('summaryNotes')
         instance.internal_notes = object_data.get('internalNotes')
         instance.non_billable = object_data.get('isNonBillable')
         instance.hours_worked = object_data.get('hoursWorked')
@@ -966,30 +975,25 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
         return instance
 
 
-class SecondaryResourceSyncronizer(Synchronizer):
+class SecondaryResourceSyncronizer(CreateRecordMixin, DeleteRecordMixin,
+                                   Synchronizer):
     def create(self, resource, role, entity):
         """
         Make a request to Autotask to create a SecondaryResource.
         """
-
         body = {
-            'resourceID': resource,
-            'roleID': role,
-            self.id_type: entity
+            'resource': resource,
+            'role': role,
+            self.related_instance_name: entity,
         }
-        instance = api.create_object(self.model_name, body)
+        return super().create(**body)
 
-        return self.update_or_create_instance(instance)
-
-    def delete(self, instances):
+    def delete(self, instances, parent=None):
         """
-        Takes a queryset of instances and deletes them from the remote
-        Autotask instance and the local database.
+        Make a request to Autotask to delete a SecondaryResource.
         """
-
-        api.delete_objects(self.model_name, instances)
-
-        instances.delete()
+        for instance in instances:
+            super().delete(instance, parent)
 
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
@@ -1002,9 +1006,7 @@ class TicketSecondaryResourceSynchronizer(SecondaryResourceSyncronizer,
     client_class = api.TicketSecondaryResourcesAPIClient
     model_class = models.TicketSecondaryResourceTracker
     last_updated_field = None
-
-    # model_name = 'TicketSecondaryResource'
-    id_type = 'ticketID'
+    related_instance_name = 'ticket'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1022,9 +1024,7 @@ class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     client_class = api.TaskSecondaryResourcesAPIClient
     model_class = models.TaskSecondaryResourceTracker
     last_updated_field = None
-
-    # model_name = 'TaskSecondaryResource'
-    id_type = 'taskID'
+    related_instance_name = 'task'
 
     related_meta = {
         'resourceID': (models.Resource, 'resource'),
@@ -1154,7 +1154,6 @@ class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.TaskPredecessorTracker
     condition_field_name = 'predecessorTaskID'
     last_updated_field = None
-    force_batch_query_size = 224
 
     related_meta = {
         'predecessorTaskID': (models.Task, 'predecessor_task'),
@@ -1186,7 +1185,6 @@ class ServiceCallSynchronizer(
     model_class = models.ServiceCallTracker
     condition_field_name = 'companyID'
     last_updated_field = 'lastModifiedDateTime'
-    force_batch_query_size = 169
 
     related_meta = {
         'companyID': (models.Account, 'account'),
@@ -1235,7 +1233,6 @@ class ServiceCallTicketSynchronizer(
     model_class = models.ServiceCallTicketTracker
     condition_field_name = 'ticketID'
     last_updated_field = None
-    force_batch_query_size = 240
 
     related_meta = {
         'serviceCallID': (models.ServiceCall, 'service_call'),
@@ -1264,12 +1261,6 @@ class ServiceCallTaskSynchronizer(
     condition_field_name = 'taskID'
     last_updated_field = None
 
-    # service_call_task shows errors w/ the value of batch_query_size
-    # larger than 215. The error: 404 - File or directory not found.</h2>
-    # <h3>The resource you are looking for might have been removed,
-    # had its name changed, or is temporarily unavailable.
-    force_batch_query_size = 215
-
     related_meta = {
         'serviceCallID': (models.ServiceCall, 'service_call'),
         'taskID': (models.Task, 'task')
@@ -1297,7 +1288,6 @@ class ServiceCallTicketResourceSynchronizer(
     model_class = models.ServiceCallTicketResourceTracker
     condition_field_name = 'serviceCallTicketID'
     last_updated_field = None
-    force_batch_query_size = 304
 
     related_meta = {
         'serviceCallTicketID':
@@ -1326,7 +1316,6 @@ class ServiceCallTaskResourceSynchronizer(
     model_class = models.ServiceCallTaskResourceTracker
     condition_field_name = 'serviceCallTaskID'
     last_updated_field = None
-    force_batch_query_size = 277
 
     related_meta = {
         'serviceCallTaskID':
@@ -1401,7 +1390,6 @@ class AccountPhysicalLocationSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.AccountPhysicalLocationTracker
     condition_field_name = 'companyID'
     last_updated_field = None
-    force_batch_query_size = 165
 
     related_meta = {
         'companyID': (models.Account, 'account'),
