@@ -53,6 +53,7 @@ class ChildSynchronizer:
 
     def _get_children(self, results, query_params):
         parent_field, parent_id = query_params
+        self.client.clear_conditions()
         self.client.add_condition(
             A(
                 op='eq',

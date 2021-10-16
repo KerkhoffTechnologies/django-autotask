@@ -501,12 +501,18 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_time_entries()
 
 
-class TestSyncTicketTimeEntryCommand(TestSyncTimeEntryCommand):
+class TestSyncTicketTimeEntryCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        mocks.service_api_get_ticket_time_entries_call,
+        mocks.service_api_get_time_entries_call,
         fixtures.API_TIME_ENTRY_TICKET,
         'time_entry',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_resources()
+        fixture_utils.init_tickets()
+        fixture_utils.init_ticket_time_entries()
 
 
 class TestSyncAllocationCodeCommand(AbstractBaseSyncRestTest, TestCase):
@@ -701,7 +707,6 @@ class TestSyncAllCommand(TestCase):
         mocks.init_api_connection(Wrapper)
         mocks.init_api_rest_connection()
         fixture_utils.mock_udfs()
-        self._call_service_api()
 
         # Mock API calls to return values based on what entity
         # is being requested
@@ -773,6 +778,7 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY_TICKET)
         test_cases = self.sync_test_cases + [TestSyncTicketTimeEntryCommand]
         self._build_test_args(test_cases)
+        self._call_service_api()
 
         output = run_sync_command()
 
@@ -798,6 +804,7 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY)
         test_cases = self.sync_test_cases + [TestSyncTimeEntryCommand]
         self._build_test_args(test_cases)
+        self._call_service_api()
 
         at_object_map = {
             'account_type': models.AccountType,

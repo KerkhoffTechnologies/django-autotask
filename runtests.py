@@ -100,5 +100,5 @@ if __name__ == '__main__':
     _setup()
     # call_command('test')
     # To run specific tests, try something such as:
-    call_command('test', 'djautotask.tests.test_commands.TestSyncAllCommand')  # noqa: E501
+    call_command('test', 'djautotask.tests.test_commands.TestSyncAllCommand.test_partial_sync')  # noqa: E501
     exit_on_failure(flake8_main())

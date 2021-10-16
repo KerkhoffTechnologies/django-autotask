@@ -472,6 +472,13 @@ def init_time_entries():
     return synchronizer.sync()
 
 
+def init_ticket_time_entries():
+    models.TimeEntry.objects.all().delete()
+    mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY_TICKET)
+    synchronizer = syncrest.TimeEntrySynchronizer()
+    return synchronizer.sync()
+
+
 def init_allocation_codes():
     models.AllocationCode.objects.all().delete()
     mocks.service_api_get_allocation_codes_call(fixtures.API_ALLOCATION_CODE)
