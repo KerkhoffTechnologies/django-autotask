@@ -501,20 +501,6 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_time_entries()
 
 
-class TestSyncTicketTimeEntryCommand(AbstractBaseSyncRestTest, TestCase):
-    args = (
-        mocks.service_api_get_time_entries_call,
-        fixtures.API_TIME_ENTRY_TICKET,
-        'time_entry',
-    )
-
-    def setUp(self):
-        super().setUp()
-        fixture_utils.init_resources()
-        fixture_utils.init_tickets()
-        fixture_utils.init_ticket_time_entries()
-
-
 class TestSyncAllocationCodeCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
         mocks.service_api_get_allocation_codes_call,
@@ -707,6 +693,7 @@ class TestSyncAllCommand(TestCase):
         mocks.init_api_connection(Wrapper)
         mocks.init_api_rest_connection()
         fixture_utils.mock_udfs()
+        self._call_service_api()
 
         # Mock API calls to return values based on what entity
         # is being requested
@@ -717,7 +704,7 @@ class TestSyncAllCommand(TestCase):
             fixture_utils.manage_full_sync_return_data
         )
 
-        self.sync_test_cases = [
+        sync_test_cases = [
             TestSyncLicenseTypeCommand,
             TestSyncTaskTypeLinkCommand,
             TestSyncUseTypeCommand,
@@ -744,6 +731,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncPhaseCommand,
             TestSyncTicketNoteCommand,
             TestSyncTaskNoteCommand,
+            TestSyncTimeEntryCommand,
             TestSyncAllocationCodeCommand,
             TestSyncResourceRoleDepartmentCommand,
             TestSyncResourceServiceDeskRoleCommand,
@@ -760,7 +748,6 @@ class TestSyncAllCommand(TestCase):
         ]
         self.test_args = []
 
-    def _build_test_args(self, sync_test_cases):
         for test_case in sync_test_cases:
             # for REST API
             if len(test_case.args) == 3:
@@ -775,11 +762,6 @@ class TestSyncAllCommand(TestCase):
         Test the command to run a sync of all objects without
         the --full argument.
         """
-        mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY_TICKET)
-        test_cases = self.sync_test_cases + [TestSyncTicketTimeEntryCommand]
-        self._build_test_args(test_cases)
-        self._call_service_api()
-
         output = run_sync_command()
 
         for mock_call, fixture, at_object in self.test_args:
@@ -801,11 +783,6 @@ class TestSyncAllCommand(TestCase):
 
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
-        mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY)
-        test_cases = self.sync_test_cases + [TestSyncTimeEntryCommand]
-        self._build_test_args(test_cases)
-        self._call_service_api()
-
         at_object_map = {
             'account_type': models.AccountType,
             'role': models.Role,
@@ -933,6 +910,7 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_TASK_SECONDARY_RESOURCE)
         mocks.service_api_get_ticket_notes_call(fixtures.API_TICKET_NOTE)
         mocks.service_api_get_task_notes_call(fixtures.API_TASK_NOTE)
+        mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY)
         mocks.service_api_get_service_call_task_resources_call(
             fixtures.API_SERVICE_CALL_TASK_RESOURCE)
         mocks.service_api_get_task_predecessors_call(
