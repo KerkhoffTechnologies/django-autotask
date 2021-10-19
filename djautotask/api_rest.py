@@ -57,6 +57,10 @@ class AutotaskSecurityPermissionsException(AutotaskAPIClientError):
     pass
 
 
+def parse_autotaskapierror(e):
+    return ', '.join(e.args)
+
+
 def retry_if_api_error(exception):
     """
     Return True if we should retry (in this case when it's an
