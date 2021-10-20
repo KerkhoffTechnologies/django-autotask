@@ -115,7 +115,7 @@ API_PROJECT_ITEM = {
         'originalEstimatedRevenue': 0.0,
         'estimatedSalesCost': 0.0,
         'status': 1,
-        'projectLeadResourceID': 29683794,
+        'projectLeadResourceID': 10,
         'completedPercentage': 0,
         'completedDateTime': '2019-09-18T06:00:00.000Z',
         'statusDetail': '',
@@ -166,23 +166,6 @@ API_LICENSE_TYPE_FIELD = {
     ]
 }
 
-API_SECONDARY_RESOURCE_LIST = [
-    {
-        'id': 29684157,
-        'UserDefinedFields': '',
-        'TicketID': 7688,
-        'ResourceID': 29683794,
-        'RoleID': 29683394
-    },
-    {
-        'id': 29684156,
-        'UserDefinedFields': '',
-        'TicketID': 7731,
-        'ResourceID': 29683915,
-        'RoleID': 29683395
-    }
-]
-
 API_RESOURCE = {
     'AccountingReferenceID': '',
     'Active': True,
@@ -212,7 +195,7 @@ API_RESOURCE = {
     'UserDefinedFields': '',
     'UserName': 'administrator',
     'UserType': 10,
-    'id': 29683794,
+    'id': 10,
 }
 
 API_RESOURCE_LIST = [API_RESOURCE]
@@ -795,9 +778,9 @@ API_PHASE = {
 API_PHASE_LIST = [API_PHASE]
 
 API_TASK_ITEM = {
-    'id': 7733,
+    'id': 101,
     'allocationCodeID': 29683415,
-    'assignedResourceID': 29683794,
+    'assignedResourceID': 10,
     'assignedResourceRoleID': 29682834,
     'canClientPortalUserCompleteTask': False,
     'createDateTime': '2018-01-20T12:00:00.000Z',
@@ -837,44 +820,67 @@ API_TASK = {
     "pageDetails": API_PAGE_DETAILS
 }
 
+API_TICKET_SECONDARY_RESOURCE_ITEMS = [
+    {
+        'id': 29684157,
+        'ticketID': 100,
+        'resourceID': 10,
+        'roleID': 8
+    },
+]
+API_TICKET_SECONDARY_RESOURCE = {
+    "items": API_TICKET_SECONDARY_RESOURCE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
+
+API_TASK_SECONDARY_RESOURCE_ITEMS = [
+    {
+        'id': 29684411,
+        'taskID': 101,
+        'resourceID': 10,
+        'roleID': 8,
+    }
+]
 API_TASK_SECONDARY_RESOURCE = {
-    'id': 29684411,
-    'UserDefinedFields': None,
-    'TaskID': 7733,
-    'ResourceID': 29683794,
-    'RoleID': 29683461,
+    "items": API_TASK_SECONDARY_RESOURCE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_TASK_SECONDARY_RESOURCE_LIST = [API_TASK_SECONDARY_RESOURCE]
 
+API_TICKET_NOTE_ITEMS = [
+    {
+        'id': 45,
+        'createDateTime': '2018-01-23T11:00:00.00Z',
+        'description': "Note description",
+        'creatorResourceID': 10,
+        'lastActivityDate': '2018-01-23T11:00:00.00Z',
+        'noteType': 2,
+        'publish': 1,
+        'ticketID': 100,
+        'title': "Note Title",
+    }
+]
 API_TICKET_NOTE = {
-    'id': 45,
-    'CreateDateTime':
-        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'Description': "Note description",
-    'CreatorResourceID': 29683794,
-    'LastActivityDate':
-        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'NoteType': 2,
-    'Publish': 1,
-    'TicketID': 7688,
-    'Title': "Note Title",
+    "items": API_TICKET_NOTE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_TICKET_NOTE_LIST = [API_TICKET_NOTE]
 
+API_TASK_NOTE_ITEMS = [
+    {
+        'id': 45,
+        'createDateTime': '2018-01-23T11:00:00.00Z',
+        'description': "Note description",
+        'creatorResourceID': 10,
+        'lastActivityDate': '2018-01-23T11:00:00.00Z',
+        'noteType': 2,
+        'publish': 1,
+        'taskID': 101,
+        'title': "Note Title",
+    }
+]
 API_TASK_NOTE = {
-    'id': 45,
-    'CreateDateTime':
-        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'Description': "Note description",
-    'CreatorResourceID': 29683794,
-    'LastActivityDate':
-        datetime(2018, 1, 23, 11, 0, tzinfo=tzoffset(None, 3600)),
-    'NoteType': 2,
-    'Publish': 1,
-    'TaskID': 7733,
-    'Title': "Note Title",
+    "items": API_TASK_NOTE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-API_TASK_NOTE_LIST = [API_TASK_NOTE]
 
 API_NOTE_TYPE_LIST = [
     {
@@ -926,64 +932,72 @@ API_TASK_TYPE_LINK_FIELD = {
     ]
 }
 
-API_TIME_ENTRY_TICKET = {
+API_TIME_ENTRY_TICKET_ITEM = {
     'id': 4,
-    'UserDefinedFields': None,
-    'TicketID': 7689,
-    'InternalAllocationCodeID': 29683403,
-    'Type': 2,
-    'DateWorked': datetime(2018, 1, 23, 0, 0, tzinfo=tzoffset(None, 3600)),
-    'StartDateTime': datetime(2018, 1, 23, 10, 0, tzinfo=tzoffset(None, 3600)),
-    'EndDateTime': datetime(2018, 1, 23, 12, 30, tzinfo=tzoffset(None, 3600)),
-    'HoursWorked': 1.0000,
-    'HoursToBill': 1.0000,
-    'OffsetHours': 0.0000,
-    'SummaryNotes': 'Initial triage of issue',
-    'InternalNotes': 'We will need to get more information',
-    'RoleID': 29683396,
-    'CreateDateTime':
-        datetime(2018, 1, 23, 9, 50, tzinfo=tzoffset(None, 3600)),
-    'ResourceID': 28,
-    'CreatorUserID': 29683794,
-    'LastModifiedUserID': 29683794,
-    'LastModifiedDateTime':
-        datetime(2018, 1, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
-    'AllocationCodeID': 29683403,
-    'ContractID': 29684054,
-    'ShowOnInvoice': True,
-    'NonBillable': False,
-    'BillingApprovalLevelMostRecent': 0,
+    'ticketID': 100,
+    'taskID': None,
+    'internalBillingCodeID': 3,
+    'timeEntryType': 2,
+    'dateWorked': '2018-01-23T00:00:00.00Z',
+    'startDateTime': '2018-01-23T10:00:00.00Z',
+    'endDateTime': '2018-01-23T12:30:00.00Z',
+    'hoursWorked': 1.0000,
+    'hoursToBill': 1.0000,
+    'offsetHours': 0.0000,
+    'summaryNotes': 'Initial triage of issue',
+    'internalNotes': 'We will need to get more information',
+    'roleID': 8,
+    'createDateTime': '2018-01-23T09:50:00.00Z',
+    'resourceID': 10,
+    'creatorUserID': 10,
+    'lastModifiedUserID': 10,
+    'lastModifiedDateTime': '2018-01-23T13:00:00.00Z',
+    'billingCodeID': 3,
+    'contractID': 5,
+    'showOnInvoice': True,
+    'isNonBillable': False,
+    'billingApprovalLevelMostRecent': 0,
 }
 
-API_TIME_ENTRY_TASK = {
+API_TIME_ENTRY_TASK_ITEM = {
     'id': 5,
-    'UserDefinedFields': None,
-    'TaskID': 7734,
-    'InternalAllocationCodeID': 29683403,
-    'Type': 2,
-    'DateWorked': datetime(2018, 1, 23, 0, 0, tzinfo=tzoffset(None, 3600)),
-    'StartDateTime': datetime(2018, 1, 23, 10, 0, tzinfo=tzoffset(None, 3600)),
-    'EndDateTime': datetime(2018, 1, 23, 12, 30, tzinfo=tzoffset(None, 3600)),
-    'HoursWorked': 1.0000,
-    'HoursToBill': 1.0000,
-    'OffsetHours': 0.0000,
-    'SummaryNotes': 'Entering time for task',
-    'InternalNotes': 'We will need to get more information',
-    'RoleID': 29683396,
-    'CreateDateTime':
-        datetime(2018, 1, 23, 9, 50, tzinfo=tzoffset(None, 3600)),
-    'ResourceID': 28,
-    'CreatorUserID': 29683794,
-    'LastModifiedUserID': 29683794,
-    'LastModifiedDateTime':
-        datetime(2018, 1, 23, 13, 0, tzinfo=tzoffset(None, 3600)),
-    'AllocationCodeID': 29683403,
-    'ContractID': 29684054,
-    'ShowOnInvoice': True,
-    'NonBillable': False,
-    'BillingApprovalLevelMostRecent': 0,
+    'ticketID': None,
+    'taskID': 101,
+    'internalBillingCodeID': 3,
+    'timeEntryType': 6,
+    'dateWorked': '2018-01-23T00:00:00.00Z',
+    'startDateTime': '2018-01-23T10:00:00.00Z',
+    'endDateTime': '2018-01-23T12:30:00.00Z',
+    'hoursWorked': 1.0000,
+    'hoursToBill': 1.0000,
+    'offsetHours': 0.0000,
+    'summaryNotes': 'Entering time for task',
+    'internalNotes': 'We will need to get more information',
+    'roleID': 8,
+    'createDateTime': '2018-01-23T09:50:00.00Z',
+    'resourceID': 10,
+    'creatorUserID': 10,
+    'lastModifiedUserID': 10,
+    'lastModifiedDateTime': '2018-01-23T13:00:00.00Z',
+    'billingCodeID': 3,
+    'contractID': 5,
+    'showOnInvoice': True,
+    'isNonBillable': False,
+    'billingApprovalLevelMostRecent': 0,
 }
-API_TIME_ENTRY_LIST = [API_TIME_ENTRY_TICKET, API_TIME_ENTRY_TASK]
+API_TIME_ENTRY_ITEMS = [API_TIME_ENTRY_TICKET_ITEM, API_TIME_ENTRY_TASK_ITEM]
+API_TIME_ENTRY_TICKET = {
+    "items": [API_TIME_ENTRY_TICKET_ITEM],
+    "pageDetails": API_PAGE_DETAILS
+}
+API_TIME_ENTRY_TASK = {
+    "items": [API_TIME_ENTRY_TASK_ITEM],
+    "pageDetails": API_PAGE_DETAILS
+}
+API_TIME_ENTRY = {
+    "items": API_TIME_ENTRY_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
 
 API_USE_TYPE_FIELD = {
     "fields": [
@@ -1032,7 +1046,7 @@ API_ALLOCATION_CODE = {
 }
 
 API_ROLE_ITEM = {
-    'id': 29683396,
+    'id': 8,
     'name': "IT:Technician I",
     'description': "",
     'isActive': True,
@@ -1065,8 +1079,8 @@ API_RESOURCE_ROLE_DEPARTMENT_ITEM = {
     "isActive": True,
     "isDefault": True,
     "isDepartmentLead": True,
-    "resourceID": 29683794,
-    "roleID": 29683396,
+    "resourceID": 10,
+    "roleID": 8,
 }
 API_RESOURCE_ROLE_DEPARTMENT_ITEMS = [API_RESOURCE_ROLE_DEPARTMENT_ITEM]
 API_RESOURCE_ROLE_DEPARTMENT = {
@@ -1078,8 +1092,8 @@ API_RESOURCE_SERVICE_DESK_ROLE_ITEM = {
     "id": 32,
     "isActive": True,
     "isDefault": True,
-    "resourceID": 29683794,
-    "roleID": 29683396,
+    "resourceID": 10,
+    "roleID": 8,
 }
 API_RESOURCE_SERVICE_DESK_ROLE_ITEMS = [API_RESOURCE_SERVICE_DESK_ROLE_ITEM]
 API_RESOURCE_SERVICE_DESK_ROLE = {
@@ -1130,8 +1144,8 @@ API_SERVICE_CALL_ITEMS = [
         'lastModifiedDateTime': None,
         'companyID': 174,
         'status': 2,
-        'creatorResourceID': 29683794,
-        'canceledByResourceID': 29683794,
+        'creatorResourceID': 10,
+        'canceledByResourceID': 10,
     }
 ]
 API_SERVICE_CALL = {
@@ -1143,7 +1157,7 @@ API_SERVICE_CALL_TICKET_ITEMS = [
     {
         'id': 4,
         'serviceCallID': 2,
-        'ticketID': 7688,
+        'ticketID': 100,
     }
 ]
 API_SERVICE_CALL_TICKET = {
@@ -1155,7 +1169,7 @@ API_SERVICE_CALL_TASK_ITEMS = [
     {
         'id': 4,
         'serviceCallID': 2,
-        'taskID': 7733,
+        'taskID': 101,
     }
 ]
 API_SERVICE_CALL_TASK = {
@@ -1167,7 +1181,7 @@ API_SERVICE_CALL_TICKET_RESOURCE_ITEMS = [
     {
         'id': 4,
         'serviceCallTicketID': 4,
-        'resourceID': 29683794,
+        'resourceID': 10,
     }
 ]
 API_SERVICE_CALL_TICKET_RESOURCE = {
@@ -1179,7 +1193,7 @@ API_SERVICE_CALL_TASK_RESOURCE_ITEMS = [
     {
         'id': 4,
         'serviceCallTaskID': 4,
-        'resourceID': 29683794,
+        'resourceID': 10,
     }
 ]
 API_SERVICE_CALL_TASK_RESOURCE = {
@@ -1255,8 +1269,8 @@ API_TICKET_ITEM = {
         'companyID': 174,
         'companyLocationID': 55,
         'billingCodeID': 29683407,
-        'assignedResourceID': 29683794,
-        'assignedResourceRoleID': 29683396,
+        'assignedResourceID': 10,
+        'assignedResourceRoleID': 8,
         'changeInfoField1': '',
         'changeInfoField2': '',
         'changeInfoField3': '',
@@ -1291,7 +1305,7 @@ API_TICKET_ITEM = {
         'ticketType': 1,
         'title': 'Monthy Services Checkup*',
         'userDefinedFields': {},
-        'id': 7688
+        'id': 100
     }
 API_TICKET_ITEMS = [API_TICKET_ITEM]
 API_TICKET_BY_ID = {

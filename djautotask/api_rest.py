@@ -19,7 +19,9 @@ RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
 FORBIDDEN_ERROR_MESSAGE = \
     'The logged in Resource does not have the adequate ' \
     'permissions to create this entity type.'
-
+NO_RECORD_ERROR_MESSAGE = \
+    'No message. No matching records found. The logged in Resource may not ' \
+    'have the required permissions to delete the data.'
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,10 @@ class AutotaskRecordNotFoundError(AutotaskAPIClientError):
 class AutotaskSecurityPermissionsException(AutotaskAPIClientError):
     """The API credentials have insufficient security permissions."""
     pass
+
+
+def parse_autotaskapierror(e):
+    return ', '.join(e.args)
 
 
 def retry_if_api_error(exception):
@@ -488,8 +494,12 @@ class AutotaskAPIClient(object):
             # https://webservices2.autotask.net/atservicesrest/swagger/ui/index#/TicketChecklistItemsChild/TicketChecklistItemsChild_CreateEntity # noqa
             # Until this is fixed in the API, check for the message indicating
             # a permission error and raise an appropriate exception.
+            # In addition, AT returns 500 when requested record doesn't exist
+            # during the deletion
             if FORBIDDEN_ERROR_MESSAGE in prepared_error:
                 raise AutotaskSecurityPermissionsException(prepared_error, 403)
+            elif NO_RECORD_ERROR_MESSAGE in prepared_error:
+                raise AutotaskRecordNotFoundError(prepared_error, 404)
             else:
                 raise AutotaskAPIServerError(prepared_error)
         else:
@@ -498,6 +508,7 @@ class AutotaskAPIClient(object):
 
     def add_condition(self, condition):
         self.conditions.add(condition)
+        return len(self.conditions) - 1
 
     def get_conditions(self):
         return self.conditions
@@ -530,6 +541,12 @@ class AutotaskAPIClient(object):
         response = self.request('post', self.get_api_url(), body)
         return response.get('itemId')
 
+    def delete(self, instance, parent=None):
+        endpoint_url = self.get_api_url() + str(instance.id)
+        response = self.request('delete', endpoint_url)
+        # AT sends deleted_id or 500 in the case failure instead of 404 or 204
+        return response.get('itemId')
+
 
 class ChildAPIMixin:
     PARENT_API = None
@@ -553,6 +570,15 @@ class ChildAPIMixin:
         endpoint_url = self.get_child_url(parent.id)
         body = self._format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
+        return response.get('itemId')
+
+    def delete(self, instance, parent):
+        endpoint_url = '{}/{}'.format(
+            self.get_child_url(parent.id),
+            str(instance.id)
+        )
+        response = self.request('delete', endpoint_url)
+        # AT sends deleted_id or 500 in the case failure instead of 404 or 204
         return response.get('itemId')
 
 
@@ -609,6 +635,56 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         the database.
         """
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
+class TicketNotesAPIClient(ChildAPIMixin, AutotaskAPIClient):
+    API = 'TicketNotes'
+    PARENT_API = 'Tickets'
+    CHILD_API = 'Notes'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('ticket')
+        return super().create(instance, parent, **kwargs)
+
+
+class TaskNotesAPIClient(AutotaskAPIClient):
+    API = 'TaskNotes'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
+class TimeEntriesAPIClient(AutotaskAPIClient):
+    API = 'TimeEntries'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
+class TicketSecondaryResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
+    API = 'TicketSecondaryResources'
+    PARENT_API = 'Tickets'
+    CHILD_API = 'SecondaryResources'
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('ticket')
+        return super().create(instance, parent, **kwargs)
+
+
+class TaskSecondaryResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
+    API = 'TaskSecondaryResources'
+    PARENT_API = 'Tasks'
+    CHILD_API = 'SecondaryResources'
+
+    def create(self, instance, **kwargs):
+        parent = kwargs.pop('task')
+        return super().create(instance, parent, **kwargs)
 
 
 class ProjectsAPIClient(AutotaskAPIClient):
