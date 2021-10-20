@@ -53,7 +53,7 @@ class TestCallBackView(TestCase):
         self.assertEqual(Ticket.objects.count(), 1)
         # Change the description of the local record to make our test
         # meaningful.
-        t = Ticket.objects.get(id=7688)
+        t = Ticket.objects.get(id=100)
         t.description = 'foobar'
         t.save()
         _, patch = mocks.service_api_get_ticket_call(fixtures.API_TICKET_BY_ID)

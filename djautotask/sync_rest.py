@@ -52,6 +52,12 @@ class ChildSynchronizer:
         return set(ids)
 
     def _get_children(self, results, query_params):
+        self._build_children_conditions(query_params)
+        logger.info('Fetching {} records.'.format(
+            self.model_class.__bases__[0].__name__))
+        return self.fetch_records(results)
+
+    def _build_children_conditions(self, query_params):
         parent_field, parent_id = query_params
         self.client.clear_conditions()
         self.client.add_condition(
@@ -61,10 +67,6 @@ class ChildSynchronizer:
                 value=parent_id
             )
         )
-
-        logger.info('Fetching {} records.'.format(
-            self.model_class.__bases__[0].__name__))
-        return self.fetch_records(results)
 
     def callback_sync(self, query_params):
         results = SyncResults()
@@ -891,6 +893,22 @@ class TicketNoteSynchronizer(NoteSynchronizer, ChildSynchronizer):
             values_list('id', flat=True).order_by(self.lookup_key)
 
         return active_ids
+
+    def _build_children_conditions(self, query_params):
+        parent_field, parent_id = query_params
+        self.client.clear_conditions()
+        self.client.add_condition(
+            A(
+                A(op='noteq', field='noteType',
+                  value=models.NoteType.WORKFLOW_RULE_NOTE_ID),
+                A(
+                    op='eq',
+                    field=parent_field,
+                    value=parent_id
+                ),
+                op='and'
+            )
+        )
 
 
 class TaskNoteSynchronizer(NoteSynchronizer):
