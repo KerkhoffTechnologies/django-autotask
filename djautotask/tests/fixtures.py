@@ -778,7 +778,7 @@ API_PHASE = {
 API_PHASE_LIST = [API_PHASE]
 
 API_TASK_ITEM = {
-    'id': 7733,
+    'id': 101,
     'allocationCodeID': 29683415,
     'assignedResourceID': 10,
     'assignedResourceRoleID': 29682834,
@@ -836,7 +836,7 @@ API_TICKET_SECONDARY_RESOURCE = {
 API_TASK_SECONDARY_RESOURCE_ITEMS = [
     {
         'id': 29684411,
-        'taskID': 7733,
+        'taskID': 101,
         'resourceID': 10,
         'roleID': 8,
     }
@@ -873,7 +873,7 @@ API_TASK_NOTE_ITEMS = [
         'lastActivityDate': '2018-01-23T11:00:00.00Z',
         'noteType': 2,
         'publish': 1,
-        'taskID': 7733,
+        'taskID': 101,
         'title': "Note Title",
     }
 ]
@@ -962,7 +962,7 @@ API_TIME_ENTRY_TICKET_ITEM = {
 API_TIME_ENTRY_TASK_ITEM = {
     'id': 5,
     'ticketID': None,
-    'taskID': 7733,
+    'taskID': 101,
     'internalBillingCodeID': 3,
     'timeEntryType': 6,
     'dateWorked': '2018-01-23T00:00:00.00Z',
@@ -1169,7 +1169,7 @@ API_SERVICE_CALL_TASK_ITEMS = [
     {
         'id': 4,
         'serviceCallID': 2,
-        'taskID': 7733,
+        'taskID': 101,
     }
 ]
 API_SERVICE_CALL_TASK = {
