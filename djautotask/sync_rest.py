@@ -9,7 +9,6 @@ from django.utils import timezone
 from djautotask import api_rest as api
 from djautotask import models
 from .api_rest import ApiCondition as A, AutotaskRecordNotFoundError
-from .sync import InvalidObjectException, SyncResults, log_sync_job
 from .utils import DjautotaskSettings
 
 CREATED = 1
@@ -17,6 +16,63 @@ UPDATED = 2
 SKIPPED = 3
 
 logger = logging.getLogger(__name__)
+
+
+class InvalidObjectException(Exception):
+    """
+    If for any reason an object can't be created (for example, it references
+    an unknown foreign object, or is missing a required field), raise this
+    so that the synchronizer can catch it and continue with other records.
+    """
+    pass
+
+
+def log_sync_job(f):
+    def wrapper(*args, **kwargs):
+        sync_instance = args[0]
+        created_count = updated_count = deleted_count = skipped_count = 0
+        sync_job = models.SyncJob()
+        sync_job.start_time = timezone.now()
+        sync_job.entity_name = sync_instance.model_class.__bases__[0].__name__
+        sync_job.synchronizer_class = sync_instance.__class__.__name__
+
+        if sync_instance.full:
+            sync_job.sync_type = 'full'
+        else:
+            sync_job.sync_type = 'partial'
+
+        sync_job.save()
+
+        try:
+            created_count, updated_count, skipped_count, deleted_count = \
+                f(*args, **kwargs)
+            sync_job.success = True
+        except Exception as e:
+            sync_job.message = str(e.args[0])
+            sync_job.success = False
+            raise
+        finally:
+            sync_job.end_time = timezone.now()
+            sync_job.added = created_count
+            sync_job.updated = updated_count
+            sync_job.skipped = skipped_count
+            sync_job.deleted = deleted_count
+            sync_job.save()
+
+        return created_count, updated_count, skipped_count, deleted_count
+
+    return wrapper
+
+
+class SyncResults:
+    """Track results of a sync job."""
+
+    def __init__(self):
+        self.created_count = 0
+        self.updated_count = 0
+        self.skipped_count = 0
+        self.deleted_count = 0
+        self.synced_ids = set()
 
 
 class ParentSynchronizer:

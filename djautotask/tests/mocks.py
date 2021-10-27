@@ -20,12 +20,6 @@ def create_mock_call(method_name, return_value, side_effect=None):
     return mock_get_call, _patch
 
 
-def init_api_connection(return_value):
-    method_name = 'djautotask.api.init_api_connection'
-
-    return create_mock_call(method_name, return_value)
-
-
 def api_query_call(return_value):
     return create_mock_call(WRAPPER_QUERY_METHOD, return_value)
 

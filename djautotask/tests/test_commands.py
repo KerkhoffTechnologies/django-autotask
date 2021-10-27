@@ -1,5 +1,4 @@
 import io
-from atws.wrapper import Wrapper
 from django.core.management import call_command
 from django.test import TestCase
 from djautotask.tests import fixtures, mocks, fixture_utils
@@ -115,7 +114,6 @@ class TestSyncContactCommand(AbstractBaseSyncRestTest, TestCase):
 class AbstractBaseSyncTest(object):
 
     def setUp(self):
-        mocks.init_api_connection(Wrapper)
         mocks.init_api_rest_connection()
 
     def _title_for_at_object(self, at_object):
@@ -705,7 +703,6 @@ class TestSyncAllCommand(TestCase):
 
     def setUp(self):
         super().setUp()
-        mocks.init_api_connection(Wrapper)
         mocks.init_api_rest_connection()
         fixture_utils.mock_udfs()
         self._call_service_api()
@@ -765,13 +762,7 @@ class TestSyncAllCommand(TestCase):
         self.test_args = []
 
         for test_case in sync_test_cases:
-            # for REST API
-            if len(test_case.args) == 3:
-                self.test_args.append(test_case.args)
-            # for SOAP API
-            else:
-                new_test_case = [None, *test_case.args]
-                self.test_args.append(new_test_case)
+            self.test_args.append(test_case.args)
 
     def test_partial_sync(self):
         """

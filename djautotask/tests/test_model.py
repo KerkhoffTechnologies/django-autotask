@@ -4,10 +4,8 @@ from django.test import TestCase
 from django.utils import timezone
 from django.test import override_settings
 from datetime import timedelta
-from atws.wrapper import Wrapper
 import pytz
 
-from djautotask.tests import mocks
 from djautotask.models import TimeEntry, OFFSET_TIMEZONE, Ticket
 from . import mocks as mk
 
@@ -38,10 +36,6 @@ class TestTicket(TestCase):
 
 
 class TestTimeEntry(TestCase):
-
-    def setUp(self):
-        super().setUp()
-        mocks.init_api_connection(Wrapper)
 
     def test_get_entered_time_has_end_date_time(self):
         """

@@ -1,12 +1,11 @@
 from dateutil.parser import parse
 
 from django.test import TestCase
-from atws.wrapper import Wrapper
 
 from copy import deepcopy
 from djautotask import models
 from djautotask import sync_rest
-from djautotask.sync import SyncResults
+from djautotask.sync_rest import SyncResults
 from djautotask.tests import fixtures, mocks, fixture_utils
 
 
@@ -29,8 +28,6 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
     def setUp(self):
         super().setUp()
-        # TODO remove init_api_connection(Wrapper) when SOAP API is gone
-        mocks.init_api_connection(Wrapper)
         mocks.init_api_rest_connection()
         self.fixture_items = self.fixture["items"]
 
@@ -426,10 +423,8 @@ class TestTicketSynchronizer(
         _checklist_patch.stop()
 
 
+# TODO check
 class PicklistSynchronizerTestMixin:
-
-    def setUp(self):
-        mocks.init_api_connection(Wrapper)
 
     def _assert_sync(self, instance, object_data):
         self.assertEqual(instance.id, object_data['Value'])
