@@ -19,6 +19,31 @@ API_EMPTY = {
     }
 }
 
+API_EMPTY_FIELDS = {"fields": []}
+
+API_UDF = {
+    "fields": [
+        {
+            'name': "Test UDF",
+            'label': "Test UDF",
+            'type': "string",
+            'length': 8000,
+            'isPickList': True,
+            'picklistValues': [
+                {
+                    'value': "1",
+                    'label': "One",
+                    'isDefaultValue': False,
+                    'sortOrder': 0,
+                    'parentValue': None,
+                    'isActive': True,
+                    'isSystem': False
+                }
+            ]
+        },
+    ],
+}
+
 API_ACCOUNT_ITEMS = [
     {
         'id': 174,

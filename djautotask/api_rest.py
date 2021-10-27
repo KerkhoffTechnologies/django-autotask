@@ -783,6 +783,27 @@ class PhasesAPIClient(AutotaskAPIClient):
     API = 'Phases'
 
 
+class UDFAPIClient(AutotaskAPIClient):
+
+    def get_api_url(self, endpoint=None):
+        return '{0}{1}/entityInformation/userDefinedFields'.format(
+            self.api_base_url,
+            self.API,
+        )
+
+
+class TicketsUDFAPIClient(UDFAPIClient):
+    API = 'Tickets'
+
+
+class TasksUDFAPIClient(UDFAPIClient):
+    API = 'Tasks'
+
+
+class ProjectsUDFAPIClient(UDFAPIClient):
+    API = 'Projects'
+
+
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
 
     def __init__(self, **kwargs):

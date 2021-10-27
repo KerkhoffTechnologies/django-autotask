@@ -57,6 +57,27 @@ def generate_api_objects(fixture_objects):
     return fixture_result
 
 
+def init_ticket_udfs():
+    models.TicketUDF.objects.all().delete()
+    mocks.service_api_get_ticket_udf_call(fixtures.API_UDF)
+    synchronizer = syncrest.TicketUDFSynchronizer()
+    return synchronizer.sync()
+
+
+def init_task_udfs():
+    models.TaskUDF.objects.all().delete()
+    mocks.service_api_get_task_udf_call(fixtures.API_UDF)
+    synchronizer = syncrest.TaskUDFSynchronizer()
+    return synchronizer.sync()
+
+
+def init_project_udfs():
+    models.ProjectUDF.objects.all().delete()
+    mocks.service_api_get_project_udf_call(fixtures.API_UDF)
+    synchronizer = syncrest.ProjectUDFSynchronizer()
+    return synchronizer.sync()
+
+
 def init_project_statuses():
     models.ProjectStatus.objects.all().delete()
     mocks.service_api_get_project_picklist_call(

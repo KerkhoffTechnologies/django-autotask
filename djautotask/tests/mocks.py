@@ -21,6 +21,21 @@ def init_api_rest_connection(return_value=None):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_ticket_udf_call(return_value):
+    method_name = 'djautotask.api_rest.TicketsUDFAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_task_udf_call(return_value):
+    method_name = 'djautotask.api_rest.TasksUDFAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_project_udf_call(return_value):
+    method_name = 'djautotask.api_rest.ProjectsUDFAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_ticket_call(return_value):
     method_name = 'djautotask.api_rest.TicketsAPIClient.get_single'
     return create_mock_call(method_name, return_value)

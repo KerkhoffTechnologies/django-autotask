@@ -37,6 +37,10 @@ def run_sync_command(full_option=False, command_name=None):
 
 class AbstractBaseSyncRestTest(object):
 
+    def setUp(self):
+        super().setUp()
+        mocks.init_api_rest_connection()
+
     def _test_sync(self, mock_call, return_value, at_object,
                    full_option=False):
         mock_call(return_value)
@@ -97,6 +101,42 @@ class PicklistSyncTest(AbstractBaseSyncRestTest):
             obj_label, len(return_value.get('fields')[0].get('picklistValues'))
         )
         self.assertEqual(msg, out.getvalue().strip())
+
+
+class TestSyncTicketUDFCommand(PicklistSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_ticket_udf_call,
+        fixtures.API_UDF,
+        'ticket_udf',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_ticket_udfs()
+
+
+class TestSyncTaskUDFCommand(PicklistSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_task_udf_call,
+        fixtures.API_UDF,
+        'task_udf',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_task_udfs()
+
+
+class TestSyncProjectUDFCommand(PicklistSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_project_udf_call,
+        fixtures.API_UDF,
+        'project_udf',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_udfs()
 
 
 class TestSyncContactCommand(AbstractBaseSyncRestTest, TestCase):
@@ -644,6 +684,9 @@ class TestSyncAllCommand(TestCase):
         self._call_service_api()
 
         sync_test_cases = [
+            TestSyncTicketUDFCommand,
+            TestSyncTaskUDFCommand,
+            TestSyncProjectUDFCommand,
             TestSyncNoteTypeCommand,
             TestSyncLicenseTypeCommand,
             TestSyncTaskTypeLinkCommand,
@@ -718,6 +761,9 @@ class TestSyncAllCommand(TestCase):
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
         at_object_map = {
+            'ticket_udf': models.TicketUDF,
+            'task_udf': models.TaskUDF,
+            'project_udf': models.ProjectUDF,
             'note_type': models.NoteType,
             'account_type': models.AccountType,
             'role': models.Role,
@@ -797,6 +843,9 @@ class TestSyncAllCommand(TestCase):
             self.assertIn(summary, output.getvalue().strip())
 
     def _call_service_api(self):
+        mocks.service_api_get_ticket_udf_call(fixtures.API_UDF)
+        mocks.service_api_get_task_udf_call(fixtures.API_UDF)
+        mocks.service_api_get_project_udf_call(fixtures.API_UDF)
         mocks.service_api_get_roles_call(fixtures.API_ROLE)
         mocks.service_api_get_departments_call(fixtures.API_DEPARTMENT)
         mocks.service_api_get_resource_service_desk_roles_call(
@@ -853,6 +902,9 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_TASK_PREDECESSOR)
 
     def _call_empty_service_api(self):
+        mocks.service_api_get_ticket_udf_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_task_udf_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_project_udf_call(fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
         mocks.service_api_get_contracts_call(fixtures.API_EMPTY)
         mocks.service_api_get_allocation_codes_call(fixtures.API_EMPTY)
@@ -886,12 +938,14 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_time_entries_call(fixtures.API_EMPTY)
         mocks.service_api_get_service_call_task_resources_call(
             fixtures.API_EMPTY)
-        mocks.service_api_get_ticket_category_picklist_call({"fields": []})
-        mocks.service_api_get_ticket_picklist_call({"fields": []})
-        mocks.service_api_get_project_picklist_call({"fields": []})
-        mocks.service_api_get_license_types_call({"fields": []})
-        mocks.service_api_get_use_types_call({"fields": []})
-        mocks.service_api_get_task_type_links_call({"fields": []})
-        mocks.service_api_get_account_types_call({"fields": []})
-        mocks.service_api_get_service_call_statuses_call({"fields": []})
-        mocks.service_api_get_note_types_call({"fields": []})
+        mocks.service_api_get_ticket_category_picklist_call(
+            fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_ticket_picklist_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_project_picklist_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_license_types_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_use_types_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_task_type_links_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_account_types_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_service_call_statuses_call(
+            fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_note_types_call(fixtures.API_EMPTY_FIELDS)

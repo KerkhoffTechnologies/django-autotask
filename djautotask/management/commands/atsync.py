@@ -21,6 +21,9 @@ class Command(BaseCommand):
         # now.
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
+            ('ticket_udf', syncrest.TicketUDFSynchronizer, _('Ticket Udf')),
+            ('task_udf', syncrest.TaskUDFSynchronizer, _('Task Udf')),
+            ('project_udf', syncrest.ProjectUDFSynchronizer, _('Project Udf')),
             ('status', syncrest.StatusSynchronizer, _('Status')),
             (
                 'license_type',

@@ -103,7 +103,7 @@ class ChildSynchronizer:
     def _child_instance_ids(self, query_params):
         ids = self.model_class.objects.filter(
             ticket__id=query_params[1]
-        ).order_by('id').values_list('id', flat=True)
+        ).values_list('id', flat=True)
 
         return set(ids)
 
@@ -297,12 +297,11 @@ class Synchronizer:
         # primary key name
         db_lookup_key = 'id'
         if not filter_params:
-            ids = self.model_class.objects.all().order_by(db_lookup_key)\
-                .values_list(db_lookup_key, flat=True)
+            ids = self.model_class.objects.all().values_list(
+                db_lookup_key, flat=True)
         else:
-            ids = self.model_class.objects.filter(filter_params)\
-                .order_by(db_lookup_key)\
-                .values_list(db_lookup_key, flat=True)
+            ids = self.model_class.objects.filter(filter_params).values_list(
+                db_lookup_key, flat=True)
         return set(ids)
 
     def get(self, results):
@@ -343,9 +342,12 @@ class Synchronizer:
             except InvalidObjectException as e:
                 logger.warning('{}'.format(e))
 
-            results.synced_ids.add(int(record[self.lookup_key]))
+            results.synced_ids.add(self.get_record_id(record))
 
         return results
+
+    def get_record_id(self, record):
+        return int(record[self.lookup_key])
 
     def get_page(self, next_url=None, *args, **kwargs):
         return self.client.get(next_url, *args, **kwargs)
@@ -376,8 +378,8 @@ class Synchronizer:
         result = None
         api_instance = self.remove_null_characters(api_instance)
         try:
-            instance_pk = api_instance[self.lookup_key]
-            instance = self.model_class.objects.get(pk=int(instance_pk))
+            instance_pk = self.get_record_id(api_instance)
+            instance = self.model_class.objects.get(pk=instance_pk)
         except self.model_class.DoesNotExist:
             instance = self.model_class()
             result = CREATED
@@ -531,6 +533,70 @@ class SyncRestRecordUDFMixin:
                     'KeyError when trying to access UDF '
                     'picklist label. {}'.format(e)
                 )
+
+
+class UDFSynchronizer(Synchronizer):
+    lookup_key = 'name'
+    model_class = None
+    last_updated_field = None
+
+    def get_record_id(self, record):
+        try:
+            return self.model_class.objects.\
+                get(name=record[self.lookup_key]).id
+        except self.model_class.DoesNotExist:
+            return None
+
+    def fetch_records(self, results):
+        """
+        For UDF, AT returns only 1 page of results; save the results to the DB.
+        """
+        next_url = self.client_class().get_api_url()
+        logger.info(
+            'Fetching {} records.'.format(self.model_class)
+        )
+        api_return = self.get_page(next_url)
+        total_page = api_return.get("fields")
+        if total_page:
+            self.persist_page(total_page, results)
+
+        return results
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.name = object_data.get('name')
+        instance.label = object_data.get('label')
+        instance.type = object_data.get('type')
+        instance.is_picklist = object_data.get('isPickList')
+
+        if instance.is_picklist:
+            # Clear picklist to eliminate stale items
+            instance.picklist = {}
+            for item in object_data.get('picklistValues'):
+                instance.picklist[item['value']] = {
+                    'label': item['label'],
+                    'is_default_value': item['isDefaultValue'],
+                    'sort_order': item['sortOrder'],
+                    'is_active': item['isActive'],
+                    'is_system': item['isSystem'],
+                }
+
+        return instance
+
+
+class TicketUDFSynchronizer(UDFSynchronizer):
+    client_class = api.TicketsUDFAPIClient
+    model_class = models.TicketUDFTracker
+
+
+class TaskUDFSynchronizer(UDFSynchronizer):
+    client_class = api.TasksUDFAPIClient
+    model_class = models.TaskUDFTracker
+
+
+class ProjectUDFSynchronizer(UDFSynchronizer):
+    client_class = api.ProjectsUDFAPIClient
+    model_class = models.ProjectUDFTracker
 
 
 class CreateRecordMixin:
