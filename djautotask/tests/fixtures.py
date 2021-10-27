@@ -1226,35 +1226,6 @@ API_TASK_PREDECESSOR = {
     "pageDetails": API_PAGE_DETAILS
 }
 
-API_UDF_LIST = [
-    {
-        'Name': "Test UDF",
-        'Label': "Test UDF",
-        'Type': "String",
-        'Length': 8000,
-        'IsPickList': False,
-    },
-    {
-        'Name': "Test UDF",
-        'Label': "Test UDF",
-        'Type': "String",
-        'Length': 8000,
-        'IsPickList': True,
-        'PicklistValues': [
-            {
-                 'Value': "1",
-                 'Label': "One",
-                 'IsDefaultValue': False,
-                 'SortOrder': 0,
-                 'parentValue': None,
-                 'IsActive': True,
-                 'IsSystem': False
-            }
-        ]
-    },
-
-]
-
 API_CONTACT_ITEMS = [
     {
         "id": 29683589,

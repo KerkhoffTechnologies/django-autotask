@@ -111,69 +111,6 @@ class TestSyncContactCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_contacts()
 
 
-class AbstractBaseSyncTest(object):
-
-    def setUp(self):
-        mocks.init_api_rest_connection()
-
-    def _title_for_at_object(self, at_object):
-        return at_object.title().replace('_', ' ')
-
-    def get_api_mock(self):
-        return mocks.api_query_call
-
-    def get_return_value(self, at_object, fixture_list):
-        return fixture_utils.generate_objects(
-            at_object.title().replace('_', ''), fixture_list)
-
-    def init_sync_command(self, fixture_list, at_object, full_option=False):
-        return_value = self.get_return_value(at_object, fixture_list)
-        api_call = self.get_api_mock()
-        api_call(return_value)
-
-        output = run_sync_command(full_option, at_object)
-        return output
-
-    def _test_sync(self):
-        out = self.init_sync_command(*self.args)
-        obj_title = self._title_for_at_object(self.args[-1])
-
-        self.assertIn(obj_title, out.getvalue().strip())
-
-    def test_full_sync(self):
-        out = self.init_sync_command(*self.args)
-
-        fixture_list, at_object = self.args
-        args = [
-            [],
-            at_object,
-        ]
-
-        out = self.init_sync_command(*args, full_option=True)
-
-        obj_label = self._title_for_at_object(at_object)
-        msg_tmpl = '{} Sync Summary - Created: 0, Updated: 0, Skipped: 0, ' \
-                   'Deleted: {}'
-
-        value_count = len(fixture_list)
-
-        msg = msg_tmpl.format(obj_label, value_count)
-
-        self.assertEqual(msg, out.getvalue().strip())
-
-
-class AbstractPicklistSyncCommandTest(AbstractBaseSyncTest):
-
-    def get_return_value(self, at_object, fixture_list):
-        field_info = fixture_utils.generate_picklist_objects(
-            self.field_name, fixture_list)
-
-        return field_info
-
-    def get_api_mock(self):
-        return mocks.api_picklist_call
-
-
 class TestSyncTicketCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
         mocks.service_api_get_tickets_call,
@@ -704,17 +641,7 @@ class TestSyncAllCommand(TestCase):
     def setUp(self):
         super().setUp()
         mocks.init_api_rest_connection()
-        fixture_utils.mock_udfs()
         self._call_service_api()
-
-        # Mock API calls to return values based on what entity
-        # is being requested
-        mocks.get_field_info_api_calls(
-            fixture_utils.manage_sync_picklist_return_data
-        )
-        mocks.wrapper_query_api_calls(
-            fixture_utils.manage_full_sync_return_data
-        )
 
         sync_test_cases = [
             TestSyncNoteTypeCommand,
@@ -836,9 +763,6 @@ class TestSyncAllCommand(TestCase):
         }
         run_sync_command()
         pre_full_sync_counts = {}
-
-        mocks.wrapper_query_api_calls()
-        mocks.get_field_info_api_calls()
 
         self._call_empty_service_api()
         for key, model_class in at_object_map.items():

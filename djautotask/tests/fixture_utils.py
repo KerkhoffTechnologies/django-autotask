@@ -1,6 +1,4 @@
 from suds.client import Client
-from atws.wrapper import QueryCursor
-from atws import helpers
 from djautotask.tests import mocks, fixtures
 from pathlib import Path
 
@@ -29,15 +27,6 @@ def init_api_client():
 API_CLIENT = init_api_client()
 
 
-def mock_query_generator(suds_objects):
-    """
-    A generator to return suds objects to mock the same behaviour as the
-    ATWS Wrapper query method.
-    """
-    for obj in suds_objects:
-        yield obj
-
-
 def set_attributes(suds_object, fixture_object):
     """
     Set attributes on suds object from the given fixture.
@@ -48,28 +37,6 @@ def set_attributes(suds_object, fixture_object):
     return suds_object
 
 
-# generate object for SOAP API
-def generate_objects(object_type, fixture_objects):
-    """
-    Generate multiple objects based on the given fixtures.
-    """
-    client = API_CLIENT
-    object_list = []
-
-    if fixture_objects is None:
-        raise Exception(object_type)
-
-    # Create test suds objects from the list of fixtures.
-    for fixture in fixture_objects:
-        suds_object = \
-            set_attributes(client.factory.create(object_type), fixture)
-
-        object_list.append(suds_object)
-
-    return QueryCursor(mock_query_generator(object_list))
-
-
-# generate object for REST API
 def generate_api_objects(fixture_objects):
     """
     Generate multiple objects based on the given fixtures.
@@ -88,141 +55,6 @@ def generate_api_objects(fixture_objects):
         fixture_result["pageDetails"]["count"] += len(fixture["items"])
 
     return fixture_result
-
-
-def generate_picklist_objects(object_type, fixture_objects):
-    """
-    Generate a mock ArrayOfField object that simulates an entity returned
-    from the API with a picklist of objects.
-    """
-    client = API_CLIENT
-    object_list = []
-    array_of_field = client.factory.create('ArrayOfField')
-    field = client.factory.create('Field')
-
-    for fixture in fixture_objects:
-        pick_list_value = client.factory.create('PickListValue')
-        picklist_object = set_attributes(pick_list_value, fixture)
-        object_list.append(picklist_object)
-
-    # suds-community does not normally initialize the ArrayOfPickListValue
-    # field because it is an optional field. We force it to by modifying the
-    # test wsdl file for the "Field"'s PicklistValues, chagining its minOccurs
-    # to "1", so it initializes it for us.
-    field.Name = object_type
-    field.IsPickList = True
-    field.PicklistValues.PickListValue = object_list
-
-    array_of_field[0].append(field)
-
-    return array_of_field
-
-
-def generate_udf_objects(fixture_objects):
-    """
-    Generate a mock ArrayOfField object that simulates an entity returned
-    from the API with a picklist of objects.
-    """
-    client = API_CLIENT
-    array_of_field = client.factory.create('ArrayOfField')
-
-    for fixture in fixture_objects:
-        field = client.factory.create('Field')
-        field.Name = fixture['Name']
-        field.Label = fixture['Label']
-        field.Type = fixture['Type']
-        field.Length = fixture['Length']
-        field.IsPickList = fixture['IsPickList']
-
-        if field.IsPickList:
-            object_list = []
-            for values in fixture['PicklistValues']:
-                pick_list_value = client.factory.create('PickListValue')
-                picklist_object = set_attributes(pick_list_value, values)
-                object_list.append(picklist_object)
-            field.PicklistValues.PickListValue = object_list
-
-        # suds-community does not normally initialize the ArrayOfPickListValue
-        # field because it is an optionalfield. We force it to by modifying the
-        # test wsdl file forthe "Field"'sPicklistValues,chagining its minOccurs
-        # to "1", so it initializes it for us.
-
-        # field.Name = object_type
-        # field.IsPickList = True
-
-        array_of_field[0].append(field)
-
-    return array_of_field
-
-
-def manage_full_sync_return_data(value):
-    return []
-
-
-def manage_client_service_query_return_data(value):
-    """
-    Generate a complete ATWSResponse object and populate with entities
-    specified in the query.
-    """
-    response = API_CLIENT.factory.create('ATWSResponse')
-    response.ReturnCode = 1
-
-    for entity in manage_full_sync_return_data(value):
-        response.EntityResults.Entity.append(entity)
-
-    result_count = helpers.query_result_count(response)
-    return response, result_count
-
-
-def manage_sync_picklist_return_data(wrapper, entity):
-    """
-    Generate and return picklist objects based on the entity
-    specified in the query.
-    """
-    fixture_dict = {
-        'TicketNote': {
-            'NoteType': fixtures.API_NOTE_TYPE_LIST,
-        },
-    }
-    client = API_CLIENT
-    array_of_field = client.factory.create('ArrayOfField')
-
-    # Since get_field_info normally returns all fields on a given entity
-    # as well as the picklists for picklist fields, we generate as many
-    # picklist objects as we need and append to the array field.
-    entity_fields = fixture_dict.get(entity)
-
-    if entity_fields:
-        for field_type, fixture in entity_fields.items():
-            api_object = generate_picklist_objects(field_type, fixture)
-            array_of_field[0].append(api_object[0][0])
-
-    return array_of_field
-
-
-def sync_objects(entity_type, fixture, sync_class):
-    created_objects = generate_objects(
-        entity_type, fixture
-    )
-    mocks.api_query_call(created_objects)
-    synchronizer = sync_class()
-
-    return synchronizer.sync()
-
-
-def sync_picklist_objects(entity_type, fixture, sync_class):
-    field_info = generate_picklist_objects(
-        entity_type, fixture
-    )
-    mocks.api_picklist_call(field_info)
-    synchronizer = sync_class()
-
-    return synchronizer.sync()
-
-
-def mock_udfs():
-    field_info = generate_udf_objects(fixtures.API_UDF_LIST)
-    mocks.api_udf_call(field_info)
 
 
 def init_project_statuses():
