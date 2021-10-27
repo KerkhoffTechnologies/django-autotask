@@ -1,8 +1,6 @@
 from suds.client import Client
 from atws.wrapper import QueryCursor
 from atws import helpers
-from xml.etree import ElementTree
-from djautotask import sync
 from djautotask.tests import mocks, fixtures
 from pathlib import Path
 
@@ -158,20 +156,7 @@ def generate_udf_objects(fixture_objects):
 
 
 def manage_full_sync_return_data(value):
-    """
-    Generate and return objects based on the entity specified in the query.
-    """
-    fixture_dict = {
-        'Resource': fixtures.API_RESOURCE_LIST,
-        'Account': fixtures.API_ACCOUNT_LIST,
-        'Phase': fixtures.API_PHASE_LIST,
-    }
-    xml_value = ElementTree.fromstring(value.get_query_xml())
-    object_type = xml_value.find('entity').text
-    fixture = fixture_dict.get(object_type)
-    return_value = generate_objects(object_type, fixture)
-
-    return return_value
+    return []
 
 
 def manage_client_service_query_return_data(value):
@@ -375,11 +360,10 @@ def init_tickets():
 
 
 def init_resources():
-    sync_objects(
-        'Resource',
-        fixtures.API_RESOURCE_LIST,
-        sync.ResourceSynchronizer
-    )
+    models.Resource.objects.all().delete()
+    mocks.service_api_get_resources_call(fixtures.API_RESOURCE)
+    synchronizer = syncrest.ResourceSynchronizer()
+    return synchronizer.sync()
 
 
 def init_ticket_secondary_resources():
@@ -399,11 +383,10 @@ def init_task_secondary_resources():
 
 
 def init_accounts():
-    sync_objects(
-        'Account',
-        fixtures.API_ACCOUNT_LIST,
-        sync.AccountSynchronizer
-    )
+    models.Account.objects.all().delete()
+    mocks.service_api_get_accounts_call(fixtures.API_ACCOUNT)
+    synchronizer = syncrest.AccountSynchronizer()
+    return synchronizer.sync()
 
 
 def init_account_physical_locations():
@@ -423,11 +406,10 @@ def init_projects():
 
 
 def init_phases():
-    sync_objects(
-        'Phase',
-        fixtures.API_PHASE_LIST,
-        sync.PhaseSynchronizer
-    )
+    models.Phase.objects.all().delete()
+    mocks.service_api_get_phases_call(fixtures.API_PHASE)
+    synchronizer = syncrest.PhaseSynchronizer()
+    return synchronizer.sync()
 
 
 def init_tasks():
@@ -458,11 +440,10 @@ def init_task_notes():
 
 
 def init_note_types():
-    sync_picklist_objects(
-        'NoteType',
-        fixtures.API_NOTE_TYPE_LIST,
-        sync.NoteTypeSynchronizer
-    )
+    models.NoteType.objects.all().delete()
+    mocks.service_api_get_note_types_call(fixtures.API_NOTE_TYPE_FIELD)
+    synchronizer = syncrest.NoteTypeSynchronizer()
+    return synchronizer.sync()
 
 
 def init_time_entries():

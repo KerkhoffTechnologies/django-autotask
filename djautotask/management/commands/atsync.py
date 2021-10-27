@@ -30,7 +30,7 @@ class Command(BaseCommand):
                 syncrest.LicenseTypeSynchronizer,
                 _('License Type')
             ),
-            ('resource', sync.ResourceSynchronizer, _('Resource')),
+            ('resource', syncrest.ResourceSynchronizer, _('Resource')),
             ('ticket_secondary_resource',
              syncrest.TicketSecondaryResourceSynchronizer,
              _('Ticket Secondary Resource')),
@@ -41,7 +41,7 @@ class Command(BaseCommand):
                 syncrest.AccountTypeSynchronizer,
                 _('Account Type')
             ),
-            ('account', sync.AccountSynchronizer, _('Account')),
+            ('account', syncrest.AccountSynchronizer, _('Account')),
             (
                 'account_physical_location',
                 syncrest.AccountPhysicalLocationSynchronizer,
@@ -53,7 +53,7 @@ class Command(BaseCommand):
             ('project_type',
              syncrest.ProjectTypeSynchronizer, _('Project Type')),
             ('project', syncrest.ProjectSynchronizer, _('Project')),
-            ('phase', sync.PhaseSynchronizer, _('Phase')),
+            ('phase', syncrest.PhaseSynchronizer, _('Phase')),
             ('display_color', syncrest.DisplayColorSynchronizer,
              _('Display Color')),
             ('ticket_category', syncrest.TicketCategorySynchronizer,
@@ -64,7 +64,7 @@ class Command(BaseCommand):
             ('sub_issue_type', syncrest.SubIssueTypeSynchronizer,
              _('Sub Issue Type')),
             ('ticket', syncrest.TicketSynchronizer, _('Ticket')),
-            ('note_type', sync.NoteTypeSynchronizer, _('Note Type')),
+            ('note_type', syncrest.NoteTypeSynchronizer, _('Note Type')),
             ('ticket_note', syncrest.TicketNoteSynchronizer, _('Ticket Note')),
             ('use_type', syncrest.UseTypeSynchronizer, _('Use Type')),
             ('allocation_code', syncrest.AllocationCodeSynchronizer,

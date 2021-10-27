@@ -334,6 +334,18 @@ class TestSyncDisplayColorCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_display_colors()
 
 
+class TestSyncNoteTypeCommand(PicklistSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_note_types_call,
+        fixtures.API_NOTE_TYPE_FIELD,
+        'note_type',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_note_types()
+
+
 class TestSyncLicenseTypeCommand(PicklistSyncTest, TestCase):
     args = (
         mocks.service_api_get_license_types_call,
@@ -382,16 +394,18 @@ class TestSyncTicketCategoryCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_ticket_categories()
 
 
-class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncResourceCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_RESOURCE_LIST,
+        mocks.service_api_get_resources_call,
+        fixtures.API_RESOURCE,
         'resource',
     )
 
 
-class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncAccountCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_ACCOUNT_LIST,
+        mocks.service_api_get_accounts_call,
+        fixtures.API_ACCOUNT,
         'account',
     )
 
@@ -421,9 +435,10 @@ class TestSyncProjectCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_projects()
 
 
-class TestSyncPhaseCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncPhaseCommand(AbstractBaseSyncRestTest, TestCase):
     args = (
-        fixtures.API_PHASE_LIST,
+        mocks.service_api_get_phases_call,
+        fixtures.API_PHASE,
         'phase',
     )
 
@@ -705,6 +720,7 @@ class TestSyncAllCommand(TestCase):
         )
 
         sync_test_cases = [
+            TestSyncNoteTypeCommand,
             TestSyncLicenseTypeCommand,
             TestSyncTaskTypeLinkCommand,
             TestSyncUseTypeCommand,
@@ -784,6 +800,7 @@ class TestSyncAllCommand(TestCase):
     def test_full_sync(self):
         """Test the command to run a full sync of all objects."""
         at_object_map = {
+            'note_type': models.NoteType,
             'account_type': models.AccountType,
             'role': models.Role,
             'department': models.Department,
@@ -886,6 +903,7 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_PROJECT_PICKLIST_FIELD)
         mocks.service_api_get_service_call_statuses_call(
             fixtures.API_SERVICE_CALL_STATUS_FIELD)
+        mocks.service_api_get_note_types_call(fixtures.API_NOTE_TYPE_FIELD)
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
         mocks.service_api_get_contracts_call(fixtures.API_CONTRACT)
         mocks.service_api_get_allocation_codes_call(
@@ -900,6 +918,9 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_service_calls_call(fixtures.API_SERVICE_CALL)
         mocks.service_api_get_service_call_tickets_call(
             fixtures.API_SERVICE_CALL_TICKET)
+        mocks.service_api_get_resources_call(fixtures.API_RESOURCE)
+        mocks.service_api_get_accounts_call(fixtures.API_ACCOUNT)
+        mocks.service_api_get_phases_call(fixtures.API_PHASE)
         mocks.service_api_get_service_call_ticket_resources_call(
             fixtures.API_SERVICE_CALL_TICKET_RESOURCE)
         mocks.service_api_get_service_call_tasks_call(
@@ -935,6 +956,9 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_EMPTY)
         mocks.service_api_get_service_calls_call(fixtures.API_EMPTY)
         mocks.service_api_get_service_call_tickets_call(fixtures.API_EMPTY)
+        mocks.service_api_get_resources_call(fixtures.API_EMPTY)
+        mocks.service_api_get_accounts_call(fixtures.API_EMPTY)
+        mocks.service_api_get_phases_call(fixtures.API_EMPTY)
         mocks.service_api_get_service_call_ticket_resources_call(
             fixtures.API_EMPTY)
         mocks.service_api_get_service_call_tasks_call(fixtures.API_EMPTY)
@@ -955,3 +979,4 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_task_type_links_call({"fields": []})
         mocks.service_api_get_account_types_call({"fields": []})
         mocks.service_api_get_service_call_statuses_call({"fields": []})
+        mocks.service_api_get_note_types_call({"fields": []})

@@ -87,6 +87,11 @@ def service_api_get_account_physical_locations_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_accounts_call(return_value):
+    method_name = 'djautotask.api_rest.AccountsAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_roles_call(return_value):
     method_name = 'djautotask.api_rest.RolesAPIClient.get'
     return create_mock_call(method_name, return_value)
@@ -94,6 +99,21 @@ def service_api_get_roles_call(return_value):
 
 def service_api_get_departments_call(return_value):
     method_name = 'djautotask.api_rest.DepartmentsAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_resources_call(return_value):
+    method_name = 'djautotask.api_rest.ResourcesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_phases_call(return_value):
+    method_name = 'djautotask.api_rest.PhasesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_note_types_call(return_value):
+    method_name = 'djautotask.api_rest.NoteTypesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 

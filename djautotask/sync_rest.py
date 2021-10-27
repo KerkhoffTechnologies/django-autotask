@@ -1431,6 +1431,90 @@ class AccountPhysicalLocationSynchronizer(BatchQueryMixin, Synchronizer):
         return active_ids
 
 
+class ResourceSynchronizer(Synchronizer):
+    client_class = api.ResourcesAPIClient
+    model_class = models.ResourceTracker
+    last_updated_field = None
+
+    related_meta = {
+        'licenseType': (models.LicenseType, 'license_type'),
+        'defaultServiceDeskRoleID': (models.Role, 'default_service_desk_role'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client.add_condition(A(op='eq', field='isActive', value=True))
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.user_name = object_data.get('userName')
+        instance.email = object_data.get('email')
+        instance.first_name = object_data.get('firstName')
+        instance.last_name = object_data.get('lastName')
+        instance.active = object_data.get('isActive')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class AccountSynchronizer(Synchronizer):
+    client_class = api.AccountsAPIClient
+    model_class = models.AccountTracker
+
+    related_meta = {
+        'companyType': (models.AccountType, 'type'),
+        'parentCompanyID': (models.Account, 'parent_account'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client.add_condition(A(op='eq', field='isActive', value=True))
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data.get('companyName')
+        instance.number = object_data.get('companyNumber')
+        instance.active = object_data.get('isActive')
+        instance.last_activity_date = object_data.get('lastActivityDate')
+
+        self._set_datetime_attribute(instance, 'last_activity_date')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
+class PhaseSynchronizer(Synchronizer):
+    client_class = api.PhasesAPIClient
+    model_class = models.PhaseTracker
+    last_updated_field = 'lastActivityDateTime'
+
+    related_meta = {
+        'projectID': (models.Project, 'project'),
+        'parentPhaseID': (models.Phase, 'parent_phase'),
+    }
+
+    def _assign_field_data(self, instance, object_data):
+
+        instance.id = object_data['id']
+        instance.title = object_data.get('title')
+        instance.number = object_data.get('phaseNumber')
+        instance.description = object_data.get('description')
+        instance.start_date = object_data.get('startDate')
+        instance.due_date = object_data.get('dueDate')
+        instance.estimated_hours = object_data.get('estimatedHours')
+        instance.last_activity_date = object_data.get('lastActivityDateTime')
+
+        self._set_datetime_attribute(instance, 'start_date')
+        self._set_datetime_attribute(instance, 'due_date')
+        self._set_datetime_attribute(instance, 'last_activity_date')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
 class PicklistSynchronizer(Synchronizer):
     lookup_name = None
     lookup_key = 'value'
@@ -1470,6 +1554,14 @@ class PicklistSynchronizer(Synchronizer):
         if hasattr(self, 'related_meta'):
             self.set_relations(instance, json_data)
         return instance
+
+
+class NoteTypeSynchronizer(PicklistSynchronizer):
+    # Ticket note types are including task note types, and there are other
+    # note types currently not used. e.g. project note types
+    client_class = api.NoteTypesAPIClient
+    model_class = models.NoteTypeTracker
+    lookup_name = 'noteType'
 
 
 class LicenseTypeSynchronizer(PicklistSynchronizer):

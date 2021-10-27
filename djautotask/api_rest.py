@@ -771,6 +771,18 @@ class ServiceCallTaskResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
 
+class ResourcesAPIClient(AutotaskAPIClient):
+    API = 'Resources'
+
+
+class AccountsAPIClient(AutotaskAPIClient):
+    API = 'Companies'
+
+
+class PhasesAPIClient(AutotaskAPIClient):
+    API = 'Phases'
+
+
 class AutotaskPicklistAPIClient(AutotaskAPIClient):
 
     def __init__(self, **kwargs):
@@ -782,6 +794,10 @@ class AutotaskPicklistAPIClient(AutotaskAPIClient):
         # initial url.
         return self.fetch_resource(
             next_url or self.get_api_url(), *args, **kwargs)
+
+
+class NoteTypesAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'TicketNotes'
 
 
 class LicenseTypesAPIClient(AutotaskPicklistAPIClient):

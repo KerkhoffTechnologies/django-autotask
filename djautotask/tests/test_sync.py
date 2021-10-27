@@ -5,7 +5,7 @@ from atws.wrapper import Wrapper
 
 from copy import deepcopy
 from djautotask import models
-from djautotask import sync, sync_rest
+from djautotask import sync_rest
 from djautotask.sync import SyncResults
 from djautotask.tests import fixtures, mocks, fixture_utils
 
@@ -624,87 +624,48 @@ class TestTicketCategorySynchronizer(SynchronizerRestTestMixin, TestCase):
                          object_data['displayColorRGB'])
 
 
-class TestResourceSynchronizer(SynchronizerTestMixin, TestCase):
+class TestResourceSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.ResourceSynchronizer
     model_class = models.ResourceTracker
     fixture = fixtures.API_RESOURCE
-    update_field = 'LastName'
+    update_field = 'last_name'
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_resources()
-        self.synchronizer = sync.ResourceSynchronizer()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_resources_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.user_name, object_data['UserName'])
-        self.assertEqual(instance.first_name, object_data['FirstName'])
-        self.assertEqual(instance.last_name, object_data['LastName'])
-        self.assertEqual(instance.email, object_data['Email'])
-        self.assertEqual(instance.active, object_data['Active'])
-
-    def test_sync_resource(self):
-        """
-        Test to ensure resource synchronizer saves a Resource
-        instance locally.
-        """
-        self.assertGreater(models.Resource.objects.all().count(), 0)
-
-        object_data = fixtures.API_RESOURCE
-        instance = models.Resource.objects.get(id=object_data['id'])
-
-        self._assert_sync(instance, object_data)
-        self.assert_sync_job()
-
-    def test_delete_stale_resources(self):
-        """
-        Test that  is removed if not fetched from the API during a
-        full sync.
-        """
-        resource_qset = models.Resource.objects.all()
-        self.assertEqual(resource_qset.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.ResourceSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(resource_qset.count(), 0)
+        self.assertEqual(instance.user_name, object_data['userName'])
+        self.assertEqual(instance.first_name, object_data['firstName'])
+        self.assertEqual(instance.last_name, object_data['lastName'])
+        self.assertEqual(instance.email, object_data['email'])
+        self.assertEqual(instance.active, object_data['isActive'])
 
 
-class TestAccountSynchronizer(SynchronizerTestMixin, TestCase):
+class TestAccountSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.AccountSynchronizer
     model_class = models.AccountTracker
-    fixture = fixtures.API_ACCOUNT_LIST[0]
-    update_field = "AccountName"
+    fixture = fixtures.API_ACCOUNT
+    update_field = "name"
 
     def setUp(self):
         super().setUp()
-        self.synchronizer = sync.AccountSynchronizer()
-        fixture_utils.init_accounts()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_accounts_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.name, object_data['AccountName'])
-        self.assertEqual(instance.number, str(object_data['AccountNumber']))
-        self.assertEqual(instance.active, object_data['Active'])
+        self.assertEqual(instance.name, object_data['companyName'])
+        self.assertEqual(instance.number, str(object_data['companyNumber']))
+        self.assertEqual(instance.active, object_data['isActive'])
         self.assertEqual(instance.last_activity_date,
-                         object_data['LastActivityDate'])
-
-    def test_sync_account(self):
-        self.assertGreater(models.Account.objects.all().count(), 0)
-        object_data = fixtures.API_ACCOUNT_LIST[0]
-        instance = models.Account.objects.get(id=object_data['id'])
-
-        self._assert_sync(instance, object_data)
-        self.assert_sync_job()
-
-    def test_delete_stale_account(self):
-        account_qset = models.Account.objects.all()
-        self.assertEqual(account_qset.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.AccountSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(account_qset.count(), 0)
+                         self._parse_datetime(object_data['lastActivityDate']))
 
 
 class TestAccountPhysicalLocationSynchronizer(SynchronizerRestTestMixin,
@@ -1037,54 +998,35 @@ class TestTaskSecondaryResourceSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.role.id, object_data['roleID'])
 
 
-class TestPhaseSynchronizer(SynchronizerTestMixin, TestCase):
+class TestPhaseSynchronizer(SynchronizerRestTestMixin, TestCase):
+    synchronizer_class = sync_rest.PhaseSynchronizer
     model_class = models.PhaseTracker
     fixture = fixtures.API_PHASE
-    update_field = "Title"
+    update_field = "title"
 
     def setUp(self):
         super().setUp()
-        mocks.init_api_connection(Wrapper)
-        self.synchronizer = sync.PhaseSynchronizer()
-
         fixture_utils.init_projects()
         fixture_utils.init_phases()
         fixture_utils.init_tasks()
+        self._sync(self.fixture)
 
-    def _assert_sync(self, instance, object_data):
+    def _call_api(self, return_data):
+        return mocks.service_api_get_phases_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
-        self.assertEqual(instance.title, object_data['Title'])
-        self.assertEqual(instance.start_date, object_data['StartDate'])
-        self.assertEqual(instance.description, object_data['Description'])
+        self.assertEqual(instance.title, object_data['title'])
+        self.assertEqual(instance.start_date,
+                         self._parse_datetime(object_data['startDate']))
+        self.assertEqual(instance.description, object_data['description'])
         self.assertEqual(instance.estimated_hours,
-                         object_data['EstimatedHours'])
-        self.assertEqual(instance.last_activity_date,
-                         object_data['LastActivityDateTime'])
-        self.assertEqual(instance.number, object_data['PhaseNumber'])
-
-    def test_sync_phase(self):
-        """
-        Test to ensure task synchronizer saves a Phase instance locally.
-        """
-        self.assertGreater(models.Phase.objects.all().count(), 0)
-
-        instance = models.Phase.objects.get(id=self.fixture['id'])
-
-        self._assert_sync(instance, self.fixture)
-        self.assert_sync_job()
-
-    def test_delete_stale_phases(self):
-        """
-        Local task should be deleted if not returned during a full sync
-        """
-        qset = models.Phase.objects.all()
-        self.assertEqual(qset.count(), 1)
-
-        mocks.api_query_call([])
-
-        synchronizer = sync.PhaseSynchronizer(full=True)
-        synchronizer.sync()
-        self.assertEqual(qset.count(), 0)
+                         object_data['estimatedHours'])
+        self.assertEqual(
+            instance.last_activity_date,
+            self._parse_datetime(object_data['lastActivityDateTime'])
+        )
+        self.assertEqual(instance.number, object_data['phaseNumber'])
 
 
 class TestTimeEntrySynchronizer(SynchronizerRestTestMixin, TestCase):
