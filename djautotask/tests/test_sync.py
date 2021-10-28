@@ -48,13 +48,19 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         self.synchronizer = self.synchronizer_class()
         return self.synchronizer.sync()
 
+    def _get_return_value(self, new_json_list):
+        return {
+            "items": new_json_list,
+            "pageDetails": fixtures.API_PAGE_DETAILS
+        }
+
     def _parse_datetime(self, datetime):
         return parse(datetime) if datetime else None
 
     def test_sync(self):
         self._sync(self.fixture)
         instance_dict = {
-            int(c[self.lookup_key]): c for c in self.fixture_items
+            self.synchronizer.get_record_id(c): c for c in self.fixture_items
         }
 
         for instance in self.model_class.objects.all():
@@ -67,11 +73,12 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         """
         Test to ensure synchronizer saves a instance locally.
         """
+        self.synchronizer = self.synchronizer_class()
         self.assertGreater(self.model_class.objects.all().count(), 0)
 
         object_data = self.fixture_items[0]
         instance = self.model_class.objects.get(
-            id=object_data[self.lookup_key]
+            id=self.synchronizer.get_record_id(object_data)
         )
 
         self._assert_fields(instance, object_data)
@@ -82,7 +89,7 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
 
         json_data = self.fixture_items[0]
 
-        instance_id = json_data[self.lookup_key]
+        instance_id = self.synchronizer.get_record_id(json_data)
         original = self.model_class.objects.get(id=instance_id)
 
         new_val = None
@@ -98,10 +105,7 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         new_json[self.update_field] = new_val
         new_json_list = [new_json]
 
-        return_value = {
-            "items": new_json_list,
-            "pageDetails": fixtures.API_PAGE_DETAILS
-        }
+        return_value = self._get_return_value(new_json_list)
         self._sync(return_value)
 
         changed = self.model_class.objects.get(id=instance_id)
@@ -113,7 +117,8 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         """
         Local instance should be deleted if not returned during a full sync
         """
-        instance_id = self.fixture_items[0][self.lookup_key]
+        self.synchronizer = self.synchronizer_class()
+        instance_id = self.synchronizer.get_record_id(self.fixture_items[0])
         instance_qset = self.model_class.objects.filter(id=instance_id)
         self.assertEqual(instance_qset.count(), 1)
 
@@ -133,16 +138,42 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         new_json_list = [new_json]
 
         # Sync it twice to be sure that the data will be updated, then ignored
-        return_value = {
-            "items": new_json_list,
-            "pageDetails": fixtures.API_PAGE_DETAILS
-        }
+        return_value = self._get_return_value(new_json_list)
         self._sync(return_value)
         _, updated_count, skipped_count, _ = \
             self._sync_with_results(return_value)
 
         self.assertGreater(skipped_count, 0)
         self.assertEqual(updated_count, 0)
+
+
+class UDFSynchronizerTestMixin(SynchronizerRestTestMixin):
+    update_field = 'label'
+    lookup_key = 'name'
+
+    def setUp(self):
+        self.fixture_items = self.fixture["fields"]
+        self._sync(self.fixture)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.name, object_data['name'])
+        self.assertEqual(instance.label, object_data['label'])
+        self.assertEqual(instance.type, object_data['type'])
+        self.assertEqual(instance.is_picklist, object_data['isPickList'])
+
+        if object_data['isPickList']:
+            for item in object_data.get('picklistValues'):
+                i = instance.picklist[item['value']]
+                self.assertEqual(i['label'], item['label'])
+                self.assertEqual(i['is_default_value'], item['isDefaultValue'])
+                self.assertEqual(i['sort_order'], item['sortOrder'])
+                self.assertEqual(i['is_active'], item['isActive'])
+                self.assertEqual(i['is_system'], item['isSystem'])
+
+    def _get_return_value(self, new_json_list):
+        return {
+            "fields": new_json_list,
+        }
 
 
 class PicklistSynchronizerRestTestMixin(SynchronizerRestTestMixin):
@@ -421,6 +452,33 @@ class TestTicketSynchronizer(
         note_patch.stop()
         resource_patch.stop()
         _checklist_patch.stop()
+
+
+class TestTicketUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync_rest.TicketUDFSynchronizer
+    model_class = models.TicketUDFTracker
+    fixture = fixtures.API_UDF
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_ticket_udf_call(return_data)
+
+
+class TestTaskUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync_rest.TaskUDFSynchronizer
+    model_class = models.TaskUDFTracker
+    fixture = fixtures.API_UDF
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_task_udf_call(return_data)
+
+
+class TestProjectUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync_rest.ProjectUDFSynchronizer
+    model_class = models.ProjectUDFTracker
+    fixture = fixtures.API_UDF
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_project_udf_call(return_data)
 
 
 class TestStatusSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):

@@ -1,40 +1,7 @@
-from suds.client import Client
 from djautotask.tests import mocks, fixtures
-from pathlib import Path
 
 from djautotask import models
 from djautotask import sync_rest as syncrest
-
-
-def init_contacts():
-    models.Contact.objects.all().delete()
-    mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
-    synchronizer = syncrest.ContactSynchronizer()
-    return synchronizer.sync()
-
-
-def init_api_client():
-    # Access the Autotask API's WSDL file from the tests directory
-    # so that we can generate mock objects from the API without actually
-    # calling the API.
-    path = Path(__file__).parent / 'atws.wsdl'
-    url = 'file://{}'.format(str(path))
-
-    return Client(url)
-
-
-# Set as a constant so the file only has to be opened once.
-API_CLIENT = init_api_client()
-
-
-def set_attributes(suds_object, fixture_object):
-    """
-    Set attributes on suds object from the given fixture.
-    """
-    for key, value in fixture_object.items():
-        setattr(suds_object, key, value)
-
-    return suds_object
 
 
 def generate_api_objects(fixture_objects):
@@ -75,6 +42,13 @@ def init_project_udfs():
     models.ProjectUDF.objects.all().delete()
     mocks.service_api_get_project_udf_call(fixtures.API_UDF)
     synchronizer = syncrest.ProjectUDFSynchronizer()
+    return synchronizer.sync()
+
+
+def init_contacts():
+    models.Contact.objects.all().delete()
+    mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
+    synchronizer = syncrest.ContactSynchronizer()
     return synchronizer.sync()
 
 

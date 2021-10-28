@@ -1,6 +1,3 @@
-from datetime import datetime
-from dateutil.tz import tzoffset
-
 
 API_PAGE_DETAILS = {
         "count": 1,
