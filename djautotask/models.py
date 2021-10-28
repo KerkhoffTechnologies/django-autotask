@@ -572,7 +572,7 @@ class Phase(TimeStampedModel):
     start_date = models.DateTimeField(blank=True, null=True)
     # due_date is end date in autotask UI
     due_date = models.DateTimeField(blank=True, null=True)
-    estimated_hours = models.PositiveIntegerField(default=0)
+    estimated_hours = models.FloatField()
     number = models.CharField(blank=True, null=True, max_length=50)
     scheduled = models.BooleanField(default=False)
     last_activity_date = models.DateTimeField(blank=True, null=True)
