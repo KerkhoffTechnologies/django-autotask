@@ -21,8 +21,7 @@ class TestTicket(TestCase):
             title='test',
             due_date_time=timezone.now(),
         )
-        with patch('djautotask.api_rest.'
-                   'TicketsAPIClient') as mock_ticketapiclient:
+        with patch('djautotask.api.TicketsAPIClient') as mock_ticketapiclient:
             instance = mock_ticketapiclient.return_value
             ticket.save()
             self.assertFalse(instance.update.called)

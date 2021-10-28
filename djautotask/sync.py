@@ -6,9 +6,9 @@ from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.utils import timezone
 
-from djautotask import api_rest as api
+from djautotask import api
 from djautotask import models
-from .api_rest import ApiCondition as A, AutotaskRecordNotFoundError
+from .api import ApiCondition as A, AutotaskRecordNotFoundError
 from .utils import DjautotaskSettings
 
 CREATED = 1
@@ -491,7 +491,7 @@ class Synchronizer:
         return json_data
 
 
-class SyncRestRecordUDFMixin:
+class SyncRecordUDFMixin:
 
     def _assign_udf_data(self, instance, udfs):
         for item in udfs:
@@ -759,7 +759,7 @@ class TicketTaskMixin:
         )
 
 
-class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
+class TicketSynchronizer(SyncRecordUDFMixin, TicketTaskMixin, Synchronizer,
                          ParentSynchronizer):
     client_class = api.TicketsAPIClient
     model_class = models.TicketTracker
@@ -873,7 +873,7 @@ class TicketSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin, Synchronizer,
         self.sync_children(*sync_classes)
 
 
-class TaskSynchronizer(SyncRestRecordUDFMixin, TicketTaskMixin,
+class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
                        BatchQueryMixin, Synchronizer):
     client_class = api.TasksAPIClient
     model_class = models.TaskTracker
@@ -1174,7 +1174,7 @@ class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     }
 
 
-class ProjectSynchronizer(SyncRestRecordUDFMixin, Synchronizer,
+class ProjectSynchronizer(SyncRecordUDFMixin, Synchronizer,
                           ParentSynchronizer):
     client_class = api.ProjectsAPIClient
     model_class = models.ProjectTracker

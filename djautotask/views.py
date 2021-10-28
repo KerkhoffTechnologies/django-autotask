@@ -6,8 +6,8 @@ from django import forms
 from django.views.generic import View
 from django.http import HttpResponse, HttpResponseBadRequest
 
-from djautotask import sync_rest as sync, models
-from djautotask.api_rest import AutotaskAPIError
+from djautotask import sync, models
+from djautotask.api import AutotaskAPIError
 
 logger = logging.getLogger(__name__)
 

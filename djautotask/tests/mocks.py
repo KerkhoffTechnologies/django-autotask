@@ -16,204 +16,204 @@ def create_mock_call(method_name, return_value, side_effect=None):
 
 
 def init_api_rest_connection(return_value=None):
-    method_name = 'djautotask.api_rest.get_api_connection_url'
+    method_name = 'djautotask.api.get_api_connection_url'
     cache.set('zone_info_url', return_value)
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_ticket_udf_call(return_value):
-    method_name = 'djautotask.api_rest.TicketsUDFAPIClient.get'
+    method_name = 'djautotask.api.TicketsUDFAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_task_udf_call(return_value):
-    method_name = 'djautotask.api_rest.TasksUDFAPIClient.get'
+    method_name = 'djautotask.api.TasksUDFAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_project_udf_call(return_value):
-    method_name = 'djautotask.api_rest.ProjectsUDFAPIClient.get'
+    method_name = 'djautotask.api.ProjectsUDFAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_ticket_call(return_value):
-    method_name = 'djautotask.api_rest.TicketsAPIClient.get_single'
+    method_name = 'djautotask.api.TicketsAPIClient.get_single'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_contacts_call(return_value):
-    method_name = 'djautotask.api_rest.ContactsAPIClient.get'
+    method_name = 'djautotask.api.ContactsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_contracts_call(return_value):
-    method_name = 'djautotask.api_rest.ContractsAPIClient.get'
+    method_name = 'djautotask.api.ContractsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_allocation_codes_call(return_value):
-    method_name = 'djautotask.api_rest.AllocationCodesAPIClient.get'
+    method_name = 'djautotask.api.AllocationCodesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_account_physical_locations_call(return_value):
-    method_name = 'djautotask.api_rest.AccountPhysicalLocationsAPIClient.get'
+    method_name = 'djautotask.api.AccountPhysicalLocationsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_accounts_call(return_value):
-    method_name = 'djautotask.api_rest.AccountsAPIClient.get'
+    method_name = 'djautotask.api.AccountsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_roles_call(return_value):
-    method_name = 'djautotask.api_rest.RolesAPIClient.get'
+    method_name = 'djautotask.api.RolesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_departments_call(return_value):
-    method_name = 'djautotask.api_rest.DepartmentsAPIClient.get'
+    method_name = 'djautotask.api.DepartmentsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_resources_call(return_value):
-    method_name = 'djautotask.api_rest.ResourcesAPIClient.get'
+    method_name = 'djautotask.api.ResourcesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_phases_call(return_value):
-    method_name = 'djautotask.api_rest.PhasesAPIClient.get'
+    method_name = 'djautotask.api.PhasesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_note_types_call(return_value):
-    method_name = 'djautotask.api_rest.NoteTypesAPIClient.get'
+    method_name = 'djautotask.api.NoteTypesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_resource_service_desk_roles_call(return_value):
-    method_name = 'djautotask.api_rest.ResourceServiceDeskRolesAPIClient.get'
+    method_name = 'djautotask.api.ResourceServiceDeskRolesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_resource_role_departments_call(return_value):
-    method_name = 'djautotask.api_rest.ResourceRoleDepartmentsAPIClient.get'
+    method_name = 'djautotask.api.ResourceRoleDepartmentsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_tickets_call(return_value):
-    method_name = 'djautotask.api_rest.TicketsAPIClient.get'
+    method_name = 'djautotask.api.TicketsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_tasks_call(return_value):
-    method_name = 'djautotask.api_rest.TasksAPIClient.get'
+    method_name = 'djautotask.api.TasksAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_projects_call(return_value):
-    method_name = 'djautotask.api_rest.ProjectsAPIClient.get'
+    method_name = 'djautotask.api.ProjectsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_ticket_categories_call(return_value):
-    method_name = 'djautotask.api_rest.TicketCategoriesAPIClient.get'
+    method_name = 'djautotask.api.TicketCategoriesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_ticket_secondary_resources_call(return_value):
-    method_name = 'djautotask.api_rest.TicketSecondaryResourcesAPIClient.get'
+    method_name = 'djautotask.api.TicketSecondaryResourcesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_task_secondary_resources_call(return_value):
-    method_name = 'djautotask.api_rest.TaskSecondaryResourcesAPIClient.get'
+    method_name = 'djautotask.api.TaskSecondaryResourcesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_ticket_notes_call(return_value):
-    method_name = 'djautotask.api_rest.TicketNotesAPIClient.get'
+    method_name = 'djautotask.api.TicketNotesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_task_notes_call(return_value):
-    method_name = 'djautotask.api_rest.TaskNotesAPIClient.get'
+    method_name = 'djautotask.api.TaskNotesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_time_entries_call(return_value):
-    method_name = 'djautotask.api_rest.TimeEntriesAPIClient.get'
+    method_name = 'djautotask.api.TimeEntriesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_task_predecessors_call(return_value):
-    method_name = 'djautotask.api_rest.TaskPredecessorsAPIClient.get'
+    method_name = 'djautotask.api.TaskPredecessorsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_ticket_category_picklist_call(return_value):
-    method_name = 'djautotask.api_rest.TicketCategoryPicklistAPIClient.get'
+    method_name = 'djautotask.api.TicketCategoryPicklistAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_ticket_picklist_call(return_value):
-    method_name = 'djautotask.api_rest.TicketPicklistAPIClient.get'
+    method_name = 'djautotask.api.TicketPicklistAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_project_picklist_call(return_value):
-    method_name = 'djautotask.api_rest.ProjectPicklistAPIClient.get'
+    method_name = 'djautotask.api.ProjectPicklistAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_license_types_call(return_value):
-    method_name = 'djautotask.api_rest.LicenseTypesAPIClient.get'
+    method_name = 'djautotask.api.LicenseTypesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_service_call_statuses_call(return_value):
-    method_name = 'djautotask.api_rest.ServiceCallStatusPicklistAPIClient.get'
+    method_name = 'djautotask.api.ServiceCallStatusPicklistAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_service_calls_call(return_value):
-    method_name = 'djautotask.api_rest.ServiceCallsAPIClient.get'
+    method_name = 'djautotask.api.ServiceCallsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_service_call_tickets_call(return_value):
-    method_name = 'djautotask.api_rest.ServiceCallTicketsAPIClient.get'
+    method_name = 'djautotask.api.ServiceCallTicketsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_service_call_ticket_resources_call(return_value):
-    method_name = 'djautotask.api_rest.ServiceCallTicketResourcesAPIClient.get'
+    method_name = 'djautotask.api.ServiceCallTicketResourcesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_service_call_tasks_call(return_value):
-    method_name = 'djautotask.api_rest.ServiceCallTasksAPIClient.get'
+    method_name = 'djautotask.api.ServiceCallTasksAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_service_call_task_resources_call(return_value):
-    method_name = 'djautotask.api_rest.ServiceCallTaskResourcesAPIClient.get'
+    method_name = 'djautotask.api.ServiceCallTaskResourcesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_use_types_call(return_value):
-    method_name = 'djautotask.api_rest.UseTypesAPIClient.get'
+    method_name = 'djautotask.api.UseTypesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_task_type_links_call(return_value):
     method_name = \
-        'djautotask.api_rest.TaskTypeLinksAPIClient.get'
+        'djautotask.api.TaskTypeLinksAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 
 def service_api_get_account_types_call(return_value):
-    method_name = 'djautotask.api_rest.AccountTypesAPIClient.get'
+    method_name = 'djautotask.api.AccountTypesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 

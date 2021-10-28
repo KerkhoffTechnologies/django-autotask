@@ -4,8 +4,8 @@ from django.test import TestCase
 
 from copy import deepcopy
 from djautotask import models
-from djautotask import sync_rest
-from djautotask.sync_rest import SyncResults
+from djautotask import sync
+from djautotask.sync import SyncResults
 from djautotask.tests import fixtures, mocks, fixture_utils
 
 
@@ -19,7 +19,7 @@ class AssertSyncMixin:
         assert qset.exists()
 
 
-class SynchronizerRestTestMixin(AssertSyncMixin):
+class SynchronizerTestMixin(AssertSyncMixin):
     synchronizer_class = None
     model_class = None
     fixture = None
@@ -147,7 +147,7 @@ class SynchronizerRestTestMixin(AssertSyncMixin):
         self.assertEqual(updated_count, 0)
 
 
-class UDFSynchronizerTestMixin(SynchronizerRestTestMixin):
+class UDFSynchronizerTestMixin(SynchronizerTestMixin):
     update_field = 'label'
     lookup_key = 'name'
 
@@ -176,7 +176,7 @@ class UDFSynchronizerTestMixin(SynchronizerRestTestMixin):
         }
 
 
-class PicklistSynchronizerRestTestMixin(SynchronizerRestTestMixin):
+class PicklistSynchronizerTestMixin(SynchronizerTestMixin):
     update_field = 'label'
     lookup_key = 'value'
 
@@ -231,8 +231,8 @@ class PicklistSynchronizerRestTestMixin(SynchronizerRestTestMixin):
         self._assert_fields(changed, new_json)
 
 
-class TestContactSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.ContactSynchronizer
+class TestContactSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ContactSynchronizer
     model_class = models.ContactTracker
     fixture = fixtures.API_CONTACT
     update_field = 'phone'
@@ -279,40 +279,8 @@ class TestAssignNullRelationMixin:
         patch.stop()
 
 
-class SynchronizerTestMixin:
-    model_class = None
-    synchronizer = None
-    fixture = None
-    update_field = None
-    updated_data = 'New Data'
-
-    def _sync(self, return_data):
-        query_generator = \
-            fixture_utils.generate_objects(
-                self.model_class.__bases__[0].__name__, [return_data])
-        _, patch = mocks.api_query_call(query_generator)
-        return self.synchronizer.sync()
-
-    def test_skips(self):
-        updated_instance = deepcopy(self.fixture)
-        updated_instance[self.update_field] = self.updated_data
-
-        _, updated_count, skipped_count, _ = self._sync(updated_instance)
-        self.assertEqual(updated_count, 1)
-        self.assertEqual(skipped_count, 0)
-
-        _, updated_count, skipped_count, _ = self._sync(updated_instance)
-        self.assertEqual(skipped_count, 1)
-        self.assertEqual(updated_count, 0)
-
-    def assert_sync_job(self):
-        qset = models.SyncJob.objects.filter(
-            entity_name=self.model_class.__bases__[0].__name__)
-        assert qset.exists()
-
-
-class TestTicketNoteSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.TicketNoteSynchronizer
+class TestTicketNoteSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.TicketNoteSynchronizer
     model_class = models.TicketNoteTracker
     fixture = fixtures.API_TICKET_NOTE
     update_field = 'title'
@@ -342,8 +310,8 @@ class TestTicketNoteSynchronizer(SynchronizerRestTestMixin, TestCase):
         self.assertEqual(instance.note_type.id, object_data['noteType'])
 
 
-class TestTaskNoteSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.TaskNoteSynchronizer
+class TestTaskNoteSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.TaskNoteSynchronizer
     model_class = models.TaskNoteTracker
     fixture = fixtures.API_TASK_NOTE
     update_field = 'title'
@@ -375,8 +343,8 @@ class TestTaskNoteSynchronizer(SynchronizerRestTestMixin, TestCase):
 
 
 class TestTicketSynchronizer(
-        SynchronizerRestTestMixin, TestAssignNullRelationMixin, TestCase):
-    synchronizer_class = sync_rest.TicketSynchronizer
+        SynchronizerTestMixin, TestAssignNullRelationMixin, TestCase):
+    synchronizer_class = sync.TicketSynchronizer
     model_class = models.TicketTracker
     fixture = fixtures.API_TICKET
     update_field = 'title'
@@ -426,20 +394,20 @@ class TestTicketSynchronizer(
         ticket.status = models.Status.objects.first()
         results = SyncResults()
         time_mock, time_patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TimeEntrySynchronizer.fetch_records',
+            'djautotask.sync.TimeEntrySynchronizer.fetch_records',
             results
         )
         note_mock, note_patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TicketNoteSynchronizer.fetch_records',
+            'djautotask.sync.TicketNoteSynchronizer.fetch_records',
             results
         )
         resource_mock, resource_patch = mocks.create_mock_call(
-            'djautotask.sync_rest.TicketSecondaryResourceSynchronizer.'
+            'djautotask.sync.TicketSecondaryResourceSynchronizer.'
             'fetch_records',
             results
         )
         _, _checklist_patch = mocks.create_mock_call(
-            "djautotask.sync_rest.TicketChecklistItemsSynchronizer.sync_items",
+            "djautotask.sync.TicketChecklistItemsSynchronizer.sync_items",
             None
         )
 
@@ -455,7 +423,7 @@ class TestTicketSynchronizer(
 
 
 class TestTicketUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
-    synchronizer_class = sync_rest.TicketUDFSynchronizer
+    synchronizer_class = sync.TicketUDFSynchronizer
     model_class = models.TicketUDFTracker
     fixture = fixtures.API_UDF
 
@@ -464,7 +432,7 @@ class TestTicketUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
 
 
 class TestTaskUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
-    synchronizer_class = sync_rest.TaskUDFSynchronizer
+    synchronizer_class = sync.TaskUDFSynchronizer
     model_class = models.TaskUDFTracker
     fixture = fixtures.API_UDF
 
@@ -473,7 +441,7 @@ class TestTaskUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
 
 
 class TestProjectUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
-    synchronizer_class = sync_rest.ProjectUDFSynchronizer
+    synchronizer_class = sync.ProjectUDFSynchronizer
     model_class = models.ProjectUDFTracker
     fixture = fixtures.API_UDF
 
@@ -481,8 +449,8 @@ class TestProjectUDFSynchronizer(UDFSynchronizerTestMixin, TestCase):
         return mocks.service_api_get_project_udf_call(return_data)
 
 
-class TestStatusSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.StatusSynchronizer
+class TestStatusSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.StatusSynchronizer
     model_class = models.StatusTracker
     fixture = fixtures.API_STATUS_FIELD
 
@@ -490,8 +458,8 @@ class TestStatusSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestPrioritySynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.PrioritySynchronizer
+class TestPrioritySynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.PrioritySynchronizer
     model_class = models.PriorityTracker
     fixture = fixtures.API_PRIORITY_FIELD
 
@@ -499,8 +467,8 @@ class TestPrioritySynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestQueueSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.QueueSynchronizer
+class TestQueueSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.QueueSynchronizer
     model_class = models.QueueTracker
     fixture = fixtures.API_QUEUE_FIELD
 
@@ -508,9 +476,9 @@ class TestQueueSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestProjectStatusSynchronizer(PicklistSynchronizerRestTestMixin,
+class TestProjectStatusSynchronizer(PicklistSynchronizerTestMixin,
                                     TestCase):
-    synchronizer_class = sync_rest.ProjectStatusSynchronizer
+    synchronizer_class = sync.ProjectStatusSynchronizer
     model_class = models.ProjectStatusTracker
     fixture = fixtures.API_PROJECT_STATUS_FIELD
 
@@ -518,8 +486,8 @@ class TestProjectStatusSynchronizer(PicklistSynchronizerRestTestMixin,
         return mocks.service_api_get_project_picklist_call(return_data)
 
 
-class TestProjectTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.ProjectTypeSynchronizer
+class TestProjectTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ProjectTypeSynchronizer
     model_class = models.ProjectTypeTracker
     fixture = fixtures.API_PROJECT_TYPE_FIELD
 
@@ -527,8 +495,8 @@ class TestProjectTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_project_picklist_call(return_data)
 
 
-class TestSourceSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.SourceSynchronizer
+class TestSourceSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.SourceSynchronizer
     model_class = models.SourceTracker
     fixture = fixtures.API_SOURCE_FIELD
 
@@ -536,8 +504,8 @@ class TestSourceSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestIssueTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.IssueTypeSynchronizer
+class TestIssueTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.IssueTypeSynchronizer
     model_class = models.IssueTypeTracker
     fixture = fixtures.API_ISSUE_TYPE_FIELD
 
@@ -545,9 +513,9 @@ class TestIssueTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestSubIssueTypeSynchronizer(PicklistSynchronizerRestTestMixin,
+class TestSubIssueTypeSynchronizer(PicklistSynchronizerTestMixin,
                                    TestCase):
-    synchronizer_class = sync_rest.SubIssueTypeSynchronizer
+    synchronizer_class = sync.SubIssueTypeSynchronizer
     model_class = models.SubIssueTypeTracker
     fixture = fixtures.API_SUB_ISSUE_TYPE_FIELD
 
@@ -555,8 +523,8 @@ class TestSubIssueTypeSynchronizer(PicklistSynchronizerRestTestMixin,
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestTicketTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.TicketTypeSynchronizer
+class TestTicketTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.TicketTypeSynchronizer
     model_class = models.TicketTypeTracker
     fixture = fixtures.API_TICKET_TYPE_FIELD
 
@@ -564,9 +532,9 @@ class TestTicketTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_ticket_picklist_call(return_data)
 
 
-class TestDisplayColorSynchronizer(PicklistSynchronizerRestTestMixin,
+class TestDisplayColorSynchronizer(PicklistSynchronizerTestMixin,
                                    TestCase):
-    synchronizer_class = sync_rest.DisplayColorSynchronizer
+    synchronizer_class = sync.DisplayColorSynchronizer
     model_class = models.DisplayColorTracker
     fixture = fixtures.API_DISPLAY_COLOR_FIELD
 
@@ -574,9 +542,9 @@ class TestDisplayColorSynchronizer(PicklistSynchronizerRestTestMixin,
         return mocks.service_api_get_ticket_category_picklist_call(return_data)
 
 
-class TestServiceCallStatusSynchronizer(PicklistSynchronizerRestTestMixin,
+class TestServiceCallStatusSynchronizer(PicklistSynchronizerTestMixin,
                                         TestCase):
-    synchronizer_class = sync_rest.ServiceCallStatusSynchronizer
+    synchronizer_class = sync.ServiceCallStatusSynchronizer
     model_class = models.ServiceCallStatusTracker
     fixture = fixtures.API_SERVICE_CALL_STATUS_FIELD
 
@@ -584,8 +552,8 @@ class TestServiceCallStatusSynchronizer(PicklistSynchronizerRestTestMixin,
         return mocks.service_api_get_service_call_statuses_call(return_data)
 
 
-class TestTicketCategorySynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.TicketCategorySynchronizer
+class TestTicketCategorySynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.TicketCategorySynchronizer
     model_class = models.TicketCategoryTracker
     fixture = fixtures.API_TICKET_CATEGORY
     update_field = "name"
@@ -607,8 +575,8 @@ class TestTicketCategorySynchronizer(SynchronizerRestTestMixin, TestCase):
                          object_data['displayColorRGB'])
 
 
-class TestResourceSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.ResourceSynchronizer
+class TestResourceSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ResourceSynchronizer
     model_class = models.ResourceTracker
     fixture = fixtures.API_RESOURCE
     update_field = 'last_name'
@@ -629,8 +597,8 @@ class TestResourceSynchronizer(SynchronizerRestTestMixin, TestCase):
         self.assertEqual(instance.active, object_data['isActive'])
 
 
-class TestAccountSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.AccountSynchronizer
+class TestAccountSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.AccountSynchronizer
     model_class = models.AccountTracker
     fixture = fixtures.API_ACCOUNT
     update_field = "name"
@@ -651,9 +619,9 @@ class TestAccountSynchronizer(SynchronizerRestTestMixin, TestCase):
                          self._parse_datetime(object_data['lastActivityDate']))
 
 
-class TestAccountPhysicalLocationSynchronizer(SynchronizerRestTestMixin,
+class TestAccountPhysicalLocationSynchronizer(SynchronizerTestMixin,
                                               TestCase):
-    synchronizer_class = sync_rest.AccountPhysicalLocationSynchronizer
+    synchronizer_class = sync.AccountPhysicalLocationSynchronizer
     model_class = models.AccountPhysicalLocationTracker
     fixture = fixtures.API_ACCOUNT_PHYSICAL_LOCATION
     update_field = 'name'
@@ -687,9 +655,9 @@ class FilterProjectTestCase(TestCase):
         cls.inactive_project.save()
 
 
-class TestProjectSynchronizer(SynchronizerRestTestMixin,
+class TestProjectSynchronizer(SynchronizerTestMixin,
                               FilterProjectTestCase):
-    synchronizer_class = sync_rest.ProjectSynchronizer
+    synchronizer_class = sync.ProjectSynchronizer
     model_class = models.ProjectTracker
     fixture = fixtures.API_PROJECT
     update_field = 'description'
@@ -760,7 +728,7 @@ class TestProjectSynchronizer(SynchronizerRestTestMixin,
             [project_fixture, fixtures.API_PROJECT]
         )
         _, patch = mocks.service_api_get_projects_call(project_instance)
-        synchronizer = sync_rest.ProjectSynchronizer(full=True)
+        synchronizer = sync.ProjectSynchronizer(full=True)
         synchronizer.sync()
 
         synced_project_ids = \
@@ -786,7 +754,7 @@ class TestProjectSynchronizer(SynchronizerRestTestMixin,
             [project_fixture, fixtures.API_PROJECT]
         )
         _, patch = mocks.service_api_get_projects_call(project_instance)
-        synchronizer = sync_rest.ProjectSynchronizer(full=True)
+        synchronizer = sync.ProjectSynchronizer(full=True)
         synchronizer.sync()
 
         synced_project_ids = \
@@ -798,10 +766,10 @@ class TestProjectSynchronizer(SynchronizerRestTestMixin,
         patch.stop()
 
 
-class TestTaskSynchronizer(SynchronizerRestTestMixin,
+class TestTaskSynchronizer(SynchronizerTestMixin,
                            TestAssignNullRelationMixin,
                            FilterProjectTestCase):
-    synchronizer_class = sync_rest.TaskSynchronizer
+    synchronizer_class = sync.TaskSynchronizer
     model_class = models.TaskTracker
     fixture = fixtures.API_TASK
     update_field = "title"
@@ -858,7 +826,7 @@ class TestTaskSynchronizer(SynchronizerRestTestMixin,
         )
         _, patch = mocks.service_api_get_tasks_call(task_instance)
 
-        synchronizer = sync_rest.TaskSynchronizer(full=True)
+        synchronizer = sync.TaskSynchronizer(full=True)
         synchronizer.sync()
 
         synced_task_ids = models.Task.objects.values_list('id', flat=True)
@@ -884,7 +852,7 @@ class TestTaskSynchronizer(SynchronizerRestTestMixin,
         )
         _, patch = mocks.service_api_get_tasks_call(task_instance)
 
-        synchronizer = sync_rest.TaskSynchronizer(full=True)
+        synchronizer = sync.TaskSynchronizer(full=True)
         synchronizer.sync()
 
         synced_task_ids = models.Task.objects.values_list('id', flat=True)
@@ -894,8 +862,8 @@ class TestTaskSynchronizer(SynchronizerRestTestMixin,
         patch.stop()
 
 
-class TestLicenseTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.LicenseTypeSynchronizer
+class TestLicenseTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.LicenseTypeSynchronizer
     model_class = models.LicenseTypeTracker
     fixture = fixtures.API_LICENSE_TYPE_FIELD
 
@@ -903,8 +871,8 @@ class TestLicenseTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_license_types_call(return_data)
 
 
-class TestUseTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.UseTypeSynchronizer
+class TestUseTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.UseTypeSynchronizer
     model_class = models.UseTypeTracker
     fixture = fixtures.API_USE_TYPE_FIELD
 
@@ -912,9 +880,9 @@ class TestUseTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_use_types_call(return_data)
 
 
-class TestTaskTypeLinkSynchronizer(PicklistSynchronizerRestTestMixin,
+class TestTaskTypeLinkSynchronizer(PicklistSynchronizerTestMixin,
                                    TestCase):
-    synchronizer_class = sync_rest.TaskTypeLinkSynchronizer
+    synchronizer_class = sync.TaskTypeLinkSynchronizer
     model_class = models.TaskTypeLinkTracker
     fixture = fixtures.API_TASK_TYPE_LINK_FIELD
 
@@ -922,8 +890,8 @@ class TestTaskTypeLinkSynchronizer(PicklistSynchronizerRestTestMixin,
         return mocks.service_api_get_task_type_links_call(return_data)
 
 
-class TestAccountTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.AccountTypeSynchronizer
+class TestAccountTypeSynchronizer(PicklistSynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.AccountTypeSynchronizer
     model_class = models.AccountTypeTracker
     fixture = fixtures.API_ACCOUNT_TYPE_FIELD
 
@@ -931,9 +899,9 @@ class TestAccountTypeSynchronizer(PicklistSynchronizerRestTestMixin, TestCase):
         return mocks.service_api_get_account_types_call(return_data)
 
 
-class TestTicketSecondaryResourceSynchronizer(SynchronizerRestTestMixin,
+class TestTicketSecondaryResourceSynchronizer(SynchronizerTestMixin,
                                               TestCase):
-    synchronizer_class = sync_rest.TicketSecondaryResourceSynchronizer
+    synchronizer_class = sync.TicketSecondaryResourceSynchronizer
     model_class = models.TicketSecondaryResourceTracker
     fixture = fixtures.API_TICKET_SECONDARY_RESOURCE
     update_field = 'resource_id'
@@ -956,9 +924,9 @@ class TestTicketSecondaryResourceSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.role.id, object_data['roleID'])
 
 
-class TestTaskSecondaryResourceSynchronizer(SynchronizerRestTestMixin,
+class TestTaskSecondaryResourceSynchronizer(SynchronizerTestMixin,
                                             TestCase):
-    synchronizer_class = sync_rest.TaskSecondaryResourceSynchronizer
+    synchronizer_class = sync.TaskSecondaryResourceSynchronizer
     model_class = models.TaskSecondaryResourceTracker
     fixture = fixtures.API_TASK_SECONDARY_RESOURCE
     update_field = 'resource_id'
@@ -981,8 +949,8 @@ class TestTaskSecondaryResourceSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.role.id, object_data['roleID'])
 
 
-class TestPhaseSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.PhaseSynchronizer
+class TestPhaseSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.PhaseSynchronizer
     model_class = models.PhaseTracker
     fixture = fixtures.API_PHASE
     update_field = "title"
@@ -1012,8 +980,8 @@ class TestPhaseSynchronizer(SynchronizerRestTestMixin, TestCase):
         self.assertEqual(instance.number, object_data['phaseNumber'])
 
 
-class TestTimeEntrySynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.TimeEntrySynchronizer
+class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.TimeEntrySynchronizer
     model_class = models.TimeEntryTracker
     fixture = fixtures.API_TIME_ENTRY
     update_field = 'summary_notes'
@@ -1050,8 +1018,8 @@ class TestTimeEntrySynchronizer(SynchronizerRestTestMixin, TestCase):
         self.assertEqual(instance.resource.id, object_data['resourceID'])
 
 
-class TestAllocationCodeSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.AllocationCodeSynchronizer
+class TestAllocationCodeSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.AllocationCodeSynchronizer
     model_class = models.AllocationCodeTracker
     fixture = fixtures.API_ALLOCATION_CODE
     update_field = 'name'
@@ -1072,8 +1040,8 @@ class TestAllocationCodeSynchronizer(SynchronizerRestTestMixin, TestCase):
         self.assertEqual(instance.use_type.id, object_data.get('useType'))
 
 
-class TestRoleSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.RoleSynchronizer
+class TestRoleSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.RoleSynchronizer
     model_class = models.RoleTracker
     fixture = fixtures.API_ROLE
     update_field = 'description'
@@ -1096,9 +1064,9 @@ class TestRoleSynchronizer(SynchronizerRestTestMixin, TestCase):
         self.assertEqual(instance.system_role, json_data['isSystemRole'])
 
 
-class TestDepartmentSynchronizer(SynchronizerRestTestMixin,
+class TestDepartmentSynchronizer(SynchronizerTestMixin,
                                  TestCase):
-    synchronizer_class = sync_rest.DepartmentSynchronizer
+    synchronizer_class = sync.DepartmentSynchronizer
     model_class = models.DepartmentTracker
     fixture = fixtures.API_DEPARTMENT
     update_field = 'description'
@@ -1117,9 +1085,9 @@ class TestDepartmentSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.number, json_data['number'])
 
 
-class TestResourceRoleDepartmentSynchronizer(SynchronizerRestTestMixin,
+class TestResourceRoleDepartmentSynchronizer(SynchronizerTestMixin,
                                              TestCase):
-    synchronizer_class = sync_rest.ResourceRoleDepartmentSynchronizer
+    synchronizer_class = sync.ResourceRoleDepartmentSynchronizer
     model_class = models.ResourceRoleDepartmentTracker
     fixture = fixtures.API_RESOURCE_ROLE_DEPARTMENT
     update_field = 'active'
@@ -1146,9 +1114,9 @@ class TestResourceRoleDepartmentSynchronizer(SynchronizerRestTestMixin,
                          json_data['isDepartmentLead'])
 
 
-class TestResourceServiceDeskRoleSynchronizer(SynchronizerRestTestMixin,
+class TestResourceServiceDeskRoleSynchronizer(SynchronizerTestMixin,
                                               TestCase):
-    synchronizer_class = sync_rest.ResourceServiceDeskRoleSynchronizer
+    synchronizer_class = sync.ResourceServiceDeskRoleSynchronizer
     model_class = models.ResourceServiceDeskRoleTracker
     fixture = fixtures.API_RESOURCE_SERVICE_DESK_ROLE
     update_field = 'active'
@@ -1171,8 +1139,8 @@ class TestResourceServiceDeskRoleSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.role.id, json_data['roleID'])
 
 
-class TestContractSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.ContractSynchronizer
+class TestContractSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ContractSynchronizer
     model_class = models.ContractTracker
     fixture = fixtures.API_CONTRACT
     update_field = 'name'
@@ -1193,8 +1161,8 @@ class TestContractSynchronizer(SynchronizerRestTestMixin, TestCase):
         self.assertEqual(instance.account.id, object_data['companyID'])
 
 
-class TestServiceCallSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.ServiceCallSynchronizer
+class TestServiceCallSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ServiceCallSynchronizer
     model_class = models.ServiceCallTracker
     fixture = fixtures.API_SERVICE_CALL
     update_field = 'description'
@@ -1245,8 +1213,8 @@ class TestServiceCallSynchronizer(SynchronizerRestTestMixin, TestCase):
         )
 
 
-class TestServiceCallTicketSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.ServiceCallTicketSynchronizer
+class TestServiceCallTicketSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ServiceCallTicketSynchronizer
     model_class = models.ServiceCallTicketTracker
     fixture = fixtures.API_SERVICE_CALL_TICKET
     update_field = 'ticket_id'
@@ -1276,8 +1244,8 @@ class TestServiceCallTicketSynchronizer(SynchronizerRestTestMixin, TestCase):
         super().test_sync_update()
 
 
-class TestServiceCallTaskSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.ServiceCallTaskSynchronizer
+class TestServiceCallTaskSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ServiceCallTaskSynchronizer
     model_class = models.ServiceCallTaskTracker
     fixture = fixtures.API_SERVICE_CALL_TASK
     update_field = 'task_id'
@@ -1308,9 +1276,9 @@ class TestServiceCallTaskSynchronizer(SynchronizerRestTestMixin, TestCase):
         super().test_sync_update()
 
 
-class TestServiceCallTicketResourceSynchronizer(SynchronizerRestTestMixin,
+class TestServiceCallTicketResourceSynchronizer(SynchronizerTestMixin,
                                                 TestCase):
-    synchronizer_class = sync_rest.ServiceCallTicketResourceSynchronizer
+    synchronizer_class = sync.ServiceCallTicketResourceSynchronizer
     model_class = models.ServiceCallTicketResourceTracker
     fixture = fixtures.API_SERVICE_CALL_TICKET_RESOURCE
     update_field = 'resource_id'
@@ -1333,9 +1301,9 @@ class TestServiceCallTicketResourceSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.resource.id, object_data['resourceID'])
 
 
-class TestServiceCallTaskResourceSynchronizer(SynchronizerRestTestMixin,
+class TestServiceCallTaskResourceSynchronizer(SynchronizerTestMixin,
                                               TestCase):
-    synchronizer_class = sync_rest.ServiceCallTaskResourceSynchronizer
+    synchronizer_class = sync.ServiceCallTaskResourceSynchronizer
     model_class = models.ServiceCallTaskResourceTracker
     fixture = fixtures.API_SERVICE_CALL_TASK_RESOURCE
     update_field = 'resource_id'
@@ -1359,8 +1327,8 @@ class TestServiceCallTaskResourceSynchronizer(SynchronizerRestTestMixin,
         self.assertEqual(instance.resource.id, object_data['resourceID'])
 
 
-class TestTaskPredecessorSynchronizer(SynchronizerRestTestMixin, TestCase):
-    synchronizer_class = sync_rest.TaskPredecessorSynchronizer
+class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.TaskPredecessorSynchronizer
     model_class = models.TaskPredecessorTracker
     fixture = fixtures.API_TASK_PREDECESSOR
     update_field = 'lag_days'

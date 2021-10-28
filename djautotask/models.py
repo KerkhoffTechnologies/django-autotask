@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from django.utils import timezone
-from djautotask import api_rest
+from djautotask import api
 from model_utils import FieldTracker
 
 OFFSET_TIMEZONE = 'America/New_York'
@@ -158,7 +158,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         return '{}-{}'.format(self.id, self.title)
 
     def update_at(self, **kwargs):
-        api_client = api_rest.TicketsAPIClient()
+        api_client = api.TicketsAPIClient()
         return api_client.update(
             self,
             self.get_updated_object(**kwargs)
@@ -559,7 +559,7 @@ class Project(ATUpdateMixin, TimeStampedModel):
         return self.name
 
     def update_at(self, **kwargs):
-        api_client = api_rest.ProjectsAPIClient()
+        api_client = api.ProjectsAPIClient()
         return api_client.update(
             self,
             self.get_updated_object(**kwargs)
@@ -660,7 +660,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
 
-        api_client = api_rest.TasksAPIClient()
+        api_client = api.TasksAPIClient()
         return api_client.update(
             self,
             self.project,

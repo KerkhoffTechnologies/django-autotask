@@ -35,7 +35,7 @@ def run_sync_command(full_option=False, command_name=None):
     return out
 
 
-class AbstractBaseSyncRestTest(object):
+class AbstractBaseSyncTest(object):
 
     def setUp(self):
         super().setUp()
@@ -80,7 +80,7 @@ class AbstractBaseSyncRestTest(object):
         self.assertEqual(msg, out.getvalue().strip())
 
 
-class PicklistSyncTest(AbstractBaseSyncRestTest):
+class PicklistSyncTest(AbstractBaseSyncTest):
 
     def test_full_sync(self):
         self.test_sync()
@@ -139,7 +139,7 @@ class TestSyncProjectUDFCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_project_udfs()
 
 
-class TestSyncContactCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncContactCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_contacts_call,
         fixtures.API_CONTACT,
@@ -151,7 +151,7 @@ class TestSyncContactCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_contacts()
 
 
-class TestSyncTicketCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncTicketCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_tickets_call,
         fixtures.API_TICKET,
@@ -357,7 +357,7 @@ class TestSyncUseTypeCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_use_types()
 
 
-class TestSyncTicketCategoryCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncTicketCategoryCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_ticket_categories_call,
         fixtures.API_TICKET_CATEGORY,
@@ -369,7 +369,7 @@ class TestSyncTicketCategoryCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_ticket_categories()
 
 
-class TestSyncResourceCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncResourceCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_resources_call,
         fixtures.API_RESOURCE,
@@ -377,7 +377,7 @@ class TestSyncResourceCommand(AbstractBaseSyncRestTest, TestCase):
     )
 
 
-class TestSyncAccountCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncAccountCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_accounts_call,
         fixtures.API_ACCOUNT,
@@ -385,7 +385,7 @@ class TestSyncAccountCommand(AbstractBaseSyncRestTest, TestCase):
     )
 
 
-class TestSyncAccountLocationCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncAccountLocationCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_account_physical_locations_call,
         fixtures.API_ACCOUNT_PHYSICAL_LOCATION,
@@ -398,7 +398,7 @@ class TestSyncAccountLocationCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_account_physical_locations()
 
 
-class TestSyncProjectCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncProjectCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_projects_call,
         fixtures.API_PROJECT,
@@ -410,7 +410,7 @@ class TestSyncProjectCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_projects()
 
 
-class TestSyncPhaseCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncPhaseCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_phases_call,
         fixtures.API_PHASE,
@@ -418,7 +418,7 @@ class TestSyncPhaseCommand(AbstractBaseSyncRestTest, TestCase):
     )
 
 
-class TestSyncTaskCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncTaskCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_tasks_call,
         fixtures.API_TASK,
@@ -431,7 +431,7 @@ class TestSyncTaskCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_tasks()
 
 
-class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncRestTest,
+class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest,
                                              TestCase):
     args = (
         mocks.service_api_get_ticket_secondary_resources_call,
@@ -440,7 +440,7 @@ class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncRestTest,
     )
 
 
-class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_task_secondary_resources_call,
         fixtures.API_TASK_SECONDARY_RESOURCE,
@@ -448,7 +448,7 @@ class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncRestTest, TestCase):
     )
 
 
-class TestSyncTicketNoteCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncTicketNoteCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_ticket_notes_call,
         fixtures.API_TICKET_NOTE,
@@ -461,7 +461,7 @@ class TestSyncTicketNoteCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_ticket_notes()
 
 
-class TestSyncTaskNoteCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncTaskNoteCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_task_notes_call,
         fixtures.API_TASK_NOTE,
@@ -475,7 +475,7 @@ class TestSyncTaskNoteCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_task_notes()
 
 
-class TestSyncTimeEntryCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_time_entries_call,
         fixtures.API_TIME_ENTRY,
@@ -491,7 +491,7 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_time_entries()
 
 
-class TestSyncAllocationCodeCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncAllocationCodeCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_allocation_codes_call,
         fixtures.API_ALLOCATION_CODE,
@@ -503,7 +503,7 @@ class TestSyncAllocationCodeCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_allocation_codes()
 
 
-class TestSyncRoleCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncRoleCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_roles_call,
         fixtures.API_ROLE,
@@ -515,7 +515,7 @@ class TestSyncRoleCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_roles()
 
 
-class TestSyncDepartmentCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncDepartmentCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_departments_call,
         fixtures.API_DEPARTMENT,
@@ -527,7 +527,7 @@ class TestSyncDepartmentCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_departments()
 
 
-class TestSyncResourceServiceDeskRoleCommand(AbstractBaseSyncRestTest,
+class TestSyncResourceServiceDeskRoleCommand(AbstractBaseSyncTest,
                                              TestCase):
     args = (
         mocks.service_api_get_resource_service_desk_roles_call,
@@ -542,7 +542,7 @@ class TestSyncResourceServiceDeskRoleCommand(AbstractBaseSyncRestTest,
         fixture_utils.init_resource_service_desk_roles()
 
 
-class TestSyncResourceRoleDepartmentCommand(AbstractBaseSyncRestTest,
+class TestSyncResourceRoleDepartmentCommand(AbstractBaseSyncTest,
                                             TestCase):
     args = (
         mocks.service_api_get_resource_role_departments_call,
@@ -558,7 +558,7 @@ class TestSyncResourceRoleDepartmentCommand(AbstractBaseSyncRestTest,
         fixture_utils.init_resource_role_departments()
 
 
-class TestSyncContractCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncContractCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_contracts_call,
         fixtures.API_CONTRACT,
@@ -570,7 +570,7 @@ class TestSyncContractCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_contracts()
 
 
-class TestSyncServiceCallCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncServiceCallCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_service_calls_call,
         fixtures.API_SERVICE_CALL,
@@ -585,7 +585,7 @@ class TestSyncServiceCallCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_accounts()
 
 
-class TestSyncServiceCallTicketCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncServiceCallTicketCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_service_call_tickets_call,
         fixtures.API_SERVICE_CALL_TICKET,
@@ -603,7 +603,7 @@ class TestSyncServiceCallTicketCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_tickets()
 
 
-class TestSyncServiceCallTaskCommand(AbstractBaseSyncRestTest, TestCase):
+class TestSyncServiceCallTaskCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_service_call_tasks_call,
         fixtures.API_SERVICE_CALL_TASK,
@@ -621,7 +621,7 @@ class TestSyncServiceCallTaskCommand(AbstractBaseSyncRestTest, TestCase):
         fixture_utils.init_tasks()
 
 
-class TestSyncServiceCallTicketResourceCommand(AbstractBaseSyncRestTest,
+class TestSyncServiceCallTicketResourceCommand(AbstractBaseSyncTest,
                                                TestCase):
     args = (
         mocks.service_api_get_service_call_ticket_resources_call,
@@ -641,7 +641,7 @@ class TestSyncServiceCallTicketResourceCommand(AbstractBaseSyncRestTest,
         fixture_utils.init_service_call_tickets()
 
 
-class TestSyncServiceCallTaskResourceCommand(AbstractBaseSyncRestTest,
+class TestSyncServiceCallTaskResourceCommand(AbstractBaseSyncTest,
                                              TestCase):
     args = (
         mocks.service_api_get_service_call_task_resources_call,
@@ -662,7 +662,7 @@ class TestSyncServiceCallTaskResourceCommand(AbstractBaseSyncRestTest,
         fixture_utils.init_service_call_tasks()
 
 
-class TestSyncTaskPredecessor(AbstractBaseSyncRestTest, TestCase):
+class TestSyncTaskPredecessor(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_task_predecessors_call,
         fixtures.API_TASK_PREDECESSOR,
