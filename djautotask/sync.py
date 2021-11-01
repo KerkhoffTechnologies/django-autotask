@@ -1625,8 +1625,11 @@ class PhaseSynchronizer(Synchronizer):
         instance.description = object_data.get('description')
         instance.start_date = object_data.get('startDate')
         instance.due_date = object_data.get('dueDate')
-        instance.estimated_hours = object_data.get('estimatedHours')
         instance.last_activity_date = object_data.get('lastActivityDateTime')
+
+        estimated_hours = object_data.get('estimatedHours')
+        instance.estimated_hours = Decimal(str(estimated_hours)) \
+            if estimated_hours is not None else None
 
         self._set_datetime_attribute(instance, 'start_date')
         self._set_datetime_attribute(instance, 'due_date')
