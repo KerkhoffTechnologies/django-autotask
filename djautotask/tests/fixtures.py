@@ -1,6 +1,3 @@
-from datetime import datetime
-from dateutil.tz import tzoffset
-
 
 API_PAGE_DETAILS = {
         "count": 1,
@@ -19,58 +16,83 @@ API_EMPTY = {
     }
 }
 
-API_ACCOUNT_LIST = [
+API_EMPTY_FIELDS = {"fields": []}
+
+API_UDF = {
+    "fields": [
+        {
+            'name': "Test UDF",
+            'label': "Test UDF",
+            'type': "string",
+            'length': 8000,
+            'isPickList': True,
+            'picklistValues': [
+                {
+                    'value': "1",
+                    'label': "One",
+                    'isDefaultValue': False,
+                    'sortOrder': 0,
+                    'parentValue': None,
+                    'isActive': True,
+                    'isSystem': False
+                }
+            ]
+        },
+    ],
+}
+
+API_ACCOUNT_ITEMS = [
     {
         'id': 174,
-        'UserDefinedFields': '',
-        'Address1': '26 Tech Valley Drive',
-        'Address2': 'Suite 2',
-        'AlternatePhone1': '',
-        'AlternatePhone2': '',
-        'City': 'East Greenbush',
-        'Country': 'United States',
-        'CreateDate':
-            datetime(2012, 10, 24, 5, 0, tzinfo=tzoffset(None, 3600)),
-        'Fax': '555-555-6677',
-        'LastActivityDate':
-            datetime(2012, 6, 18, 13, 15, 47, tzinfo=tzoffset(None, 3600)),
-        'MarketSegmentID': 29683456,
-        'AccountName': 'Autotask Corporation',
-        'AccountNumber': "289843",
-        'OwnerResourceID': 29682885,
-        'Phone': '555-555-5566',
-        'PostalCode': 12061,
-        'SICCode': '',
-        'State': 'NY',
-        'StockMarket': '',
-        'StockSymbol': '',
-        'TerritoryID': 29683453,
-        'AccountType': 7,
-        'WebAddress': 'www.autotask.com',
-        'Active': True,
-        'ClientPortalActive': True,
-        'TaskFireActive': False,
-        'TaxExempt': False,
-        'TaxID': '',
-        'AdditionalAddressInformation': '',
-        'CountryID': 237,
-        'BillToAddressToUse': 1,
-        'BillToAttention': '',
-        'BillToAddress1': '26 Tech Valley Drive',
-        'BillToAddress2': 'Suite 2',
-        'BillToCity': 'East Greenbush',
-        'BillToState': 'NY',
-        'BillToZipCode': 12061,
-        'BillToCountryID': 237,
-        'BillToAdditionalAddressInformation': '',
-        'QuoteTemplateID': 1,
-        'QuoteEmailMessageID': 2,
-        'InvoiceTemplateID': 102,
-        'InvoiceEmailMessageID': 1,
-        'CurrencyID': 1,
-        'CreatedByResourceID': 29682885,
+        'userDefinedFields': [],
+        'address1': '26 Tech Valley Drive',
+        'address2': 'Suite 2',
+        'alternatePhone1': '',
+        'alternatePhone2': '',
+        'city': 'East Greenbush',
+        'createDate': '2012-10-24T05:00:00.000Z',
+        'fax': '555-555-6677',
+        'lastActivityDate': '2012-06-18T13:15:47.000Z',
+        'marketSegmentID': 29683456,
+        'companyName': 'Autotask Corporation',
+        'companyNumber': "289843",
+        'ownerResourceID': 29682885,
+        'phone': '555-555-5566',
+        'postalCode': 12061,
+        'sicCode': '',
+        'state': 'NY',
+        'stockMarket': '',
+        'stockSymbol': '',
+        'territoryID': 29683453,
+        'companyType': 7,
+        'webAddress': 'www.autotask.com',
+        'isActive': True,
+        'isClientPortalActive': True,
+        'isTaskFireActive': False,
+        'taxID': '',
+        'additionalAddressInformation': '',
+        'countryID': 237,
+        'billToAddressToUse': 1,
+        'billToAttention': '',
+        'billToAddress1': '26 Tech Valley Drive',
+        'billToAddress2': 'Suite 2',
+        'billToCity': 'East Greenbush',
+        'billToState': 'NY',
+        'billToZipCode': 12061,
+        'billToCountryID': 237,
+        'billToAdditionalAddressInformation': '',
+        'quoteTemplateID': 1,
+        'quoteEmailMessageID': 2,
+        'invoiceTemplateID': 102,
+        'invoiceEmailMessageID': 1,
+        'currencyID': 1,
+        'createdByResourceID': 29682885,
     }
 ]
+API_ACCOUNT = {
+    "items": API_ACCOUNT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
 
 API_ACCOUNT_PHYSICAL_LOCATION_ITEMS = [
     {
@@ -166,39 +188,41 @@ API_LICENSE_TYPE_FIELD = {
     ]
 }
 
+API_RESOURCE_ITEMS = [
+    {
+        'accountingReferenceID': '',
+        'isActive': True,
+        'dateFormat': 'MM/dd/yyyy',
+        'email': '',
+        'email2': '',
+        'email3': '',
+        'emailTypeCode': 'PRIMARY',
+        'firstName': 'Autotask',
+        'hireDate': '',
+        'homePhone': '',
+        'initials': '',
+        'internalCost': 1.0,
+        'lastName': 'Administrator',
+        'licenseType': 1,
+        'locationID': 90682,
+        'middleName': '',
+        'mobilePhone': '',
+        'numberFormat': 'X,XXX.XX',
+        'officeExtension': '',
+        'officePhone': '(518) 720-3500',
+        'payrollType': 1,
+        'resourceType': 'Employee',
+        'timeFormat': 'hh:mm a',
+        'title': '',
+        'userName': 'administrator',
+        'userType': 10,
+        'id': 10,
+    }
+]
 API_RESOURCE = {
-    'AccountingReferenceID': '',
-    'Active': True,
-    'DateFormat': 'MM/dd/yyyy',
-    'Email': '',
-    'Email2': '',
-    'Email3': '',
-    'EmailTypeCode': 'PRIMARY',
-    'FirstName': 'Autotask',
-    'HireDate': '',
-    'HomePhone': '',
-    'Initials': '',
-    'InternalCost': 1.0,
-    'LastName': 'Administrator',
-    'LicenseType': 1,
-    'LocationID': 90682,
-    'MiddleName': '',
-    'MobilePhone': '',
-    'NumberFormat': 'X,XXX.XX',
-    'OfficeExtension': '',
-    'OfficePhone': '(518) 720-3500',
-    'Password': '******',
-    'PayrollType': 1,
-    'ResourceType': 'Employee',
-    'TimeFormat': 'hh:mm a',
-    'Title': '',
-    'UserDefinedFields': '',
-    'UserName': 'administrator',
-    'UserType': 10,
-    'id': 10,
+    "items": API_RESOURCE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-
-API_RESOURCE_LIST = [API_RESOURCE]
 
 API_SOURCE_FIELD = {
     "fields": [
@@ -758,24 +782,26 @@ API_ACCOUNT_TYPE_FIELD = {
     ]
 }
 
+API_PHASE_ITEMS = [
+    {
+        'estimatedHours': 23.0,
+        'startDate': '2012-08-27T05:00:00.000Z',
+        'phaseNumber': 'T20120604.0011',
+        'projectID': 4,
+        'dueDate': '2012-09-17T05:00:00.000Z',
+        'id': 7732,
+        'description': 'Unit Testing',
+        'createDate': '2012-06-18T17:50:31.000Z',
+        'lastActivityDateTime': '2019-11-05T00:28:25.000Z',
+        'externalID': None,
+        'title': 'Unit Testing',
+        'creatorResourceID': 4
+    }
+]
 API_PHASE = {
-    'EstimatedHours': 23.0,
-    'StartDate': datetime(2012, 8, 27, 5, 0, tzinfo=tzoffset(None, 3600)),
-    'PhaseNumber': 'T20120604.0011',
-    'ProjectID': 4,
-    'UserDefinedFields': '',
-    'Scheduled': False,
-    'DueDate': datetime(2012, 9, 17, 5, 0, tzinfo=tzoffset(None, 3600)),
-    'id': 7732,
-    'Description': 'Unit Testing',
-    'CreateDate': datetime(2012, 6, 18, 17, 50, 31, tzinfo=tzoffset(None, 3600)),
-    'LastActivityDateTime': datetime(2019, 11, 5, 0, 28, 25, 490000, tzinfo=tzoffset(None, 3600)),
-    'ExternalID': None,
-    'Title': 'Unit Testing',
-    'CreatorResourceID': 4
+    "items": API_PHASE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
 }
-
-API_PHASE_LIST = [API_PHASE]
 
 API_TASK_ITEM = {
     'id': 101,
@@ -882,26 +908,34 @@ API_TASK_NOTE = {
     "pageDetails": API_PAGE_DETAILS
 }
 
-API_NOTE_TYPE_LIST = [
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Task Detail',
-        'SortOrder': 1,
-        'Value': 2,
-        'ParentValue': None,
-    },
-    {
-        'IsActive': True,
-        'IsDefaultValue': False,
-        'IsSystem': True,
-        'Label': 'Client Portal Note',
-        'SortOrder': 1,
-        'Value': 18,
-        'ParentValue': None,
-    },
-]
+API_NOTE_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "noteType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "2",
+                    "label": "Task Detail",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
 
 API_TASK_TYPE_LINK_FIELD = {
     "fields": [
@@ -1213,35 +1247,6 @@ API_TASK_PREDECESSOR = {
     "items": API_TASK_PREDECESSOR_ITEMS,
     "pageDetails": API_PAGE_DETAILS
 }
-
-API_UDF_LIST = [
-    {
-        'Name': "Test UDF",
-        'Label': "Test UDF",
-        'Type': "String",
-        'Length': 8000,
-        'IsPickList': False,
-    },
-    {
-        'Name': "Test UDF",
-        'Label': "Test UDF",
-        'Type': "String",
-        'Length': 8000,
-        'IsPickList': True,
-        'PicklistValues': [
-            {
-                 'Value': "1",
-                 'Label': "One",
-                 'IsDefaultValue': False,
-                 'SortOrder': 0,
-                 'parentValue': None,
-                 'IsActive': True,
-                 'IsSystem': False
-            }
-        ]
-    },
-
-]
 
 API_CONTACT_ITEMS = [
     {

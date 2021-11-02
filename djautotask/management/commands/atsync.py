@@ -1,12 +1,9 @@
 from collections import OrderedDict
-from atws.wrapper import AutotaskProcessException, AutotaskAPIException
-from xml.sax._exceptions import SAXParseException
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.translation import gettext_lazy as _
-from djautotask import sync, api
-from djautotask import sync_rest as syncrest
-from djautotask import api_rest as apirest
+from djautotask import sync
+from djautotask import api
 
 OPTION_NAME = 'autotask_object'
 ERROR_MESSAGE_TEMPLATE = 'Failed to sync {}. Autotask API returned an ' \
@@ -24,107 +21,107 @@ class Command(BaseCommand):
         # now.
         # See https://www.python.org/dev/peps/pep-0468/.
         synchronizers = (
-            ('status', syncrest.StatusSynchronizer, _('Status')),
+            ('ticket_udf', sync.TicketUDFSynchronizer, _('Ticket Udf')),
+            ('task_udf', sync.TaskUDFSynchronizer, _('Task Udf')),
+            ('project_udf', sync.ProjectUDFSynchronizer, _('Project Udf')),
+            ('status', sync.StatusSynchronizer, _('Status')),
             (
                 'license_type',
-                syncrest.LicenseTypeSynchronizer,
+                sync.LicenseTypeSynchronizer,
                 _('License Type')
             ),
             ('resource', sync.ResourceSynchronizer, _('Resource')),
             ('ticket_secondary_resource',
-             syncrest.TicketSecondaryResourceSynchronizer,
+             sync.TicketSecondaryResourceSynchronizer,
              _('Ticket Secondary Resource')),
-            ('priority', syncrest.PrioritySynchronizer, _('Priority')),
-            ('queue', syncrest.QueueSynchronizer, _('Queue')),
+            ('priority', sync.PrioritySynchronizer, _('Priority')),
+            ('queue', sync.QueueSynchronizer, _('Queue')),
             (
                 'account_type',
-                syncrest.AccountTypeSynchronizer,
+                sync.AccountTypeSynchronizer,
                 _('Account Type')
             ),
             ('account', sync.AccountSynchronizer, _('Account')),
             (
                 'account_physical_location',
-                syncrest.AccountPhysicalLocationSynchronizer,
+                sync.AccountPhysicalLocationSynchronizer,
                 _('Account Physical Location')
             ),
-            ('contract', syncrest.ContractSynchronizer, _('Contract')),
+            ('contract', sync.ContractSynchronizer, _('Contract')),
             ('project_status',
-             syncrest.ProjectStatusSynchronizer, _('Project Status')),
+             sync.ProjectStatusSynchronizer, _('Project Status')),
             ('project_type',
-             syncrest.ProjectTypeSynchronizer, _('Project Type')),
-            ('project', syncrest.ProjectSynchronizer, _('Project')),
+             sync.ProjectTypeSynchronizer, _('Project Type')),
+            ('project', sync.ProjectSynchronizer, _('Project')),
             ('phase', sync.PhaseSynchronizer, _('Phase')),
-            ('display_color', syncrest.DisplayColorSynchronizer,
+            ('display_color', sync.DisplayColorSynchronizer,
              _('Display Color')),
-            ('ticket_category', syncrest.TicketCategorySynchronizer,
+            ('ticket_category', sync.TicketCategorySynchronizer,
              _('Ticket Category')),
-            ('source', syncrest.SourceSynchronizer, _('Source')),
-            ('issue_type', syncrest.IssueTypeSynchronizer, _('Issue Type')),
-            ('ticket_type', syncrest.TicketTypeSynchronizer, _('Ticket Type')),
-            ('sub_issue_type', syncrest.SubIssueTypeSynchronizer,
+            ('source', sync.SourceSynchronizer, _('Source')),
+            ('issue_type', sync.IssueTypeSynchronizer, _('Issue Type')),
+            ('ticket_type', sync.TicketTypeSynchronizer, _('Ticket Type')),
+            ('sub_issue_type', sync.SubIssueTypeSynchronizer,
              _('Sub Issue Type')),
-            ('ticket', syncrest.TicketSynchronizer, _('Ticket')),
+            ('ticket', sync.TicketSynchronizer, _('Ticket')),
             ('note_type', sync.NoteTypeSynchronizer, _('Note Type')),
-            ('ticket_note', syncrest.TicketNoteSynchronizer, _('Ticket Note')),
-            ('use_type', syncrest.UseTypeSynchronizer, _('Use Type')),
-            ('allocation_code', syncrest.AllocationCodeSynchronizer,
+            ('ticket_note', sync.TicketNoteSynchronizer, _('Ticket Note')),
+            ('use_type', sync.UseTypeSynchronizer, _('Use Type')),
+            ('allocation_code', sync.AllocationCodeSynchronizer,
              _('Allocation Code')),
-            ('role', syncrest.RoleSynchronizer, _('Role')),
-            ('department', syncrest.DepartmentSynchronizer, _('Department')),
-            ('time_entry', syncrest.TimeEntrySynchronizer, _('Time Entry')),
-            ('task', syncrest.TaskSynchronizer, _('Task')),
-            ('task_note', syncrest.TaskNoteSynchronizer, _('Task Note')),
-            ('task_type_link', syncrest.TaskTypeLinkSynchronizer,
+            ('role', sync.RoleSynchronizer, _('Role')),
+            ('department', sync.DepartmentSynchronizer, _('Department')),
+            ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
+            ('task', sync.TaskSynchronizer, _('Task')),
+            ('task_note', sync.TaskNoteSynchronizer, _('Task Note')),
+            ('task_type_link', sync.TaskTypeLinkSynchronizer,
              _('Task Type Link')),
             ('task_secondary_resource',
-             syncrest.TaskSecondaryResourceSynchronizer,
+             sync.TaskSecondaryResourceSynchronizer,
              _('Task Secondary Resource')),
             (
                 'resource_role_department',
-                syncrest.ResourceRoleDepartmentSynchronizer,
+                sync.ResourceRoleDepartmentSynchronizer,
                 _('Resource Role Department')
             ),
             (
                 'resource_service_desk_role',
-                syncrest.ResourceServiceDeskRoleSynchronizer,
+                sync.ResourceServiceDeskRoleSynchronizer,
                 _('Resource Service Desk Role')
             ),
             (
                 'service_call_status',
-                syncrest.ServiceCallStatusSynchronizer,
+                sync.ServiceCallStatusSynchronizer,
                 _('Service Call Status')
             ),
             (
                 'service_call',
-                syncrest.ServiceCallSynchronizer,
+                sync.ServiceCallSynchronizer,
                 _('Service Call')
             ),
             (
                 'service_call_ticket',
-                syncrest.ServiceCallTicketSynchronizer,
+                sync.ServiceCallTicketSynchronizer,
                 _('Service Call Ticket')
             ),
             (
                 'service_call_task',
-                syncrest.ServiceCallTaskSynchronizer,
+                sync.ServiceCallTaskSynchronizer,
                 _('Service Call Task')
             ),
             (
                 'service_call_ticket_resource',
-                syncrest.ServiceCallTicketResourceSynchronizer,
+                sync.ServiceCallTicketResourceSynchronizer,
                 _('Service Call Ticket Resource')
             ),
             (
                 'service_call_task_resource',
-                syncrest.ServiceCallTaskResourceSynchronizer,
+                sync.ServiceCallTaskResourceSynchronizer,
                 _('Service Call Task Resource')
             ),
-            ('task_predecessor', syncrest.TaskPredecessorSynchronizer,
+            ('task_predecessor', sync.TaskPredecessorSynchronizer,
              _('Task Predecessor')),
-            ('ticket_udf', sync.TicketUDFSynchronizer, _('Ticket UDF')),
-            ('task_udf', sync.TaskUDFSynchronizer, _('Task UDF')),
-            ('project_udf', sync.ProjectUDFSynchronizer, _('Project UDF')),
-            ('contact', syncrest.ContactSynchronizer, _('Contact')),
+            ('contact', sync.ContactSynchronizer, _('Contact')),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:
@@ -184,19 +181,7 @@ class Command(BaseCommand):
                 self.sync_by_class(sync_class, obj_name,
                                    full_option=full_option)
 
-            except AutotaskProcessException as e:
-                error_msg = ERROR_MESSAGE_TEMPLATE.format(
-                    obj_name, api.parse_autotaskprocessexception(e))
-
-            except AutotaskAPIException as e:
-                error_msg = ERROR_MESSAGE_TEMPLATE.format(
-                    obj_name, api.parse_autotaskapiexception(e))
-
-            except SAXParseException as e:
-                error_msg = 'Failed to connect to Autotask API. ' \
-                      'The error was: {}'.format(e)
-
-            except apirest.AutotaskAPIError as e:
+            except api.AutotaskAPIError as e:
                 error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
 
             finally:

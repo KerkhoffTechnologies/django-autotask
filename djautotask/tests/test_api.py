@@ -7,10 +7,10 @@ from django.utils import timezone
 
 from . import mocks as mk
 
-from .. import api_rest as api
-from ..api_rest import AutotaskAPIError, AutotaskAPIClientError, \
+from .. import api
+from ..api import AutotaskAPIError, AutotaskAPIClientError, \
     ApiConditionList
-from ..api_rest import ApiCondition as A
+from ..api import ApiCondition as A
 
 
 class TestApiConditionList(TestCase):
