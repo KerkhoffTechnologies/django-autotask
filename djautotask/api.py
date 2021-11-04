@@ -22,6 +22,10 @@ FORBIDDEN_ERROR_MESSAGE = \
 NO_RECORD_ERROR_MESSAGE = \
     'No message. No matching records found. The logged in Resource may not ' \
     'have the required permissions to delete the data.'
+CACHE_KEYS = {
+    'url': 'zone_info_url',
+    'webUrl': 'zone_info_webUrl'
+}
 
 logger = logging.getLogger(__name__)
 
@@ -76,23 +80,27 @@ def get_cached_url(cache_key):
     return cache.get(cache_key)
 
 
-def get_api_connection_url():
-    return _get_connection_url('url')
+def update_cache(json_obj):
+    for key, cache_key in CACHE_KEYS.items():
+        cache.set(cache_key, json_obj[key])
 
 
-def get_web_connection_url():
-    return _get_connection_url('webUrl')
+def get_api_connection_url(force_fetch=False):
+    return _get_connection_url('url', force_fetch)
 
 
-def _get_connection_url(field):
+def get_web_connection_url(force_fetch=False):
+    return _get_connection_url('webUrl', force_fetch)
+
+
+def _get_connection_url(field, force_fetch=False):
     cache_key = 'zone_info_' + field
     api_url_from_cache = get_cached_url(cache_key)
 
-    if not api_url_from_cache:
+    if not api_url_from_cache or force_fetch:
         try:
             json_obj = get_zone_info(settings.AUTOTASK_CREDENTIALS['username'])
             url = json_obj[field]
-            cache.set(cache_key, url, timeout=None)
         except AutotaskAPIError as e:
             raise AutotaskAPIError('Failed to get zone info: {}'.format(e))
     else:
@@ -110,6 +118,8 @@ def get_zone_info(username):
         response = requests.get(endpoint_url)
         if 200 == response.status_code:
             resp_json = response.json()
+            # Whenever get_zone_info is triggered, update cache
+            update_cache(resp_json)
             return resp_json
         elif 500 == response.status_code:
             # AT returns 500 if username is blank or incorrect.
@@ -231,6 +241,7 @@ class ApiConditionList:
 
 class AutotaskAPIClient(object):
     API = None
+    MAX_401_ATTEMPTS = 1
 
     def __init__(
         self,
@@ -406,6 +417,17 @@ class AutotaskAPIClient(object):
                     return response.json()
                 except JSONDecodeError as e:
                     raise AutotaskAPIError('{}'.format(e))
+            elif response.status_code == 401:
+                # It could be the case that zone info has been changed
+                msg = 'Unauthorized request: {}'.format(endpoint_url)
+                logger.warning(msg)
+                if request_retry_counter['count'] <= self.MAX_401_ATTEMPTS:
+                    cached_url = get_cached_url('zone_info_url')
+                    if cached_url != get_api_connection_url(force_fetch=True):
+                        logger.info('Zone information has been changed, '
+                                    'so this request will be retried.')
+                        raise AutotaskAPIError(response.content)
+                raise AutotaskAPIClientError(msg)
             elif response.status_code == 403:
                 self._log_failed(response)
                 raise AutotaskSecurityPermissionsException(
