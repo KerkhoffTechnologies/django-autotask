@@ -17,7 +17,7 @@ def create_mock_call(method_name, return_value, side_effect=None):
 
 def init_api_rest_connection(return_value=None):
     method_name = 'djautotask.api.get_api_connection_url'
-    cache.set('zone_info_url', return_value)
+    cache.set('url', return_value)
     return create_mock_call(method_name, return_value)
 
 

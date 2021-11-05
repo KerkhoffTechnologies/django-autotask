@@ -100,16 +100,16 @@ class TestFetchAPIUrl(TestCase):
         """
         cache.clear()
         mk.init_api_rest_connection(return_value=self.API_URL)
-        self.assertIsNotNone(api.get_cached_url('zone_info_url'))
+        self.assertIsNotNone(api.get_cached_url('url'))
 
     def test_fetch_api_url_from_warm_cache(self):
         """
         Request shouldn't be tried, when zone info is found in the cache
         """
         # get api url from cache during __init__
-        cache.set('zone_info_url', 'some api url')
+        cache.set('url', 'some api url')
         api.ContactsAPIClient()
-        self.assertEqual(api.get_cached_url('zone_info_url'), 'some api url')
+        self.assertEqual(api.get_cached_url('url'), 'some api url')
 
     def test_get_specific_api_connection_url(self):
         mk.init_api_rest_connection(return_value=self.API_URL)

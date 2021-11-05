@@ -22,10 +22,6 @@ FORBIDDEN_ERROR_MESSAGE = \
 NO_RECORD_ERROR_MESSAGE = \
     'No message. No matching records found. The logged in Resource may not ' \
     'have the required permissions to delete the data.'
-CACHE_KEYS = {
-    'url': 'zone_info_url',
-    'webUrl': 'zone_info_webUrl'
-}
 
 logger = logging.getLogger(__name__)
 
@@ -81,8 +77,8 @@ def get_cached_url(cache_key):
 
 
 def update_cache(json_obj):
-    for key, cache_key in CACHE_KEYS.items():
-        cache.set(cache_key, json_obj[key])
+    cache.set('url', json_obj['url'])
+    cache.set('webUrl', json_obj['webUrl'])
 
 
 def get_api_connection_url(force_fetch=False):
@@ -94,8 +90,7 @@ def get_web_connection_url(force_fetch=False):
 
 
 def _get_connection_url(field, force_fetch=False):
-    cache_key = 'zone_info_' + field
-    api_url_from_cache = get_cached_url(cache_key)
+    api_url_from_cache = get_cached_url(field)
 
     if not api_url_from_cache or force_fetch:
         try:
@@ -422,7 +417,7 @@ class AutotaskAPIClient(object):
                 msg = 'Unauthorized request: {}'.format(endpoint_url)
                 logger.warning(msg)
                 if request_retry_counter['count'] <= self.MAX_401_ATTEMPTS:
-                    cached_url = get_cached_url('zone_info_url')
+                    cached_url = get_cached_url('url')
                     if cached_url != get_api_connection_url(force_fetch=True):
                         logger.info('Zone information has been changed, '
                                     'so this request will be retried.')
