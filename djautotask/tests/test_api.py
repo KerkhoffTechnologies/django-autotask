@@ -107,7 +107,7 @@ class TestFetchAPIUrl(TestCase):
         Request shouldn't be tried, when zone info is found in the cache
         """
         # get api url from cache during __init__
-        cache.set('url', 'some api url')
+        cache.set('ZoneUrl', 'some api url')
         api.ContactsAPIClient()
         self.assertEqual(api.get_cached_url('url'), 'some api url')
 

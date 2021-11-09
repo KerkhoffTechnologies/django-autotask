@@ -73,12 +73,14 @@ def retry_if_api_error(exception):
 
 
 def get_cached_url(cache_key):
-    return cache.get(cache_key)
+    return cache.get('Zone{}'.format(cache_key.capitalize()))
 
 
 def update_cache(json_obj):
-    cache.set('url', json_obj['url'])
-    cache.set('webUrl', json_obj['webUrl'])
+    # set cache timeout as 10 minutes (default: 300)
+    timeout = 600
+    cache.set('ZoneUrl', json_obj['url'], timeout=timeout)
+    cache.set('ZoneWebUrl', json_obj['webUrl'], timeout=timeout)
 
 
 def get_api_connection_url(force_fetch=False):
