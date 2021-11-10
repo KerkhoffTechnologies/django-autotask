@@ -16,6 +16,9 @@ from retrying import retry
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
 # wait before retrying a request.
 RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
+CACHE_TIMEOUT = 600
+AT_URL_KEY = 'url'
+AT_WEB_KEY = 'webUrl'
 FORBIDDEN_ERROR_MESSAGE = \
     'The logged in Resource does not have the adequate ' \
     'permissions to create this entity type.'
@@ -73,22 +76,23 @@ def retry_if_api_error(exception):
 
 
 def get_cached_url(cache_key):
-    return cache.get('Zone{}'.format(cache_key.capitalize()))
+    return cache.get(f'zone_{cache_key}')
 
 
 def update_cache(json_obj):
     # set cache timeout as 10 minutes (default: 300)
-    timeout = 600
-    cache.set('ZoneUrl', json_obj['url'], timeout=timeout)
-    cache.set('ZoneWebUrl', json_obj['webUrl'], timeout=timeout)
+    cache.set(
+        f'zone_{AT_URL_KEY}', json_obj[AT_URL_KEY], timeout=CACHE_TIMEOUT)
+    cache.set(
+        f'zone_{AT_WEB_KEY}', json_obj[AT_WEB_KEY], timeout=CACHE_TIMEOUT)
 
 
 def get_api_connection_url(force_fetch=False):
-    return _get_connection_url('url', force_fetch)
+    return _get_connection_url(AT_URL_KEY, force_fetch)
 
 
 def get_web_connection_url(force_fetch=False):
-    return _get_connection_url('webUrl', force_fetch)
+    return _get_connection_url(AT_WEB_KEY, force_fetch)
 
 
 def _get_connection_url(field, force_fetch=False):
@@ -97,9 +101,12 @@ def _get_connection_url(field, force_fetch=False):
     if not api_url_from_cache or force_fetch:
         try:
             json_obj = get_zone_info(settings.AUTOTASK_CREDENTIALS['username'])
+            # Update cache if empty or forced
+            update_cache(json_obj)
+
             url = json_obj[field]
         except AutotaskAPIError as e:
-            raise AutotaskAPIError('Failed to get zone info: {}'.format(e))
+            raise AutotaskAPIError(f'Failed to get zone info: {e}')
     else:
         url = api_url_from_cache
 
@@ -115,8 +122,6 @@ def get_zone_info(username):
         response = requests.get(endpoint_url)
         if 200 == response.status_code:
             resp_json = response.json()
-            # Whenever get_zone_info is triggered, update cache
-            update_cache(resp_json)
             return resp_json
         elif 500 == response.status_code:
             # AT returns 500 if username is blank or incorrect.
