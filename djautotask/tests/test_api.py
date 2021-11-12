@@ -57,7 +57,10 @@ class TestAutotaskAPIClient(TestCase):
     API_URL = 'https://localhost/'
 
     def setUp(self):
-        mk.init_api_rest_connection(return_value=self.API_URL)
+        mk.init_zone_info_connection(return_value={
+            'url': self.API_URL,
+            'webUrl': self.API_URL,
+        })
         self.client = api.ContactsAPIClient()  # Must use a real client as
         # AutotaskAPIClient is effectively abstract
 
@@ -99,20 +102,32 @@ class TestFetchAPIUrl(TestCase):
         when zone info is not found in the cache
         """
         cache.clear()
-        mk.init_api_rest_connection(return_value=self.API_URL)
-        self.assertIsNotNone(api.get_cached_url('zone_info_url'))
+        self.assertIsNone(api.get_cached_url('url'))
+        mk.init_zone_info_connection(return_value={
+            'url': self.API_URL,
+            'webUrl': self.API_URL,
+        })
+        api.ContactsAPIClient()
+        self.assertIsNotNone(api.get_cached_url('url'))
 
     def test_fetch_api_url_from_warm_cache(self):
         """
         Request shouldn't be tried, when zone info is found in the cache
         """
         # get api url from cache during __init__
-        cache.set('zone_info_url', 'some api url')
+        cache.set('zone_url', 'some api url')
+        mk.init_zone_info_connection(return_value={
+            'url': "some NEW api url",
+            'webUrl': "some NEW api url",
+        })
         api.ContactsAPIClient()
-        self.assertEqual(api.get_cached_url('zone_info_url'), 'some api url')
+        self.assertEqual(api.get_cached_url('url'), 'some api url')
 
     def test_get_specific_api_connection_url(self):
-        mk.init_api_rest_connection(return_value=self.API_URL)
+        mk.init_zone_info_connection(return_value={
+            'url': self.API_URL,
+            'webUrl': self.API_URL,
+        })
         client = api.ContactsAPIClient(
             server_url='https://specific-api-url.autotask.net'
         )
@@ -126,7 +141,10 @@ class TestAPISettings(TestCase):
     API_URL = 'https://localhost/'
 
     def setUp(self):
-        mk.init_api_rest_connection(return_value=self.API_URL)
+        mk.init_zone_info_connection(return_value={
+            'url': self.API_URL,
+            'webUrl': self.API_URL,
+        })
 
     def test_default_timeout(self):
         client = api.ContactsAPIClient()
@@ -162,6 +180,10 @@ class TestAPISettings(TestCase):
 
         tested_status_codes = []
         http_400_range = list(range(400, 499))
+
+        # We do actually want to retry 401, as that indicates the
+        # zone information may have changed
+        http_400_range.pop(1)
 
         for status_code in http_400_range:
 

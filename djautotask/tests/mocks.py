@@ -1,7 +1,6 @@
 from mock import patch
 import json
 import responses
-from django.core.cache import cache
 
 
 def create_mock_call(method_name, return_value, side_effect=None):
@@ -17,7 +16,11 @@ def create_mock_call(method_name, return_value, side_effect=None):
 
 def init_api_rest_connection(return_value=None):
     method_name = 'djautotask.api.get_api_connection_url'
-    cache.set('zone_info_url', return_value)
+    return create_mock_call(method_name, return_value)
+
+
+def init_zone_info_connection(return_value=None):
+    method_name = 'djautotask.api.get_zone_info'
     return create_mock_call(method_name, return_value)
 
 

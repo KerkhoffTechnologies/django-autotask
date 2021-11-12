@@ -16,6 +16,9 @@ from retrying import retry
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
 # wait before retrying a request.
 RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
+CACHE_TIMEOUT = 600
+AT_URL_KEY = 'url'
+AT_WEB_KEY = 'webUrl'
 FORBIDDEN_ERROR_MESSAGE = \
     'The logged in Resource does not have the adequate ' \
     'permissions to create this entity type.'
@@ -73,28 +76,37 @@ def retry_if_api_error(exception):
 
 
 def get_cached_url(cache_key):
-    return cache.get(cache_key)
+    return cache.get(f'zone_{cache_key}')
 
 
-def get_api_connection_url():
-    return _get_connection_url('url')
+def update_cache(json_obj):
+    # set cache timeout as 10 minutes (default: 300)
+    cache.set(
+        f'zone_{AT_URL_KEY}', json_obj[AT_URL_KEY], timeout=CACHE_TIMEOUT)
+    cache.set(
+        f'zone_{AT_WEB_KEY}', json_obj[AT_WEB_KEY], timeout=CACHE_TIMEOUT)
 
 
-def get_web_connection_url():
-    return _get_connection_url('webUrl')
+def get_api_connection_url(force_fetch=False):
+    return _get_connection_url(AT_URL_KEY, force_fetch)
 
 
-def _get_connection_url(field):
-    cache_key = 'zone_info_' + field
-    api_url_from_cache = get_cached_url(cache_key)
+def get_web_connection_url(force_fetch=False):
+    return _get_connection_url(AT_WEB_KEY, force_fetch)
 
-    if not api_url_from_cache:
+
+def _get_connection_url(field, force_fetch=False):
+    api_url_from_cache = get_cached_url(field)
+
+    if not api_url_from_cache or force_fetch:
         try:
             json_obj = get_zone_info(settings.AUTOTASK_CREDENTIALS['username'])
+            # Update cache if empty or forced
+            update_cache(json_obj)
+
             url = json_obj[field]
-            cache.set(cache_key, url, timeout=None)
         except AutotaskAPIError as e:
-            raise AutotaskAPIError('Failed to get zone info: {}'.format(e))
+            raise AutotaskAPIError(f'Failed to get zone info: {e}')
     else:
         url = api_url_from_cache
 
@@ -231,6 +243,7 @@ class ApiConditionList:
 
 class AutotaskAPIClient(object):
     API = None
+    MAX_401_ATTEMPTS = 1
 
     def __init__(
         self,
@@ -406,6 +419,17 @@ class AutotaskAPIClient(object):
                     return response.json()
                 except JSONDecodeError as e:
                     raise AutotaskAPIError('{}'.format(e))
+            elif response.status_code == 401:
+                # It could be the case that zone info has been changed
+                msg = 'Unauthorized request: {}'.format(endpoint_url)
+                logger.warning(msg)
+                if request_retry_counter['count'] <= self.MAX_401_ATTEMPTS:
+                    cached_url = get_cached_url(AT_URL_KEY)
+                    if cached_url != get_api_connection_url(force_fetch=True):
+                        logger.info('Zone information has been changed, '
+                                    'so this request will be retried.')
+                        raise AutotaskAPIError(response.content)
+                raise AutotaskAPIClientError(msg)
             elif response.status_code == 403:
                 self._log_failed(response)
                 raise AutotaskSecurityPermissionsException(
