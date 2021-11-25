@@ -149,6 +149,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         'account': 'companyID',
         'account_physical_location': 'companyLocationID',
         'contact': 'contactID',
+        'contract': 'contractID',
     }
 
     class Meta:
@@ -848,7 +849,7 @@ class Contract(models.Model):
         (INACTIVE, 'Inactive'),
         (ACTIVE, 'Active')
     )
-    name = models.CharField(max_length=250)
+    name = models.CharField(max_length=250, db_index=True)
     number = models.CharField(blank=True, null=True, max_length=50)
     status = models.CharField(
         max_length=20, blank=True, null=True, choices=STATUS_CHOICES)
@@ -856,6 +857,9 @@ class Contract(models.Model):
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
+
+    class Meta:
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
