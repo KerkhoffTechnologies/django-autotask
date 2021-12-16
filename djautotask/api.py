@@ -252,6 +252,7 @@ class AutotaskAPIClient(object):
         integration_code=None,
         rest_api_version=None,
         server_url=None,
+        impersonation_id=None,
     ):
         if not username:
             username = settings.AUTOTASK_CREDENTIALS['username']
@@ -278,6 +279,8 @@ class AutotaskAPIClient(object):
 
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
+        self.impersonation = self.request_settings.get('impersonation', False)
+        self.impersonation_id = impersonation_id
         self.conditions = ApiConditionList()
 
         self.cached_body = None
@@ -334,7 +337,7 @@ class AutotaskAPIClient(object):
                                                     error)
         return msg
 
-    def get_headers(self):
+    def get_headers(self, method):
         headers = {'Content-Type': 'application/json'}
 
         if self.username:
@@ -343,6 +346,9 @@ class AutotaskAPIClient(object):
             headers['Secret'] = self.password
         if self.integration_code:
             headers['ApiIntegrationCode'] = self.integration_code
+        if self.impersonation and self.impersonation_id \
+                and method.lower() != 'get':
+            headers['ImpersonationResourceId'] = self.impersonation_id
 
         return headers
 
@@ -406,7 +412,7 @@ class AutotaskAPIClient(object):
                     endpoint_url,
                     data=request_body,
                     timeout=self.timeout,
-                    headers=self.get_headers(),
+                    headers=self.get_headers(request_method),
                 )
 
             except requests.RequestException as e:
@@ -484,7 +490,7 @@ class AutotaskAPIClient(object):
                 endpoint_url,
                 json=body,
                 timeout=self.timeout,
-                headers=self.get_headers(),
+                headers=self.get_headers(method),
             )
         except requests.RequestException as e:
             logger.error(
