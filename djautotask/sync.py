@@ -239,7 +239,9 @@ class Synchronizer:
     last_updated_field = 'lastActivityDate'
 
     def __init__(self, full=False, *args, **kwargs):
-        self.client = self.client_class()
+        self.client = self.client_class(
+            impersonation_id=kwargs.get('impersonation_id', None)
+        )
         self.full = full
 
     def set_relations(self, instance, json_data):
@@ -984,11 +986,14 @@ class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
         """
         Make a request to Autotask to create a Note.
         """
-        description = "{}\n\nNote was added by {} {}.".format(
-            kwargs['description'],
-            kwargs['resource'].first_name,
-            kwargs['resource'].last_name
-        )
+        if self.client.impersonation and self.client.impersonation_id:
+            description = kwargs['description']
+        else:
+            description = "{}\n\nNote was added by {} {}.".format(
+                kwargs['description'],
+                kwargs['resource'].first_name,
+                kwargs['resource'].last_name
+            )
         kwargs.update({
             self.related_instance_name: kwargs.pop('card'),
             'description': description

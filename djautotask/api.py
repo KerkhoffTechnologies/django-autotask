@@ -20,8 +20,7 @@ CACHE_TIMEOUT = 600
 AT_URL_KEY = 'url'
 AT_WEB_KEY = 'webUrl'
 FORBIDDEN_ERROR_MESSAGE = \
-    'The logged in Resource does not have the adequate ' \
-    'permissions to create this entity type.'
+    'The logged in Resource does not have the adequate permissions'
 NO_RECORD_ERROR_MESSAGE = \
     'No message. No matching records found. The logged in Resource may not ' \
     'have the required permissions to delete the data.'
@@ -252,6 +251,7 @@ class AutotaskAPIClient(object):
         integration_code=None,
         rest_api_version=None,
         server_url=None,
+        impersonation_id=None,
     ):
         if not username:
             username = settings.AUTOTASK_CREDENTIALS['username']
@@ -278,6 +278,8 @@ class AutotaskAPIClient(object):
 
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
+        self.impersonation = self.request_settings.get('impersonation', False)
+        self.impersonation_id = impersonation_id
         self.conditions = ApiConditionList()
 
         self.cached_body = None
@@ -301,6 +303,14 @@ class AutotaskAPIClient(object):
     def _log_failed(self, response):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
+
+    def _prepare_error_for_impersonation(self, msg):
+        impersonation_error_msg = \
+            'Resource impersonation is enabled in your TopLeft ' \
+            'application. Please check the resource security level that is ' \
+            'being impersonated.'
+        msg = '{} {}'.format(msg, impersonation_error_msg)
+        return msg
 
     def _prepare_error_response(self, response):
         error = response.content.decode("utf-8")
@@ -334,7 +344,7 @@ class AutotaskAPIClient(object):
                                                     error)
         return msg
 
-    def get_headers(self):
+    def get_headers(self, method):
         headers = {'Content-Type': 'application/json'}
 
         if self.username:
@@ -343,6 +353,9 @@ class AutotaskAPIClient(object):
             headers['Secret'] = self.password
         if self.integration_code:
             headers['ApiIntegrationCode'] = self.integration_code
+        if self.impersonation and self.impersonation_id \
+                and method.lower() != 'get':
+            headers['ImpersonationResourceId'] = self.impersonation_id
 
         return headers
 
@@ -406,7 +419,7 @@ class AutotaskAPIClient(object):
                     endpoint_url,
                     data=request_body,
                     timeout=self.timeout,
-                    headers=self.get_headers(),
+                    headers=self.get_headers(request_method),
                 )
 
             except requests.RequestException as e:
@@ -484,7 +497,7 @@ class AutotaskAPIClient(object):
                 endpoint_url,
                 json=body,
                 timeout=self.timeout,
-                headers=self.get_headers(),
+                headers=self.get_headers(method),
             )
         except requests.RequestException as e:
             logger.error(
@@ -521,7 +534,11 @@ class AutotaskAPIClient(object):
             # In addition, AT returns 500 when requested record doesn't exist
             # during the deletion
             if FORBIDDEN_ERROR_MESSAGE in prepared_error:
-                raise AutotaskSecurityPermissionsException(prepared_error, 403)
+                if self.impersonation_id:
+                    prepared_error = self._prepare_error_for_impersonation(
+                        prepared_error
+                    )
+                raise AutotaskSecurityPermissionsException(prepared_error)
             elif NO_RECORD_ERROR_MESSAGE in prepared_error:
                 raise AutotaskRecordNotFoundError(prepared_error, 404)
             else:
