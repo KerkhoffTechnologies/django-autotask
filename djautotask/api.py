@@ -20,8 +20,7 @@ CACHE_TIMEOUT = 600
 AT_URL_KEY = 'url'
 AT_WEB_KEY = 'webUrl'
 FORBIDDEN_ERROR_MESSAGE = \
-    'The logged in Resource does not have the adequate ' \
-    'permissions to create this entity type.'
+    'The logged in Resource does not have the adequate permissions'
 NO_RECORD_ERROR_MESSAGE = \
     'No message. No matching records found. The logged in Resource may not ' \
     'have the required permissions to delete the data.'
@@ -305,6 +304,14 @@ class AutotaskAPIClient(object):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
 
+    def _prepare_error_for_impersonation(self, msg):
+        impersonation_error_msg = \
+            'Notice: Resource impersonation is enabled in your TopLeft ' \
+            'instance. Please check the resource security level that is ' \
+            'being impersonated.'
+        msg = '{} {}'.format(msg, impersonation_error_msg)
+        return msg
+
     def _prepare_error_response(self, response):
         error = response.content.decode("utf-8")
         # decode the bytes encoded error to a string
@@ -527,6 +534,10 @@ class AutotaskAPIClient(object):
             # In addition, AT returns 500 when requested record doesn't exist
             # during the deletion
             if FORBIDDEN_ERROR_MESSAGE in prepared_error:
+                if self.impersonation_id:
+                    prepared_error = self._prepare_error_for_impersonation(
+                        prepared_error
+                    )
                 raise AutotaskSecurityPermissionsException(prepared_error, 403)
             elif NO_RECORD_ERROR_MESSAGE in prepared_error:
                 raise AutotaskRecordNotFoundError(prepared_error, 404)
