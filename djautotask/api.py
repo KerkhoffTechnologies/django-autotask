@@ -306,8 +306,8 @@ class AutotaskAPIClient(object):
 
     def _prepare_error_for_impersonation(self, msg):
         impersonation_error_msg = \
-            'Notice: Resource impersonation is enabled in your TopLeft ' \
-            'instance. Please check the resource security level that is ' \
+            'Resource impersonation is enabled in your TopLeft ' \
+            'application. Please check the resource security level that is ' \
             'being impersonated.'
         msg = '{} {}'.format(msg, impersonation_error_msg)
         return msg
@@ -538,7 +538,7 @@ class AutotaskAPIClient(object):
                     prepared_error = self._prepare_error_for_impersonation(
                         prepared_error
                     )
-                raise AutotaskSecurityPermissionsException(prepared_error, 403)
+                raise AutotaskSecurityPermissionsException(prepared_error)
             elif NO_RECORD_ERROR_MESSAGE in prepared_error:
                 raise AutotaskRecordNotFoundError(prepared_error, 404)
             else:
