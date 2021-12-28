@@ -345,6 +345,18 @@ class TestSyncTaskTypeLinkCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_task_type_links()
 
 
+class TestSyncTaskCategoryCommand(PicklistSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_task_picklist_call,
+        fixtures.API_TASK_CATEGORY_FIELD,
+        'task_category',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_task_categories()
+
+
 class TestSyncUseTypeCommand(PicklistSyncTest, TestCase):
     args = (
         mocks.service_api_get_use_types_call,
@@ -695,6 +707,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncRoleCommand,
             TestSyncDepartmentCommand,
             TestSyncTicketCommand,
+            TestSyncTaskCategoryCommand,
             TestSyncTaskCommand,
             TestSyncStatusCommand,
             TestSyncResourceCommand,
@@ -786,6 +799,7 @@ class TestSyncAllCommand(TestCase):
             'sub_issue_type': models.SubIssueType,
             'ticket_type': models.TicketType,
             'license_type': models.LicenseType,
+            'task_category': models.TaskCategory,
             'task': models.Task,
             'task_secondary_resource': models.TaskSecondaryResource,
             'phase': models.Phase,
@@ -868,6 +882,9 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_service_call_statuses_call(
             fixtures.API_SERVICE_CALL_STATUS_FIELD)
         mocks.service_api_get_note_types_call(fixtures.API_NOTE_TYPE_FIELD)
+        mocks.service_api_get_task_picklist_call(
+            fixtures.API_TASK_CATEGORY_FIELD)
+
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
         mocks.service_api_get_contracts_call(fixtures.API_CONTRACT)
         mocks.service_api_get_allocation_codes_call(
@@ -949,3 +966,4 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_service_call_statuses_call(
             fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_note_types_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_task_picklist_call(fixtures.API_EMPTY_FIELDS)

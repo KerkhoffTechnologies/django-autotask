@@ -885,6 +885,7 @@ class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
     last_updated_field = 'lastActivityDateTime'
 
     related_meta = {
+        'taskCategoryID': (models.TaskCategory, 'task_category'),
         'assignedResourceID': (models.Resource, 'assigned_resource'),
         'assignedResourceRoleID': (models.Role, 'assigned_resource_role'),
         'billingCodeID': (models.AllocationCode, 'allocation_code'),
@@ -1771,6 +1772,15 @@ class SubIssueTypeSynchronizer(TicketPicklistSynchronizer):
 class TicketTypeSynchronizer(TicketPicklistSynchronizer):
     model_class = models.TicketTypeTracker
     lookup_name = 'ticketType'
+
+
+class TaskPicklistSynchronizer(PicklistSynchronizer):
+    client_class = api.TaskPicklistAPIClient
+
+
+class TaskCategorySynchronizer(TaskPicklistSynchronizer):
+    model_class = models.TaskCategoryTracker
+    lookup_name = 'taskCategoryID'
 
 
 class ProjectPicklistSynchronizer(PicklistSynchronizer):

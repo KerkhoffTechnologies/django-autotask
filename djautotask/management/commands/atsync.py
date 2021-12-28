@@ -72,6 +72,8 @@ class Command(BaseCommand):
             ('role', sync.RoleSynchronizer, _('Role')),
             ('department', sync.DepartmentSynchronizer, _('Department')),
             ('time_entry', sync.TimeEntrySynchronizer, _('Time Entry')),
+            ('task_category', sync.TaskCategorySynchronizer,
+             _('Task Category')),
             ('task', sync.TaskSynchronizer, _('Task')),
             ('task_note', sync.TaskNoteSynchronizer, _('Task Note')),
             ('task_type_link', sync.TaskTypeLinkSynchronizer,

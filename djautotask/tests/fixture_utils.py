@@ -141,6 +141,13 @@ def init_use_types():
     return synchronizer.sync()
 
 
+def init_task_categories():
+    models.TaskCategory.objects.all().delete()
+    mocks.service_api_get_task_picklist_call(fixtures.API_TASK_CATEGORY_FIELD)
+    synchronizer = sync.TaskCategorySynchronizer()
+    return synchronizer.sync()
+
+
 def init_task_type_links():
     models.TaskTypeLink.objects.all().delete()
     mocks.service_api_get_task_type_links_call(
