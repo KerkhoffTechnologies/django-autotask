@@ -670,6 +670,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'phase': 'phaseID',
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
+        'task_category': 'taskCategoryID',
     }
 
     def __str__(self):
