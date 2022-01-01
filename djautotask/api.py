@@ -304,14 +304,6 @@ class AutotaskAPIClient(object):
         logger.error('Failed API call: {0} - {1} - {2}'.format(
             response.url, response.status_code, response.content))
 
-    def _prepare_error_for_impersonation(self, msg):
-        impersonation_error_msg = \
-            'Resource impersonation is enabled in your TopLeft ' \
-            'application. Please check the resource security level that is ' \
-            'being impersonated.'
-        msg = '{} {}'.format(msg, impersonation_error_msg)
-        return msg
-
     def _prepare_error_response(self, response):
         error = response.content.decode("utf-8")
         # decode the bytes encoded error to a string
@@ -321,9 +313,10 @@ class AutotaskAPIClient(object):
 
         try:
             error = json.loads(error)
-            stripped_message = error.get('message').rstrip('.') if \
-                error.get('message') else 'No message'
-            primary_error_msg = '{}.'.format(stripped_message)
+            primary_error_msg = ''
+            if error.get('message'):
+                stripped_message = error.get('message').rstrip('.')
+                primary_error_msg = '{}.'.format(stripped_message)
             if error.get('errors'):
                 for error_message in error.get('errors'):
                     messages.append(
@@ -534,10 +527,6 @@ class AutotaskAPIClient(object):
             # In addition, AT returns 500 when requested record doesn't exist
             # during the deletion
             if FORBIDDEN_ERROR_MESSAGE in prepared_error:
-                if self.impersonation_id:
-                    prepared_error = self._prepare_error_for_impersonation(
-                        prepared_error
-                    )
                 raise AutotaskSecurityPermissionsException(prepared_error)
             elif NO_RECORD_ERROR_MESSAGE in prepared_error:
                 raise AutotaskRecordNotFoundError(prepared_error, 404)
