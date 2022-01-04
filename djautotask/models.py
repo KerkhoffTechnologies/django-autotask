@@ -255,7 +255,8 @@ class TicketType(Picklist):
 
 
 class TaskCategory(Picklist):
-    pass
+    class Meta:
+        verbose_name_plural = 'Task categories'
 
 
 class SubIssueType(Picklist):

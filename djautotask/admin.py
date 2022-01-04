@@ -86,6 +86,11 @@ class TicketCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'active')
 
 
+@admin.register(models.TaskCategory)
+class TaskCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'is_active')
+
+
 @admin.register(models.Source)
 class SourceAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
