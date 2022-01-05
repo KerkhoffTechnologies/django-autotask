@@ -254,6 +254,11 @@ class TicketType(Picklist):
     pass
 
 
+class TaskCategory(Picklist):
+    class Meta:
+        verbose_name_plural = 'Task categories'
+
+
 class SubIssueType(Picklist):
     parent_value = models.ForeignKey(
         'IssueType', blank=True, null=True, on_delete=models.CASCADE
@@ -647,6 +652,9 @@ class Task(ATUpdateMixin, TimeStampedModel):
     department = models.ForeignKey(
         'Department', blank=True, null=True, on_delete=models.SET_NULL
     )
+    category = models.ForeignKey(
+        'TaskCategory', null=True, blank=True, on_delete=models.SET_NULL
+    )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
     AUTOTASK_FIELDS = {
@@ -663,6 +671,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'phase': 'phaseID',
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
+        'category': 'taskCategoryID',
     }
 
     def __str__(self):
@@ -1132,6 +1141,14 @@ class TicketTypeTracker(TicketType):
     class Meta:
         proxy = True
         db_table = 'djautotask_tickettype'
+
+
+class TaskCategoryTracker(TaskCategory):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_taskcategory'
 
 
 class SubIssueTypeTracker(SubIssueType):

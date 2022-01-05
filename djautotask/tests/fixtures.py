@@ -633,6 +633,44 @@ API_TICKET_CATEGORY = {
     "pageDetails": API_PAGE_DETAILS
 }
 
+API_TASK_CATEGORY_FIELD = {
+    "fields": [
+        {
+            "name": "taskCategoryID",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    'value': 100,
+                    'label': 'New category',
+                    'isDefaultValue': False,
+                    'sortOrder': 0,
+                    'isActive': True,
+                    'isSystem': False,
+                    'parentValue': None,
+                },
+                {
+                    'value': 2,
+                    'label': 'Standard',
+                    'isDefaultValue': True,
+                    'sortOrder': 0,
+                    'isActive': True,
+                    'isSystem': True,
+                    'parentValue': None,
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
 API_PROJECT_STATUS_FIELD = {
     "fields": [
         {
@@ -831,6 +869,7 @@ API_TASK_ITEM = {
     'taskIsBillable': False,
     'taskNumber': 'T20120604.0012',
     'taskType': 1,
+    'taskCategoryID': 2,
     'title': 'Review modular code',
     'creatorType': 1,
     'lastActivityResourceID': 29683968,

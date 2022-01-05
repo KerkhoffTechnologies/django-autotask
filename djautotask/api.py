@@ -890,6 +890,10 @@ class TicketPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Tickets'
 
 
+class TaskPicklistAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'Tasks'
+
+
 class ProjectPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Projects'
 
