@@ -885,7 +885,7 @@ class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
     last_updated_field = 'lastActivityDateTime'
 
     related_meta = {
-        'taskCategoryID': (models.TaskCategory, 'task_category'),
+        'taskCategoryID': (models.TaskCategory, 'category'),
         'assignedResourceID': (models.Resource, 'assigned_resource'),
         'assignedResourceRoleID': (models.Role, 'assigned_resource_role'),
         'billingCodeID': (models.AllocationCode, 'allocation_code'),

@@ -652,7 +652,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
     department = models.ForeignKey(
         'Department', blank=True, null=True, on_delete=models.SET_NULL
     )
-    task_category = models.ForeignKey(
+    category = models.ForeignKey(
         'TaskCategory', null=True, blank=True, on_delete=models.SET_NULL
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
@@ -671,7 +671,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'phase': 'phaseID',
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
-        'task_category': 'taskCategoryID',
+        'category': 'taskCategoryID',
     }
 
     def __str__(self):
