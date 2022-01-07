@@ -312,7 +312,7 @@ class RegularResourceManager(models.Manager):
 
 class Resource(TimeStampedModel):
     user_name = models.CharField(max_length=32)
-    email = models.CharField(max_length=50)
+    email = models.CharField(max_length=250)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     active = models.BooleanField(default=False)
