@@ -164,7 +164,8 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api.TicketsAPIClient(
-            impersonation_id=kwargs.get('impersonation_id')
+            impersonation_id=kwargs.get('impersonation_id', None),
+            impersonation_target=self,
         )
         return api_client.update(
             self,
@@ -270,7 +271,63 @@ class SubIssueType(Picklist):
 
 
 class LicenseType(Picklist):
-    pass
+    # We expect this id's is fixed and immutable.
+    impersonation_limited_type = {
+        'TEAM_MEMBER': 4,
+        'CONTRACTOR': 8,
+        'CO_HELP_DESK': 9,
+    }
+    impersonation_disabled_type = {
+        'TIME_ATTENDANCE': 5,
+        'DASHBOARD': 6,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.init_limited_impersonation_targets()
+
+    def has_impersonation(self, target=None):
+        if self.id in self.impersonation_disabled_type.values():
+            return False
+
+        if self.id in self.impersonation_limited_type.values():
+            return self.check_impersonation(target)
+
+        return True
+
+    def init_limited_impersonation_targets(self):
+
+        if self.id == self.impersonation_limited_type['TEAM_MEMBER']:
+            self.limited_impersonation_targets = [
+                Project,
+                TaskNoteTracker,
+            ]
+        elif self.id == \
+                self.impersonation_limited_type['CONTRACTOR']:
+            self.limited_impersonation_targets = [
+                Ticket,
+                Project,
+                ServiceCallTracker,
+                TimeEntryTracker,
+                TicketNoteTracker,
+                TaskNoteTracker,
+            ]
+        elif self.id == \
+                self.impersonation_limited_type['CO_HELP_DESK']:
+            self.limited_impersonation_targets = [
+                Ticket,
+                Project,
+                TaskNoteTracker,
+            ]
+        else:
+            self.limited_impersonation_targets = []
+
+    def check_impersonation(self, target):
+        for limited_target in self.limited_impersonation_targets:
+            if isinstance(target, limited_target) or target == limited_target:
+                return False
+
+        return True
 
 
 class AccountType(Picklist):
@@ -572,7 +629,8 @@ class Project(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api.ProjectsAPIClient(
-            impersonation_id=kwargs.get('impersonation_id')
+            impersonation_id=kwargs.get('impersonation_id', None),
+            impersonation_target=self,
         )
         return api_client.update(
             self,
@@ -680,7 +738,8 @@ class Task(ATUpdateMixin, TimeStampedModel):
     def update_at(self, **kwargs):
 
         api_client = api.TasksAPIClient(
-            impersonation_id=kwargs.get('impersonation_id')
+            impersonation_id=kwargs.get('impersonation_id', None),
+            impersonation_target=self,
         )
         return api_client.update(
             self,

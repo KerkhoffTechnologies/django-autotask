@@ -239,8 +239,12 @@ class Synchronizer:
     last_updated_field = 'lastActivityDate'
 
     def __init__(self, full=False, *args, **kwargs):
+        target_model = kwargs.get('impersonation_target', None)
+        if not target_model and self.model_class:
+            target_model = self.model_class
         self.client = self.client_class(
-            impersonation_id=kwargs.get('impersonation_id', None)
+            impersonation_id=kwargs.get('impersonation_id', None),
+            impersonation_target=target_model,
         )
         self.full = full
 
@@ -987,7 +991,7 @@ class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
         """
         Make a request to Autotask to create a Note.
         """
-        if self.client.impersonation and self.client.impersonation_id:
+        if self.client.impersonation_id:
             description = kwargs['description']
         else:
             description = "{}\n\nNote was added by {} {}.".format(
