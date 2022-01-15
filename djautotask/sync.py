@@ -243,7 +243,7 @@ class Synchronizer:
         if not target_model and self.model_class:
             target_model = self.model_class
         self.client = self.client_class(
-            impersonation_id=kwargs.get('impersonation_id', None),
+            impersonation_resource=kwargs.get('impersonation_resource'),
             impersonation_target=target_model,
         )
         self.full = full

@@ -45,11 +45,11 @@ class ATUpdateMixin:
         """
         changed_fields = kwargs.pop('changed_fields', None)
         update_at = kwargs.pop('update_at', False)
-        impersonation_id = kwargs.pop('impersonation_id', None)
+        impersonation_resource = kwargs.pop('impersonation_resource', None)
 
         if update_at and changed_fields:
             self.update_at(
-                impersonation_id=impersonation_id,
+                impersonation_resource=impersonation_resource,
                 changed_fields=changed_fields
             )
 
@@ -164,7 +164,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api.TicketsAPIClient(
-            impersonation_id=kwargs.get('impersonation_id', None),
+            impersonation_resource=kwargs.get('impersonation_resource'),
             impersonation_target=self,
         )
         return api_client.update(
@@ -629,7 +629,7 @@ class Project(ATUpdateMixin, TimeStampedModel):
 
     def update_at(self, **kwargs):
         api_client = api.ProjectsAPIClient(
-            impersonation_id=kwargs.get('impersonation_id', None),
+            impersonation_resource=kwargs.get('impersonation_resource'),
             impersonation_target=self,
         )
         return api_client.update(
@@ -738,7 +738,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
     def update_at(self, **kwargs):
 
         api_client = api.TasksAPIClient(
-            impersonation_id=kwargs.get('impersonation_id', None),
+            impersonation_resource=kwargs.get('impersonation_resource'),
             impersonation_target=self,
         )
         return api_client.update(
