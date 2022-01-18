@@ -252,7 +252,6 @@ class AutotaskAPIClient(object):
         rest_api_version=None,
         server_url=None,
         impersonation_resource=None,
-        impersonation_target=None,
     ):
         if not username:
             username = settings.AUTOTASK_CREDENTIALS['username']
@@ -280,7 +279,7 @@ class AutotaskAPIClient(object):
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
         self.impersonation_id = self._set_impersonation_id(
-            impersonation_resource, impersonation_target
+            impersonation_resource
         )
         self.conditions = ApiConditionList()
 
@@ -355,7 +354,7 @@ class AutotaskAPIClient(object):
             headers['Secret'] = self.password
         if self.integration_code:
             headers['ApiIntegrationCode'] = self.integration_code
-        if self.impersonation_id and method.lower() != 'get':
+        if self.impersonation_id and method.upper() != 'GET':
             headers['ImpersonationResourceId'] = self.impersonation_id
 
         return headers
@@ -589,10 +588,10 @@ class AutotaskAPIClient(object):
         # AT sends deleted_id or 500 in the case failure instead of 404 or 204
         return response.get('itemId')
 
-    def _set_impersonation_id(self, impersonation_resource, target=None):
+    def _set_impersonation_id(self, impersonation_resource):
         impersonation_id = None
         if impersonation_resource:
-            if impersonation_resource.license_type.has_impersonation(target):
+            if impersonation_resource.license_type.has_impersonation(self):
                 impersonation_id = str(impersonation_resource.id)
 
         return impersonation_id

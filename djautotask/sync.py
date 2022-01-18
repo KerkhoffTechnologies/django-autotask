@@ -239,12 +239,8 @@ class Synchronizer:
     last_updated_field = 'lastActivityDate'
 
     def __init__(self, full=False, *args, **kwargs):
-        target_model = kwargs.get('impersonation_target', None)
-        if not target_model and self.model_class:
-            target_model = self.model_class
         self.client = self.client_class(
             impersonation_resource=kwargs.get('impersonation_resource'),
-            impersonation_target=target_model,
         )
         self.full = full
 
