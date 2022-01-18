@@ -240,7 +240,7 @@ class Synchronizer:
 
     def __init__(self, full=False, *args, **kwargs):
         self.client = self.client_class(
-            impersonation_id=kwargs.get('impersonation_id', None)
+            impersonation_resource=kwargs.get('impersonation_resource'),
         )
         self.full = full
 
@@ -987,7 +987,7 @@ class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
         """
         Make a request to Autotask to create a Note.
         """
-        if self.client.impersonation and self.client.impersonation_id:
+        if self.client.impersonation_id:
             description = kwargs['description']
         else:
             description = "{}\n\nNote was added by {} {}.".format(
