@@ -589,11 +589,8 @@ class AutotaskAPIClient(object):
         return response.get('itemId')
 
     def _set_impersonation_id(self, impersonation_resource):
-        impersonation_id = None
-        if impersonation_resource and impersonation_resource.license_type:
-            if impersonation_resource.license_type.has_impersonation(self):
-                impersonation_id = str(impersonation_resource.id)
-
+        impersonation_id = str(impersonation_resource.id) \
+            if impersonation_resource else None
         return impersonation_id
 
 
