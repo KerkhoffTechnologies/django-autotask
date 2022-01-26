@@ -270,7 +270,18 @@ class SubIssueType(Picklist):
 
 
 class LicenseType(Picklist):
-    pass
+    # We expect this id's is fixed and immutable.
+    impersonation_limited_type = {
+        'TEAM_MEMBER': 4,
+        'CONTRACTOR': 8,
+        'CO_HELP_DESK': 9,
+        'TIME_ATTENDANCE': 5,
+        'DASHBOARD': 6,
+    }
+
+    def is_impersonation_limited(self):
+        if self.id in self.impersonation_limited_type.values():
+            return True
 
 
 class AccountType(Picklist):
