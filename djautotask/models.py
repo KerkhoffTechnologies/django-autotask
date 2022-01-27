@@ -5,6 +5,10 @@ from django.utils import timezone
 from djautotask import api
 from model_utils import FieldTracker
 
+from djautotask.api import ProjectsAPIClient, TaskNotesAPIClient, \
+    TicketsAPIClient, ServiceCallsAPIClient, TimeEntriesAPIClient, \
+    TicketNotesAPIClient
+
 OFFSET_TIMEZONE = 'America/New_York'
 
 
@@ -275,13 +279,58 @@ class LicenseType(Picklist):
         'TEAM_MEMBER': 4,
         'CONTRACTOR': 8,
         'CO_HELP_DESK': 9,
+    }
+    impersonation_disabled_type = {
         'TIME_ATTENDANCE': 5,
         'DASHBOARD': 6,
     }
 
-    def is_impersonation_limited(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.init_limited_impersonation_targets()
+
+    def has_impersonation(self, target):
+        if self.id in self.impersonation_disabled_type.values():
+            return False
+
         if self.id in self.impersonation_limited_type.values():
-            return True
+            return self.check_impersonation(target)
+
+        return True
+
+    def init_limited_impersonation_targets(self):
+
+        if self.id == self.impersonation_limited_type['TEAM_MEMBER']:
+            self.limited_impersonation_targets = [
+                ProjectsAPIClient,
+                TaskNotesAPIClient,
+            ]
+        elif self.id == \
+                self.impersonation_limited_type['CONTRACTOR']:
+            self.limited_impersonation_targets = [
+                TicketsAPIClient,
+                ProjectsAPIClient,
+                ServiceCallsAPIClient,
+                TimeEntriesAPIClient,
+                TicketNotesAPIClient,
+                TaskNotesAPIClient,
+            ]
+        elif self.id == \
+                self.impersonation_limited_type['CO_HELP_DESK']:
+            self.limited_impersonation_targets = [
+                TicketsAPIClient,
+                ProjectsAPIClient,
+                TaskNotesAPIClient,
+            ]
+        else:
+            self.limited_impersonation_targets = []
+
+    def check_impersonation(self, target):
+        for limited_target in self.limited_impersonation_targets:
+            if isinstance(target, limited_target):
+                return False
+
+        return True
 
 
 class AccountType(Picklist):

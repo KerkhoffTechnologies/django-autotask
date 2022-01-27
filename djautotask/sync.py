@@ -987,7 +987,7 @@ class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
         """
         Make a request to Autotask to create a Note.
         """
-        if self.client.impersonation_id:
+        if self.client.impersonation_resource:
             description = kwargs['description']
         else:
             description = "{}\n\nNote was added by {} {}.".format(
