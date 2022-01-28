@@ -1,10 +1,10 @@
+import pytz
 from unittest.mock import patch
 
 from django.test import TestCase
 from django.utils import timezone
 from django.test import override_settings
 from datetime import timedelta
-import pytz
 
 from djautotask.models import TimeEntry, OFFSET_TIMEZONE, Ticket
 from . import mocks as mk

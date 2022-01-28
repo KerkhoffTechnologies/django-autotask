@@ -1,3 +1,5 @@
+import pytz
+
 from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
@@ -836,8 +838,9 @@ class TimeEntry(TimeStampedModel):
         else:
             # Autotask gives us date_worked as a datetime, even though the
             # time is always set to EST midnight (00:00:00).
+            # TODO timezone.pytz does not exist anymore
             est_offset = timezone.localtime(
-                timezone=timezone.pytz.timezone(OFFSET_TIMEZONE)).utcoffset()
+                timezone=pytz.timezone(OFFSET_TIMEZONE)).utcoffset()
             local_offset = timezone.localtime().utcoffset()
 
             # We want to end up with a UTC datetime that is midnight in the
