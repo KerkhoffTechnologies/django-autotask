@@ -59,6 +59,13 @@ class AutotaskSecurityPermissionsException(AutotaskAPIClientError):
     pass
 
 
+class AutotaskImpersonationLimitedException(
+    AutotaskSecurityPermissionsException
+):
+    """The impersonation resource has insufficient security permissions."""
+    pass
+
+
 def parse_autotaskapierror(e):
     return ', '.join(e.args)
 
@@ -278,9 +285,7 @@ class AutotaskAPIClient(object):
 
         self.request_settings = DjautotaskSettings().get_settings()
         self.timeout = self.request_settings['timeout']
-        self.impersonation_id = self._set_impersonation_id(
-            impersonation_resource
-        )
+        self.impersonation_resource = impersonation_resource
         self.conditions = ApiConditionList()
 
         self.cached_body = None
@@ -354,8 +359,12 @@ class AutotaskAPIClient(object):
             headers['Secret'] = self.password
         if self.integration_code:
             headers['ApiIntegrationCode'] = self.integration_code
-        if self.impersonation_id and method.upper() != 'GET':
-            headers['ImpersonationResourceId'] = self.impersonation_id
+        if self.impersonation_resource and method.upper() != 'GET':
+            # We don't check the impersonation possibility for GET request.
+            self.check_impersonation_possibility()
+            headers['ImpersonationResourceId'] = str(
+                self.impersonation_resource.id
+            ) if self.impersonation_resource else None
 
         return headers
 
@@ -484,6 +493,13 @@ class AutotaskAPIClient(object):
 
         logger.debug(logger_message)
 
+    def check_impersonation_possibility(self):
+        if self.impersonation_resource and not self.impersonation_resource.\
+                license_type.has_impersonation(self):
+            raise AutotaskImpersonationLimitedException(
+                'You do not have the adequate permissions '
+                '(impersonation limitation).')
+
     def request(self, method, endpoint_url, body=None):
         """
         Issue the given type of request to the specified REST endpoint.
@@ -492,6 +508,7 @@ class AutotaskAPIClient(object):
             logger.debug(
                 'Making {} request to {}'.format(method, endpoint_url)
             )
+
             response = requests.request(
                 method,
                 endpoint_url,
@@ -499,6 +516,11 @@ class AutotaskAPIClient(object):
                 timeout=self.timeout,
                 headers=self.get_headers(method),
             )
+        except AutotaskImpersonationLimitedException as e:
+            logger.error(
+                'Request failed: {} {}: {}'.format(method, endpoint_url, e)
+            )
+            raise e
         except requests.RequestException as e:
             logger.error(
                 'Request failed: {} {}: {}'.format(method, endpoint_url, e)
@@ -534,7 +556,7 @@ class AutotaskAPIClient(object):
             # In addition, AT returns 500 when requested record doesn't exist
             # during the deletion
             if FORBIDDEN_ERROR_MESSAGE in prepared_error:
-                if self.impersonation_id:
+                if self.impersonation_resource:
                     prepared_error = self._prepare_error_for_impersonation(
                         prepared_error
                     )
@@ -587,14 +609,6 @@ class AutotaskAPIClient(object):
         response = self.request('delete', endpoint_url)
         # AT sends deleted_id or 500 in the case failure instead of 404 or 204
         return response.get('itemId')
-
-    def _set_impersonation_id(self, impersonation_resource):
-        impersonation_id = None
-        if impersonation_resource and impersonation_resource.license_type:
-            if impersonation_resource.license_type.has_impersonation(self):
-                impersonation_id = str(impersonation_resource.id)
-
-        return impersonation_id
 
 
 class ChildAPIMixin:
