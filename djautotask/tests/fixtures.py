@@ -1087,7 +1087,7 @@ API_USE_TYPE_FIELD = {
             "picklistValues": [
                 {
                     "value": "2",
-                    "label": "General Allocation Code",
+                    "label": "General Billing Code",
                     "isDefaultValue": False,
                     "sortOrder": 1,
                     "parentValue": "",
@@ -1101,7 +1101,7 @@ API_USE_TYPE_FIELD = {
     ]
 }
 
-API_ALLOCATION_CODE_ITEMS = [
+API_BILLING_CODE_ITEMS = [
     {
         'id': 2,
         'name': 'Finance',
@@ -1113,8 +1113,8 @@ API_ALLOCATION_CODE_ITEMS = [
         'isExcludedFromNewContracts': False,
     }
 ]
-API_ALLOCATION_CODE = {
-    "items": API_ALLOCATION_CODE_ITEMS,
+API_BILLING_CODE = {
+    "items": API_BILLING_CODE_ITEMS,
     "pageDetails": API_PAGE_DETAILS
 }
 

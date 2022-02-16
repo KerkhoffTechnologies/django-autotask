@@ -133,8 +133,8 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
-    allocation_code = models.ForeignKey(
-        'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
+    billing_code = models.ForeignKey(
+        'BillingCode', null=True, blank=True, on_delete=models.SET_NULL
     )
     contract = models.ForeignKey(
         'Contract', null=True, blank=True, on_delete=models.SET_NULL
@@ -150,7 +150,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         'status': 'status',
         'priority': 'priority',
         'category': 'ticketCategory',
-        'allocation_code': 'billingCodeID',
+        'billing_code': 'billingCodeID',
         'issue_type': 'issueType',
         'sub_issue_type': 'subIssueType',
         'project': 'projectID',
@@ -705,8 +705,8 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'Phase', null=True,
         on_delete=models.SET_NULL
     )
-    allocation_code = models.ForeignKey(
-        'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
+    billing_code = models.ForeignKey(
+        'BillingCode', null=True, blank=True, on_delete=models.SET_NULL
     )
     assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
@@ -728,7 +728,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'remaining_hours': 'remainingHours',
         'status': 'status',
         'department': 'departmentID',
-        'allocation_code': 'billingCodeID',
+        'billing_code': 'billingCodeID',
         'priority': 'priorityLabel',
         'phase': 'phaseID',
         'assigned_resource': 'assignedResourceID',
@@ -794,8 +794,8 @@ class TimeEntry(TimeStampedModel):
         'Task', blank=True, null=True, on_delete=models.CASCADE)
     type = models.ForeignKey(
         'TaskTypeLink', blank=True, null=True, on_delete=models.SET_NULL)
-    allocation_code = models.ForeignKey(
-        'AllocationCode', blank=True, null=True, on_delete=models.SET_NULL)
+    billing_code = models.ForeignKey(
+        'BillingCode', blank=True, null=True, on_delete=models.SET_NULL)
     role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
@@ -815,7 +815,7 @@ class TimeEntry(TimeStampedModel):
         'offset_hours': 'offsetHours',
         'role': 'roleID',
         'resource': 'resourceID',
-        'allocation_code': 'billingCodeID',
+        'billing_code': 'billingCodeID',
         'contract': 'contractID',
     }
 
@@ -851,11 +851,11 @@ class TimeEntry(TimeStampedModel):
         return entered_time
 
 
-class AllocationCode(TimeStampedModel):
-    # AllocationCodes with use type General Allocation Code (with ID = 1)
+class BillingCode(TimeStampedModel):
+    # BillingCodes with use type General Allocation Code (with ID = 1)
     # are for setting a ticket's work type in the UI. See API docs for details.
     # https://ww4.autotask.net/help/Content/AdminSetup/2ExtensionsIntegrations/APIs/WSAPI/Entities/AllocationCodeEntity.htm # noqa
-    GENERAL_ALLOCATION_CODE_ID = 1
+    GENERAL_BILLING_CODE_ID = 1
     name = models.CharField(blank=True, null=True, max_length=200)
     description = models.CharField(blank=True, null=True, max_length=500)
     active = models.BooleanField(default=False)
@@ -1374,12 +1374,12 @@ class TimeEntryTracker(TimeEntry):
         db_table = 'djautotask_timeentry'
 
 
-class AllocationCodeTracker(AllocationCode):
+class BillingCodeTracker(BillingCode):
     tracker = FieldTracker()
 
     class Meta:
         proxy = True
-        db_table = 'djautotask_allocationcode'
+        db_table = 'djautotask_billingcode'
 
 
 class RoleTracker(Role):

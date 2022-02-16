@@ -503,16 +503,16 @@ class TestSyncTimeEntryCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_time_entries()
 
 
-class TestSyncAllocationCodeCommand(AbstractBaseSyncTest, TestCase):
+class TestSyncBillingCodeCommand(AbstractBaseSyncTest, TestCase):
     args = (
-        mocks.service_api_get_allocation_codes_call,
-        fixtures.API_ALLOCATION_CODE,
-        'allocation_code',
+        mocks.service_api_get_billing_codes_call,
+        fixtures.API_BILLING_CODE,
+        'billing_code',
     )
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_allocation_codes()
+        fixture_utils.init_billing_codes()
 
 
 class TestSyncRoleCommand(AbstractBaseSyncTest, TestCase):
@@ -728,7 +728,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncTicketNoteCommand,
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
-            TestSyncAllocationCodeCommand,
+            TestSyncBillingCodeCommand,
             TestSyncResourceRoleDepartmentCommand,
             TestSyncResourceServiceDeskRoleCommand,
             TestSyncContractCommand,
@@ -808,7 +808,7 @@ class TestSyncAllCommand(TestCase):
             'time_entry': models.TimeEntry,
             'task_type_link': models.TaskTypeLink,
             'use_type': models.UseType,
-            'allocation_code': models.AllocationCode,
+            'billing_code': models.BillingCode,
             'resource_role_department': models.ResourceRoleDepartment,
             'resource_service_desk_role': models.ResourceServiceDeskRole,
             'contract': models.Contract,
@@ -887,8 +887,8 @@ class TestSyncAllCommand(TestCase):
 
         mocks.service_api_get_contacts_call(fixtures.API_CONTACT)
         mocks.service_api_get_contracts_call(fixtures.API_CONTRACT)
-        mocks.service_api_get_allocation_codes_call(
-            fixtures.API_ALLOCATION_CODE)
+        mocks.service_api_get_billing_codes_call(
+            fixtures.API_BILLING_CODE)
         mocks.service_api_get_account_physical_locations_call(
             fixtures.API_ACCOUNT_PHYSICAL_LOCATION)
         mocks.service_api_get_ticket_categories_call(
@@ -924,7 +924,7 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_project_udf_call(fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
         mocks.service_api_get_contracts_call(fixtures.API_EMPTY)
-        mocks.service_api_get_allocation_codes_call(fixtures.API_EMPTY)
+        mocks.service_api_get_billing_codes_call(fixtures.API_EMPTY)
         mocks.service_api_get_account_physical_locations_call(
             fixtures.API_EMPTY)
         mocks.service_api_get_tickets_call(fixtures.API_EMPTY)

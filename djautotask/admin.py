@@ -263,8 +263,8 @@ class UseTypeAdmin(admin.ModelAdmin):
     search_fields = ('id', 'label')
 
 
-@admin.register(models.AllocationCode)
-class AllocationCodeAdmin(admin.ModelAdmin):
+@admin.register(models.BillingCode)
+class BillingCodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'active', 'use_type')
     list_filter = ('use_type', )
     search_fields = ('id', 'name')

@@ -669,7 +669,7 @@ class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 
 
-class AllocationCodesAPIClient(AutotaskAPIClient):
+class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
 
 
