@@ -843,7 +843,7 @@ API_PHASE = {
 
 API_TASK_ITEM = {
     'id': 101,
-    'allocationCodeID': 29683415,
+    'billingCodeID': 29683415,
     'assignedResourceID': 10,
     'assignedResourceRoleID': 29682834,
     'canClientPortalUserCompleteTask': False,

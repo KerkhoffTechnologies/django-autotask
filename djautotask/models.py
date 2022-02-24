@@ -854,7 +854,7 @@ class TimeEntry(TimeStampedModel):
 class BillingCode(TimeStampedModel):
     # BillingCodes with use type General Allocation Code (with ID = 1)
     # are for setting a ticket's work type in the UI. See API docs for details.
-    # https://ww4.autotask.net/help/Content/AdminSetup/2ExtensionsIntegrations/APIs/WSAPI/Entities/AllocationCodeEntity.htm # noqa
+    # https://ww2.autotask.net/help/DeveloperHelp/Content/APIs/REST/Entities/BillingCodesEntity.htm # noqa
     GENERAL_BILLING_CODE_ID = 1
     name = models.CharField(blank=True, null=True, max_length=200)
     description = models.CharField(blank=True, null=True, max_length=500)
