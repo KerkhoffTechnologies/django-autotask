@@ -1018,10 +1018,10 @@ class TestTimeEntrySynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(instance.resource.id, object_data['resourceID'])
 
 
-class TestAllocationCodeSynchronizer(SynchronizerTestMixin, TestCase):
-    synchronizer_class = sync.AllocationCodeSynchronizer
-    model_class = models.AllocationCodeTracker
-    fixture = fixtures.API_ALLOCATION_CODE
+class TestBillingCodeSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.BillingCodeSynchronizer
+    model_class = models.BillingCodeTracker
+    fixture = fixtures.API_BILLING_CODE
     update_field = 'name'
 
     def setUp(self):
@@ -1030,7 +1030,7 @@ class TestAllocationCodeSynchronizer(SynchronizerTestMixin, TestCase):
         self._sync(self.fixture)
 
     def _call_api(self, return_data):
-        return mocks.service_api_get_allocation_codes_call(return_data)
+        return mocks.service_api_get_billing_codes_call(return_data)
 
     def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])

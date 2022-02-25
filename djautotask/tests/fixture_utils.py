@@ -287,10 +287,10 @@ def init_time_entries():
     return synchronizer.sync()
 
 
-def init_allocation_codes():
-    models.AllocationCode.objects.all().delete()
-    mocks.service_api_get_allocation_codes_call(fixtures.API_ALLOCATION_CODE)
-    synchronizer = sync.AllocationCodeSynchronizer()
+def init_billing_codes():
+    models.BillingCode.objects.all().delete()
+    mocks.service_api_get_billing_codes_call(fixtures.API_BILLING_CODE)
+    synchronizer = sync.BillingCodeSynchronizer()
     return synchronizer.sync()
 
 

@@ -54,8 +54,8 @@ def service_api_get_contracts_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
-def service_api_get_allocation_codes_call(return_value):
-    method_name = 'djautotask.api.AllocationCodesAPIClient.get'
+def service_api_get_billing_codes_call(return_value):
+    method_name = 'djautotask.api.BillingCodesAPIClient.get'
     return create_mock_call(method_name, return_value)
 
 

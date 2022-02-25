@@ -783,7 +783,7 @@ class TicketSynchronizer(SyncRecordUDFMixin, TicketTaskMixin, Synchronizer,
         'issueType': (models.IssueType, 'issue_type'),
         'subIssueType': (models.SubIssueType, 'sub_issue_type'),
         'assignedResourceRoleID': (models.Role, 'assigned_resource_role'),
-        'billingCodeID': (models.AllocationCode, 'allocation_code'),
+        'billingCodeID': (models.BillingCode, 'billing_code'),
         'contractID': (models.Contract, 'contract'),
         'contactID': (models.Contact, 'contact'),
     }
@@ -888,7 +888,7 @@ class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
         'taskCategoryID': (models.TaskCategory, 'category'),
         'assignedResourceID': (models.Resource, 'assigned_resource'),
         'assignedResourceRoleID': (models.Role, 'assigned_resource_role'),
-        'billingCodeID': (models.AllocationCode, 'allocation_code'),
+        'billingCodeID': (models.BillingCode, 'billing_code'),
         'departmentID': (models.Department, 'department'),
         'phaseID': (models.Phase, 'phase'),
         'projectID': (models.Project, 'project'),
@@ -1072,7 +1072,7 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
         'ticketID': (models.Ticket, 'ticket'),
         'taskID': (models.Task, 'task'),
         'timeEntryType': (models.TaskTypeLink, 'type'),
-        'billingCodeID': (models.AllocationCode, 'allocation_code'),
+        'billingCodeID': (models.BillingCode, 'billing_code'),
         'roleID': (models.Role, 'role'),
         'contractID': (models.Contract, 'contract'),
     }
@@ -1484,9 +1484,9 @@ class ServiceCallTaskResourceSynchronizer(
         return instance
 
 
-class AllocationCodeSynchronizer(Synchronizer):
-    client_class = api.AllocationCodesAPIClient
-    model_class = models.AllocationCodeTracker
+class BillingCodeSynchronizer(Synchronizer):
+    client_class = api.BillingCodesAPIClient
+    model_class = models.BillingCodeTracker
     last_updated_field = None
 
     related_meta = {
