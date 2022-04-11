@@ -1079,11 +1079,10 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
 
     @property
     def active_ids(self):
-        active_tickets = models.Ticket.objects.all().\
-            values_list('id', flat=True).order_by(self.lookup_key)
-        active_tasks = models.Task.objects.exclude(
-            status=models.Status.COMPLETE_ID
-        ).values_list('id', flat=True).order_by(self.lookup_key)
+        active_tickets = models.Ticket.objects.all().values_list(
+            'id', flat=True).order_by(self.lookup_key)
+        active_tasks = models.Task.objects.all().values_list(
+            'id', flat=True).order_by(self.lookup_key)
 
         active_ids = dict()
         if len(active_tickets):
