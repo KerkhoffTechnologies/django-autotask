@@ -800,7 +800,7 @@ class TicketSynchronizer(SyncRecordUDFMixin, TicketTaskMixin, Synchronizer,
         instance.service_level_agreement_has_been_met = \
             bool(json_data.get('serviceLevelAgreementHasBeenMet'))
         sla_paused = \
-            json_data.get('serviceLevelAgreementPausedNextEventHours')
+            json_data.get('serviceLevelAgreementPausedNextEventHours', 0)
         instance.first_response_date_time = \
             json_data.get('firstResponseDateTime')
         instance.first_response_due_date_time = \
@@ -839,9 +839,14 @@ class TicketSynchronizer(SyncRecordUDFMixin, TicketTaskMixin, Synchronizer,
         if len(udfs):
             self._assign_udf_data(instance, udfs)
 
-        if sla_paused:
-            instance.service_level_agreement_paused_next_event_hours = \
-                Decimal(str(round(sla_paused, 2)))
+        # It's important to set the SLA paused field to zero if it's not
+        # present in the JSON data because we need to track when a ticket
+        # moves from a paused SLA state to one where the SLA timer is running.
+        if not sla_paused:
+            sla_paused = 0
+
+        instance.service_level_agreement_paused_next_event_hours = \
+            Decimal(str(round(sla_paused, 2)))
         if instance.estimated_hours:
             instance.estimated_hours = \
                 Decimal(str(round(instance.estimated_hours, 2)))
