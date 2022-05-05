@@ -800,7 +800,7 @@ class TicketSynchronizer(SyncRecordUDFMixin, TicketTaskMixin, Synchronizer,
         instance.service_level_agreement_has_been_met = \
             bool(json_data.get('serviceLevelAgreementHasBeenMet'))
         sla_paused = \
-            json_data.get('serviceLevelAgreementPausedNextEventHours', 0)
+            json_data.get('serviceLevelAgreementPausedNextEventHours')
         instance.first_response_date_time = \
             json_data.get('firstResponseDateTime')
         instance.first_response_due_date_time = \
