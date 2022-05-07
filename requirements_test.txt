@@ -5,3 +5,6 @@ model-mommy
 django-coverage
 names
 pytz
+django-test-plus
+mock
+model-mommy
