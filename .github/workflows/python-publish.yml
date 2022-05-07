@@ -26,9 +26,10 @@ jobs:
         pip install --upgrade -r requirements.txt
         pip install --upgrade -r requirements_test.txt
         python setup.py install
-#        pip install build
-#    - name: Build package
-#      run: python -m build
+    - name: Run tests
+      run: |
+        flake8 .
+        python setup.py test
 #    - name: Publish package
 #      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
 #      with:
