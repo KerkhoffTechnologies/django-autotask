@@ -4,3 +4,4 @@ responses
 model-mommy
 django-coverage
 names
+pytz
