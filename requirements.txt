@@ -5,3 +5,4 @@ django-model-utils
 django-braces
 django-extensions
 retrying
+wheel
