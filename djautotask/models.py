@@ -1,9 +1,15 @@
+import pytz
+
 from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from django.utils import timezone
-from djautotask import api, api_rest
+from djautotask import api
 from model_utils import FieldTracker
+
+from djautotask.api import ProjectsAPIClient, TaskNotesAPIClient, \
+    TicketsAPIClient, ServiceCallsAPIClient, TimeEntriesAPIClient, \
+    TicketNotesAPIClient
 
 OFFSET_TIMEZONE = 'America/New_York'
 
@@ -45,9 +51,13 @@ class ATUpdateMixin:
         """
         changed_fields = kwargs.pop('changed_fields', None)
         update_at = kwargs.pop('update_at', False)
+        impersonation_resource = kwargs.pop('impersonation_resource', None)
 
         if update_at and changed_fields:
-            self.update_at(changed_fields=changed_fields)
+            self.update_at(
+                impersonation_resource=impersonation_resource,
+                changed_fields=changed_fields
+            )
 
         super().save(**kwargs)
 
@@ -72,6 +82,9 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     service_level_agreement_has_been_met = models.BooleanField(default=False)
     service_level_agreement_paused_next_event_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
+    checklist_completed = models.PositiveSmallIntegerField(
+        blank=True, null=True)
+    checklist_total = models.PositiveSmallIntegerField(blank=True, null=True)
 
     status = models.ForeignKey(
         'Status', blank=True, null=True, on_delete=models.SET_NULL
@@ -95,6 +108,10 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
+    account_physical_location = models.ForeignKey(
+        'AccountPhysicalLocation', blank=True, null=True,
+        on_delete=models.SET_NULL
+    )
     project = models.ForeignKey(
         'Project', blank=True, null=True, on_delete=models.SET_NULL
     )
@@ -116,15 +133,15 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
-    allocation_code = models.ForeignKey(
-        'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
+    billing_code = models.ForeignKey(
+        'BillingCode', null=True, blank=True, on_delete=models.SET_NULL
     )
     contract = models.ForeignKey(
         'Contract', null=True, blank=True, on_delete=models.SET_NULL
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
-    EDITABLE_FIELDS = {
+    AUTOTASK_FIELDS = {
         'title': 'title',
         'description': 'description',
         'queue': 'queueID',
@@ -133,12 +150,16 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         'status': 'status',
         'priority': 'priority',
         'category': 'ticketCategory',
-        'allocation_code': 'billingCodeID',
+        'billing_code': 'billingCodeID',
         'issue_type': 'issueType',
         'sub_issue_type': 'subIssueType',
         'project': 'projectID',
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
+        'account': 'companyID',
+        'account_physical_location': 'companyLocationID',
+        'contact': 'contactID',
+        'contract': 'contractID',
     }
 
     class Meta:
@@ -148,8 +169,10 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         return '{}-{}'.format(self.id, self.title)
 
     def update_at(self, **kwargs):
-        api_client = api_rest.TicketsAPIClient()
-        return api_client.update_ticket(
+        api_client = api.TicketsAPIClient(
+            impersonation_resource=kwargs.get('impersonation_resource'),
+        )
+        return api_client.update(
             self,
             self.get_updated_object(**kwargs)
         )
@@ -237,6 +260,11 @@ class TicketType(Picklist):
     pass
 
 
+class TaskCategory(Picklist):
+    class Meta:
+        verbose_name_plural = 'Task categories'
+
+
 class SubIssueType(Picklist):
     parent_value = models.ForeignKey(
         'IssueType', blank=True, null=True, on_delete=models.CASCADE
@@ -248,7 +276,63 @@ class SubIssueType(Picklist):
 
 
 class LicenseType(Picklist):
-    pass
+    # We expect this id's is fixed and immutable.
+    impersonation_limited_type = {
+        'TEAM_MEMBER': 4,
+        'CONTRACTOR': 8,
+        'CO_HELP_DESK': 9,
+    }
+    impersonation_disabled_type = {
+        'TIME_ATTENDANCE': 5,
+        'DASHBOARD': 6,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.init_limited_impersonation_targets()
+
+    def has_impersonation(self, target):
+        if self.id in self.impersonation_disabled_type.values():
+            return False
+
+        if self.id in self.impersonation_limited_type.values():
+            return self.check_impersonation(target)
+
+        return True
+
+    def init_limited_impersonation_targets(self):
+
+        if self.id == self.impersonation_limited_type['TEAM_MEMBER']:
+            self.limited_impersonation_targets = [
+                ProjectsAPIClient,
+                TaskNotesAPIClient,
+            ]
+        elif self.id == \
+                self.impersonation_limited_type['CONTRACTOR']:
+            self.limited_impersonation_targets = [
+                TicketsAPIClient,
+                ProjectsAPIClient,
+                ServiceCallsAPIClient,
+                TimeEntriesAPIClient,
+                TicketNotesAPIClient,
+                TaskNotesAPIClient,
+            ]
+        elif self.id == \
+                self.impersonation_limited_type['CO_HELP_DESK']:
+            self.limited_impersonation_targets = [
+                TicketsAPIClient,
+                ProjectsAPIClient,
+                TaskNotesAPIClient,
+            ]
+        else:
+            self.limited_impersonation_targets = []
+
+    def check_impersonation(self, target):
+        for limited_target in self.limited_impersonation_targets:
+            if isinstance(target, limited_target):
+                return False
+
+        return True
 
 
 class AccountType(Picklist):
@@ -290,7 +374,7 @@ class RegularResourceManager(models.Manager):
 
 class Resource(TimeStampedModel):
     user_name = models.CharField(max_length=32)
-    email = models.CharField(max_length=50)
+    email = models.CharField(max_length=250)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     active = models.BooleanField(default=False)
@@ -340,6 +424,12 @@ class TicketSecondaryResource(TimeStampedModel):
         'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
 
+    AUTOTASK_FIELDS = {
+        'resource': 'resourceID',
+        'ticket': 'ticketID',
+        'role': 'roleID',
+    }
+
     def __str__(self):
         return '{} {}'.format(self.resource, self.ticket)
 
@@ -349,6 +439,12 @@ class Note:
     INTERNAL_USERS = 2
     PUBLISH_CHOICES = ((ALL_USERS, 'All Autotask Users'),
                        (INTERNAL_USERS, 'Internal Users'))
+    AUTOTASK_FIELDS = {
+        'title': 'title',
+        'description': 'description',
+        'note_type': 'noteType',
+        'publish': 'publish',
+    }
 
 
 class TicketNote(TimeStampedModel, Note):
@@ -371,6 +467,12 @@ class TicketNote(TimeStampedModel, Note):
         'Ticket', blank=True, null=True, on_delete=models.SET_NULL
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        super().AUTOTASK_FIELDS.update({
+            'ticket': 'ticketID',
+        })
+
 
 class TaskNote(TimeStampedModel, Note):
     title = models.CharField(max_length=250)
@@ -391,11 +493,19 @@ class TaskNote(TimeStampedModel, Note):
         'Task', blank=True, null=True, on_delete=models.SET_NULL
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        super().AUTOTASK_FIELDS.update({
+            'task': 'taskID',
+        })
+
 
 class Contact(TimeStampedModel):
 
-    first_name = models.CharField(blank=True, null=True, max_length=200)
-    last_name = models.CharField(blank=True, null=True, max_length=200)
+    first_name = models.CharField(blank=True, null=True, max_length=200,
+                                  db_index=True)
+    last_name = models.CharField(blank=True, null=True, max_length=200,
+                                 db_index=True)
     email_address = models.CharField(blank=True, null=True, max_length=200)
     email_address2 = models.CharField(blank=True, null=True, max_length=200)
     email_address3 = models.CharField(blank=True, null=True, max_length=200)
@@ -406,13 +516,17 @@ class Contact(TimeStampedModel):
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
 
+    class Meta:
+        ordering = ('first_name', 'last_name')
+
     def __str__(self):
         return '{} {}'.format(self.first_name,
                               self.last_name if self.last_name else '')
 
 
 class Account(TimeStampedModel):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,
+                            db_index=True)
     number = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
@@ -433,7 +547,7 @@ class Account(TimeStampedModel):
 class AccountPhysicalLocation(models.Model):
     name = models.CharField(max_length=100)
     active = models.BooleanField(default=True)
-
+    primary = models.BooleanField(default=True)
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
@@ -457,7 +571,7 @@ class AvailableProjectManager(models.Manager):
         )
 
 
-class Project(TimeStampedModel):
+class Project(ATUpdateMixin, TimeStampedModel):
     name = models.CharField(max_length=100)
     number = models.CharField(null=True, max_length=50)
     description = models.CharField(max_length=2000)
@@ -497,6 +611,18 @@ class Project(TimeStampedModel):
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
+    AUTOTASK_FIELDS = {
+        'name': 'projectName',
+        'status': 'status',
+        'description': 'description',
+        'start_date': 'startDateTime',
+        'end_date': 'endDateTime',
+        'type': 'projectType',
+        'project_lead_resource': 'projectLeadResourceID',
+        'department': 'department',
+        'status_detail': 'statusDetail',
+    }
+
     objects = models.Manager()
     available_objects = AvailableProjectManager()
 
@@ -506,16 +632,14 @@ class Project(TimeStampedModel):
     def __str__(self):
         return self.name
 
-    def update_at(self, data=None):
-        if data:
-            fields_to_update = {}
-            for field, data in data.items():
-                fields_to_update[field] = data
-        else:
-            fields_to_update = {
-                'Status': self.status.id,
-            }
-        return api.update_object('Project', self.id, fields_to_update)
+    def update_at(self, **kwargs):
+        api_client = api.ProjectsAPIClient(
+            impersonation_resource=kwargs.get('impersonation_resource'),
+        )
+        return api_client.update(
+            self,
+            self.get_updated_object(**kwargs)
+        )
 
 
 class Phase(TimeStampedModel):
@@ -524,7 +648,8 @@ class Phase(TimeStampedModel):
     start_date = models.DateTimeField(blank=True, null=True)
     # due_date is end date in autotask UI
     due_date = models.DateTimeField(blank=True, null=True)
-    estimated_hours = models.PositiveIntegerField(default=0)
+    estimated_hours = models.DecimalField(default=0.0, decimal_places=2,
+                                          max_digits=6)
     number = models.CharField(blank=True, null=True, max_length=50)
     scheduled = models.BooleanField(default=False)
     last_activity_date = models.DateTimeField(blank=True, null=True)
@@ -568,7 +693,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         related_name='secondary_resource_tasks'
     )
     project = models.ForeignKey(
-        'Project', null=True, on_delete=models.SET_NULL
+        'Project', on_delete=models.CASCADE
     )
     priority = models.ForeignKey(
         'Priority', null=True, blank=True, on_delete=models.SET_NULL
@@ -580,8 +705,8 @@ class Task(ATUpdateMixin, TimeStampedModel):
         'Phase', null=True,
         on_delete=models.SET_NULL
     )
-    allocation_code = models.ForeignKey(
-        'AllocationCode', null=True, blank=True, on_delete=models.SET_NULL
+    billing_code = models.ForeignKey(
+        'BillingCode', null=True, blank=True, on_delete=models.SET_NULL
     )
     assigned_resource_role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
@@ -589,31 +714,40 @@ class Task(ATUpdateMixin, TimeStampedModel):
     department = models.ForeignKey(
         'Department', blank=True, null=True, on_delete=models.SET_NULL
     )
+    category = models.ForeignKey(
+        'TaskCategory', null=True, blank=True, on_delete=models.SET_NULL
+    )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
-    EDITABLE_FIELDS = {
+    AUTOTASK_FIELDS = {
         'title': 'title',
         'description': 'description',
         'start_date': 'startDateTime',
         'end_date': 'endDateTime',
         'estimated_hours': 'estimatedHours',
+        'remaining_hours': 'remainingHours',
         'status': 'status',
         'department': 'departmentID',
-        'allocation_code': 'billingCodeID',
+        'billing_code': 'billingCodeID',
         'priority': 'priorityLabel',
         'phase': 'phaseID',
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
+        'category': 'taskCategoryID',
     }
 
     def __str__(self):
         return self.title
 
     def update_at(self, **kwargs):
-        api_client = api_rest.TasksAPIClient()
-        return api_client.update_task(
+
+        api_client = api.TasksAPIClient(
+            impersonation_resource=kwargs.get('impersonation_resource'),
+        )
+        return api_client.update(
             self,
-            self.get_updated_object(**kwargs)
+            self.project,
+            self.get_updated_object(**kwargs),
         )
 
 
@@ -627,6 +761,12 @@ class TaskSecondaryResource(TimeStampedModel):
     role = models.ForeignKey(
         'Role', null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    AUTOTASK_FIELDS = {
+        'resource': 'resourceID',
+        'task': 'taskID',
+        'role': 'roleID',
+    }
 
     def __str__(self):
         return '{} {}'.format(self.resource, self.task)
@@ -654,14 +794,30 @@ class TimeEntry(TimeStampedModel):
         'Task', blank=True, null=True, on_delete=models.CASCADE)
     type = models.ForeignKey(
         'TaskTypeLink', blank=True, null=True, on_delete=models.SET_NULL)
-    allocation_code = models.ForeignKey(
-        'AllocationCode', blank=True, null=True, on_delete=models.SET_NULL)
+    billing_code = models.ForeignKey(
+        'BillingCode', blank=True, null=True, on_delete=models.SET_NULL)
     role = models.ForeignKey(
         'Role', blank=True, null=True, on_delete=models.SET_NULL
     )
     contract = models.ForeignKey(
         'Contract', blank=True, null=True, on_delete=models.SET_NULL
     )
+
+    AUTOTASK_FIELDS = {
+        'ticket': 'ticketID',
+        'task': 'taskID',
+        'date_worked': 'dateWorked',
+        'start_date_time': 'startDateTime',
+        'end_date_time': 'endDateTime',
+        'summary_notes': 'summaryNotes',
+        'internal_notes': 'internalNotes',
+        'hours_worked': 'hoursWorked',
+        'offset_hours': 'offsetHours',
+        'role': 'roleID',
+        'resource': 'resourceID',
+        'billing_code': 'billingCodeID',
+        'contract': 'contractID',
+    }
 
     class Meta:
         verbose_name_plural = 'Time entries'
@@ -682,8 +838,9 @@ class TimeEntry(TimeStampedModel):
         else:
             # Autotask gives us date_worked as a datetime, even though the
             # time is always set to EST midnight (00:00:00).
+            # TODO timezone.pytz does not exist anymore
             est_offset = timezone.localtime(
-                timezone=timezone.pytz.timezone(OFFSET_TIMEZONE)).utcoffset()
+                timezone=pytz.timezone(OFFSET_TIMEZONE)).utcoffset()
             local_offset = timezone.localtime().utcoffset()
 
             # We want to end up with a UTC datetime that is midnight in the
@@ -694,11 +851,11 @@ class TimeEntry(TimeStampedModel):
         return entered_time
 
 
-class AllocationCode(TimeStampedModel):
-    # AllocationCodes with use type General Allocation Code (with ID = 1)
+class BillingCode(TimeStampedModel):
+    # BillingCodes with use type General Allocation Code (with ID = 1)
     # are for setting a ticket's work type in the UI. See API docs for details.
-    # https://ww4.autotask.net/help/Content/AdminSetup/2ExtensionsIntegrations/APIs/WSAPI/Entities/AllocationCodeEntity.htm # noqa
-    GENERAL_ALLOCATION_CODE_ID = 1
+    # https://ww2.autotask.net/help/DeveloperHelp/Content/APIs/REST/Entities/BillingCodesEntity.htm # noqa
+    GENERAL_BILLING_CODE_ID = 1
     name = models.CharField(blank=True, null=True, max_length=200)
     description = models.CharField(blank=True, null=True, max_length=500)
     active = models.BooleanField(default=False)
@@ -774,7 +931,7 @@ class Contract(models.Model):
         (INACTIVE, 'Inactive'),
         (ACTIVE, 'Active')
     )
-    name = models.CharField(max_length=250)
+    name = models.CharField(max_length=250, db_index=True)
     number = models.CharField(blank=True, null=True, max_length=50)
     status = models.CharField(
         max_length=20, blank=True, null=True, choices=STATUS_CHOICES)
@@ -782,6 +939,9 @@ class Contract(models.Model):
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
+
+    class Meta:
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -832,6 +992,22 @@ class ServiceCall(TimeStampedModel):
         related_name='task_service_calls'
     )
 
+    AUTOTASK_FIELDS = {
+        'description': 'description',
+        'duration': 'duration',
+        'complete': 'isComplete',
+        'create_date_time': 'createDateTime',
+        'start_date_time': 'startDateTime',
+        'end_date_time': 'endDateTime',
+        'canceled_date_time': 'canceledDateTime',
+        'last_modified_date_time': 'lastModifiedDateTime',
+        'account': 'companyID',
+        'location': 'companyLocationID',
+        'status': 'status',
+        'creator_resource': 'creatorResourceID',
+        'canceled_by_resource': 'canceledByResourceID',
+    }
+
     def __str__(self):
         return str(self.id)
 
@@ -848,6 +1024,11 @@ class ServiceCallTicket(TimeStampedModel):
         'Resource', through='ServiceCallTicketResource',
         related_name='resource_service_call_ticket'
     )
+
+    AUTOTASK_FIELDS = {
+        'service_call': 'serviceCallID',
+        'ticket': 'ticketID',
+    }
 
     def __str__(self):
         return str(self.id)
@@ -866,6 +1047,11 @@ class ServiceCallTask(TimeStampedModel):
         related_name='resource_service_call_task'
     )
 
+    AUTOTASK_FIELDS = {
+        'service_call': 'serviceCallID',
+        'task': 'taskID',
+    }
+
     def __str__(self):
         return str(self.id)
 
@@ -875,6 +1061,11 @@ class ServiceCallTicketResource(TimeStampedModel):
         'ServiceCallTicket', on_delete=models.CASCADE)
     resource = models.ForeignKey('Resource', on_delete=models.CASCADE)
 
+    AUTOTASK_FIELDS = {
+        'resource': 'resourceID',
+        'service_call_ticket': 'serviceCallTicketID',
+    }
+
     def __str__(self):
         return str(self.id)
 
@@ -883,6 +1074,11 @@ class ServiceCallTaskResource(TimeStampedModel):
     service_call_task = models.ForeignKey(
         'ServiceCallTask', on_delete=models.CASCADE)
     resource = models.ForeignKey('Resource', on_delete=models.CASCADE)
+
+    AUTOTASK_FIELDS = {
+        'resource': 'resourceID',
+        'service_call_task': 'serviceCallTaskID',
+    }
 
     def __str__(self):
         return str(self.id)
@@ -1008,6 +1204,14 @@ class TicketTypeTracker(TicketType):
     class Meta:
         proxy = True
         db_table = 'djautotask_tickettype'
+
+
+class TaskCategoryTracker(TaskCategory):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_taskcategory'
 
 
 class SubIssueTypeTracker(SubIssueType):
@@ -1170,12 +1374,12 @@ class TimeEntryTracker(TimeEntry):
         db_table = 'djautotask_timeentry'
 
 
-class AllocationCodeTracker(AllocationCode):
+class BillingCodeTracker(BillingCode):
     tracker = FieldTracker()
 
     class Meta:
         proxy = True
-        db_table = 'djautotask_allocationcode'
+        db_table = 'djautotask_billingcode'
 
 
 class RoleTracker(Role):

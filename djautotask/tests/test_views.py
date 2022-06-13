@@ -37,9 +37,14 @@ class TestCallBackView(TestCase):
 
         fixture_utils.init_statuses()
         _, patch = mocks.service_api_get_ticket_call(fixtures.API_TICKET_BY_ID)
+        _, _checklist_patch = mocks.create_mock_call(
+            "djautotask.sync.TicketChecklistItemsSynchronizer.sync_items",
+            None
+        )
 
         self._test_synced(fixtures.API_TICKET_BY_ID['item'])
         patch.stop()
+        _checklist_patch.stop()
 
     def test_update(self):
         fixture_utils.init_statuses()
@@ -48,10 +53,15 @@ class TestCallBackView(TestCase):
         self.assertEqual(Ticket.objects.count(), 1)
         # Change the description of the local record to make our test
         # meaningful.
-        t = Ticket.objects.get(id=7688)
+        t = Ticket.objects.get(id=100)
         t.description = 'foobar'
         t.save()
         _, patch = mocks.service_api_get_ticket_call(fixtures.API_TICKET_BY_ID)
+        _, _checklist_patch = mocks.create_mock_call(
+            "djautotask.sync.TicketChecklistItemsSynchronizer.sync_items",
+            None
+        )
 
         self._test_synced(fixtures.API_TICKET_BY_ID['item'])
         patch.stop()
+        _checklist_patch.stop()

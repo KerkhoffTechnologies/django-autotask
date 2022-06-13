@@ -86,6 +86,11 @@ class TicketCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'active')
 
 
+@admin.register(models.TaskCategory)
+class TaskCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'is_active')
+
+
 @admin.register(models.Source)
 class SourceAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
@@ -258,8 +263,8 @@ class UseTypeAdmin(admin.ModelAdmin):
     search_fields = ('id', 'label')
 
 
-@admin.register(models.AllocationCode)
-class AllocationCodeAdmin(admin.ModelAdmin):
+@admin.register(models.BillingCode)
+class BillingCodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'active', 'use_type')
     list_filter = ('use_type', )
     search_fields = ('id', 'name')

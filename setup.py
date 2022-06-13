@@ -14,7 +14,7 @@ setup(
                 'and callbacks.',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    keywords='django autotask soap rest api python',
+    keywords='django autotask rest api python',
     packages=find_packages(),
     author='Kerkhoff Technologies Inc.',
     author_email='matt@kerkhofftech.ca',
@@ -29,7 +29,6 @@ setup(
         'django-braces',
         'django-extensions',
         'retrying',
-        'atws',
     ],
     test_suite='runtests.suite',
     tests_require=[
