@@ -1,0 +1,7 @@
+requests
+django
+python-dateutil
+django-model-utils
+django-braces
+django-extensions
+retrying
