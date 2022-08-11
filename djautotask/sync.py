@@ -992,7 +992,8 @@ class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
         """
         Make a request to Autotask to create a Note.
         """
-        if self.client.impersonation_resource:
+        if self.client.impersonation_resource or \
+                kwargs.get('created_by_contact_id'):
             description = kwargs['description']
         else:
             description = "{}\n\nNote was added by {} {}.".format(
@@ -1054,6 +1055,7 @@ class TaskNoteSynchronizer(NoteSynchronizer):
         'noteType': (models.NoteType, 'note_type'),
         'creatorResourceID': (models.Resource, 'creator_resource'),
         'taskID': (models.Task, 'task'),
+        'createdByContactID': (models.Contact, 'created_by_contact'),
     }
 
     @property

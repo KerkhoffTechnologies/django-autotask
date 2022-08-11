@@ -492,11 +492,15 @@ class TaskNote(TimeStampedModel, Note):
     task = models.ForeignKey(
         'Task', blank=True, null=True, on_delete=models.SET_NULL
     )
+    created_by_contact = models.ForeignKey(
+        'Contact', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         super().AUTOTASK_FIELDS.update({
             'task': 'taskID',
+            'created_by_contact_id': 'createdByContactID',
         })
 
 
