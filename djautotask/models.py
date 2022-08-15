@@ -39,7 +39,6 @@ class ATUpdateMixin:
         updated_object = {}
         if changed_field_keys:
             for field in changed_field_keys:
-                field = field.replace('_id', '')
                 updated_object[field] = getattr(self, field)
 
         return updated_object
@@ -169,6 +168,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         return '{}-{}'.format(self.id, self.title)
 
     def update_at(self, **kwargs):
+
         api_client = api.TicketsAPIClient(
             impersonation_resource=kwargs.get('impersonation_resource'),
         )

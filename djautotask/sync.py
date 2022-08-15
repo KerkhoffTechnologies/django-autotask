@@ -761,7 +761,10 @@ class TicketTaskMixin:
         )
 
 
-class TicketSynchronizer(SyncRecordUDFMixin, TicketTaskMixin, Synchronizer,
+class TicketSynchronizer(CreateRecordMixin,
+                         SyncRecordUDFMixin,
+                         TicketTaskMixin,
+                         Synchronizer,
                          ParentSynchronizer):
     client_class = api.TicketsAPIClient
     model_class = models.TicketTracker
@@ -878,6 +881,43 @@ class TicketSynchronizer(SyncRecordUDFMixin, TicketTaskMixin, Synchronizer,
         TicketChecklistItemsSynchronizer().sync_items(instance)
 
         self.sync_children(*sync_classes)
+
+    # TODO move to parent sync when generalized, OR remove when
+    #  "sync/card packager" class created
+    def get_changed_values(self, record, **kwargs):
+        """
+        Only create tickets with manually selected fields, so AT can set its
+        own defaults.
+
+        """
+        changed_field_keys = kwargs.get('changed_fields')
+
+        new_record = {}
+        if changed_field_keys:
+            for field in changed_field_keys:
+                new_record[field] = getattr(record, field)
+
+        return new_record
+
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a Ticket.
+        """
+
+        description = kwargs.get('description')
+
+        if not self.client.impersonation_resource:
+            description = "{}\n\nTicket was created by {} {}.".format(
+                description if description is not None else "",
+                kwargs['resource'].first_name,
+                kwargs['resource'].last_name,
+            )
+        kwargs.update({
+            'description': description
+        })
+
+        new_record_fields = self.get_changed_values(**kwargs)
+        return super().create(**new_record_fields)
 
 
 class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
