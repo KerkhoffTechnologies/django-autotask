@@ -904,11 +904,11 @@ class TicketSynchronizer(CreateRecordMixin,
         Make a request to Autotask to create a Ticket.
         """
 
-        if self.client.impersonation_resource:
-            description = kwargs['description']
-        else:
+        description = kwargs.get('description')
+
+        if not self.client.impersonation_resource:
             description = "{}\n\nTicket was created by {} {}.".format(
-                kwargs['description'],
+                description if description is not None else "",
                 kwargs['resource'].first_name,
                 kwargs['resource'].last_name,
             )
