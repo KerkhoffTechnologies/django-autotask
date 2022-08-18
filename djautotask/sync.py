@@ -1059,6 +1059,7 @@ class TicketNoteSynchronizer(NoteSynchronizer, ChildSynchronizer):
         'noteType': (models.NoteType, 'note_type'),
         'creatorResourceID': (models.Resource, 'creator_resource'),
         'ticketID': (models.Ticket, 'ticket'),
+        'createdByContactID': (models.Contact, 'created_by_contact'),
     }
 
     @property
