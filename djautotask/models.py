@@ -39,7 +39,6 @@ class ATUpdateMixin:
         updated_object = {}
         if changed_field_keys:
             for field in changed_field_keys:
-                field = field.replace('_id', '')
                 updated_object[field] = getattr(self, field)
 
         return updated_object
@@ -169,6 +168,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         return '{}-{}'.format(self.id, self.title)
 
     def update_at(self, **kwargs):
+
         api_client = api.TicketsAPIClient(
             impersonation_resource=kwargs.get('impersonation_resource'),
         )
@@ -444,6 +444,7 @@ class Note:
         'description': 'description',
         'note_type': 'noteType',
         'publish': 'publish',
+        'created_by_contact_id': 'createdByContactID',
     }
 
 
@@ -465,6 +466,9 @@ class TicketNote(TimeStampedModel, Note):
     )
     ticket = models.ForeignKey(
         'Ticket', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    created_by_contact = models.ForeignKey(
+        'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     def __init__(self, *args, **kwargs):
@@ -500,7 +504,6 @@ class TaskNote(TimeStampedModel, Note):
         super().__init__(*args, **kwargs)
         super().AUTOTASK_FIELDS.update({
             'task': 'taskID',
-            'created_by_contact_id': 'createdByContactID',
         })
 
 
