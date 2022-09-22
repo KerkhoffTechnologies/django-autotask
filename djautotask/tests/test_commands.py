@@ -451,6 +451,10 @@ class TestSyncTicketSecondaryResourceCommand(AbstractBaseSyncTest,
         'ticket_secondary_resource',
     )
 
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_tickets()
+
 
 class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
     args = (
@@ -458,6 +462,11 @@ class TestSyncTaskSecondaryResourceCommand(AbstractBaseSyncTest, TestCase):
         fixtures.API_TASK_SECONDARY_RESOURCE,
         'task_secondary_resource',
     )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_projects()
+        fixture_utils.init_tasks()
 
 
 class TestSyncTicketNoteCommand(AbstractBaseSyncTest, TestCase):
