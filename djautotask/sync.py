@@ -1170,7 +1170,8 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
 
 
 class SecondaryResourceSyncronizer(CreateRecordMixin, DeleteRecordMixin,
-                                   Synchronizer):
+                                   BatchQueryMixin, Synchronizer):
+
     def create(self, resource, role, entity):
         """
         Make a request to Autotask to create a SecondaryResource.
@@ -1194,18 +1195,22 @@ class SecondaryResourceSyncronizer(CreateRecordMixin, DeleteRecordMixin,
         self.set_relations(instance, object_data)
         return instance
 
+    @property
+    def active_ids(self):
+        active_ids = self.related_instance_model.objects.all(). \
+            values_list('id', flat=True).order_by(self.lookup_key)
+
+        return active_ids
+
 
 class TicketSecondaryResourceSynchronizer(SecondaryResourceSyncronizer,
                                           ChildSynchronizer):
     client_class = api.TicketSecondaryResourcesAPIClient
     model_class = models.TicketSecondaryResourceTracker
     last_updated_field = None
+    condition_field_name = 'ticketID'
     related_instance_name = 'ticket'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Without this, AT returns empty instances
-        self.client.add_condition(A(op='gt', field='id', value='0'))
+    related_instance_model = models.Ticket
 
     related_meta = {
         'resourceID': (models.Resource, 'resource'),
@@ -1218,7 +1223,9 @@ class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     client_class = api.TaskSecondaryResourcesAPIClient
     model_class = models.TaskSecondaryResourceTracker
     last_updated_field = None
+    condition_field_name = 'taskID'
     related_instance_name = 'task'
+    related_instance_model = models.Task
 
     related_meta = {
         'resourceID': (models.Resource, 'resource'),
