@@ -654,6 +654,7 @@ class ContactSynchronizer(Synchronizer):
         instance.phone = json_data.get('phone')
         instance.alternate_phone = json_data.get('alternatePhone')
         instance.mobile_phone = json_data.get('mobilePhone')
+        instance.extension = json_data.get('extension')
 
         self.set_relations(instance, json_data)
 
