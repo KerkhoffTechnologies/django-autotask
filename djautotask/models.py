@@ -519,6 +519,7 @@ class Contact(TimeStampedModel):
     phone = models.CharField(blank=True, null=True, max_length=200)
     alternate_phone = models.CharField(blank=True, null=True, max_length=200)
     mobile_phone = models.CharField(blank=True, null=True, max_length=200)
+    extension = models.CharField(blank=True, null=True, max_length=10)
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
