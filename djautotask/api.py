@@ -371,7 +371,6 @@ class AutotaskAPIClient(object):
     def _format_fields(self, api_entity, inserted_fields):
         body = {'id': api_entity.id} if api_entity.id else dict()
 
-        breakpoint()
         for field, value in inserted_fields.items():
             if field in api_entity.AUTOTASK_FIELDS:
                 key = api_entity.AUTOTASK_FIELDS[field]
