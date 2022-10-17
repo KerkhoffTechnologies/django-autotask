@@ -1101,6 +1101,54 @@ API_USE_TYPE_FIELD = {
     ]
 }
 
+API_BILLING_CODE_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "billingCodeType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": False,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "0",
+                    "label": "Normal",
+                    "isDefaultValue": False,
+                    "sortOrder": 1,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                },
+                {
+                    "value": "1",
+                    "label": "System",
+                    "isDefaultValue": False,
+                    "sortOrder": 2,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                },
+                {
+                    "value": "2",
+                    "label": "Non-Billable",
+                    "isDefaultValue": False,
+                    "sortOrder": 3,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                }
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        }
+    ]
+}
+
+
 API_BILLING_CODE_ITEMS = [
     {
         'id': 2,

@@ -371,6 +371,7 @@ class AutotaskAPIClient(object):
     def _format_fields(self, api_entity, inserted_fields):
         body = {'id': api_entity.id} if api_entity.id else dict()
 
+        breakpoint()
         for field, value in inserted_fields.items():
             if field in api_entity.AUTOTASK_FIELDS:
                 key = api_entity.AUTOTASK_FIELDS[field]
@@ -396,6 +397,10 @@ class AutotaskAPIClient(object):
                 {key: str(value) if value else '0'}
             )
 
+        elif isinstance(value, bool):
+            body.update(
+                {key: value}
+            )
         else:
             body.update(
                 {key: str(value) if value else ''}
@@ -865,6 +870,10 @@ class LicenseTypesAPIClient(AutotaskPicklistAPIClient):
 
 
 class UseTypesAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'BillingCodes'
+
+
+class BillingCodeTypeAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'BillingCodes'
 
 

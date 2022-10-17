@@ -357,6 +357,12 @@ class UseType(Picklist):
     pass
 
 
+class BillingCodeType(Picklist):
+    NORMAL = 0
+    SYSTEM = 1
+    NON_BILLABLE = 2
+
+
 class ServiceCallStatus(Picklist):
 
     class Meta:
@@ -533,6 +539,7 @@ class Contact(TimeStampedModel):
 
 
 class Account(TimeStampedModel):
+    MY_ACCOUNT = 0
     name = models.CharField(max_length=100,
                             db_index=True)
     number = models.CharField(max_length=50)
@@ -825,6 +832,7 @@ class TimeEntry(TimeStampedModel):
         'resource': 'resourceID',
         'billing_code': 'billingCodeID',
         'contract': 'contractID',
+        'show_on_invoice': 'showOnInvoice',
     }
 
     class Meta:
@@ -870,6 +878,9 @@ class BillingCode(TimeStampedModel):
 
     use_type = models.ForeignKey(
         'UseType', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    billing_code_type = models.ForeignKey(
+        'BillingCodeType', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     def __str__(self):
@@ -1268,6 +1279,14 @@ class UseTypeTracker(UseType):
     class Meta:
         proxy = True
         db_table = 'djautotask_usetype'
+
+
+class BillingCodeTypeTracker(BillingCodeType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_billingcodetype'
 
 
 class ServiceCallStatusTracker(ServiceCallStatus):

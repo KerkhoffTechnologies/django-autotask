@@ -67,6 +67,8 @@ class Command(BaseCommand):
             ('note_type', sync.NoteTypeSynchronizer, _('Note Type')),
             ('ticket_note', sync.TicketNoteSynchronizer, _('Ticket Note')),
             ('use_type', sync.UseTypeSynchronizer, _('Use Type')),
+            ('billing_code_type',
+             sync.BillingCodeTypeSynchronizer, _('Billing Code Type')),
             ('billing_code', sync.BillingCodeSynchronizer,
              _('Billing Code')),
             ('role', sync.RoleSynchronizer, _('Role')),
