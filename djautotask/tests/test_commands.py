@@ -369,6 +369,14 @@ class TestSyncUseTypeCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_use_types()
 
 
+class TestSyncBillingCodeTypeCommand(PicklistSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_billing_code_types_call,
+        fixtures.API_BILLING_CODE_TYPE_FIELD,
+        'billing_code_type',
+    )
+
+
 class TestSyncTicketCategoryCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_ticket_categories_call,
@@ -712,6 +720,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncLicenseTypeCommand,
             TestSyncTaskTypeLinkCommand,
             TestSyncUseTypeCommand,
+            TestSyncBillingCodeTypeCommand,
             TestSyncAccountTypeCommand,
             TestSyncRoleCommand,
             TestSyncDepartmentCommand,
@@ -817,6 +826,7 @@ class TestSyncAllCommand(TestCase):
             'time_entry': models.TimeEntry,
             'task_type_link': models.TaskTypeLink,
             'use_type': models.UseType,
+            'billing_code_type': models.BillingCodeType,
             'billing_code': models.BillingCode,
             'resource_role_department': models.ResourceRoleDepartment,
             'resource_service_desk_role': models.ResourceServiceDeskRole,
@@ -878,6 +888,8 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_license_types_call(
             fixtures.API_LICENSE_TYPE_FIELD)
         mocks.service_api_get_use_types_call(fixtures.API_USE_TYPE_FIELD)
+        mocks.service_api_get_billing_code_types_call(
+            fixtures.API_BILLING_CODE_TYPE_FIELD)
         mocks.service_api_get_task_type_links_call(
             fixtures.API_TASK_TYPE_LINK_FIELD)
         mocks.service_api_get_account_types_call(
@@ -970,6 +982,8 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_project_picklist_call(fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_license_types_call(fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_use_types_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_billing_code_types_call(
+            fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_task_type_links_call(fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_account_types_call(fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_service_call_statuses_call(

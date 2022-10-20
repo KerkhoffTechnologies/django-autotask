@@ -1545,7 +1545,8 @@ class BillingCodeSynchronizer(Synchronizer):
     last_updated_field = None
 
     related_meta = {
-        'useType': (models.UseType, 'use_type')
+        'useType': (models.UseType, 'use_type'),
+        'billingCodeType': (models.BillingCodeType, 'billing_code_type')
     }
 
     def __init__(self, *args, **kwargs):
@@ -1760,6 +1761,12 @@ class UseTypeSynchronizer(PicklistSynchronizer):
     client_class = api.UseTypesAPIClient
     model_class = models.UseTypeTracker
     lookup_name = 'useType'
+
+
+class BillingCodeTypeSynchronizer(PicklistSynchronizer):
+    client_class = api.BillingCodeTypeAPIClient
+    model_class = models.BillingCodeTypeTracker
+    lookup_name = 'billingCodeType'
 
 
 class TaskTypeLinkSynchronizer(PicklistSynchronizer):
