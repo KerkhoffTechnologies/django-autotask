@@ -167,6 +167,9 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
     def __str__(self):
         return '{}-{}'.format(self.id, self.title)
 
+    def get_account(self):
+        return self.account
+
     def update_at(self, **kwargs):
 
         api_client = api.TicketsAPIClient(
@@ -753,6 +756,9 @@ class Task(ATUpdateMixin, TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+    def get_account(self):
+        return getattr(self.project, 'account', None)
 
     def update_at(self, **kwargs):
 
