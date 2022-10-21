@@ -548,6 +548,7 @@ class Account(TimeStampedModel):
     number = models.CharField(max_length=50)
     active = models.BooleanField(default=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
+    phone = models.CharField(blank=True, null=True, max_length=200)
     type = models.ForeignKey(
         'AccountType', blank=True, null=True, on_delete=models.SET_NULL
     )
