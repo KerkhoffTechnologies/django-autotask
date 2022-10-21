@@ -396,6 +396,10 @@ class AutotaskAPIClient(object):
                 {key: str(value) if value else '0'}
             )
 
+        elif isinstance(value, bool):
+            body.update(
+                {key: value}
+            )
         else:
             body.update(
                 {key: str(value) if value else ''}
@@ -865,6 +869,10 @@ class LicenseTypesAPIClient(AutotaskPicklistAPIClient):
 
 
 class UseTypesAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'BillingCodes'
+
+
+class BillingCodeTypeAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'BillingCodes'
 
 

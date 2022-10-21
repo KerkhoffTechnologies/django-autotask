@@ -214,6 +214,11 @@ def service_api_get_use_types_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_billing_code_types_call(return_value):
+    method_name = 'djautotask.api.BillingCodeTypeAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_task_type_links_call(return_value):
     method_name = \
         'djautotask.api.TaskTypeLinksAPIClient.get'
