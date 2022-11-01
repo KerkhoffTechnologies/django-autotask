@@ -1661,6 +1661,7 @@ class AccountSynchronizer(Synchronizer):
         instance.number = object_data.get('companyNumber')
         instance.active = object_data.get('isActive')
         instance.last_activity_date = object_data.get('lastActivityDate')
+        instance.phone = object_data.get('phone')
 
         self._set_datetime_attribute(instance, 'last_activity_date')
 
