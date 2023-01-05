@@ -7,7 +7,7 @@ from djautotask import api
 
 OPTION_NAME = 'autotask_object'
 ERROR_MESSAGE_TEMPLATE = 'Failed to sync {}. Autotask API returned an ' \
-                             'error(s): {}.'
+                         'error(s): {}.'
 
 
 class Command(BaseCommand):
@@ -186,6 +186,8 @@ class Command(BaseCommand):
                                    full_option=full_option)
 
             except api.AutotaskAPIError as e:
+                error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
+            except api as e:
                 error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
 
             finally:
