@@ -187,7 +187,7 @@ class Command(BaseCommand):
 
             except api.AutotaskAPIError as e:
                 error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
-            except api as e:
+            except api.AutotaskSecurityPermissionsException as e:
                 error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
 
             finally:
