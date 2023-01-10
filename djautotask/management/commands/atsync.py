@@ -184,11 +184,12 @@ class Command(BaseCommand):
             try:
                 self.sync_by_class(sync_class, obj_name,
                                    full_option=full_option)
-
-            except api.AutotaskAPIError as e:
-                error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
             except api.AutotaskSecurityPermissionsException as e:
                 error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
+                raise CommandError(error_msg)
+            except api.AutotaskAPIError as e:
+                error_msg = ERROR_MESSAGE_TEMPLATE.format(obj_name, e)
+
 
             finally:
                 if error_msg:
