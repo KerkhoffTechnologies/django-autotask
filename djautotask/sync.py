@@ -920,6 +920,18 @@ class TicketSynchronizer(CreateRecordMixin,
         new_record_fields = self.get_changed_values(**kwargs)
         return super().create(**new_record_fields)
 
+    def count(self, **kwargs):
+        queue_id = kwargs['queue_id']
+
+        tickets_api = self.client_class()
+
+        # Create api condition to request tickets of queue ID
+        tickets_api.add_condition(A(op="eq", field="queueID", value=f'{queue_id}'))
+
+        # Call Ticket API count method to make request
+        return tickets_api.count(next_url=None)
+
+
 
 class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
                        BatchQueryMixin, Synchronizer):
