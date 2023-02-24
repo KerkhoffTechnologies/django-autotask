@@ -779,14 +779,17 @@ class TicketSynchronizer(CreateRecordMixin,
         self._add_conditions()
 
     def _add_conditions(self):
+        condition_list = []
         for queue_id in self.queue_sync_filter:
-            self.client.add_condition(
+            condition_list.append(
                 A(
                     op='eq',
                     field='queueID',
                     value=queue_id,
-                )
+                ),
             )
+
+        self.client.add_condition(A(*condition_list, op="or"))
 
     related_meta = {
         'companyID': (models.Account, 'account'),
