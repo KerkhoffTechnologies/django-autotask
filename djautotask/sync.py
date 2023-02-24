@@ -789,7 +789,8 @@ class TicketSynchronizer(CreateRecordMixin,
                 ),
             )
 
-        self.client.add_condition(A(*condition_list, op="or"))
+        if condition_list:
+            self.client.add_condition(A(*condition_list, op="or"))
 
     related_meta = {
         'companyID': (models.Account, 'account'),
