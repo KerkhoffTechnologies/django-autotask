@@ -772,6 +772,26 @@ class TicketSynchronizer(CreateRecordMixin,
     udf_class = models.TicketUDF
     completed_date_field = 'completedDate'
 
+    def __init__(self, full=False, *args, **kwargs):
+        settings = DjautotaskSettings().get_settings()
+        self.queue_sync_filter = settings.get('queue_sync_filter')
+        super().__init__(full, *args, **kwargs)
+        self._add_conditions()
+
+    def _add_conditions(self):
+        condition_list = []
+        for queue_id in self.queue_sync_filter:
+            condition_list.append(
+                A(
+                    op='eq',
+                    field='queueID',
+                    value=queue_id,
+                ),
+            )
+
+        if condition_list:
+            self.client.add_condition(A(*condition_list, op="or"))
+
     related_meta = {
         'companyID': (models.Account, 'account'),
         'companyLocationID': (models.AccountPhysicalLocation,
@@ -919,6 +939,22 @@ class TicketSynchronizer(CreateRecordMixin,
 
         new_record_fields = self.get_changed_values(**kwargs)
         return super().create(**new_record_fields)
+
+    def count(self, **kwargs):
+        queue_id = kwargs['queue_id']
+
+        tickets_api = self.client_class()
+
+        # Create api condition to request tickets of queue ID
+        tickets_api.add_condition(
+            A(op="eq",
+              field="queueID",
+              value=f'{queue_id}'
+              )
+        )
+
+        # Call Ticket API count method to make request
+        return tickets_api.count(next_url=None)
 
 
 class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
