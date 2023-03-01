@@ -555,6 +555,9 @@ class Account(TimeStampedModel):
     parent_account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
+    owner_resource = models.ForeignKey(
+        'Resource', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         ordering = ('name',)
