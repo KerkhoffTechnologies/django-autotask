@@ -676,6 +676,10 @@ class ResourceRoleDepartmentsAPIClient(AutotaskAPIClient):
 class TicketsAPIClient(AutotaskAPIClient):
     API = 'Tickets'
 
+    def count(self, next_url, *args, **kwargs):
+        # Make get request using Api conditions
+        return self.fetch_resource(next_url, *args, **kwargs)
+
 
 class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
