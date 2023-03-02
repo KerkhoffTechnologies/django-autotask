@@ -1685,6 +1685,7 @@ class AccountSynchronizer(Synchronizer):
     related_meta = {
         'companyType': (models.AccountType, 'type'),
         'parentCompanyID': (models.Account, 'parent_account'),
+        'ownerResourceID': (models.Resource, 'owner_resource'),
     }
 
     def __init__(self, *args, **kwargs):
