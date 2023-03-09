@@ -443,8 +443,8 @@ class AutotaskAPIClient(object):
             if 200 <= response.status_code < 300:
                 try:
                     return response.json()
-                except JSONDecodeError as error:
-                    logger.error('An error occurred during returning response as dict: {}'.format(error))
+                except JSONDecodeError as e:
+                    logger.error('An error occurred during returning response as dict: {}'.format(e))
             elif response.status_code == 401:
                 # It could be the case that zone info has been changed
                 msg = 'Unauthorized request: {}'.format(endpoint_url)
