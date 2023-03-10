@@ -444,7 +444,10 @@ class AutotaskAPIClient(object):
                 try:
                     return response.json()
                 except JSONDecodeError as e:
-                    logger.error('An error occurred during returning response as dict: {}'.format(e))
+                    logger.error('An error occurred while decoding '
+                                 'the request: {}'.format(e))
+                    return {}
+
             elif response.status_code == 401:
                 # It could be the case that zone info has been changed
                 msg = 'Unauthorized request: {}'.format(endpoint_url)
