@@ -103,7 +103,7 @@ def get_web_connection_url(force_fetch=False):
 
 def _get_connection_url(field, force_fetch=False):
     api_url_from_cache = get_cached_url(field)
-
+    url = ""
     if not api_url_from_cache or force_fetch:
         try:
             json_obj = get_zone_info(settings.AUTOTASK_CREDENTIALS['username'])
@@ -112,7 +112,8 @@ def _get_connection_url(field, force_fetch=False):
 
             url = json_obj[field]
         except AutotaskAPIError as e:
-            raise AutotaskAPIError(f'Failed to get zone info: {e}')
+            logger.error('Failed to get zone info {}'.format(e))
+
     else:
         url = api_url_from_cache
 
