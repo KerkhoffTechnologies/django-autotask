@@ -255,6 +255,10 @@ class Synchronizer:
                 field_name
             )
 
+    @property
+    def impersonation_resource(self):
+        return self.client.impersonation_resource
+
     @staticmethod
     def _assign_null_relation(instance, model_field):
         """
@@ -607,14 +611,31 @@ class CreateRecordMixin:
         """
         Make a request to Autotask to create an entity.
         """
+
+        new_record_fields = self.get_changed_values(**kwargs)
+
         instance = self.model_class()
-        created_id = self.client.create(instance, **kwargs)
+        created_id = self.client.create(instance, **new_record_fields)
 
         # get_single retrieves the newly created entity info, which includes
         # generated/calculated fields from AT-side
         created_instance = self.get_single(created_id)
 
         return self.update_or_create_instance(created_instance['item'])
+
+
+class UpdateRecordMixin:
+
+    def update(self, instance, **kwargs):
+        """
+        Make a request to Autotask to update an entity.
+        """
+        updated_id = self.client.update(instance, kwargs)
+
+        # get_single retrieves the updated entity info, to get the latest data
+        updated_instance = self.get_single(updated_id['itemId'])
+
+        return self.update_or_create_instance(updated_instance['item'])
 
 
 class DeleteRecordMixin:
@@ -763,6 +784,7 @@ class TicketTaskMixin:
 
 
 class TicketSynchronizer(CreateRecordMixin,
+                         UpdateRecordMixin,
                          SyncRecordUDFMixin,
                          TicketTaskMixin,
                          Synchronizer,
@@ -771,6 +793,27 @@ class TicketSynchronizer(CreateRecordMixin,
     model_class = models.TicketTracker
     udf_class = models.TicketUDF
     completed_date_field = 'completedDate'
+
+    API_FIELD_NAMES = {
+        'title': 'title',
+        'description': 'description',
+        'queue': 'queueID',
+        'estimated_hours': 'estimatedHours',
+        'due_date_time': 'dueDateTime',
+        'status': 'status',
+        'priority': 'priority',
+        'category': 'ticketCategory',
+        'billing_code': 'billingCodeID',
+        'issue_type': 'issueType',
+        'sub_issue_type': 'subIssueType',
+        'project': 'projectID',
+        'assigned_resource': 'assignedResourceID',
+        'assigned_resource_role': 'assignedResourceRoleID',
+        'account': 'companyID',
+        'account_physical_location': 'companyLocationID',
+        'contact': 'contactID',
+        'contract': 'contractID',
+    }
 
     def __init__(self, full=False, *args, **kwargs):
         settings = DjautotaskSettings().get_settings()
@@ -920,25 +963,23 @@ class TicketSynchronizer(CreateRecordMixin,
 
         return new_record
 
-    def create(self, **kwargs):
+    def update(self, instance, **kwargs):
         """
-        Make a request to Autotask to create a Ticket.
+        Make a request to Autotask to update a Ticket.
         """
+        # TODO move into parent synchronizer update method in 2860
 
-        description = kwargs.get('description')
+        updated_record_fields = self._convert_fields_to_api_format(kwargs)
+        return super().update(instance, **updated_record_fields)
 
-        if not self.client.impersonation_resource:
-            description = "{}\n\nTicket was created by {} {}.".format(
-                description if description is not None else "",
-                kwargs['resource'].first_name,
-                kwargs['resource'].last_name,
-            )
-        kwargs.update({
-            'description': description
-        })
-
-        new_record_fields = self.get_changed_values(**kwargs)
-        return super().create(**new_record_fields)
+    def _convert_fields_to_api_format(self, fields):
+        """
+        Converts the model field names to the API field names.
+        """
+        api_fields = {}
+        for key, value in fields.items():
+            api_fields[self.API_FIELD_NAMES[key]] = value
+        return api_fields
 
     def count(self, **kwargs):
         queue_id = kwargs['queue_id']
