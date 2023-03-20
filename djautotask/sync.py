@@ -611,11 +611,8 @@ class CreateRecordMixin:
         """
         Make a request to Autotask to create an entity.
         """
-
-        new_record_fields = self.get_changed_values(**kwargs)
-
         instance = self.model_class()
-        created_id = self.client.create(instance, **new_record_fields)
+        created_id = self.client.create(instance, **kwargs)
 
         # get_single retrieves the newly created entity info, which includes
         # generated/calculated fields from AT-side
@@ -962,6 +959,22 @@ class TicketSynchronizer(CreateRecordMixin,
                 new_record[field] = getattr(record, field)
 
         return new_record
+
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create an entity.
+        """
+
+        new_record_fields = self.get_changed_values(**kwargs)
+
+        instance = self.model_class()
+        created_id = self.client.create(instance, **new_record_fields)
+
+        # get_single retrieves the newly created entity info, which includes
+        # generated/calculated fields from AT-side
+        created_instance = self.get_single(created_id)
+
+        return self.update_or_create_instance(created_instance['item'])
 
     def update(self, instance, **kwargs):
         """
