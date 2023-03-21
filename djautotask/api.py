@@ -683,6 +683,28 @@ class TicketsAPIClient(AutotaskAPIClient):
         # Make get request using Api conditions
         return self.fetch_resource(next_url, *args, **kwargs)
 
+    def create(self, instance, **kwargs):
+        # TODO this can be moved into base synchronizer class during 2860
+        body = self._format_fields(instance, kwargs)
+        # API returns only newly created id
+        response = self.request('post', self.get_api_url(), body)
+        return response.get('itemId')
+
+    def update(self, instance, changed_fields):
+        # TODO this can be moved into base synchronizer class during 2860
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
+
+    def _format_fields(self, record, inserted_fields):
+        # TODO this can be moved into base synchronizer class during 2860
+        body = {'id': record.id} if record.id else dict()
+
+        for field, value in inserted_fields.items():
+            key = field
+            body = self._format_request_body(body, key, value)
+
+        return body
+
 
 class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
