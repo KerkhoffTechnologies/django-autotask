@@ -690,6 +690,24 @@ class TicketsAPIClient(AutotaskAPIClient):
         response = self.request('post', self.get_api_url(), body)
         return response.get('itemId')
 
+    def _legacy_format_fields(self, api_entity, inserted_fields):
+        # TODO Used by models to update fields in Autotask
+        #  will be removed in 2860 or 2861
+        body = {'id': api_entity.id} if api_entity.id else dict()
+
+        for field, value in inserted_fields.items():
+            if field in api_entity.AUTOTASK_FIELDS:
+                key = api_entity.AUTOTASK_FIELDS[field]
+                body = self._format_request_body(body, key, value)
+
+        return body
+
+    def legacy_update(self, instance, changed_fields):
+        # TODO Used by models to update fields in Autotask
+        #  will be removed in 2860 or 2861
+        body = self._legacy_format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
+
     def update(self, instance, changed_fields):
         # TODO this can be moved into base synchronizer class during 2860
         body = self._format_fields(instance, changed_fields)
