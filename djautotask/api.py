@@ -691,6 +691,8 @@ class TicketsAPIClient(AutotaskAPIClient):
         return response.get('itemId')
 
     def _legacy_format_fields(self, api_entity, inserted_fields):
+        # TODO Used by models to update fields in Autotask
+        #  will be removed in 2860 or 2861
         body = {'id': api_entity.id} if api_entity.id else dict()
 
         for field, value in inserted_fields.items():
@@ -701,6 +703,8 @@ class TicketsAPIClient(AutotaskAPIClient):
         return body
 
     def legacy_update(self, instance, changed_fields):
+        # TODO Used by models to update fields in Autotask
+        #  will be removed in 2860 or 2861
         body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
