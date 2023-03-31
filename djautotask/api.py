@@ -444,9 +444,11 @@ class AutotaskAPIClient(object):
                 try:
                     return response.json()
                 except JSONDecodeError as e:
-                    logger.error('An error occurred while decoding '
-                                 'the request: {}'.format(e))
-                    return {}
+                    logger.error(
+                        'Request failed during JSON decode: {} {}: {}'.format(
+                            request_method.upper(), endpoint_url, e)
+                    )
+                    raise AutotaskAPIError('{}'.format(e))
 
             elif response.status_code == 401:
                 # It could be the case that zone info has been changed
