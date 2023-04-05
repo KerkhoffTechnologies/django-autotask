@@ -215,6 +215,9 @@ class Status(Picklist):
         ordering = ('label',)
         verbose_name_plural = 'Statuses'
 
+    def is_complete(self):
+        return self.id == Status.COMPLETE_ID
+
 
 class Priority(Picklist):
 
