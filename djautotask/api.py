@@ -125,7 +125,7 @@ def get_zone_info(username):
 
     try:
         logger.debug('Making GET request to {}'.format(endpoint_url))
-        response = requests.get(endpoint_url)
+        response = requests.get(endpoint_url, timeout=3)
         if 200 == response.status_code:
             resp_json = response.json()
             return resp_json
