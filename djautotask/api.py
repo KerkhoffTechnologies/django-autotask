@@ -408,7 +408,10 @@ class AutotaskAPIClient(object):
 
     def _legacy_format_fields(self, api_entity, inserted_fields):
         # TODO Used by models to update fields in Autotask
-        #  will be removed in 2860 or 2861
+        # NoteSynchronizer, TimeEntrySynchronizer,
+        # SecondaryResourceSynchronizer, ServicallSynchronizer (and child classes)
+        # still rely on this method. Once calls to those synchronizers update
+        # and create methods are updated, this method can be removed.
         body = {'id': api_entity.id} if api_entity.id else dict()
 
         for field, value in inserted_fields.items():
@@ -697,6 +700,7 @@ class TicketsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(next_url, *args, **kwargs)
 
     def update(self, instance, changed_fields):
+        # TODO Can be moved to parent class once _legacy_format_fields is removed
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
@@ -724,7 +728,7 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     # For tasks, child API endpoint is the same
 
     def update(self, instance, parent, changed_fields):
-        # Only for updating records with models in the DB, not Dummy syncs
+        # TODO Can be moved to parent class once _legacy_format_fields is removed.
         endpoint_url = self.get_child_url(parent.id)
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
@@ -784,6 +788,7 @@ class ProjectsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
     def update(self, instance, changed_fields):
+        # TODO Can be moved to parent class once _legacy_format_fields is removed.
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
