@@ -1007,6 +1007,7 @@ class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
         'assigned_resource_role': 'assignedResourceRoleID',
         'category': 'taskCategoryID',
     }
+
     @property
     def active_ids(self):
         active_projects = models.Project.objects.exclude(

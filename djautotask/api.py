@@ -418,12 +418,6 @@ class AutotaskAPIClient(object):
 
         return body
 
-    def legacy_update(self, instance, changed_fields):
-        # TODO Used by models to update fields in Autotask
-        #  will be removed in 2860 or 2861
-        body = self._legacy_format_fields(instance, changed_fields)
-        return self.request('patch', self.get_api_url(), body)
-
     def fetch_resource(self, next_url=None, retry_counter=None, method='get',
                        *args, **kwargs):
         """
@@ -621,11 +615,11 @@ class AutotaskAPIClient(object):
         return response
 
     def update(self, instance, changed_fields):
-        body = self._format_fields(instance, changed_fields)
+        body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
     def create(self, instance, **kwargs):
-        body = self._format_fields(instance, kwargs)
+        body = self._legacy_format_fields(instance, kwargs)
         # API returns only newly created id
         response = self.request('post', self.get_api_url(), body)
         return response.get('itemId')
@@ -652,12 +646,12 @@ class ChildAPIMixin:
     def update(self, instance, parent, changed_fields):
         # Only for updating records with models in the DB, not Dummy syncs
         endpoint_url = self.get_child_url(parent.id)
-        body = self._format_fields(instance, changed_fields)
+        body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
     def create(self, instance, parent, **kwargs):
         endpoint_url = self.get_child_url(parent.id)
-        body = self._format_fields(instance, kwargs)
+        body = self._legacy_format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
         return response.get('itemId')
 
@@ -702,6 +696,10 @@ class TicketsAPIClient(AutotaskAPIClient):
         # Make get request using Api conditions
         return self.fetch_resource(next_url, *args, **kwargs)
 
+    def update(self, instance, changed_fields):
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
+
 
 class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
@@ -724,6 +722,12 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     PARENT_API = 'Projects'
     CHILD_API = API
     # For tasks, child API endpoint is the same
+
+    def update(self, instance, parent, changed_fields):
+        # Only for updating records with models in the DB, not Dummy syncs
+        endpoint_url = self.get_child_url(parent.id)
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', endpoint_url, body)
 
 
 class TicketNotesAPIClient(ChildAPIMixin, AutotaskAPIClient):
@@ -778,6 +782,10 @@ class ProjectsAPIClient(AutotaskAPIClient):
     # use POST method because of IN-clause query string
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+    def update(self, instance, changed_fields):
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
 
 
 class TicketCategoriesAPIClient(AutotaskAPIClient):
