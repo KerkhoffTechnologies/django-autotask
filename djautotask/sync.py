@@ -496,6 +496,15 @@ class Synchronizer:
 
         return json_data
 
+    def _translate_fields_to_api_format(self, fields):
+        """
+        Converts the model field names to the API field names.
+        """
+        api_fields = {}
+        for key, value in fields.items():
+            api_fields[self.API_FIELD_NAMES[key]] = value
+        return api_fields
+
 
 class SyncRecordUDFMixin:
 
@@ -627,7 +636,8 @@ class UpdateRecordMixin:
         """
         Make a request to Autotask to update an entity.
         """
-        updated_id = self.client.update(instance, kwargs)
+        updated_record_fields = self._translate_fields_to_api_format(kwargs)
+        updated_id = self.client.update(instance, updated_record_fields)
 
         # get_single retrieves the updated entity info, to get the latest data
         updated_instance = self.get_single(updated_id['itemId'])
@@ -943,57 +953,6 @@ class TicketSynchronizer(CreateRecordMixin,
 
         self.sync_children(*sync_classes)
 
-    # TODO move to parent sync when generalized, OR remove when
-    #  "sync/card packager" class created
-    def get_changed_values(self, record, **kwargs):
-        """
-        Only create tickets with manually selected fields, so AT can set its
-        own defaults.
-
-        """
-        changed_field_keys = kwargs.get('changed_fields')
-
-        new_record = {}
-        if changed_field_keys:
-            for field in changed_field_keys:
-                new_record[field] = getattr(record, field)
-
-        return new_record
-
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create an entity.
-        """
-
-        new_record_fields = self.get_changed_values(**kwargs)
-
-        instance = self.model_class()
-        created_id = self.client.create(instance, **new_record_fields)
-
-        # get_single retrieves the newly created entity info, which includes
-        # generated/calculated fields from AT-side
-        created_instance = self.get_single(created_id)
-
-        return self.update_or_create_instance(created_instance['item'])
-
-    def update(self, instance, **kwargs):
-        """
-        Make a request to Autotask to update a Ticket.
-        """
-        # TODO move into parent synchronizer update method in 2860
-
-        updated_record_fields = self._convert_fields_to_api_format(kwargs)
-        return super().update(instance, **updated_record_fields)
-
-    def _convert_fields_to_api_format(self, fields):
-        """
-        Converts the model field names to the API field names.
-        """
-        api_fields = {}
-        for key, value in fields.items():
-            api_fields[self.API_FIELD_NAMES[key]] = value
-        return api_fields
-
     def count(self, **kwargs):
         queue_id = kwargs['queue_id']
 
@@ -1032,6 +991,22 @@ class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
         'status': (models.Status, 'status'),
     }
 
+    API_FIELD_NAMES = {
+        'title': 'title',
+        'description': 'description',
+        'start_date': 'startDateTime',
+        'end_date': 'endDateTime',
+        'estimated_hours': 'estimatedHours',
+        'remaining_hours': 'remainingHours',
+        'status': 'status',
+        'department': 'departmentID',
+        'billing_code': 'billingCodeID',
+        'priority': 'priorityLabel',
+        'phase': 'phaseID',
+        'assigned_resource': 'assignedResourceID',
+        'assigned_resource_role': 'assignedResourceRoleID',
+        'category': 'taskCategoryID',
+    }
     @property
     def active_ids(self):
         active_projects = models.Project.objects.exclude(
@@ -1087,6 +1062,20 @@ class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
 
         self.set_relations(instance, json_data)
         return instance
+
+    def update(self, instance, **kwargs):
+        """
+        Make a request to Autotask to update an entity.
+        """
+        updated_record_fields = self._translate_fields_to_api_format(kwargs)
+
+        updated_id = self.client.update(
+            instance, instance.project, updated_record_fields)
+
+        # get_single retrieves the updated entity info, to get the latest data
+        updated_instance = self.get_single(updated_id['itemId'])
+
+        return self.update_or_create_instance(updated_instance['item'])
 
 
 class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
@@ -1325,7 +1314,7 @@ class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     }
 
 
-class ProjectSynchronizer(SyncRecordUDFMixin, Synchronizer,
+class ProjectSynchronizer(SyncRecordUDFMixin, UpdateRecordMixin, Synchronizer,
                           ParentSynchronizer):
     client_class = api.ProjectsAPIClient
     model_class = models.ProjectTracker
@@ -1339,6 +1328,18 @@ class ProjectSynchronizer(SyncRecordUDFMixin, Synchronizer,
         'projectType': (models.ProjectType, 'type'),
         'contractID': (models.Contract, 'contract'),
         'department': (models.Department, 'department'),
+    }
+
+    API_FIELD_NAMES = {
+        'name': 'projectName',
+        'status': 'status',
+        'description': 'description',
+        'start_date': 'startDateTime',
+        'end_date': 'endDateTime',
+        'type': 'projectType',
+        'project_lead_resource': 'projectLeadResourceID',
+        'department': 'department',
+        'status_detail': 'statusDetail',
     }
 
     def __init__(self, *args, **kwargs):
