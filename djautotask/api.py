@@ -930,3 +930,45 @@ class TicketChecklistItemsAPIClient(ChildAPIMixin, AutotaskAPIClient):
             kwargs.get("id")
         )
         return self.request('delete', endpoint_url)
+
+class SystemAPIClient(AutotaskAPIClient):
+    API = 'System'
+
+    ENDPOINT_DOCUMENTS = 'AttachmentInfo/query'
+
+
+    def document_download(self, object_id, document_id, type):
+        ENDPOINT_DOCUMENTS_DOWNLOAD = f'{type}/{object_id}/Attachments/{document_id}'
+
+        endpoint = f'{self.api_base_url}/{ENDPOINT_DOCUMENTS_DOWNLOAD}'
+
+        try:
+            logger.debug('Making GET request to {}'.format(endpoint))
+            response = requests.get(
+                endpoint,
+                timeout=self.timeout,
+                headers=self.get_headers('GET'),
+            )
+        except requests.RequestException as e:
+            logger.error('Request failed: GET {}: {}'.format(endpoint, e))
+            raise AutotaskAPIError('{}'.format(e))
+
+        if 200 <= response.status_code < 300:
+            if response.json().get('items'):
+                response = response.json().get('items')[0]
+
+            return response
+        else:
+            self._log_failed(response)
+            return None
+
+    def get_attachments(self, object_id, *args, **kwargs):
+        context = {"filter":[{"op":"eq","field":"ParentID","value": object_id}]}
+        endpoint_url = f'{self.api_base_url}' \
+            f'{self.ENDPOINT_DOCUMENTS}' \
+            f'?search={context}'
+        return self.fetch_resource(endpoint_url,
+                                   should_page=True, *args, **kwargs)
+
+    def get_attachment(self, object_id, document_id, type):
+        return self.document_download(object_id, document_id, type)
