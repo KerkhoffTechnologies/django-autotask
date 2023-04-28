@@ -932,7 +932,7 @@ class TicketChecklistItemsAPIClient(ChildAPIMixin, AutotaskAPIClient):
         return self.request('delete', endpoint_url)
 
 
-class SystemAPIClient(AutotaskAPIClient):
+class AttachmentInfoAPIClient(AutotaskAPIClient):
     API = 'System'
 
     ENDPOINT_DOCUMENTS = 'AttachmentInfo/query'
@@ -963,12 +963,13 @@ class SystemAPIClient(AutotaskAPIClient):
             self._log_failed(response)
             return None
 
-    def get_attachments(self, object_id, *args, **kwargs):
-        context = {"filter": [{"op": "eq", "field": "ParentID",
+    def get_attachments(self, object_id, field, *args, **kwargs):
+        context = {"filter": [{"op": "eq",
+                               "field": field,
                                "value": object_id}]}
         endpoint_url = f'{self.api_base_url}' \
-            f'{self.ENDPOINT_DOCUMENTS}' \
-            f'?search={context}'
+                       f'{self.ENDPOINT_DOCUMENTS}' \
+                       f'?search={context}'
         return self.fetch_resource(endpoint_url,
                                    should_page=True, *args, **kwargs)
 
