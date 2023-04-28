@@ -368,13 +368,12 @@ class AutotaskAPIClient(object):
 
         return headers
 
-    def _format_fields(self, api_entity, inserted_fields):
-        body = {'id': api_entity.id} if api_entity.id else dict()
+    def _format_fields(self, record, inserted_fields):
+        body = {'id': record.id} if record.id else dict()
 
         for field, value in inserted_fields.items():
-            if field in api_entity.AUTOTASK_FIELDS:
-                key = api_entity.AUTOTASK_FIELDS[field]
-                body = self._format_request_body(body, key, value)
+            key = field
+            body = self._format_request_body(body, key, value)
 
         return body
 
@@ -404,6 +403,22 @@ class AutotaskAPIClient(object):
             body.update(
                 {key: str(value) if value else ''}
             )
+
+        return body
+
+    def _legacy_format_fields(self, api_entity, inserted_fields):
+        # TODO Used by models to update fields in Autotask
+        # NoteSynchronizer, TimeEntrySynchronizer,
+        # SecondaryResourceSynchronizer, ServicallSynchronizer
+        # (and child classes) still rely on this method.
+        # Once calls to those synchronizers update and create methods
+        # are updated, this method can be removed.
+        body = {'id': api_entity.id} if api_entity.id else dict()
+
+        for field, value in inserted_fields.items():
+            if field in api_entity.AUTOTASK_FIELDS:
+                key = api_entity.AUTOTASK_FIELDS[field]
+                body = self._format_request_body(body, key, value)
 
         return body
 
@@ -604,11 +619,11 @@ class AutotaskAPIClient(object):
         return response
 
     def update(self, instance, changed_fields):
-        body = self._format_fields(instance, changed_fields)
+        body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
     def create(self, instance, **kwargs):
-        body = self._format_fields(instance, kwargs)
+        body = self._legacy_format_fields(instance, kwargs)
         # API returns only newly created id
         response = self.request('post', self.get_api_url(), body)
         return response.get('itemId')
@@ -635,12 +650,12 @@ class ChildAPIMixin:
     def update(self, instance, parent, changed_fields):
         # Only for updating records with models in the DB, not Dummy syncs
         endpoint_url = self.get_child_url(parent.id)
-        body = self._format_fields(instance, changed_fields)
+        body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
     def create(self, instance, parent, **kwargs):
         endpoint_url = self.get_child_url(parent.id)
-        body = self._format_fields(instance, kwargs)
+        body = self._legacy_format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
         return response.get('itemId')
 
@@ -685,45 +700,11 @@ class TicketsAPIClient(AutotaskAPIClient):
         # Make get request using Api conditions
         return self.fetch_resource(next_url, *args, **kwargs)
 
-    def create(self, instance, **kwargs):
-        # TODO this can be moved into base synchronizer class during 2860
-        body = self._format_fields(instance, kwargs)
-        # API returns only newly created id
-        response = self.request('post', self.get_api_url(), body)
-        return response.get('itemId')
-
-    def _legacy_format_fields(self, api_entity, inserted_fields):
-        # TODO Used by models to update fields in Autotask
-        #  will be removed in 2860 or 2861
-        body = {'id': api_entity.id} if api_entity.id else dict()
-
-        for field, value in inserted_fields.items():
-            if field in api_entity.AUTOTASK_FIELDS:
-                key = api_entity.AUTOTASK_FIELDS[field]
-                body = self._format_request_body(body, key, value)
-
-        return body
-
-    def legacy_update(self, instance, changed_fields):
-        # TODO Used by models to update fields in Autotask
-        #  will be removed in 2860 or 2861
-        body = self._legacy_format_fields(instance, changed_fields)
-        return self.request('patch', self.get_api_url(), body)
-
     def update(self, instance, changed_fields):
-        # TODO this can be moved into base synchronizer class during 2860
+        # TODO Can be moved to parent class once _legacy_format_fields is
+        #  removed
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
-
-    def _format_fields(self, record, inserted_fields):
-        # TODO this can be moved into base synchronizer class during 2860
-        body = {'id': record.id} if record.id else dict()
-
-        for field, value in inserted_fields.items():
-            key = field
-            body = self._format_request_body(body, key, value)
-
-        return body
 
 
 class BillingCodesAPIClient(AutotaskAPIClient):
@@ -747,6 +728,13 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     PARENT_API = 'Projects'
     CHILD_API = API
     # For tasks, child API endpoint is the same
+
+    def update(self, instance, parent, changed_fields):
+        # TODO Can be moved to parent class once _legacy_format_fields is
+        #  removed.
+        endpoint_url = self.get_child_url(parent.id)
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', endpoint_url, body)
 
 
 class TicketNotesAPIClient(ChildAPIMixin, AutotaskAPIClient):
@@ -801,6 +789,12 @@ class ProjectsAPIClient(AutotaskAPIClient):
     # use POST method because of IN-clause query string
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+    def update(self, instance, changed_fields):
+        # TODO Can be moved to parent class once _legacy_format_fields is
+        #  removed.
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
 
 
 class TicketCategoriesAPIClient(AutotaskAPIClient):
