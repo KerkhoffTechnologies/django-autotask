@@ -933,12 +933,10 @@ class TicketChecklistItemsAPIClient(ChildAPIMixin, AutotaskAPIClient):
 
 
 class AttachmentInfoAPIClient(AutotaskAPIClient):
-    API = 'System'
+    API = 'AttachmentInfo'
 
-    ENDPOINT_DOCUMENTS = 'AttachmentInfo/query'
-
-    def document_download(self, object_id, document_id, type):
-        ENDPOINT_DOCUMENTS_DOWNLOAD = f'{type}/{object_id}' \
+    def document_download(self, object_id, document_id, record_type):
+        ENDPOINT_DOCUMENTS_DOWNLOAD = f'{record_type}/{object_id}' \
                                       f'/Attachments/{document_id}'
 
         endpoint = f'{self.api_base_url}/{ENDPOINT_DOCUMENTS_DOWNLOAD}'
@@ -963,15 +961,5 @@ class AttachmentInfoAPIClient(AutotaskAPIClient):
             self._log_failed(response)
             return None
 
-    def get_attachments(self, object_id, field, *args, **kwargs):
-        context = {"filter": [{"op": "eq",
-                               "field": field,
-                               "value": object_id}]}
-        endpoint_url = f'{self.api_base_url}' \
-                       f'{self.ENDPOINT_DOCUMENTS}' \
-                       f'?search={context}'
-        return self.fetch_resource(endpoint_url,
-                                   should_page=True, *args, **kwargs)
-
-    def get_attachment(self, object_id, document_id, type):
-        return self.document_download(object_id, document_id, type)
+    def get_attachment(self, object_id, document_id, record_type):
+        return self.document_download(object_id, document_id, record_type)
