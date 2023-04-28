@@ -1580,16 +1580,17 @@ class ServiceCallTaskResourceSynchronizer(
 
 
 class AttachmentSynchronizer:
-    client_class = api.SystemAPIClient
+    client_class = api.AttachmentInfoAPIClient
 
-    def __init__(self, type, *args, **kwargs):
+    def __init__(self, type, field=None, *args, **kwargs):
         self.api_conditions = []
         self.client = self.client_class()
         self.type = type
+        self.field = field
 
     def get_page(self, *args, **kwargs):
         object_id = kwargs.pop('object_id')
-        return self.client.get_attachments(object_id, *args, **kwargs)
+        return self.client.get_attachments(object_id, self.field, *args, **kwargs)
 
     def download_attachment(self, object_id, attachment_id, path):
         response = self.client.get_attachment(object_id,
