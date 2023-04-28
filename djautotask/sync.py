@@ -259,6 +259,10 @@ class Synchronizer:
                 field_name
             )
 
+    @property
+    def impersonation_resource(self):
+        return self.client.impersonation_resource
+
     @staticmethod
     def _assign_null_relation(instance, model_field):
         """
@@ -496,6 +500,15 @@ class Synchronizer:
 
         return json_data
 
+    def _translate_fields_to_api_format(self, fields):
+        """
+        Converts the model field names to the API field names.
+        """
+        api_fields = {}
+        for key, value in fields.items():
+            api_fields[self.API_FIELD_NAMES[key]] = value
+        return api_fields
+
 
 class SyncRecordUDFMixin:
 
@@ -619,6 +632,21 @@ class CreateRecordMixin:
         created_instance = self.get_single(created_id)
 
         return self.update_or_create_instance(created_instance['item'])
+
+
+class UpdateRecordMixin:
+
+    def update(self, instance, **kwargs):
+        """
+        Make a request to Autotask to update an entity.
+        """
+        updated_record_fields = self._translate_fields_to_api_format(kwargs)
+        updated_id = self.client.update(instance, updated_record_fields)
+
+        # get_single retrieves the updated entity info, to get the latest data
+        updated_instance = self.get_single(updated_id['itemId'])
+
+        return self.update_or_create_instance(updated_instance['item'])
 
 
 class DeleteRecordMixin:
@@ -767,6 +795,7 @@ class TicketTaskMixin:
 
 
 class TicketSynchronizer(CreateRecordMixin,
+                         UpdateRecordMixin,
                          SyncRecordUDFMixin,
                          TicketTaskMixin,
                          Synchronizer,
@@ -775,6 +804,27 @@ class TicketSynchronizer(CreateRecordMixin,
     model_class = models.TicketTracker
     udf_class = models.TicketUDF
     completed_date_field = 'completedDate'
+
+    API_FIELD_NAMES = {
+        'title': 'title',
+        'description': 'description',
+        'queue': 'queueID',
+        'estimated_hours': 'estimatedHours',
+        'due_date_time': 'dueDateTime',
+        'status': 'status',
+        'priority': 'priority',
+        'category': 'ticketCategory',
+        'billing_code': 'billingCodeID',
+        'issue_type': 'issueType',
+        'sub_issue_type': 'subIssueType',
+        'project': 'projectID',
+        'assigned_resource': 'assignedResourceID',
+        'assigned_resource_role': 'assignedResourceRoleID',
+        'account': 'companyID',
+        'account_physical_location': 'companyLocationID',
+        'contact': 'contactID',
+        'contract': 'contractID',
+    }
 
     def __init__(self, full=False, *args, **kwargs):
         settings = DjautotaskSettings().get_settings()
@@ -907,43 +957,6 @@ class TicketSynchronizer(CreateRecordMixin,
 
         self.sync_children(*sync_classes)
 
-    # TODO move to parent sync when generalized, OR remove when
-    #  "sync/card packager" class created
-    def get_changed_values(self, record, **kwargs):
-        """
-        Only create tickets with manually selected fields, so AT can set its
-        own defaults.
-
-        """
-        changed_field_keys = kwargs.get('changed_fields')
-
-        new_record = {}
-        if changed_field_keys:
-            for field in changed_field_keys:
-                new_record[field] = getattr(record, field)
-
-        return new_record
-
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create a Ticket.
-        """
-
-        description = kwargs.get('description')
-
-        if not self.client.impersonation_resource:
-            description = "{}\n\nTicket was created by {} {}.".format(
-                description if description is not None else "",
-                kwargs['resource'].first_name,
-                kwargs['resource'].last_name,
-            )
-        kwargs.update({
-            'description': description
-        })
-
-        new_record_fields = self.get_changed_values(**kwargs)
-        return super().create(**new_record_fields)
-
     def count(self, **kwargs):
         queue_id = kwargs['queue_id']
 
@@ -980,6 +993,23 @@ class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
         'projectID': (models.Project, 'project'),
         'priorityLabel': (models.Priority, 'priority'),
         'status': (models.Status, 'status'),
+    }
+
+    API_FIELD_NAMES = {
+        'title': 'title',
+        'description': 'description',
+        'start_date': 'startDateTime',
+        'end_date': 'endDateTime',
+        'estimated_hours': 'estimatedHours',
+        'remaining_hours': 'remainingHours',
+        'status': 'status',
+        'department': 'departmentID',
+        'billing_code': 'billingCodeID',
+        'priority': 'priorityLabel',
+        'phase': 'phaseID',
+        'assigned_resource': 'assignedResourceID',
+        'assigned_resource_role': 'assignedResourceRoleID',
+        'category': 'taskCategoryID',
     }
 
     @property
@@ -1037,6 +1067,20 @@ class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
 
         self.set_relations(instance, json_data)
         return instance
+
+    def update(self, instance, **kwargs):
+        """
+        Make a request to Autotask to update an entity.
+        """
+        updated_record_fields = self._translate_fields_to_api_format(kwargs)
+
+        updated_id = self.client.update(
+            instance, instance.project, updated_record_fields)
+
+        # get_single retrieves the updated entity info, to get the latest data
+        updated_instance = self.get_single(updated_id['itemId'])
+
+        return self.update_or_create_instance(updated_instance['item'])
 
 
 class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
@@ -1275,7 +1319,7 @@ class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
     }
 
 
-class ProjectSynchronizer(SyncRecordUDFMixin, Synchronizer,
+class ProjectSynchronizer(SyncRecordUDFMixin, UpdateRecordMixin, Synchronizer,
                           ParentSynchronizer):
     client_class = api.ProjectsAPIClient
     model_class = models.ProjectTracker
@@ -1289,6 +1333,18 @@ class ProjectSynchronizer(SyncRecordUDFMixin, Synchronizer,
         'projectType': (models.ProjectType, 'type'),
         'contractID': (models.Contract, 'contract'),
         'department': (models.Department, 'department'),
+    }
+
+    API_FIELD_NAMES = {
+        'name': 'projectName',
+        'status': 'status',
+        'description': 'description',
+        'start_date': 'startDateTime',
+        'end_date': 'endDateTime',
+        'type': 'projectType',
+        'project_lead_resource': 'projectLeadResourceID',
+        'department': 'department',
+        'status_detail': 'statusDetail',
     }
 
     def __init__(self, *args, **kwargs):

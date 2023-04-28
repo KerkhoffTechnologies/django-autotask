@@ -125,7 +125,7 @@ def get_zone_info(username):
 
     try:
         logger.debug('Making GET request to {}'.format(endpoint_url))
-        response = requests.get(endpoint_url)
+        response = requests.get(endpoint_url, timeout=3)
         if 200 == response.status_code:
             resp_json = response.json()
             return resp_json
@@ -368,13 +368,12 @@ class AutotaskAPIClient(object):
 
         return headers
 
-    def _format_fields(self, api_entity, inserted_fields):
-        body = {'id': api_entity.id} if api_entity.id else dict()
+    def _format_fields(self, record, inserted_fields):
+        body = {'id': record.id} if record.id else dict()
 
         for field, value in inserted_fields.items():
-            if field in api_entity.AUTOTASK_FIELDS:
-                key = api_entity.AUTOTASK_FIELDS[field]
-                body = self._format_request_body(body, key, value)
+            key = field
+            body = self._format_request_body(body, key, value)
 
         return body
 
@@ -404,6 +403,22 @@ class AutotaskAPIClient(object):
             body.update(
                 {key: str(value) if value else ''}
             )
+
+        return body
+
+    def _legacy_format_fields(self, api_entity, inserted_fields):
+        # TODO Used by models to update fields in Autotask
+        # NoteSynchronizer, TimeEntrySynchronizer,
+        # SecondaryResourceSynchronizer, ServicallSynchronizer
+        # (and child classes) still rely on this method.
+        # Once calls to those synchronizers update and create methods
+        # are updated, this method can be removed.
+        body = {'id': api_entity.id} if api_entity.id else dict()
+
+        for field, value in inserted_fields.items():
+            if field in api_entity.AUTOTASK_FIELDS:
+                key = api_entity.AUTOTASK_FIELDS[field]
+                body = self._format_request_body(body, key, value)
 
         return body
 
@@ -444,7 +459,12 @@ class AutotaskAPIClient(object):
                 try:
                     return response.json()
                 except JSONDecodeError as e:
+                    logger.error(
+                        'Request failed during JSON decode: {} {}: {}'.format(
+                            request_method.upper(), endpoint_url, e)
+                    )
                     raise AutotaskAPIError('{}'.format(e))
+
             elif response.status_code == 401:
                 # It could be the case that zone info has been changed
                 msg = 'Unauthorized request: {}'.format(endpoint_url)
@@ -599,11 +619,11 @@ class AutotaskAPIClient(object):
         return response
 
     def update(self, instance, changed_fields):
-        body = self._format_fields(instance, changed_fields)
+        body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
     def create(self, instance, **kwargs):
-        body = self._format_fields(instance, kwargs)
+        body = self._legacy_format_fields(instance, kwargs)
         # API returns only newly created id
         response = self.request('post', self.get_api_url(), body)
         return response.get('itemId')
@@ -630,12 +650,12 @@ class ChildAPIMixin:
     def update(self, instance, parent, changed_fields):
         # Only for updating records with models in the DB, not Dummy syncs
         endpoint_url = self.get_child_url(parent.id)
-        body = self._format_fields(instance, changed_fields)
+        body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
     def create(self, instance, parent, **kwargs):
         endpoint_url = self.get_child_url(parent.id)
-        body = self._format_fields(instance, kwargs)
+        body = self._legacy_format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
         return response.get('itemId')
 
@@ -680,6 +700,12 @@ class TicketsAPIClient(AutotaskAPIClient):
         # Make get request using Api conditions
         return self.fetch_resource(next_url, *args, **kwargs)
 
+    def update(self, instance, changed_fields):
+        # TODO Can be moved to parent class once _legacy_format_fields is
+        #  removed
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
+
 
 class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
@@ -702,6 +728,13 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     PARENT_API = 'Projects'
     CHILD_API = API
     # For tasks, child API endpoint is the same
+
+    def update(self, instance, parent, changed_fields):
+        # TODO Can be moved to parent class once _legacy_format_fields is
+        #  removed.
+        endpoint_url = self.get_child_url(parent.id)
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', endpoint_url, body)
 
 
 class TicketNotesAPIClient(ChildAPIMixin, AutotaskAPIClient):
@@ -756,6 +789,12 @@ class ProjectsAPIClient(AutotaskAPIClient):
     # use POST method because of IN-clause query string
     def get(self, next_url, *args, **kwargs):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+    def update(self, instance, changed_fields):
+        # TODO Can be moved to parent class once _legacy_format_fields is
+        #  removed.
+        body = self._format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
 
 
 class TicketCategoriesAPIClient(AutotaskAPIClient):
