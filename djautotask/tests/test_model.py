@@ -24,14 +24,14 @@ class TestTicket(TestCase):
         with patch('djautotask.api.TicketsAPIClient') as mock_ticketapiclient:
             instance = mock_ticketapiclient.return_value
             ticket.save()
-            self.assertFalse(instance.legacy_update.called)
+            self.assertFalse(instance.update.called)
             ticket.save(update_at=True)
-            self.assertFalse(instance.legacy_update.called)
+            self.assertFalse(instance.update.called)
 
             # 'update_at' is called
             ticket.save(update_at=True,
                         changed_fields=['title', 'due_date_time'])
-            self.assertTrue(instance.legacy_update.called)
+            self.assertTrue(instance.update.called)
 
 
 class TestTimeEntry(TestCase):
