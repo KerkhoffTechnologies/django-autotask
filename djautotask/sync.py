@@ -1591,8 +1591,10 @@ class AttachmentSynchronizer:
         object_id = kwargs.pop('object_id')
         return self.client.get_attachments(object_id, *args, **kwargs)
 
-    def download_attachment(self,object_id, attachment_id, path):
-        response = self.client.get_attachment(object_id, attachment_id, self.type)
+    def download_attachment(self, object_id, attachment_id, path):
+        response = self.client.get_attachment(object_id,
+                                              attachment_id,
+                                              self.type)
 
         filename = response.get('fullPath')
         unique_filename = f'{attachment_id}-{filename}'
