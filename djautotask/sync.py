@@ -1670,6 +1670,9 @@ class AttachmentSynchronizer(Synchronizer):
 
         return unique_filename
 
+    def get_count(self):
+        return self.client.count()
+
 
 class BillingCodeSynchronizer(Synchronizer):
     client_class = api.BillingCodesAPIClient

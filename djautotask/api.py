@@ -225,19 +225,36 @@ class ApiConditionList:
     def __iter__(self):
         return self._list.__iter__()
 
-    def build_query(self, method="get"):
+    def build_query(self, method="get", **kwargs):
         queries = []
         for condition in self._list:
             queries.append(condition.format_condition())
 
+        condition_filters = {
+            'filter': queries,
+        }
+
+        max_records = kwargs.get('page_size')
+        if max_records:
+            condition_filters.update({
+                'MaxRecords': max_records
+            })
+
         endpoint = self.METHODS[method]
-        filters = json.dumps({'filter': queries})
+        filters = json.dumps(condition_filters)
 
         if method == "get":
-            endpoint += filters
+
+            count = kwargs.get('record_count')
+            if count:
+                endpoint = f'query/count?search={filters}'
+            else:
+                endpoint += filters
+
             filters = None
         elif method != "post":
             raise TypeError("Unsupported method")
+
         return endpoint, filters
 
     def add(self, condition):
@@ -499,7 +516,7 @@ class AutotaskAPIClient(object):
         else:
             # Query endpoint is different between GET and POST
             query_endpoint, self.cached_body = \
-                self.conditions.build_query(method=method)
+                self.conditions.build_query(method=method, **kwargs)
             url = "{}{}".format(self.get_api_url(), query_endpoint)
 
         return _fetch_resource(
@@ -1002,3 +1019,8 @@ class AttachmentInfoAPIClient(AutotaskAPIClient):
 
     def get_attachment(self, object_id, document_id, record_type):
         return self.document_download(object_id, document_id, record_type)
+
+    def count(self, *args, **kwargs):
+        kwargs['record_count'] = True
+
+        return self.fetch_resource(*args, **kwargs)
