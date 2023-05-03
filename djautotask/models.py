@@ -175,7 +175,7 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
         api_client = api.TicketsAPIClient(
             impersonation_resource=kwargs.get('impersonation_resource'),
         )
-        return api_client.update(
+        return api_client.legacy_update(
             self,
             self.get_updated_object(**kwargs)
         )
@@ -772,7 +772,7 @@ class Task(ATUpdateMixin, TimeStampedModel):
         api_client = api.TasksAPIClient(
             impersonation_resource=kwargs.get('impersonation_resource'),
         )
-        return api_client.update(
+        return api_client.legacy_update(
             self,
             self.project,
             self.get_updated_object(**kwargs),
