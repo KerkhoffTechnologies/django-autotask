@@ -723,6 +723,10 @@ class TicketsAPIClient(AutotaskAPIClient):
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
+    def legacy_update(self, instance, changed_fields):
+        body = self._legacy_format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
+
 
 class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
@@ -751,6 +755,11 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         #  removed.
         endpoint_url = self.get_child_url(parent.id)
         body = self._format_fields(instance, changed_fields)
+        return self.request('patch', endpoint_url, body)
+
+    def legacy_update(self, instance, parent, changed_fields):
+        endpoint_url = self.get_child_url(parent.id)
+        body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
 
