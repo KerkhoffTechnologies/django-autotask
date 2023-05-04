@@ -225,19 +225,36 @@ class ApiConditionList:
     def __iter__(self):
         return self._list.__iter__()
 
-    def build_query(self, method="get"):
+    def build_query(self, method="get", **kwargs):
         queries = []
         for condition in self._list:
             queries.append(condition.format_condition())
 
+        condition_filters = {
+            'filter': queries,
+        }
+
+        max_records = kwargs.get('page_size')
+        if max_records:
+            condition_filters.update({
+                'MaxRecords': max_records
+            })
+
         endpoint = self.METHODS[method]
-        filters = json.dumps({'filter': queries})
+        filters = json.dumps(condition_filters)
 
         if method == "get":
-            endpoint += filters
+
+            count = kwargs.get('record_count')
+            if count:
+                endpoint = f'query/count?search={filters}'
+            else:
+                endpoint += filters
+
             filters = None
         elif method != "post":
             raise TypeError("Unsupported method")
+
         return endpoint, filters
 
     def add(self, condition):
@@ -499,7 +516,7 @@ class AutotaskAPIClient(object):
         else:
             # Query endpoint is different between GET and POST
             query_endpoint, self.cached_body = \
-                self.conditions.build_query(method=method)
+                self.conditions.build_query(method=method, **kwargs)
             url = "{}{}".format(self.get_api_url(), query_endpoint)
 
         return _fetch_resource(
@@ -706,6 +723,10 @@ class TicketsAPIClient(AutotaskAPIClient):
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', self.get_api_url(), body)
 
+    def legacy_update(self, instance, changed_fields):
+        body = self._legacy_format_fields(instance, changed_fields)
+        return self.request('patch', self.get_api_url(), body)
+
 
 class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
@@ -734,6 +755,11 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         #  removed.
         endpoint_url = self.get_child_url(parent.id)
         body = self._format_fields(instance, changed_fields)
+        return self.request('patch', endpoint_url, body)
+
+    def legacy_update(self, instance, parent, changed_fields):
+        endpoint_url = self.get_child_url(parent.id)
+        body = self._legacy_format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
 
@@ -969,3 +995,41 @@ class TicketChecklistItemsAPIClient(ChildAPIMixin, AutotaskAPIClient):
             kwargs.get("id")
         )
         return self.request('delete', endpoint_url)
+
+
+class AttachmentInfoAPIClient(AutotaskAPIClient):
+    API = 'AttachmentInfo'
+
+    def document_download(self, object_id, document_id, record_type):
+        ENDPOINT_DOCUMENTS_DOWNLOAD = f'{record_type}/{object_id}' \
+                                      f'/Attachments/{document_id}'
+
+        endpoint = f'{self.api_base_url}/{ENDPOINT_DOCUMENTS_DOWNLOAD}'
+
+        try:
+            logger.debug('Making GET request to {}'.format(endpoint))
+            response = requests.get(
+                endpoint,
+                timeout=self.timeout,
+                headers=self.get_headers('GET'),
+            )
+        except requests.RequestException as e:
+            logger.error('Request failed: GET {}: {}'.format(endpoint, e))
+            raise AutotaskAPIError('{}'.format(e))
+
+        if 200 <= response.status_code < 300:
+            if response.json().get('items'):
+                response = response.json().get('items')[0]
+
+            return response
+        else:
+            self._log_failed(response)
+            return None
+
+    def get_attachment(self, object_id, document_id, record_type):
+        return self.document_download(object_id, document_id, record_type)
+
+    def count(self, *args, **kwargs):
+        kwargs['record_count'] = True
+
+        return self.fetch_resource(*args, **kwargs)

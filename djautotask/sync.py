@@ -1,4 +1,6 @@
 import logging
+import os
+import base64
 from dateutil.parser import parse
 from decimal import Decimal
 
@@ -14,6 +16,8 @@ from .utils import DjautotaskSettings
 CREATED = 1
 UPDATED = 2
 SKIPPED = 3
+FILE_UMASK = 0o022
+
 
 logger = logging.getLogger(__name__)
 
@@ -1629,6 +1633,45 @@ class ServiceCallTaskResourceSynchronizer(
         self.set_relations(instance, object_data)
 
         return instance
+
+
+class AttachmentSynchronizer(Synchronizer):
+    client_class = api.AttachmentInfoAPIClient
+
+    def __init__(self, record_type=None, field=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.type = record_type
+        self.field = field
+
+        if kwargs.get('object_id'):
+            self.client.add_condition(
+                A(op='eq', field=self.field, value=kwargs.get('object_id'))
+            )
+
+    def download_attachment(self, object_id, attachment_id, path):
+        response = self.client.get_attachment(object_id,
+                                              attachment_id,
+                                              self.type)
+
+        filename = response.get('fullPath')
+        unique_filename = f'{attachment_id}-{filename}'
+
+        logger.debug(f'Writing attachment {unique_filename} to {path}')
+
+        file_path = os.path.join(path, f'{unique_filename}')
+        # Set permissions on file before creating and writing to it.
+        previous_umask = os.umask(FILE_UMASK)
+        data = response.get('data')
+        decoded_data = base64.b64decode(data)
+
+        with open(file_path, 'wb') as f:
+            f.write(decoded_data)
+        os.umask(previous_umask)
+
+        return unique_filename
+
+    def get_count(self):
+        return self.client.count()
 
 
 class BillingCodeSynchronizer(Synchronizer):
