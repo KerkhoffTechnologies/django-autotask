@@ -16,7 +16,7 @@ from retrying import retry
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
 # wait before retrying a request.
 RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
-CACHE_TIMEOUT = 600
+CACHE_TIMEOUT = 43200
 AT_URL_KEY = 'url'
 AT_WEB_KEY = 'webUrl'
 FORBIDDEN_ERROR_MESSAGE = \
