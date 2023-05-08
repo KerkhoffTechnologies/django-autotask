@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-VERSION = (1, 1, 1, 'final')
+VERSION = (1, 1, 3, 'final')
 
 # pragma: no cover
 if VERSION[-1] != "final":
