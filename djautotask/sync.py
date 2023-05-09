@@ -52,8 +52,10 @@ def log_sync_job(f):
                 f(*args, **kwargs)
             sync_job.success = True
         except Exception as e:
-            sync_job.message = str(e.args[0])
+            error_msg = f'Failed to create object. The error was: {e}'
+            sync_job.message = error_msg
             sync_job.success = False
+            sync_job.save()
             raise
         finally:
             sync_job.end_time = timezone.now()
