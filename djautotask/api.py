@@ -6,13 +6,11 @@ from json import JSONDecodeError
 
 import pytz
 import requests
-
+from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
-from django.apps import apps
 from django.utils import timezone
-
 from djautotask.utils import DjautotaskSettings
 from retrying import retry
 
@@ -97,7 +95,16 @@ def update_cache(json_obj):
 
 
 def get_api_connection_url(force_fetch=False):
-    return _get_connection_url(AT_URL_KEY, force_fetch)
+    try:
+        return _get_connection_url(AT_URL_KEY, force_fetch)
+    except AutotaskAPIError as e:
+        # Save a log even when the get_zone_info request fails.
+        SyncJob = apps.get_model('djautotask', 'SyncJob')
+        sync_job = SyncJob()
+        sync_job.start_time = timezone.now()
+        sync_job.message = e
+        sync_job.success = False
+        sync_job.save()
 
 
 def get_web_connection_url(force_fetch=False):
@@ -106,13 +113,6 @@ def get_web_connection_url(force_fetch=False):
 
 def _get_connection_url(field, force_fetch=False):
     api_url_from_cache = get_cached_url(field)
-    SyncJob = apps.get_model('djautotask', 'SyncJob')
-    sync_job = SyncJob()
-    sync_job.start_time = timezone.now()
-    if '--full' in sys.argv[1:]:
-        sync_job.sync_type = 'full'
-    else:
-        sync_job.sync_type = 'partial'
 
     if not api_url_from_cache or force_fetch:
         try:
@@ -122,10 +122,6 @@ def _get_connection_url(field, force_fetch=False):
 
             url = json_obj[field]
         except AutotaskAPIError as e:
-            error_msg = f'Failed to get zone info. The error was: {e}'
-            sync_job.message = error_msg
-            sync_job.success = False
-            sync_job.save()
             raise AutotaskAPIError(f'Failed to get zone info: {e}')
     else:
         url = api_url_from_cache
