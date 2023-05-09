@@ -6,17 +6,18 @@ from json import JSONDecodeError
 
 import pytz
 import requests
-
+from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from django.utils import timezone
 from djautotask.utils import DjautotaskSettings
 from retrying import retry
 
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
 # wait before retrying a request.
 RETRY_WAIT_EXPONENTIAL_MAX = 10000  # Maximum number of milliseconds to wait
-CACHE_TIMEOUT = 600
+CACHE_TIMEOUT = 43200
 AT_URL_KEY = 'url'
 AT_WEB_KEY = 'webUrl'
 FORBIDDEN_ERROR_MESSAGE = \
@@ -94,7 +95,16 @@ def update_cache(json_obj):
 
 
 def get_api_connection_url(force_fetch=False):
-    return _get_connection_url(AT_URL_KEY, force_fetch)
+    try:
+        return _get_connection_url(AT_URL_KEY, force_fetch)
+    except AutotaskAPIError as e:
+        # Save a log even when the get_zone_info request fails.
+        SyncJob = apps.get_model('djautotask', 'SyncJob')
+        sync_job = SyncJob()
+        sync_job.start_time = timezone.now()
+        sync_job.message = e
+        sync_job.success = False
+        sync_job.save()
 
 
 def get_web_connection_url(force_fetch=False):
