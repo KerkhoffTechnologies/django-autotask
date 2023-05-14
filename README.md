@@ -17,6 +17,16 @@ From source:
     git clone git@github.com:KerkhoffTechnologies/django-autotask.git
     cd django-autotask
     python setup.py install
+    
+Create a local development environment in a Docker container:
+
+    If you don't already have Docker installed on your machine, you can download and install it from the official Docker website: https://www.docker.com/products/docker-desktop.
+    git clone git@github.com:KerkhoffTechnologies/django-autotask.git
+    cd django-autotask
+    docker build -t django-autotask .
+    docker run -it --name my-django-autotask-container django-autotask /bin/bash
+
+
 
 ## Usage
 
