@@ -52,6 +52,8 @@ class Command(BaseCommand):
              sync.ProjectStatusSynchronizer, _('Project Status')),
             ('project_type',
              sync.ProjectTypeSynchronizer, _('Project Type')),
+            ('project_note_type',
+             sync.ProjectNoteTypeSynchronizer, _('Project Note Type')),
             ('project', sync.ProjectSynchronizer, _('Project')),
             ('phase', sync.PhaseSynchronizer, _('Phase')),
             ('display_color', sync.DisplayColorSynchronizer,

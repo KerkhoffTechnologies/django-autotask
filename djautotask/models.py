@@ -355,6 +355,12 @@ class NoteType(Picklist):
     RMM_NOTE = 99
 
 
+class ProjectNoteType(Picklist):
+    NOTES = 5
+    EMAIL = 8
+    STATUS = 12
+
+
 class TaskTypeLink(Picklist):
     pass
 
@@ -1212,6 +1218,14 @@ class ProjectTypeTracker(ProjectType):
     class Meta:
         proxy = True
         db_table = 'djautotask_projecttype'
+
+
+class ProjectNoteTypeTracker(ProjectNoteType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_projectnotetype'
 
 
 class SourceTracker(Source):

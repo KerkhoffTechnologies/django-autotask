@@ -321,6 +321,18 @@ class TestSyncNoteTypeCommand(PicklistSyncTest, TestCase):
         fixture_utils.init_note_types()
 
 
+class TestProjectNoteTypeCommand(PicklistSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_project_note_types_call,
+        fixtures.API_PROJECT_NOTE_TYPE_FIELD,
+        'project_note_type',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_note_types()
+
+
 class TestSyncLicenseTypeCommand(PicklistSyncTest, TestCase):
     args = (
         mocks.service_api_get_license_types_call,
@@ -717,6 +729,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncTaskUDFCommand,
             TestSyncProjectUDFCommand,
             TestSyncNoteTypeCommand,
+            TestProjectNoteTypeCommand,
             TestSyncLicenseTypeCommand,
             TestSyncTaskTypeLinkCommand,
             TestSyncUseTypeCommand,
@@ -813,6 +826,7 @@ class TestSyncAllCommand(TestCase):
             'project': models.Project,
             'project_status': models.ProjectStatus,
             'project_type': models.ProjectType,
+            'project_note_type': models.ProjectNoteType,
             'ticket_category': models.TicketCategory,
             'sub_issue_type': models.SubIssueType,
             'ticket_type': models.TicketType,
@@ -903,6 +917,8 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_service_call_statuses_call(
             fixtures.API_SERVICE_CALL_STATUS_FIELD)
         mocks.service_api_get_note_types_call(fixtures.API_NOTE_TYPE_FIELD)
+        mocks.service_api_get_project_note_types_call(
+            fixtures.API_PROJECT_NOTE_TYPE_FIELD)
         mocks.service_api_get_task_picklist_call(
             fixtures.API_TASK_CATEGORY_FIELD)
 
@@ -989,4 +1005,6 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_service_call_statuses_call(
             fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_note_types_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_project_note_types_call(
+            fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_task_picklist_call(fixtures.API_EMPTY_FIELDS)
