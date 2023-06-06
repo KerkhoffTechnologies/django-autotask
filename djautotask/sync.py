@@ -1998,6 +1998,24 @@ class ProjectTypeSynchronizer(ProjectPicklistSynchronizer):
     lookup_name = 'projectType'
 
 
+class ProjectNoteTypeSynchronizer(PicklistSynchronizer):
+    client_class = api.ProjectNoteTypesAPIClient
+    model_class = models.ProjectNoteTypeTracker
+    lookup_name = 'noteType'
+
+
+class ProjectNotesSynchronizer(Synchronizer):
+    client_class = api.ProjectNotesAPIClient
+
+    def __init__(self, project_id=None, field=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if project_id:
+            self.client.add_condition(
+                A(op='eq', field=field, value=project_id)
+            )
+
+
 ###################################################################
 # Dummy Synchronizers                                             #
 ###################################################################

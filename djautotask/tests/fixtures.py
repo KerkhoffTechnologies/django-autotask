@@ -1,10 +1,9 @@
-
 API_PAGE_DETAILS = {
-        "count": 1,
-        "requestCount": 500,
-        "prevPageUrl": None,
-        "nextPageUrl": None
-    }
+    "count": 1,
+    "requestCount": 500,
+    "prevPageUrl": None,
+    "nextPageUrl": None
+}
 
 API_EMPTY = {
     "items": [],
@@ -109,47 +108,47 @@ API_ACCOUNT_PHYSICAL_LOCATION = {
 }
 
 API_PROJECT_ITEM = {
-        'id': 4,
-        'projectName': 'Software Project',
-        'companyID': 174,
-        'projectType': 5,
-        'extProjectNumber': '',
-        'projectNumber': 'P20120604.0001',
-        'description': '',
-        'department': 29683384,
-        'contractID': 29684183,
-        'createDateTime': '2012-06-18T06:00:00.000Z',
-        'creatorResourceID': 4,
-        'startDateTime': '2012-06-19T06:00:00.000Z',
-        'endDateTime': '2012-10-24T06:00:00.000Z',
-        'duration': 59,
-        'actualHours': 0.0,
-        'actualBilledHours': 0.0,
-        'estimatedTime': 164.0,
-        'laborEstimatedRevenue': 0.0,
-        'laborEstimatedCosts': 0.0,
-        'laborEstimatedMarginPercentage': 0.0,
-        'projectCostsRevenue': 0.0,
-        'projectCostsBudget': 0.0,
-        'projectCostEstimatedMarginPercentage': 0.0,
-        'changeOrdersRevenue': 0.0,
-        'sgda': 0.0,
-        'originalEstimatedRevenue': 0.0,
-        'estimatedSalesCost': 0.0,
-        'status': 1,
-        'projectLeadResourceID': 10,
-        'completedPercentage': 0,
-        'completedDateTime': '2019-09-18T06:00:00.000Z',
-        'statusDetail': '',
-        'statusDateTime': '2012-06-18T06:00:00.000Z',
-        'LineOfBusiness': 6,
-        'purchaseOrderNumber': '',
-        'businessDivisionSubdivisionID': 6,
-        'lastActivityResourceID': 4,
-        'lastActivityDateTime': '2012-06-18T02:00:00.000Z',
-        'lastActivityPersonType': 1,
-        'userDefinedFields': {},
-    }
+    'id': 4,
+    'projectName': 'Software Project',
+    'companyID': 174,
+    'projectType': 5,
+    'extProjectNumber': '',
+    'projectNumber': 'P20120604.0001',
+    'description': '',
+    'department': 29683384,
+    'contractID': 29684183,
+    'createDateTime': '2012-06-18T06:00:00.000Z',
+    'creatorResourceID': 4,
+    'startDateTime': '2012-06-19T06:00:00.000Z',
+    'endDateTime': '2012-10-24T06:00:00.000Z',
+    'duration': 59,
+    'actualHours': 0.0,
+    'actualBilledHours': 0.0,
+    'estimatedTime': 164.0,
+    'laborEstimatedRevenue': 0.0,
+    'laborEstimatedCosts': 0.0,
+    'laborEstimatedMarginPercentage': 0.0,
+    'projectCostsRevenue': 0.0,
+    'projectCostsBudget': 0.0,
+    'projectCostEstimatedMarginPercentage': 0.0,
+    'changeOrdersRevenue': 0.0,
+    'sgda': 0.0,
+    'originalEstimatedRevenue': 0.0,
+    'estimatedSalesCost': 0.0,
+    'status': 1,
+    'projectLeadResourceID': 10,
+    'completedPercentage': 0,
+    'completedDateTime': '2019-09-18T06:00:00.000Z',
+    'statusDetail': '',
+    'statusDateTime': '2012-06-18T06:00:00.000Z',
+    'LineOfBusiness': 6,
+    'purchaseOrderNumber': '',
+    'businessDivisionSubdivisionID': 6,
+    'lastActivityResourceID': 4,
+    'lastActivityDateTime': '2012-06-18T02:00:00.000Z',
+    'lastActivityPersonType': 1,
+    'userDefinedFields': {},
+}
 API_PROJECT_ITEMS = [API_PROJECT_ITEM]
 API_PROJECT_BY_ID = {
     "item": API_PROJECT_ITEM
@@ -976,6 +975,35 @@ API_NOTE_TYPE_FIELD = {
     ]
 }
 
+API_PROJECT_NOTE_TYPE_FIELD = {
+    "fields": [
+        {
+            "name": "noteType",
+            "dataType": "integer",
+            "length": 0,
+            "isRequired": True,
+            "isReadOnly": False,
+            "isQueryable": True,
+            "isReference": False,
+            "referenceEntityType": "",
+            "isPickList": True,
+            "picklistValues": [
+                {
+                    "value": "5",
+                    "label": "Project Notes",
+                    "isDefaultValue": False,
+                    "sortOrder": 2,
+                    "parentValue": "",
+                    "isActive": True,
+                    "isSystem": True
+                },
+            ],
+            "picklistParentValueField": "",
+            "isSupportedWebhookField": False
+        },
+    ]
+}
+
 API_TASK_TYPE_LINK_FIELD = {
     "fields": [
         {
@@ -1148,7 +1176,6 @@ API_BILLING_CODE_TYPE_FIELD = {
     ]
 }
 
-
 API_BILLING_CODE_ITEMS = [
     {
         'id': 2,
@@ -1175,7 +1202,7 @@ API_ROLE_ITEM = {
     'hourlyRate': 100,
     'roleType': 0,
     'isSystemRole': False,
-    }
+}
 API_ROLE_ITEMS = [API_ROLE_ITEM]
 API_ROLE = {
     "items": API_ROLE_ITEMS,
@@ -1187,7 +1214,7 @@ API_DEPARTMENT_ITEM = {
     'name': "Finance",
     'description': "Finance Dept",
     'number': "",
-    }
+}
 API_DEPARTMENT_ITEMS = [API_DEPARTMENT_ITEM]
 API_DEPARTMENT = {
     "items": API_DEPARTMENT_ITEMS,
@@ -1358,47 +1385,47 @@ API_CONTACT = {
 }
 
 API_TICKET_ITEM = {
-        'companyID': 174,
-        'companyLocationID': 55,
-        'billingCodeID': 29683407,
-        'assignedResourceID': 10,
-        'assignedResourceRoleID': 8,
-        'changeInfoField1': '',
-        'changeInfoField2': '',
-        'changeInfoField3': '',
-        'changeInfoField4': '',
-        'changeInfoField5': '',
-        'completedByResourceID': 29682885,
-        'completedDate': '2019-09-05T08:23:00.000Z',
-        'contactID': 29683586,
-        'contractID': 29684183,
-        'createDate': '2019-08-18T01:00:00.000Z',
-        'creatorResourceID': 4,
-        'creatorType': 1,
-        'description': 'Monthy Services Checkup',
-        'dueDateTime': '2012-09-07T01:00:00.000Z',
-        'estimatedHours': 2.0,
-        'externalID': '',
-        'firstResponseDateTime': '2012-06-18T01:00:00.000Z',
-        'hoursToBeScheduled': 0.0,
-        'issueType': 10,
-        'lastActivityDate': '2019-09-23T11:00:00.000Z',
-        'lastActivityPersonType': 1,
-        'lastActivityResourceID': 4,
-        'priority': 3,
-        'purchaseOrderNumber': '',
-        'queueID': 29682833,
-        'resolution': '',
-        'source': 6,
-        'status': 10,
-        'subIssueType': 136,
-        'ticketCategory': 3,
-        'ticketNumber': 'T20120604.0002.005',
-        'ticketType': 1,
-        'title': 'Monthy Services Checkup*',
-        'userDefinedFields': {},
-        'id': 100
-    }
+    'companyID': 174,
+    'companyLocationID': 55,
+    'billingCodeID': 29683407,
+    'assignedResourceID': 10,
+    'assignedResourceRoleID': 8,
+    'changeInfoField1': '',
+    'changeInfoField2': '',
+    'changeInfoField3': '',
+    'changeInfoField4': '',
+    'changeInfoField5': '',
+    'completedByResourceID': 29682885,
+    'completedDate': '2019-09-05T08:23:00.000Z',
+    'contactID': 29683586,
+    'contractID': 29684183,
+    'createDate': '2019-08-18T01:00:00.000Z',
+    'creatorResourceID': 4,
+    'creatorType': 1,
+    'description': 'Monthy Services Checkup',
+    'dueDateTime': '2012-09-07T01:00:00.000Z',
+    'estimatedHours': 2.0,
+    'externalID': '',
+    'firstResponseDateTime': '2012-06-18T01:00:00.000Z',
+    'hoursToBeScheduled': 0.0,
+    'issueType': 10,
+    'lastActivityDate': '2019-09-23T11:00:00.000Z',
+    'lastActivityPersonType': 1,
+    'lastActivityResourceID': 4,
+    'priority': 3,
+    'purchaseOrderNumber': '',
+    'queueID': 29682833,
+    'resolution': '',
+    'source': 6,
+    'status': 10,
+    'subIssueType': 136,
+    'ticketCategory': 3,
+    'ticketNumber': 'T20120604.0002.005',
+    'ticketType': 1,
+    'title': 'Monthy Services Checkup*',
+    'userDefinedFields': {},
+    'id': 100
+}
 API_TICKET_ITEMS = [API_TICKET_ITEM]
 API_TICKET_BY_ID = {
     "item": API_TICKET_ITEM

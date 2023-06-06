@@ -387,3 +387,8 @@ class TaskUDFAdmin(admin.ModelAdmin):
 class ProjectUDFAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'type', 'is_picklist')
     search_fields = ['name', 'type']
+
+
+@admin.register(models.ProjectNoteType)
+class ProjectNoteTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label')

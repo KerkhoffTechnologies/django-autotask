@@ -280,6 +280,14 @@ def init_note_types():
     return synchronizer.sync()
 
 
+def init_project_note_types():
+    models.ProjectNoteType.objects.all().delete()
+    mocks.service_api_get_project_note_types_call(
+        fixtures.API_PROJECT_NOTE_TYPE_FIELD)
+    synchronizer = sync.ProjectNoteTypeSynchronizer()
+    return synchronizer.sync()
+
+
 def init_time_entries():
     models.TimeEntry.objects.all().delete()
     mocks.service_api_get_time_entries_call(fixtures.API_TIME_ENTRY)
