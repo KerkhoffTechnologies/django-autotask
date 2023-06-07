@@ -94,6 +94,11 @@ def service_api_get_note_types_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_project_note_types_call(return_value):
+    method_name = 'djautotask.api.ProjectNoteTypesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_resource_service_desk_roles_call(return_value):
     method_name = 'djautotask.api.ResourceServiceDeskRolesAPIClient.get'
     return create_mock_call(method_name, return_value)

@@ -837,6 +837,10 @@ class TicketCategoriesAPIClient(AutotaskAPIClient):
     API = 'TicketCategories'
 
 
+class ProjectNotesAPIClient(AutotaskAPIClient):
+    API = 'ProjectNotes'
+
+
 class TaskPredecessorsAPIClient(AutotaskAPIClient):
     API = 'TaskPredecessors'
 
@@ -981,6 +985,10 @@ class TaskPicklistAPIClient(AutotaskPicklistAPIClient):
 
 class ProjectPicklistAPIClient(AutotaskPicklistAPIClient):
     API_ENTITY = 'Projects'
+
+
+class ProjectNoteTypesAPIClient(AutotaskPicklistAPIClient):
+    API_ENTITY = 'ProjectNotes'
 
 
 class TicketChecklistItemsAPIClient(ChildAPIMixin, AutotaskAPIClient):
