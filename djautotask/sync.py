@@ -666,6 +666,22 @@ class DeleteRecordMixin:
             instance.delete()
 
 
+class ChildCreateRecordMixin:
+
+    def create(self, parent, **kwargs):
+        """
+        Make a request to Autotask to create an entity.
+        """
+        instance = self.model_class()
+        created_id = self.client.create(instance, parent, **kwargs)
+
+        # get_single retrieves the newly created entity info, which includes
+        # generated/calculated fields from AT-side
+        created_instance = self.get_single(created_id)
+
+        return self.update_or_create_instance(created_instance['item'])
+
+
 class ContactSynchronizer(Synchronizer):
     client_class = api.ContactsAPIClient
     model_class = models.ContactTracker
@@ -976,8 +992,8 @@ class TicketSynchronizer(CreateRecordMixin,
         return tickets_api.count(next_url=None)
 
 
-class TaskSynchronizer(SyncRecordUDFMixin, TicketTaskMixin,
-                       BatchQueryMixin, Synchronizer):
+class TaskSynchronizer(ChildCreateRecordMixin, SyncRecordUDFMixin,
+                       TicketTaskMixin, BatchQueryMixin, Synchronizer):
     client_class = api.TasksAPIClient
     model_class = models.TaskTracker
     udf_class = models.TaskUDF
