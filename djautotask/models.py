@@ -382,6 +382,10 @@ class ServiceCallStatus(Picklist):
         verbose_name_plural = 'Service call statuses'
 
 
+class TaskType(Picklist):
+    pass
+
+
 class RegularResourceManager(models.Manager):
     API_USER_LICENSE_ID = 7
 
@@ -747,6 +751,9 @@ class Task(ATUpdateMixin, TimeStampedModel):
     )
     category = models.ForeignKey(
         'TaskCategory', null=True, blank=True, on_delete=models.SET_NULL
+    )
+    task_type = models.ForeignKey(
+        'TaskType', null=True, blank=True, on_delete=models.SET_NULL
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
 
@@ -1546,3 +1553,11 @@ class ProjectUDFTracker(ProjectUDF):
     class Meta:
         proxy = True
         db_table = 'djautotask_projectudf'
+
+
+class TaskTypeTracker(TaskType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_tasktype'

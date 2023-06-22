@@ -673,7 +673,9 @@ class ChildCreateRecordMixin:
         Make a request to Autotask to create an entity.
         """
         instance = self.model_class()
-        created_id = self.client.create(instance, parent, **kwargs)
+        created_record_fields = self._translate_fields_to_api_format(kwargs)
+        created_id = \
+            self.client.create(instance, parent, **created_record_fields)
 
         # get_single retrieves the newly created entity info, which includes
         # generated/calculated fields from AT-side
@@ -1028,6 +1030,8 @@ class TaskSynchronizer(ChildCreateRecordMixin, SyncRecordUDFMixin,
         'assigned_resource': 'assignedResourceID',
         'assigned_resource_role': 'assignedResourceRoleID',
         'category': 'taskCategoryID',
+        'project': 'projectID',
+        'task_type': 'taskType',
     }
 
     @property
@@ -1998,6 +2002,11 @@ class TaskPicklistSynchronizer(PicklistSynchronizer):
 class TaskCategorySynchronizer(TaskPicklistSynchronizer):
     model_class = models.TaskCategoryTracker
     lookup_name = 'taskCategoryID'
+
+
+class TaskTypeSynchronizer(TaskPicklistSynchronizer):
+    model_class = models.TaskTypeTracker
+    lookup_name = 'taskType'
 
 
 class ProjectPicklistSynchronizer(PicklistSynchronizer):
