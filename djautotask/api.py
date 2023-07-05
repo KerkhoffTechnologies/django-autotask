@@ -299,10 +299,7 @@ class AutotaskAPIClient(object):
             rest_api_version = settings.AUTOTASK_CREDENTIALS[
                 'rest_api_version']
         if not server_url:
-            try:
-                server_url = get_api_connection_url()
-            except AutotaskAPIError as e:
-                raise AutotaskAPIError('{}'.format(e))
+            server_url = get_api_connection_url()
         if not self.API:
             raise ValueError('API not specified')
 
