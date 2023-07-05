@@ -299,8 +299,10 @@ class AutotaskAPIClient(object):
             rest_api_version = settings.AUTOTASK_CREDENTIALS[
                 'rest_api_version']
         if not server_url:
-            server_url = get_api_connection_url()
-
+            try:
+                server_url = get_api_connection_url()
+            except AutotaskAPIError as e:
+                raise AutotaskAPIError('{}'.format(e))
         if not self.API:
             raise ValueError('API not specified')
 
@@ -498,10 +500,13 @@ class AutotaskAPIClient(object):
                 logger.warning(msg)
                 if request_retry_counter['count'] <= self.MAX_401_ATTEMPTS:
                     cached_url = get_cached_url(AT_URL_KEY)
-                    if cached_url != get_api_connection_url(force_fetch=True):
-                        logger.info('Zone information has been changed, '
-                                    'so this request will be retried.')
-                        raise AutotaskAPIError(response.content)
+                    try:
+                        if cached_url != get_api_connection_url(force_fetch=True):
+                            logger.info('Zone information has been changed, '
+                                        'so this request will be retried.')
+                            raise AutotaskAPIError(response.content)
+                    except AutotaskAPIError as e:
+                        raise AutotaskAPIError('{}'.format(e))
                 raise AutotaskAPIClientError(msg)
             elif response.status_code == 403:
                 self._log_failed(response)
