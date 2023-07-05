@@ -501,7 +501,8 @@ class AutotaskAPIClient(object):
                 if request_retry_counter['count'] <= self.MAX_401_ATTEMPTS:
                     cached_url = get_cached_url(AT_URL_KEY)
                     try:
-                        if cached_url != get_api_connection_url(force_fetch=True):
+                        if cached_url != \
+                                get_api_connection_url(force_fetch=True):
                             logger.info('Zone information has been changed, '
                                         'so this request will be retried.')
                             raise AutotaskAPIError(response.content)
