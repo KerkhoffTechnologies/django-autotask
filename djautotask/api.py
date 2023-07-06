@@ -767,6 +767,13 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
+    def create(self, instance, parent, **kwargs):
+        endpoint_url = self.get_child_url(parent.id)
+
+        body = self._format_fields(instance, kwargs)
+        response = self.request('post', endpoint_url, body)
+        return response.get('itemId')
+
     def legacy_update(self, instance, parent, changed_fields):
         endpoint_url = self.get_child_url(parent.id)
         body = self._legacy_format_fields(instance, changed_fields)

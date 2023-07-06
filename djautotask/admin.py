@@ -91,6 +91,11 @@ class TaskCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'label', 'is_active')
 
 
+@admin.register(models.TaskType)
+class TaskTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'is_active')
+
+
 @admin.register(models.Source)
 class SourceAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
