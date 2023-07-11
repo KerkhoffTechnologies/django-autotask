@@ -650,7 +650,7 @@ class AutotaskAPIClient(object):
         return self.request('patch', self.get_api_url(), body)
 
     def create(self, instance, **kwargs):
-        body = self._legacy_format_fields(instance, kwargs)
+        body = self._format_fields(instance, kwargs)
         # API returns only newly created id
         response = self.request('post', self.get_api_url(), body)
         return response.get('itemId')
@@ -682,7 +682,7 @@ class ChildAPIMixin:
 
     def create(self, instance, parent, **kwargs):
         endpoint_url = self.get_child_url(parent.id)
-        body = self._legacy_format_fields(instance, kwargs)
+        body = self._format_fields(instance, kwargs)
         response = self.request('post', endpoint_url, body)
         return response.get('itemId')
 
@@ -767,13 +767,6 @@ class TasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
         body = self._format_fields(instance, changed_fields)
         return self.request('patch', endpoint_url, body)
 
-    def create(self, instance, parent, **kwargs):
-        endpoint_url = self.get_child_url(parent.id)
-
-        body = self._format_fields(instance, kwargs)
-        response = self.request('post', endpoint_url, body)
-        return response.get('itemId')
-
     def legacy_update(self, instance, parent, changed_fields):
         endpoint_url = self.get_child_url(parent.id)
         body = self._legacy_format_fields(instance, changed_fields)
@@ -784,10 +777,6 @@ class TicketNotesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'TicketNotes'
     PARENT_API = 'Tickets'
     CHILD_API = 'Notes'
-
-    def create(self, instance, **kwargs):
-        parent = kwargs.pop('ticket')
-        return super().create(instance, parent, **kwargs)
 
 
 class TaskNotesAPIClient(AutotaskAPIClient):
@@ -811,19 +800,11 @@ class TicketSecondaryResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     PARENT_API = 'Tickets'
     CHILD_API = 'SecondaryResources'
 
-    def create(self, instance, **kwargs):
-        parent = kwargs.pop('ticket')
-        return super().create(instance, parent, **kwargs)
-
 
 class TaskSecondaryResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'TaskSecondaryResources'
     PARENT_API = 'Tasks'
     CHILD_API = 'SecondaryResources'
-
-    def create(self, instance, **kwargs):
-        parent = kwargs.pop('task')
-        return super().create(instance, parent, **kwargs)
 
 
 class ProjectsAPIClient(AutotaskAPIClient):
@@ -869,19 +850,11 @@ class ServiceCallTicketsAPIClient(ChildAPIMixin, AutotaskAPIClient):
     PARENT_API = 'ServiceCalls'
     CHILD_API = 'Tickets'
 
-    def create(self, instance, **kwargs):
-        parent = kwargs.pop('service_call')
-        return super().create(instance, parent, **kwargs)
-
 
 class ServiceCallTicketResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTicketResources'
     PARENT_API = 'ServiceCallTickets'
     CHILD_API = 'Resources'
-
-    def create(self, instance, **kwargs):
-        parent = kwargs.pop('service_call_ticket')
-        return super().create(instance, parent, **kwargs)
 
 
 class ServiceCallTasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
@@ -889,19 +862,11 @@ class ServiceCallTasksAPIClient(ChildAPIMixin, AutotaskAPIClient):
     PARENT_API = 'ServiceCalls'
     CHILD_API = 'Tasks'
 
-    def create(self, instance, **kwargs):
-        parent = kwargs.pop('service_call')
-        return super().create(instance, parent, **kwargs)
-
 
 class ServiceCallTaskResourcesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'ServiceCallTaskResources'
     PARENT_API = 'ServiceCallTasks'
     CHILD_API = 'Resources'
-
-    def create(self, instance, **kwargs):
-        parent = kwargs.pop('service_call_task')
-        return super().create(instance, parent, **kwargs)
 
 
 class ResourcesAPIClient(AutotaskAPIClient):

@@ -627,7 +627,8 @@ class CreateRecordMixin:
         Make a request to Autotask to create an entity.
         """
         instance = self.model_class()
-        created_id = self.client.create(instance, **kwargs)
+        created_record_fields = self._translate_fields_to_api_format(kwargs)
+        created_id = self.client.create(instance, **created_record_fields)
 
         # get_single retrieves the newly created entity info, which includes
         # generated/calculated fields from AT-side
@@ -1105,7 +1106,15 @@ class TaskSynchronizer(ChildCreateRecordMixin, SyncRecordUDFMixin,
         return self.update_or_create_instance(updated_instance['item'])
 
 
-class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
+class NoteSynchronizer(ChildCreateRecordMixin, BatchQueryMixin, Synchronizer):
+
+    API_FIELD_NAMES = {
+        'title': 'title',
+        'description': 'description',
+        'note_type': 'noteType',
+        'publish': 'publish',
+        'created_by_contact_id': 'createdByContactID',
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1135,25 +1144,25 @@ class NoteSynchronizer(CreateRecordMixin, BatchQueryMixin, Synchronizer):
 
         return instance
 
-    def create(self, **kwargs):
+    def create(self, parent, **kwargs):
         """
         Make a request to Autotask to create a Note.
         """
+        resource = kwargs.pop('resource')
         if self.client.impersonation_resource or \
                 kwargs.get('created_by_contact_id'):
             description = kwargs['description']
         else:
             description = "{}\n\nNote was added by {} {}.".format(
                 kwargs['description'],
-                kwargs['resource'].first_name,
-                kwargs['resource'].last_name
+                resource.first_name,
+                resource.last_name,
             )
         kwargs.update({
-            self.related_instance_name: kwargs.pop('card'),
             'description': description
         })
 
-        return super().create(**kwargs)
+        return super().create(parent, **kwargs)
 
 
 class TicketNoteSynchronizer(NoteSynchronizer, ChildSynchronizer):
@@ -1215,7 +1224,8 @@ class TaskNoteSynchronizer(NoteSynchronizer):
         return active_ids
 
 
-class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
+class TimeEntrySynchronizer(CreateRecordMixin,
+                            MultiConditionBatchQueryMixin,
                             Synchronizer,
                             ChildSynchronizer):
     client_class = api.TimeEntriesAPIClient
@@ -1230,6 +1240,22 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
         'billingCodeID': (models.BillingCode, 'billing_code'),
         'roleID': (models.Role, 'role'),
         'contractID': (models.Contract, 'contract'),
+    }
+    API_FIELD_NAMES = {
+        'ticket': 'ticketID',
+        'task': 'taskID',
+        'date_worked': 'dateWorked',
+        'start_date_time': 'startDateTime',
+        'end_date_time': 'endDateTime',
+        'summary_notes': 'summaryNotes',
+        'internal_notes': 'internalNotes',
+        'hours_worked': 'hoursWorked',
+        'offset_hours': 'offsetHours',
+        'role': 'roleID',
+        'resource': 'resourceID',
+        'billing_code': 'billingCodeID',
+        'contract': 'contractID',
+        'show_on_invoice': 'showOnInvoice'
     }
 
     @property
@@ -1276,19 +1302,8 @@ class TimeEntrySynchronizer(CreateRecordMixin, MultiConditionBatchQueryMixin,
         return instance
 
 
-class SecondaryResourceSyncronizer(CreateRecordMixin, DeleteRecordMixin,
-                                   BatchQueryMixin, Synchronizer):
-
-    def create(self, resource, role, entity):
-        """
-        Make a request to Autotask to create a SecondaryResource.
-        """
-        body = {
-            'resource': resource,
-            'role': role,
-            self.related_instance_name: entity,
-        }
-        return super().create(**body)
+class SecondaryResourceSynchronizer(ChildCreateRecordMixin, DeleteRecordMixin,
+                                    BatchQueryMixin, Synchronizer):
 
     def delete(self, instances, parent=None):
         """
@@ -1310,7 +1325,7 @@ class SecondaryResourceSyncronizer(CreateRecordMixin, DeleteRecordMixin,
         return active_ids
 
 
-class TicketSecondaryResourceSynchronizer(SecondaryResourceSyncronizer,
+class TicketSecondaryResourceSynchronizer(SecondaryResourceSynchronizer,
                                           ChildSynchronizer):
     client_class = api.TicketSecondaryResourcesAPIClient
     model_class = models.TicketSecondaryResourceTracker
@@ -1324,9 +1339,14 @@ class TicketSecondaryResourceSynchronizer(SecondaryResourceSyncronizer,
         'roleID': (models.Role, 'role'),
         'ticketID': (models.Ticket, 'ticket'),
     }
+    API_FIELD_NAMES = {
+        'resource': 'resourceID',
+        'role': 'roleID',
+        'ticket': 'ticketID',
+    }
 
 
-class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
+class TaskSecondaryResourceSynchronizer(SecondaryResourceSynchronizer):
     client_class = api.TaskSecondaryResourcesAPIClient
     model_class = models.TaskSecondaryResourceTracker
     last_updated_field = None
@@ -1339,9 +1359,15 @@ class TaskSecondaryResourceSynchronizer(SecondaryResourceSyncronizer):
         'roleID': (models.Role, 'role'),
         'taskID': (models.Task, 'task'),
     }
+    API_FIELD_NAMES = {
+        'resource': 'resourceID',
+        'role': 'roleID',
+        'task': 'taskID',
+    }
 
 
-class ProjectSynchronizer(SyncRecordUDFMixin, UpdateRecordMixin, Synchronizer,
+class ProjectSynchronizer(CreateRecordMixin, UpdateRecordMixin,
+                          SyncRecordUDFMixin, Synchronizer,
                           ParentSynchronizer):
     client_class = api.ProjectsAPIClient
     model_class = models.ProjectTracker
@@ -1367,6 +1393,7 @@ class ProjectSynchronizer(SyncRecordUDFMixin, UpdateRecordMixin, Synchronizer,
         'project_lead_resource': 'projectLeadResourceID',
         'department': 'department',
         'status_detail': 'statusDetail',
+        'account': 'companyID'
     }
 
     def __init__(self, *args, **kwargs):
@@ -1515,6 +1542,22 @@ class ServiceCallSynchronizer(
         'canceledByResourceID': (models.Resource, 'canceled_by_resource')
     }
 
+    API_FIELD_NAMES = {
+        'description': 'description',
+        'duration': 'duration',
+        'complete': 'isComplete',
+        'create_date_time': 'createDateTime',
+        'start_date_time': 'startDateTime',
+        'end_date_time': 'endDateTime',
+        'canceled_date_time': 'canceledDateTime',
+        'last_modified_date_time': 'lastModifiedDateTime',
+        'account': 'companyID',
+        'location': 'companyLocationID',
+        'status': 'status',
+        'creator_resource': 'creatorResourceID',
+        'canceled_by_resource': 'canceledByResourceID',
+    }
+
     @property
     def active_ids(self):
         active_ids = models.Account.objects.filter(
@@ -1547,7 +1590,7 @@ class ServiceCallSynchronizer(
 
 
 class ServiceCallTicketSynchronizer(
-        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+        ChildCreateRecordMixin, BatchQueryMixin, Synchronizer):
 
     client_class = api.ServiceCallTicketsAPIClient
     model_class = models.ServiceCallTicketTracker
@@ -1557,6 +1600,10 @@ class ServiceCallTicketSynchronizer(
     related_meta = {
         'serviceCallID': (models.ServiceCall, 'service_call'),
         'ticketID': (models.Ticket, 'ticket')
+    }
+    API_FIELD_NAMES = {
+        'service_call': 'serviceCallID',
+        'ticket': 'ticketID',
     }
 
     @property
@@ -1574,7 +1621,7 @@ class ServiceCallTicketSynchronizer(
 
 
 class ServiceCallTaskSynchronizer(
-        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+        ChildCreateRecordMixin, BatchQueryMixin, Synchronizer):
 
     client_class = api.ServiceCallTasksAPIClient
     model_class = models.ServiceCallTaskTracker
@@ -1584,6 +1631,10 @@ class ServiceCallTaskSynchronizer(
     related_meta = {
         'serviceCallID': (models.ServiceCall, 'service_call'),
         'taskID': (models.Task, 'task')
+    }
+    API_FIELD_NAMES = {
+        'service_call': 'serviceCallID',
+        'task': 'taskID',
     }
 
     @property
@@ -1602,7 +1653,7 @@ class ServiceCallTaskSynchronizer(
 
 
 class ServiceCallTicketResourceSynchronizer(
-        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+        ChildCreateRecordMixin, BatchQueryMixin, Synchronizer):
 
     client_class = api.ServiceCallTicketResourcesAPIClient
     model_class = models.ServiceCallTicketResourceTracker
@@ -1613,6 +1664,10 @@ class ServiceCallTicketResourceSynchronizer(
         'serviceCallTicketID':
             (models.ServiceCallTicket, 'service_call_ticket'),
         'resourceID': (models.Resource, 'resource')
+    }
+    API_FIELD_NAMES = {
+        'resource': 'resourceID',
+        'service_call_ticket': 'serviceCallTicketID',
     }
 
     @property
@@ -1630,7 +1685,7 @@ class ServiceCallTicketResourceSynchronizer(
 
 
 class ServiceCallTaskResourceSynchronizer(
-        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+        ChildCreateRecordMixin, BatchQueryMixin, Synchronizer):
 
     client_class = api.ServiceCallTaskResourcesAPIClient
     model_class = models.ServiceCallTaskResourceTracker
@@ -1641,6 +1696,10 @@ class ServiceCallTaskResourceSynchronizer(
         'serviceCallTaskID':
             (models.ServiceCallTask, 'service_call_task'),
         'resourceID': (models.Resource, 'resource')
+    }
+    API_FIELD_NAMES = {
+        'resource': 'resourceID',
+        'service_call_task': 'serviceCallTaskID',
     }
 
     @property
