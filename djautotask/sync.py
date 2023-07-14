@@ -1106,7 +1106,7 @@ class TaskSynchronizer(ChildCreateRecordMixin, SyncRecordUDFMixin,
         return self.update_or_create_instance(updated_instance['item'])
 
 
-class NoteSynchronizer(ChildCreateRecordMixin, BatchQueryMixin, Synchronizer):
+class NoteSynchronizer(BatchQueryMixin, Synchronizer):
 
     API_FIELD_NAMES = {
         'title': 'title',
@@ -1144,28 +1144,31 @@ class NoteSynchronizer(ChildCreateRecordMixin, BatchQueryMixin, Synchronizer):
 
         return instance
 
-    def create(self, parent, **kwargs):
+    def set_description(self, note_data):
         """
-        Make a request to Autotask to create a Note.
+        Set the description for a note.
         """
-        resource = kwargs.pop('resource')
+        resource = note_data.pop('resource')
         if self.client.impersonation_resource or \
-                kwargs.get('created_by_contact_id'):
-            description = kwargs['description']
+                note_data.get('created_by_contact_id'):
+            description = note_data['description']
         else:
             description = "{}\n\nNote was added by {} {}.".format(
-                kwargs['description'],
+                note_data['description'],
                 resource.first_name,
                 resource.last_name,
             )
-        kwargs.update({
+
+        note_data.update({
             'description': description
         })
 
-        return super().create(parent, **kwargs)
+        return note_data
 
 
-class TicketNoteSynchronizer(NoteSynchronizer, ChildSynchronizer):
+class TicketNoteSynchronizer(ChildCreateRecordMixin,
+                             NoteSynchronizer,
+                             ChildSynchronizer):
     client_class = api.TicketNotesAPIClient
     model_class = models.TicketNoteTracker
     condition_field_name = 'ticketID'
@@ -1201,8 +1204,16 @@ class TicketNoteSynchronizer(NoteSynchronizer, ChildSynchronizer):
             )
         )
 
+    def create(self, parent, **kwargs):
+        """
+        Make a request to Autotask to create a Note.
+        """
+        kwargs = self.set_description(kwargs)
 
-class TaskNoteSynchronizer(NoteSynchronizer):
+        return super().create(parent, **kwargs)
+
+
+class TaskNoteSynchronizer(CreateRecordMixin, NoteSynchronizer):
     client_class = api.TaskNotesAPIClient
     model_class = models.TaskNoteTracker
     condition_field_name = 'taskID'
@@ -1215,6 +1226,12 @@ class TaskNoteSynchronizer(NoteSynchronizer):
         'createdByContactID': (models.Contact, 'created_by_contact'),
     }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        super().API_FIELD_NAMES.update({
+            'task': 'taskID',
+        })
+
     @property
     def active_ids(self):
         active_ids = models.Task.objects.exclude(
@@ -1222,6 +1239,14 @@ class TaskNoteSynchronizer(NoteSynchronizer):
         ).values_list('id', flat=True).order_by(self.lookup_key)
 
         return active_ids
+
+    def create(self, **kwargs):
+        """
+        Make a request to Autotask to create a Note.
+        """
+        kwargs = self.set_description(kwargs)
+
+        return super().create(**kwargs)
 
 
 class TimeEntrySynchronizer(CreateRecordMixin,
