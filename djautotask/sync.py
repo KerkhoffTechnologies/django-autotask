@@ -671,7 +671,6 @@ class DeleteRecordMixin:
             instance.delete()
 
 
-
 class ChildCreateRecordMixin:
 
     def create(self, parent, **kwargs):
