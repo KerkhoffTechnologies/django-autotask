@@ -508,7 +508,11 @@ class Synchronizer:
         """
         api_fields = {}
         for key, value in fields.items():
-            api_fields[self.API_FIELD_NAMES[key]] = value
+            try:
+                api_fields[self.API_FIELD_NAMES[key]] = value
+            except KeyError:
+                # If the key is not in the API_FIELD_NAMES dict, continue
+                pass
         return api_fields
 
 
@@ -665,6 +669,7 @@ class DeleteRecordMixin:
         except AutotaskRecordNotFoundError:
             # We can safely delete instance to sync
             instance.delete()
+
 
 
 class ChildCreateRecordMixin:
@@ -1148,11 +1153,11 @@ class NoteSynchronizer(BatchQueryMixin, Synchronizer):
         """
         Set the description for a note.
         """
-        resource = note_data.pop('resource')
         if self.client.impersonation_resource or \
                 note_data.get('created_by_contact_id'):
             description = note_data['description']
         else:
+            resource = note_data.pop('resource')
             description = "{}\n\nNote was added by {} {}.".format(
                 note_data['description'],
                 resource.first_name,
