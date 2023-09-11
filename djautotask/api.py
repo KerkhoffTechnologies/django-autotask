@@ -168,7 +168,7 @@ class ApiCondition:
         if op in ("and", "or"):
             # Grouping query
             for condition in args:
-                if type(condition) != self.__class__:
+                if not isinstance(condition, self.__class__):
                     raise TypeError(
                         "Grouped conditions must also be "
                         "instances of {}".format(self.__class__.__name__)
@@ -225,7 +225,7 @@ class ApiConditionList:
         return self._list[i]
 
     def __setitem__(self, i, value):
-        if type(value) is not ApiCondition:
+        if not isinstance(value, ApiCondition):
             raise TypeError("Conditions must be instances of ApiCondition.")
         self._list[i] = value
 
@@ -268,7 +268,7 @@ class ApiConditionList:
         return endpoint, filters
 
     def add(self, condition):
-        if type(condition) is not ApiCondition:
+        if not isinstance(condition, ApiCondition):
             raise TypeError("Conditions must be instances of ApiCondition.")
 
         self._list.append(condition)
