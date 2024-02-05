@@ -292,12 +292,11 @@ class AutotaskAPIClient(object):
         if not password:
             password = settings.AUTOTASK_CREDENTIALS['password']
         if not integration_code:
-            integration_code = settings.AUTOTASK_CREDENTIALS[
-                'integration_code'
-            ]
+            integration_code = \
+                settings.AUTOTASK_CREDENTIALS['integration_code']
         if not rest_api_version:
-            rest_api_version = settings.AUTOTASK_CREDENTIALS[
-                'rest_api_version']
+            rest_api_version = \
+                settings.AUTOTASK_CREDENTIALS['rest_api_version']
         if not server_url:
             server_url = get_api_connection_url()
 
@@ -321,7 +320,7 @@ class AutotaskAPIClient(object):
     def api_base_url(self):
         return '{0}v{1}/'.format(
             self.server_url,
-            settings.AUTOTASK_CREDENTIALS['rest_api_version'],
+            self.rest_api_version,
         )
 
     def get_api_url(self, endpoint=None):
