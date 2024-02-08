@@ -94,9 +94,9 @@ def update_cache(json_obj):
         f'zone_{AT_WEB_KEY}', json_obj[AT_WEB_KEY], timeout=CACHE_TIMEOUT)
 
 
-def get_api_connection_url(force_fetch=False):
+def get_api_connection_url(username, force_fetch=False):
     try:
-        return _get_connection_url(AT_URL_KEY, force_fetch)
+        return _get_connection_url(AT_URL_KEY, username, force_fetch)
     except AutotaskAPIError as e:
         # Save a log even when the get_zone_info request fails.
         SyncJob = apps.get_model('djautotask', 'SyncJob')
@@ -107,16 +107,16 @@ def get_api_connection_url(force_fetch=False):
         sync_job.save()
 
 
-def get_web_connection_url(force_fetch=False):
-    return _get_connection_url(AT_WEB_KEY, force_fetch)
+def get_web_connection_url(username, force_fetch=False):
+    return _get_connection_url(AT_WEB_KEY, username, force_fetch)
 
 
-def _get_connection_url(field, force_fetch=False):
+def _get_connection_url(field, username, force_fetch=False):
     api_url_from_cache = get_cached_url(field)
 
     if not api_url_from_cache or force_fetch:
         try:
-            json_obj = get_zone_info(settings.AUTOTASK_CREDENTIALS['username'])
+            json_obj = get_zone_info(username)
             # Update cache if empty or forced
             update_cache(json_obj)
 
@@ -130,8 +130,9 @@ def _get_connection_url(field, force_fetch=False):
 
 
 def get_zone_info(username):
-    endpoint_url = settings.AUTOTASK_SERVER_URL + 'v1.0/zoneInformation?user='\
-                   + username
+    endpoint_url = '{}v1.0/zoneInformation?user={}'.format(
+        settings.AUTOTASK_SERVER_URL, username
+    )
 
     try:
         logger.debug('Making GET request to {}'.format(endpoint_url))
@@ -298,7 +299,7 @@ class AutotaskAPIClient(object):
             rest_api_version = \
                 settings.AUTOTASK_CREDENTIALS['rest_api_version']
         if not server_url:
-            server_url = get_api_connection_url()
+            server_url = get_api_connection_url(username)
 
         if not self.API:
             raise ValueError('API not specified')
@@ -497,7 +498,9 @@ class AutotaskAPIClient(object):
                 logger.warning(msg)
                 if request_retry_counter['count'] <= self.MAX_401_ATTEMPTS:
                     cached_url = get_cached_url(AT_URL_KEY)
-                    if cached_url != get_api_connection_url(force_fetch=True):
+                    if cached_url != get_api_connection_url(
+                            self.username, force_fetch=True
+                    ):
                         logger.info('Zone information has been changed, '
                                     'so this request will be retried.')
                         raise AutotaskAPIError(response.content)
