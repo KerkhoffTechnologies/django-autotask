@@ -350,23 +350,17 @@ class AutotaskAPIClient(object):
         # decode the bytes encoded error to a string
         # error = error.args[0].decode("utf-8")
         error = error.replace('\r\n', '')
-        messages = []
 
         try:
-            error = json.loads(error)
-            stripped_message = error.get('message').rstrip('.') if \
-                error.get('message') else 'No message'
-            primary_error_msg = '{}.'.format(stripped_message)
-            if error.get('errors'):
-                for error_message in error.get('errors'):
-                    messages.append(
-                        '{}.'.format(error_message.rstrip('.'))
-                    )
-
-            messages = ' The error was: '.join(messages)
-
-            msg = '{} {}'.format(primary_error_msg, messages)
-
+            error_json = json.loads(error)
+            error_list = error_json.get('errors', [])
+            if len(error_list) > 1:
+                msg = 'Errors: {}'.format(', '.join(error_list))
+            elif len(error_list) == 1:
+                msg = error_list[0]
+            else:
+                # No errors given
+                msg = 'No error message given.'
         except json.decoder.JSONDecodeError:
             # JSON decoding failed
             msg = 'An error occurred: {} {}'.format(response.status_code,
@@ -516,8 +510,14 @@ class AutotaskAPIClient(object):
                     self._prepare_error_response(response))
             elif response.status_code == 500:
                 self._log_failed(response)
-                raise AutotaskAPIServerError(
-                    self._prepare_error_response(response))
+                msg = self._prepare_error_response(response)
+                if FORBIDDEN_ERROR_MESSAGE in msg:
+                    # Standards, who needs em?
+                    raise AutotaskSecurityPermissionsException(msg)
+                else:
+                    raise AutotaskAPIServerError(
+                        self._prepare_error_response(response)
+                    )
             else:
                 self._log_failed(response)
                 raise AutotaskAPIError(
