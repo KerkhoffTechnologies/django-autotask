@@ -22,6 +22,7 @@ settings.configure(
         'django.contrib.auth',
         'django.contrib.sessions',
     ),
+    SECRET_KEY='correct horse battery staple',
     AUTOTASK_SERVER_URL='https://localhost',
     AUTOTASK_CREDENTIALS={
         'username': '',
