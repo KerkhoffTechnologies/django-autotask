@@ -799,7 +799,7 @@ class ResourceRoleDepartmentSynchronizer(Synchronizer):
         return instance
 
 
-class ProjectTicketTaskMixin:
+class CompletedDateMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request_settings = DjautotaskSettings().get_settings()
@@ -822,7 +822,7 @@ class ProjectTicketTaskMixin:
 class TicketSynchronizer(CreateRecordMixin,
                          UpdateRecordMixin,
                          SyncRecordUDFMixin,
-                         ProjectTicketTaskMixin,
+                         CompletedDateMixin,
                          Synchronizer,
                          ParentSynchronizer):
     client_class = api.TicketsAPIClient
@@ -1000,7 +1000,7 @@ class TicketSynchronizer(CreateRecordMixin,
 
 
 class TaskSynchronizer(ChildCreateRecordMixin, SyncRecordUDFMixin,
-                       ProjectTicketTaskMixin, BatchQueryMixin, Synchronizer):
+                       CompletedDateMixin, BatchQueryMixin, Synchronizer):
     client_class = api.TasksAPIClient
     model_class = models.TaskTracker
     udf_class = models.TaskUDF
@@ -1397,7 +1397,7 @@ class TaskSecondaryResourceSynchronizer(SecondaryResourceSynchronizer):
 
 class ProjectSynchronizer(CreateRecordMixin, UpdateRecordMixin,
                           SyncRecordUDFMixin, Synchronizer,
-                          ParentSynchronizer, ProjectTicketTaskMixin):
+                          ParentSynchronizer, CompletedDateMixin):
     client_class = api.ProjectsAPIClient
     model_class = models.ProjectTracker
     udf_class = models.ProjectUDF
