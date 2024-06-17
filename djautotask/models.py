@@ -487,7 +487,8 @@ class TicketNote(TimeStampedModel, Note):
         choices=Note.PUBLISH_CHOICES
     )
     ticket = models.ForeignKey(
-        'Ticket', blank=True, null=True, on_delete=models.SET_NULL
+        'Ticket', blank=True, null=True, on_delete=models.SET_NULL,
+        related_name='notes'
     )
     created_by_contact = models.ForeignKey(
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
@@ -516,7 +517,11 @@ class TaskNote(TimeStampedModel, Note):
         null=True,
         choices=Note.PUBLISH_CHOICES)
     task = models.ForeignKey(
-        'Task', blank=True, null=True, on_delete=models.SET_NULL
+        'Task',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='notes'
     )
     created_by_contact = models.ForeignKey(
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
@@ -1030,11 +1035,9 @@ class ServiceCall(TimeStampedModel):
 
     tickets = models.ManyToManyField(
         'Ticket', through='ServiceCallTicket',
-        related_name='ticket_service_calls'
     )
     tasks = models.ManyToManyField(
         'Task', through='ServiceCallTask',
-        related_name='task_service_calls'
     )
 
     AUTOTASK_FIELDS = {
