@@ -241,6 +241,9 @@ class ProjectStatus(Picklist):
         ordering = ('label',)
         verbose_name_plural = 'Project statuses'
 
+    def is_complete(self):
+        return self.id == ProjectStatus.COMPLETE_ID
+
 
 class DisplayColor(Picklist):
 
