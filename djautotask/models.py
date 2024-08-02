@@ -4,7 +4,6 @@ from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
 from django.utils import timezone
-from djautotask import api
 from model_utils import FieldTracker
 
 from djautotask.api import ProjectsAPIClient, TaskNotesAPIClient, \
@@ -31,37 +30,7 @@ class SyncJob(models.Model):
             return self.end_time - self.start_time
 
 
-class ATUpdateMixin:
-
-    def get_updated_object(self, **kwargs):
-        changed_field_keys = kwargs.get('changed_fields')
-
-        updated_object = {}
-        if changed_field_keys:
-            for field in changed_field_keys:
-                updated_object[field] = getattr(self, field)
-
-        return updated_object
-
-    def save(self, *args, **kwargs):
-        """
-        Save the object.
-        If update_at as a kwarg is True, then update Autotask with changes.
-        """
-        changed_fields = kwargs.pop('changed_fields', None)
-        update_at = kwargs.pop('update_at', False)
-        impersonation_resource = kwargs.pop('impersonation_resource', None)
-
-        if update_at and changed_fields:
-            self.update_at(
-                impersonation_resource=impersonation_resource,
-                changed_fields=changed_fields
-            )
-
-        super().save(**kwargs)
-
-
-class Ticket(ATUpdateMixin, TimeStampedModel):
+class Ticket(TimeStampedModel):
     ticket_number = models.CharField(blank=True, null=True, max_length=50)
     completed_date = models.DateTimeField(blank=True, null=True)
     create_date = models.DateTimeField(blank=True, null=True)
@@ -169,16 +138,6 @@ class Ticket(ATUpdateMixin, TimeStampedModel):
 
     def get_account(self):
         return self.account
-
-    def update_at(self, **kwargs):
-
-        api_client = api.TicketsAPIClient(
-            impersonation_resource=kwargs.get('impersonation_resource'),
-        )
-        return api_client.legacy_update(
-            self,
-            self.get_updated_object(**kwargs)
-        )
 
 
 class AvailablePicklistManager(models.Manager):
@@ -614,7 +573,7 @@ class AvailableProjectManager(models.Manager):
         )
 
 
-class Project(ATUpdateMixin, TimeStampedModel):
+class Project(TimeStampedModel):
     name = models.CharField(max_length=100)
     number = models.CharField(null=True, max_length=50)
     description = models.CharField(max_length=2000)
@@ -675,15 +634,6 @@ class Project(ATUpdateMixin, TimeStampedModel):
     def __str__(self):
         return self.name
 
-    def update_at(self, **kwargs):
-        api_client = api.ProjectsAPIClient(
-            impersonation_resource=kwargs.get('impersonation_resource'),
-        )
-        return api_client.update(
-            self,
-            self.get_updated_object(**kwargs)
-        )
-
 
 class Phase(TimeStampedModel):
     title = models.CharField(blank=True, null=True, max_length=255)
@@ -712,7 +662,7 @@ class Phase(TimeStampedModel):
         return self.title
 
 
-class Task(ATUpdateMixin, TimeStampedModel):
+class Task(TimeStampedModel):
     MAX_DESCRIPTION = 8000
     title = models.CharField(blank=True, null=True, max_length=255)
     number = models.CharField(blank=True, null=True, max_length=50)
@@ -787,17 +737,6 @@ class Task(ATUpdateMixin, TimeStampedModel):
 
     def get_account(self):
         return getattr(self.project, 'account', None)
-
-    def update_at(self, **kwargs):
-
-        api_client = api.TasksAPIClient(
-            impersonation_resource=kwargs.get('impersonation_resource'),
-        )
-        return api_client.legacy_update(
-            self,
-            self.project,
-            self.get_updated_object(**kwargs),
-        )
 
 
 class TaskSecondaryResource(TimeStampedModel):
