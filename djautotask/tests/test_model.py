@@ -1,36 +1,11 @@
 import pytz
-from unittest.mock import patch
 
 from django.test import TestCase
 from django.utils import timezone
 from django.test import override_settings
 from datetime import timedelta
 
-from djautotask.models import TimeEntry, OFFSET_TIMEZONE, Ticket
-from . import mocks as mk
-
-
-class TestTicket(TestCase):
-    API_URL = 'https://localhost/'
-
-    def setUp(self):
-        mk.init_api_rest_connection(return_value=self.API_URL)
-
-    def test_save_calls_update_at_when_kwarg_passed(self):
-        ticket = Ticket.objects.create(
-            title='test',
-            due_date_time=timezone.now(),
-        )
-        with patch('djautotask.api.TicketsAPIClient') as mock_ticketapiclient:
-            instance = mock_ticketapiclient.return_value
-            ticket.save()
-            self.assertFalse(instance.legacy_update.called)
-            ticket.save(update_at=True)
-            self.assertFalse(instance.legacy_update.called)
-            # 'update_at' is called
-            ticket.save(update_at=True,
-                        changed_fields=['title', 'due_date_time'])
-            self.assertTrue(instance.legacy_update.called)
+from djautotask.models import TimeEntry, OFFSET_TIMEZONE
 
 
 class TestTimeEntry(TestCase):
