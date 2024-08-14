@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
-from djautotask.utils import DjautotaskSettings
+from djautotask.utils import DjautotaskSettings, encode_file_to_base64
 from retrying import retry
 
 RETRY_WAIT_EXPONENTIAL_MULTAPPLIER = 1000  # Initial number of milliseconds to
@@ -972,6 +972,26 @@ class AttachmentInfoAPIClient(AutotaskAPIClient):
         else:
             self._log_failed(response)
             return None
+
+    def upload_attachments(self, object_id, file, recordType):
+        ENDPOINT_DOCUMENTS = f'{recordType}/{object_id}/Attachments'
+        endpoint_url = f'{self.api_base_url}/{ENDPOINT_DOCUMENTS}'
+
+        file_name, file_content = file['file']
+        file_data = encode_file_to_base64(file_content)
+
+        body = {
+            "id": 0,
+            "attachmentType": "FILE_ATTACHMENT",
+            "fullPath": file_name,
+            "publish": 1,
+            "title": file_name,
+            "data": file_data
+        }
+
+        response = self.request('POST', endpoint_url, body)
+
+        return response
 
     def get_attachment(self, object_id, document_id, record_type):
         return self.document_download(object_id, document_id, record_type)
