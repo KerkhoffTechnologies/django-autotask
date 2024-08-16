@@ -1,3 +1,4 @@
+import base64
 from django.conf import settings
 
 
@@ -17,3 +18,7 @@ class DjautotaskSettings:
             request_settings.update(settings.DJAUTOTASK_CONF_CALLABLE())
 
         return request_settings
+
+
+def encode_file_to_base64(file_content):
+    return base64.b64encode(file_content.read()).decode('utf-8')
