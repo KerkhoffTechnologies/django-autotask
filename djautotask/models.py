@@ -431,7 +431,7 @@ class Note:
         'created_by_contact_id': 'createdByContactID',
     }
 
-    
+
 class NonInternalTicketNoteManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().exclude(publish=Note.INTERNAL_USERS)
@@ -460,10 +460,10 @@ class TicketNote(TimeStampedModel, Note):
     created_by_contact = models.ForeignKey(
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
-    
+
     objects = models.Manager()
     non_internal_objects = NonInternalTicketNoteManager()
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         super().AUTOTASK_FIELDS.update({
@@ -501,9 +501,9 @@ class TaskNote(TimeStampedModel, Note):
     created_by_contact = models.ForeignKey(
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
-    
+
     objects = models.Manager()
-    non_internal_obejcts = NonInternalTaskNoteManager()
+    non_internal_objects = NonInternalTaskNoteManager()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
