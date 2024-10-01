@@ -1829,6 +1829,7 @@ class ContractSynchronizer(Synchronizer):
         instance.name = object_data.get('contractName')
         instance.number = object_data.get('contractNumber')
         instance.status = str(object_data.get('status'))
+        instance.contract_exclusion_set_id = object_data.get('contractExclusionSetID')
 
         self.set_relations(instance, object_data)
 
@@ -1990,6 +1991,19 @@ class PicklistSynchronizer(Synchronizer):
         if hasattr(self, 'related_meta'):
             self.set_relations(instance, json_data)
         return instance
+
+
+class ContractExcludedWorkTypesSynchronizer(Synchronizer):
+    client_class = api.ContractsExcludedWorkTypesAPIClient
+
+    def __init__(self, contract_exclusion_set_id=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.contract_exclusion_set_id = contract_exclusion_set_id
+
+        if contract_exclusion_set_id:
+            self.client.add_condition(
+                A(op='eq', field="contractExclusionSetID", value=self.contract_exclusion_set_id)
+            )
 
 
 class NoteTypeSynchronizer(PicklistSynchronizer):
