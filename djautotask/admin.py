@@ -305,7 +305,7 @@ class ResourceServiceDeskRoleAdmin(admin.ModelAdmin):
 
 @admin.register(models.Contract)
 class ContractAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'number', 'account', 'status_name')
+    list_display = ('id', 'name', 'number', 'account', 'status_name', 'contract_exclusion_set_id')
     search_fields = ('id', 'name', 'number')
     list_filter = ('status',)
 

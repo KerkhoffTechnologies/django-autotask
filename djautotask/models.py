@@ -948,9 +948,11 @@ class Contract(models.Model):
     number = models.CharField(blank=True, null=True, max_length=50)
     status = models.CharField(
         max_length=20, blank=True, null=True, choices=STATUS_CHOICES)
-
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    contract_exclusion_set_id = models.IntegerField(
+        blank=True, null=True
     )
 
     class Meta:
