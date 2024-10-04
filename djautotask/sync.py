@@ -2017,6 +2017,19 @@ class ContractExcludedWorkTypesSynchronizer(Synchronizer):
             )
 
 
+class ContractExcludedRolesSynchronizer(Synchronizer):
+    client_class = api.ContractsExcludedRolesAPIClient
+
+    def __init__(self, contract_exclusion_set_id=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.contract_exclusion_set_id = contract_exclusion_set_id
+
+        if contract_exclusion_set_id:
+            self.client.add_condition(
+                A(op='eq', field="contractExclusionSetID", value=self.contract_exclusion_set_id)
+            )
+
+
 class NoteTypeSynchronizer(PicklistSynchronizer):
     # Ticket note types are including task note types, and there are other
     # note types currently not used. e.g. project note types
