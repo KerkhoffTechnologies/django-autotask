@@ -1134,7 +1134,7 @@ class NoteSynchronizer(BatchQueryMixin, Synchronizer):
         instance.description = object_data.get('description')
         instance.create_date_time = object_data.get('createDateTime')
         instance.last_activity_date = object_data.get('lastActivityDate')
-        instance.publish = object_data.get('publish')
+        instance.publish = str(object_data.get('publish'))
 
         self._set_datetime_attribute(instance, 'create_date_time')
         self._set_datetime_attribute(instance, 'last_activity_date')
