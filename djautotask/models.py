@@ -421,8 +421,10 @@ class TicketSecondaryResource(TimeStampedModel):
 class Note:
     ALL_USERS = 1
     INTERNAL_USERS = 2
-    PUBLISH_CHOICES = ((ALL_USERS, 'All Autotask Users'),
-                       (INTERNAL_USERS, 'Internal Users'))
+    PUBLISH_CHOICES = (
+        (ALL_USERS, 'All Autotask Users'),
+        (INTERNAL_USERS, 'Internal Users')
+    )
     AUTOTASK_FIELDS = {
         'title': 'title',
         'description': 'description',
@@ -430,6 +432,14 @@ class Note:
         'publish': 'publish',
         'created_by_contact_id': 'createdByContactID',
     }
+
+    def is_internal(self):
+        return self.publish == str(Note.INTERNAL_USERS)
+
+
+class NonInternalTicketNoteManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().exclude(publish=Note.INTERNAL_USERS)
 
 
 class TicketNote(TimeStampedModel, Note):
@@ -456,11 +466,19 @@ class TicketNote(TimeStampedModel, Note):
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
 
+    objects = models.Manager()
+    non_internal_objects = NonInternalTicketNoteManager()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         super().AUTOTASK_FIELDS.update({
             'ticket': 'ticketID',
         })
+
+
+class NonInternalTaskNoteManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().exclude(publish=Note.INTERNAL_USERS)
 
 
 class TaskNote(TimeStampedModel, Note):
@@ -488,6 +506,9 @@ class TaskNote(TimeStampedModel, Note):
     created_by_contact = models.ForeignKey(
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
+
+    objects = models.Manager()
+    non_internal_objects = NonInternalTaskNoteManager()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
