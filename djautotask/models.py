@@ -421,8 +421,10 @@ class TicketSecondaryResource(TimeStampedModel):
 class Note:
     ALL_USERS = 1
     INTERNAL_USERS = 2
-    PUBLISH_CHOICES = ((ALL_USERS, 'All Autotask Users'),
-                       (INTERNAL_USERS, 'Internal Users'))
+    PUBLISH_CHOICES = (
+        (ALL_USERS, 'All Autotask Users'),
+        (INTERNAL_USERS, 'Internal Users')
+    )
     AUTOTASK_FIELDS = {
         'title': 'title',
         'description': 'description',
@@ -430,6 +432,9 @@ class Note:
         'publish': 'publish',
         'created_by_contact_id': 'createdByContactID',
     }
+
+    def is_internal(self):
+        return self.publish == str(Note.INTERNAL_USERS)
 
 
 class NonInternalTicketNoteManager(models.Manager):
