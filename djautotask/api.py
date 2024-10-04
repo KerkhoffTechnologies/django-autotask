@@ -782,6 +782,9 @@ class TicketCategoriesAPIClient(AutotaskAPIClient):
     API = 'TicketCategories'
 
 
+class CompanyAlertAPIClient(AutotaskAPIClient):
+    API = 'CompanyAlerts'
+
 class ProjectNotesAPIClient(AutotaskAPIClient):
     API = 'ProjectNotes'
 

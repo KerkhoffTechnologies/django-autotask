@@ -1125,6 +1125,17 @@ class BaseUDF(TimeStampedModel):
         return self.name
 
 
+class CompanyAlerts(models.Model):
+    alert_text = models.TextField(blank=True, null=True, max_length=8000)
+    alert_type = models.IntegerField(blank=True, null=True)
+    account = models.ForeignKey(
+        'Account', blank=True, null=True, on_delete=models.SET_NULL, related_name='alerts'
+    )
+
+    def __str__(self):
+        return self.alert_text
+
+
 class TicketUDF(BaseUDF):
     pass
 
@@ -1526,4 +1537,11 @@ class TaskTypeTracker(TaskType):
 
     class Meta:
         proxy = True
-        db_table = 'djautotask_tasktype'
+    
+
+class CompanyAlertTrackers(CompanyAlerts):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_companyalert'

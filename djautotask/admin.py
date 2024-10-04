@@ -397,3 +397,8 @@ class ProjectUDFAdmin(admin.ModelAdmin):
 @admin.register(models.ProjectNoteType)
 class ProjectNoteTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
+
+
+@admin.register(models.CompanyAlerts)
+class CompanyAlertsAdmin(admin.ModelAdmin):
+    list_display = ('id', 'alert_text', 'alert_type', 'company')
