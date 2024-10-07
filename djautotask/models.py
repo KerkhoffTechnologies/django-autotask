@@ -1131,7 +1131,8 @@ class CompanyAlert(models.Model):
     alert_text = models.TextField(blank=True, null=True, max_length=8000)
     alert_type = models.IntegerField(blank=True, null=True)
     account = models.ForeignKey(
-        'Account', blank=True, null=True, on_delete=models.SET_NULL, related_name='alerts'
+        'Account', blank=True, null=True, on_delete=models.SET_NULL, 
+        related_name='alerts'
     )
 
     def __str__(self):
@@ -1539,7 +1540,7 @@ class TaskTypeTracker(TaskType):
 
     class Meta:
         proxy = True
-    
+
 
 class CompanyAlertTrackers(CompanyAlert):
     tracker = FieldTracker()

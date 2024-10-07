@@ -2007,7 +2007,7 @@ class CompanyAlertSynchronizer(BatchQueryMixin, Synchronizer):
         instance.alert_text = object_data.get('alertText')
         instance.alert_type = object_data.get('alertTypeID')
         instance.company_id = object_data.get('companyID')
-        
+
         self.set_relations(instance, object_data)
 
         return instance
