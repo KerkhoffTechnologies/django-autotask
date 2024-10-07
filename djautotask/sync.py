@@ -1994,7 +1994,7 @@ class PicklistSynchronizer(Synchronizer):
 
 class CompanyAlertSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.CompanyAlertAPIClient
-    model_class = models.CompanyAlertTrackers
+    model_class = models.CompanyAlertTracker
     condition_field_name = 'companyID'
     last_updated_field = None
 
@@ -2006,7 +2006,6 @@ class CompanyAlertSynchronizer(BatchQueryMixin, Synchronizer):
         instance.id = object_data['id']
         instance.alert_text = object_data.get('alertText')
         instance.alert_type = object_data.get('alertTypeID')
-        instance.company_id = object_data.get('companyID')
 
         self.set_relations(instance, object_data)
 

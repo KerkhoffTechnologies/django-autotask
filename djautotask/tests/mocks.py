@@ -48,6 +48,9 @@ def service_api_get_contacts_call(return_value):
     method_name = 'djautotask.api.ContactsAPIClient.get'
     return create_mock_call(method_name, return_value)
 
+def service_api_get_company_alerts_call(return_value):
+    method_name = 'djautotask.api.CompanyAlertAPIClient.get'
+    return create_mock_call(method_name, return_value)
 
 def service_api_get_contracts_call(return_value):
     method_name = 'djautotask.api.ContractsAPIClient.get'

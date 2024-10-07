@@ -1542,7 +1542,7 @@ class TaskTypeTracker(TaskType):
         proxy = True
 
 
-class CompanyAlertTrackers(CompanyAlert):
+class CompanyAlertTracker(CompanyAlert):
     tracker = FieldTracker()
 
     class Meta:
