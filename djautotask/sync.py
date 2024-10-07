@@ -2005,7 +2005,7 @@ class CompanyAlertSynchronizer(BatchQueryMixin, Synchronizer):
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
         instance.alert_text = object_data.get('alertText')
-        instance.alert_type = object_data.get('alertType')
+        instance.alert_type = object_data.get('alertTypeID')
         instance.company_id = object_data.get('companyID')
         
         self.set_relations(instance, object_data)

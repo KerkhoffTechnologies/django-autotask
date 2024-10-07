@@ -399,6 +399,6 @@ class ProjectNoteTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
 
 
-@admin.register(models.CompanyAlerts)
+@admin.register(models.CompanyAlert)
 class CompanyAlertsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'alert_text', 'alert_type', 'company')
+    list_display = ('id', 'alert_text', 'alert_type', 'account')

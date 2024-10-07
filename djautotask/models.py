@@ -1125,7 +1125,9 @@ class BaseUDF(TimeStampedModel):
         return self.name
 
 
-class CompanyAlerts(models.Model):
+class CompanyAlert(models.Model):
+    TICKET_EDIT_ALERT_TYPE = 3
+
     alert_text = models.TextField(blank=True, null=True, max_length=8000)
     alert_type = models.IntegerField(blank=True, null=True)
     account = models.ForeignKey(
@@ -1539,7 +1541,7 @@ class TaskTypeTracker(TaskType):
         proxy = True
     
 
-class CompanyAlertTrackers(CompanyAlerts):
+class CompanyAlertTrackers(CompanyAlert):
     tracker = FieldTracker()
 
     class Meta:
