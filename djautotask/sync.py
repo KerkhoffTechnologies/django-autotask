@@ -243,6 +243,7 @@ class MultiConditionBatchQueryMixin(BatchQueryMixin):
 class Synchronizer:
     lookup_key = 'id'
     last_updated_field = 'lastActivityDate'
+    bulk_prune = True
 
     def __init__(self, full=False, *args, **kwargs):
         self.client = self.client_class(
@@ -450,7 +451,11 @@ class Synchronizer:
                     len(stale_ids), self.model_class.__bases__[0].__name__,
                 )
             )
-            delete_qset.delete()
+            if self.bulk_prune:
+                delete_qset.delete()
+            else:
+                for instance in delete_qset:
+                    instance.delete()
 
         return deleted_count
 
@@ -1866,6 +1871,7 @@ class ResourceSynchronizer(Synchronizer):
     client_class = api.ResourcesAPIClient
     model_class = models.ResourceTracker
     last_updated_field = None
+    bulk_prune = False
 
     related_meta = {
         'licenseType': (models.LicenseType, 'license_type'),
