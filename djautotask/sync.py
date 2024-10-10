@@ -2017,7 +2017,7 @@ class CompanyAlertSynchronizer(BatchQueryMixin, Synchronizer):
             values_list('id', flat=True).order_by(self.lookup_key)
 
         return active_ids
-        
+
 
 class NoteTypeSynchronizer(PicklistSynchronizer):
     # Ticket note types are including task note types, and there are other

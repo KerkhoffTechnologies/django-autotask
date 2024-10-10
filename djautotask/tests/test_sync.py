@@ -1183,7 +1183,6 @@ class TestCompanyAlertsSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(instance.account.id, object_data['companyID'])
 
 
-
 class TestServiceCallSynchronizer(SynchronizerTestMixin, TestCase):
     synchronizer_class = sync.ServiceCallSynchronizer
     model_class = models.ServiceCallTracker

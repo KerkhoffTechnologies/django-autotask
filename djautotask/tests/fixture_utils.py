@@ -377,6 +377,7 @@ def init_service_call_task_resources():
     synchronizer = sync.ServiceCallTaskResourceSynchronizer()
     return synchronizer.sync()
 
+
 def init_company_alerts():
     models.CompanyAlert.objects.all().delete()
     mocks.service_api_get_company_alerts_call(fixtures.API_COMPANY_ALERTS)
