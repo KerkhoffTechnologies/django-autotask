@@ -122,6 +122,11 @@ class Command(BaseCommand):
                 _('Service Call Ticket Resource')
             ),
             (
+                'company_alert',
+                sync.CompanyAlertSynchronizer,
+                _('Company Alert')
+            ),
+            (
                 'service_call_task_resource',
                 sync.ServiceCallTaskResourceSynchronizer,
                 _('Service Call Task Resource')

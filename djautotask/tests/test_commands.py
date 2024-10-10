@@ -717,6 +717,19 @@ class TestSyncTaskPredecessor(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_task_predecessors()
 
 
+class TestSyncCompanyAlertsCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_company_alerts_call,
+        fixtures.API_COMPANY_ALERTS,
+        'company_alert',
+    )
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_accounts()
+        fixture_utils.init_company_alerts()
+
+
 class TestSyncAllCommand(TestCase):
 
     def setUp(self):
@@ -772,6 +785,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncAccountLocationCommand,
             TestSyncTaskPredecessor,
             TestSyncContactCommand,
+            TestSyncCompanyAlertsCommand,
         ]
         self.test_args = []
 
@@ -853,6 +867,7 @@ class TestSyncAllCommand(TestCase):
             'service_call_task_resource': models.ServiceCallTaskResource,
             'task_predecessor': models.TaskPredecessor,
             'contact': models.Contact,
+            'company_alert': models.CompanyAlert,
         }
         run_sync_command()
         pre_full_sync_counts = {}
@@ -954,6 +969,8 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_SERVICE_CALL_TASK_RESOURCE)
         mocks.service_api_get_task_predecessors_call(
             fixtures.API_TASK_PREDECESSOR)
+        mocks.service_api_get_company_alerts_call(
+            fixtures.API_COMPANY_ALERTS)
 
     def _call_empty_service_api(self):
         mocks.service_api_get_ticket_udf_call(fixtures.API_EMPTY_FIELDS)
@@ -1008,3 +1025,4 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_project_note_types_call(
             fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_task_picklist_call(fixtures.API_EMPTY_FIELDS)
+        mocks.service_api_get_company_alerts_call(fixtures.API_COMPANY_ALERTS)

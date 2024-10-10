@@ -1434,3 +1434,15 @@ API_TICKET = {
     "items": API_TICKET_ITEMS,
     "pageDetails": API_PAGE_DETAILS
 }
+
+API_COMPANY_ALERT_ITEM = {
+    "id": 1,
+    "alertText": "Find me here: Account Detail Screen > Edit Account > Alerts tab.",
+    "alertTypeID": 1,
+    "companyID": 174
+}
+API_COMPANY_ALERT_ITEMS = [API_COMPANY_ALERT_ITEM]
+API_COMPANY_ALERTS = {
+    "items": API_COMPANY_ALERT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}

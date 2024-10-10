@@ -1161,6 +1161,28 @@ class TestContractSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(instance.account.id, object_data['companyID'])
 
 
+class TestCompanyAlertsSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.CompanyAlertSynchronizer
+    model_class = models.CompanyAlertTracker
+    fixture = fixtures.API_COMPANY_ALERTS
+    update_field = 'alert_text'
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_accounts()
+        fixture_utils.init_company_alerts()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_company_alerts_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.alert_text, object_data['alertText'])
+        self.assertEqual(instance.alert_type, object_data['alertTypeID'])
+        self.assertEqual(instance.account.id, object_data['companyID'])
+
+
 class TestServiceCallSynchronizer(SynchronizerTestMixin, TestCase):
     synchronizer_class = sync.ServiceCallSynchronizer
     model_class = models.ServiceCallTracker
