@@ -397,3 +397,13 @@ class ProjectUDFAdmin(admin.ModelAdmin):
 @admin.register(models.ProjectNoteType)
 class ProjectNoteTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
+
+
+@admin.register(models.ContractExcludedWorkType)
+class ContractExcludedWorkTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contract_exclusion_set_id')
+
+
+@admin.register(models.ContractExcludedRole)
+class ContractExcludedRoleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contract_exclusion_set_id')
