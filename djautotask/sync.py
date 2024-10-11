@@ -452,20 +452,13 @@ class Synchronizer:
                 )
             )
             if self.bulk_prune:
-                try:
-                    delete_qset.delete()
-                except IntegrityError as e:
-                    logger.error(
-                        'IntegrityError while attempting to '
-                        'delete {} records. Error: {}'.format(
-                            self.model_class.__bases__[0].__name__, e)
-                    )
+                delete_qset.delete()
             else:
                 for instance in delete_qset:
                     try:
                         instance.delete()
-                    except DatabaseError as e:
-                        logger.error(
+                    except IntegrityError as e:
+                        logger.exception(
                             'A database error occurred while attempting to '
                             'delete {} records. Error: {}'.format(
                                 self.model_class.__bases__[0].__name__,
