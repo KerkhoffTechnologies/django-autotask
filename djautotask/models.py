@@ -948,9 +948,11 @@ class Contract(models.Model):
     number = models.CharField(blank=True, null=True, max_length=50)
     status = models.CharField(
         max_length=20, blank=True, null=True, choices=STATUS_CHOICES)
-
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    contract_exclusion_set_id = models.IntegerField(
+        blank=True, null=True
     )
 
     class Meta:
@@ -958,6 +960,24 @@ class Contract(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ContractExcludedWorkType(models.Model):
+    contract_exclusion_set_id = models.IntegerField(
+        blank=True, null=True
+    )
+    excluded_work_types = models.ManyToManyField(
+        'BillingCode', related_name='excluded_in_contracts'
+    )
+
+
+class ContractExcludedRole(models.Model):
+    contract_exclusion_set_id = models.IntegerField(
+        blank=True, null=True
+    )
+    excluded_roles = models.ManyToManyField(
+        'Role', related_name='excluded_in_contracts'
+    )
 
 
 class ServiceCall(TimeStampedModel):
@@ -1447,6 +1467,22 @@ class ContractTracker(Contract):
     class Meta:
         proxy = True
         db_table = 'djautotask_contract'
+
+
+class ContractExcludedWorkTypeTracker(ContractExcludedWorkType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contract_excluded_worktype'
+
+
+class ContractExcludeRoleTracker(ContractExcludedRole):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contract_excluded_role'
 
 
 class ServiceCallTracker(ServiceCall):

@@ -305,7 +305,7 @@ class ResourceServiceDeskRoleAdmin(admin.ModelAdmin):
 
 @admin.register(models.Contract)
 class ContractAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'number', 'account', 'status_name')
+    list_display = ('id', 'name', 'number', 'account', 'status_name', 'contract_exclusion_set_id')
     search_fields = ('id', 'name', 'number')
     list_filter = ('status',)
 
@@ -397,3 +397,13 @@ class ProjectUDFAdmin(admin.ModelAdmin):
 @admin.register(models.ProjectNoteType)
 class ProjectNoteTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
+
+
+@admin.register(models.ContractExcludedWorkType)
+class ContractExcludedWorkTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contract_exclusion_set_id')
+
+
+@admin.register(models.ContractExcludedRole)
+class ContractExcludedRoleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contract_exclusion_set_id')
