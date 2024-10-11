@@ -4,7 +4,7 @@ import base64
 from dateutil.parser import parse
 from decimal import Decimal
 
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, DatabaseError
 from django.db.models import Q
 from django.utils import timezone
 
@@ -452,11 +452,22 @@ class Synchronizer:
                 )
             )
             if self.bulk_prune:
-                delete_qset.delete()
+                try:
+                    delete_qset.delete()
+                except IntegrityError as e:
+                    logger.error(
+                        'IntegrityError while attempting to delete {} records. '
+                        'Error: {}'.format(self.model_class.__bases__[0].__name__, e)
+                    )
             else:
                 for instance in delete_qset:
-                    instance.delete()
-
+                    try:
+                        instance.delete()
+                    except DatabaseError as e:
+                        logger.error(
+                            'A database error occurred while attempting to delete {} records. '
+                            'Error: {}'.format(self.model_class.__bases__[0].__name__, e.__cause__)
+                        )
         return deleted_count
 
     def get_delete_qset(self, stale_ids):
