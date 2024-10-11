@@ -4,7 +4,7 @@ import base64
 from dateutil.parser import parse
 from decimal import Decimal
 
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, DatabaseError
 from django.db.models import Q
 from django.utils import timezone
 
@@ -243,6 +243,7 @@ class MultiConditionBatchQueryMixin(BatchQueryMixin):
 class Synchronizer:
     lookup_key = 'id'
     last_updated_field = 'lastActivityDate'
+    bulk_prune = True
 
     def __init__(self, full=False, *args, **kwargs):
         self.client = self.client_class(
@@ -450,8 +451,20 @@ class Synchronizer:
                     len(stale_ids), self.model_class.__bases__[0].__name__,
                 )
             )
-            delete_qset.delete()
-
+            if self.bulk_prune:
+                delete_qset.delete()
+            else:
+                for instance in delete_qset:
+                    try:
+                        instance.delete()
+                    except IntegrityError as e:
+                        logger.exception(
+                            'A database error occurred while attempting to '
+                            'delete {} records. Error: {}'.format(
+                                self.model_class.__bases__[0].__name__,
+                                e.__cause__
+                            )
+                        )
         return deleted_count
 
     def get_delete_qset(self, stale_ids):
@@ -1836,6 +1849,7 @@ class ResourceSynchronizer(Synchronizer):
     client_class = api.ResourcesAPIClient
     model_class = models.ResourceTracker
     last_updated_field = None
+    bulk_prune = False
 
     related_meta = {
         'licenseType': (models.LicenseType, 'license_type'),
