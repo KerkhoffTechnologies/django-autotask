@@ -402,3 +402,11 @@ class ProjectNoteTypeAdmin(admin.ModelAdmin):
 @admin.register(models.CompanyAlert)
 class CompanyAlertsAdmin(admin.ModelAdmin):
     list_display = ('id', 'alert_text', 'alert_type', 'account')
+@admin.register(models.ContractExcludedWorkType)
+class ContractExcludedWorkTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contract_exclusion_set_id')
+
+
+@admin.register(models.ContractExcludedRole)
+class ContractExcludedRoleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contract_exclusion_set_id')

@@ -134,6 +134,16 @@ class Command(BaseCommand):
             ('task_predecessor', sync.TaskPredecessorSynchronizer,
              _('Task Predecessor')),
             ('contact', sync.ContactSynchronizer, _('Contact')),
+            (
+                'contract_excluded_worktype',
+                sync.ContractExcludedWorkTypesSynchronizer,
+                _('Contract Excluded Work Type')
+            ),
+            (
+                'contract_excluded_role',
+                sync.ContractExcludedRolesSynchronizer,
+                _('Contract Excluded Role')
+            ),
         )
         self.synchronizer_map = OrderedDict()
         for name, synchronizer, obj_name in synchronizers:

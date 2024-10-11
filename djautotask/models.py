@@ -962,6 +962,24 @@ class Contract(models.Model):
         return self.name
 
 
+class ContractExcludedWorkType(models.Model):
+    contract_exclusion_set_id = models.IntegerField(
+        blank=True, null=True
+    )
+    excluded_work_types = models.ManyToManyField(
+        'BillingCode', related_name='excluded_in_contracts'
+    )
+
+
+class ContractExcludedRole(models.Model):
+    contract_exclusion_set_id = models.IntegerField(
+        blank=True, null=True
+    )
+    excluded_roles = models.ManyToManyField(
+        'Role', related_name='excluded_in_contracts'
+    )
+
+
 class ServiceCall(TimeStampedModel):
     description = models.TextField(blank=True, null=True, max_length=2000)
     duration = models.DecimalField(
@@ -1463,6 +1481,22 @@ class ContractTracker(Contract):
     class Meta:
         proxy = True
         db_table = 'djautotask_contract'
+
+
+class ContractExcludedWorkTypeTracker(ContractExcludedWorkType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contract_excluded_worktype'
+
+
+class ContractExcludeRoleTracker(ContractExcludedRole):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contract_excluded_role'
 
 
 class ServiceCallTracker(ServiceCall):
