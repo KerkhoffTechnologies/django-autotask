@@ -1149,27 +1149,6 @@ class NoteSynchronizer(BatchQueryMixin, Synchronizer):
 
         return instance
 
-    def set_description(self, note_data):
-        """
-        Set the description for a note.
-        """
-        if self.client.impersonation_resource or \
-                note_data.get('created_by_contact_id'):
-            description = note_data['description']
-        else:
-            resource = note_data.pop('resource')
-            description = "{}\n\nNote was added by {} {}.".format(
-                note_data['description'],
-                resource.first_name,
-                resource.last_name,
-            )
-
-        note_data.update({
-            'description': description
-        })
-
-        return note_data
-
 
 class TicketNoteSynchronizer(ChildCreateRecordMixin,
                              NoteSynchronizer,
@@ -1213,7 +1192,6 @@ class TicketNoteSynchronizer(ChildCreateRecordMixin,
         """
         Make a request to Autotask to create a Note.
         """
-        kwargs = self.set_description(kwargs)
 
         return super().create(parent, **kwargs)
 
@@ -1244,14 +1222,6 @@ class TaskNoteSynchronizer(CreateRecordMixin, NoteSynchronizer):
         ).values_list('id', flat=True).order_by(self.lookup_key)
 
         return active_ids
-
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create a Note.
-        """
-        kwargs = self.set_description(kwargs)
-
-        return super().create(**kwargs)
 
 
 class TimeEntrySynchronizer(CreateRecordMixin,
