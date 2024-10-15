@@ -4,7 +4,7 @@ import base64
 from dateutil.parser import parse
 from decimal import Decimal
 
-from django.db import transaction, IntegrityError, DatabaseError
+from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.utils import timezone
 
