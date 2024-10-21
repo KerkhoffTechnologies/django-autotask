@@ -721,6 +721,10 @@ class ContractsAPIClient(AutotaskAPIClient):
     API = 'Contracts'
 
 
+class ContractExclusionSetsAPIClient(AutotaskAPIClient):
+    API = 'ContractExclusionSets'
+
+
 class ContractsExcludedWorkTypesAPIClient(AutotaskAPIClient):
     API = 'ContractExclusionSetExcludedWorkTypes'
 

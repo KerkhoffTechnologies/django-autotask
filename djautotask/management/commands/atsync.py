@@ -135,13 +135,18 @@ class Command(BaseCommand):
              _('Task Predecessor')),
             ('contact', sync.ContactSynchronizer, _('Contact')),
             (
+                'contract_exclusion_set',
+                sync.ContractExclusionSetSynchronizer,
+                _('Contract Exclusion Set')
+            ),
+            (
                 'contract_excluded_worktype',
-                sync.ContractExcludedWorkTypesSynchronizer,
+                sync.ContractExcludedWorkTypeSynchronizer,
                 _('Contract Excluded Work Type')
             ),
             (
                 'contract_excluded_role',
-                sync.ContractExcludedRolesSynchronizer,
+                sync.ContractExcludedRoleSynchronizer,
                 _('Contract Excluded Role')
             ),
         )
