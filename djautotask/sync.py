@@ -1993,59 +1993,73 @@ class PicklistSynchronizer(Synchronizer):
         return instance
 
 
-class ContractExcludedWorkTypesSynchronizer(BatchQueryMixin, Synchronizer):
+class ContractExclusionSetSynchronizer(Synchronizer):
+    client_class = api.ContractExclusionSetsAPIClient
+    model_class = models.ContractExclusionSetTracker
+    last_updated_field = None
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.name = object_data['name']
+        instance.is_active = object_data['isActive']
+        instance.description = object_data['description']
+
+        return instance
+
+
+class ContractExcludedWorkTypeSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.ContractsExcludedWorkTypesAPIClient
     model_class = models.ContractExcludedWorkTypeTracker
     condition_field_name = 'contractExclusionSetID'
-    lookup_key = 'contractExclusionSetID'
     last_updated_field = None
 
+    related_meta = {
+        'contractExclusionSetID':
+            (models.ContractExclusionSet, 'contract_exclusion_set'),
+        'excludedWorkTypeID': (models.BillingCode, 'excluded_work_type')
+    }
+
     def _assign_field_data(self, instance, object_data):
-        instance.contract_exclusion_set_id = object_data[self.lookup_key]
-        try:
-            exclusion_set = models.ContractExcludedWorkType.objects.get(pk=instance.id)
-        except models.ContractExcludedWorkType.DoesNotExist:
-            instance.id = object_data[self.lookup_key]
-            instance.save()
-            
-        work_type = models.BillingCode.objects.filter(id=object_data['excludedWorkTypeID'], use_type=1).first()
-        instance.excluded_work_types.add(work_type)
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
 
         return instance
 
     @property
     def active_ids(self):
-        active_ids = models.Contract.objects.exclude(contract_exclusion_set_id=None).values_list(
-            'contract_exclusion_set_id', flat=True
-        ).distinct()
+        active_ids = models.ContractExclusionSet.objects.exclude(
+            is_active=False
+        ).values_list(
+            'id', flat=True
+        )
         return active_ids
 
 
-class ContractExcludedRolesSynchronizer(Synchronizer):
+class ContractExcludedRoleSynchronizer(BatchQueryMixin, Synchronizer):
     client_class = api.ContractsExcludedRolesAPIClient
     model_class = models.ContractExcludeRoleTracker
     condition_field_name = 'contractExclusionSetID'
-    lookup_key = 'contractExclusionSetID'
     last_updated_field = None
+    
+    related_meta = {
+        'contractExclusionSetID':
+            (models.ContractExclusionSet, 'contract_exclusion_set'),
+        'excludedRoleID': (models.Role, 'excluded_role')
+    }
 
     def _assign_field_data(self, instance, object_data):
-        instance.contract_exclusion_set_id = object_data[self.lookup_key]
-        try:
-            exclusion_set = models.ContractExcludedRole.objects.get(pk=instance.id)
-        except models.ContractExcludedRole.DoesNotExist:
-            instance.id = object_data[self.lookup_key]
-            instance.save()
-            
-        role = models.Role.objects.filter(id=object_data['excludedRoleID']).first()
-        instance.excluded_roles.add(role)
+        instance.id = object_data['id']
+        self.set_relations(instance, object_data)
 
         return instance
 
     @property
     def active_ids(self):
-        active_ids = models.Role.objects.exclude(contract_exclusion_set_id=None).values_list(
-            'contract_exclusion_set_id', flat=True
-        ).distinct()
+        active_ids = models.ContractExclusionSet.objects.exclude(
+            is_active=False
+        ).values_list(
+            'id', flat=True
+        )
         return active_ids
 
 
