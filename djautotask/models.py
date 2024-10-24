@@ -35,7 +35,7 @@ class Ticket(TimeStampedModel):
     completed_date = models.DateTimeField(blank=True, null=True)
     create_date = models.DateTimeField(blank=True, null=True)
     description = models.TextField(blank=True, null=True, max_length=8000)
-    due_date_time = models.DateTimeField(null=False)
+    due_date_time = models.DateTimeField(blank=True, null=True)
     estimated_hours = models.DecimalField(
         blank=True, null=True, decimal_places=2, max_digits=9)
     last_activity_date = models.DateTimeField(blank=True, null=True)

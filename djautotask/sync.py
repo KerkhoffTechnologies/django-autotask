@@ -243,6 +243,7 @@ class MultiConditionBatchQueryMixin(BatchQueryMixin):
 class Synchronizer:
     lookup_key = 'id'
     last_updated_field = 'lastActivityDate'
+    bulk_prune = True
 
     def __init__(self, full=False, *args, **kwargs):
         self.client = self.client_class(
@@ -450,8 +451,20 @@ class Synchronizer:
                     len(stale_ids), self.model_class.__bases__[0].__name__,
                 )
             )
-            delete_qset.delete()
-
+            if self.bulk_prune:
+                delete_qset.delete()
+            else:
+                for instance in delete_qset:
+                    try:
+                        instance.delete()
+                    except IntegrityError as e:
+                        logger.exception(
+                            'A database error occurred while attempting to '
+                            'delete {} records. Error: {}'.format(
+                                self.model_class.__bases__[0].__name__,
+                                e.__cause__
+                            )
+                        )
         return deleted_count
 
     def get_delete_qset(self, stale_ids):
@@ -1149,27 +1162,6 @@ class NoteSynchronizer(BatchQueryMixin, Synchronizer):
 
         return instance
 
-    def set_description(self, note_data):
-        """
-        Set the description for a note.
-        """
-        if self.client.impersonation_resource or \
-                note_data.get('created_by_contact_id'):
-            description = note_data['description']
-        else:
-            resource = note_data.pop('resource')
-            description = "{}\n\nNote was added by {} {}.".format(
-                note_data['description'],
-                resource.first_name,
-                resource.last_name,
-            )
-
-        note_data.update({
-            'description': description
-        })
-
-        return note_data
-
 
 class TicketNoteSynchronizer(ChildCreateRecordMixin,
                              NoteSynchronizer,
@@ -1213,7 +1205,6 @@ class TicketNoteSynchronizer(ChildCreateRecordMixin,
         """
         Make a request to Autotask to create a Note.
         """
-        kwargs = self.set_description(kwargs)
 
         return super().create(parent, **kwargs)
 
@@ -1244,14 +1235,6 @@ class TaskNoteSynchronizer(CreateRecordMixin, NoteSynchronizer):
         ).values_list('id', flat=True).order_by(self.lookup_key)
 
         return active_ids
-
-    def create(self, **kwargs):
-        """
-        Make a request to Autotask to create a Note.
-        """
-        kwargs = self.set_description(kwargs)
-
-        return super().create(**kwargs)
 
 
 class TimeEntrySynchronizer(CreateRecordMixin,
@@ -1866,6 +1849,7 @@ class ResourceSynchronizer(Synchronizer):
     client_class = api.ResourcesAPIClient
     model_class = models.ResourceTracker
     last_updated_field = None
+    bulk_prune = False
 
     related_meta = {
         'licenseType': (models.LicenseType, 'license_type'),
