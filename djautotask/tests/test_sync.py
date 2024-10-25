@@ -1159,6 +1159,76 @@ class TestContractSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(instance.number, object_data['contractNumber'])
         self.assertEqual(instance.status, str(object_data['status']))
         self.assertEqual(instance.account.id, object_data['companyID'])
+        self.assertEqual(instance.contract_exclusion_set_id,
+                         object_data['contractExclusionSetID'])
+
+
+class TestContractExclusionSetSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ContractExclusionSetSynchronizer
+    model_class = models.ContractExclusionSetTracker
+    fixture = fixtures.API_CONTRACT_EXCLUSION_SET
+    update_field = 'name'
+
+    def setUp(self):
+        super().setUp()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_contracts_exclusions_sets_call(
+            return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.description, object_data['description'])
+        self.assertEqual(instance.isActive, object_data['isActive'])
+        self.assertEqual(instance.name, object_data['name'])
+
+
+class TestContractExclusionRoleSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.ContractExcludedRoleSynchronizer
+    model_class = models.ContractExcludeRoleTracker
+    fixture = fixtures.API_CONTRACT_EXCLUSION_ROLE
+    update_field = 'excluded_role_id'
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_contracts_exclusion_sets()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_contracts_excluded_roles_call(
+            return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.contract_exclusion_set.id,
+                         object_data['contractExclusionSetID'])
+        self.assertEqual(instance.excluded_role.id,
+                         object_data['excludedRoleID'])
+
+
+class TestContractExclusionWorkTypeSynchronizer(SynchronizerTestMixin,
+                                                TestCase):
+    synchronizer_class = sync.ContractExcludedWorkTypeSynchronizer
+    model_class = models.ContractExcludedWorkTypeTracker
+    fixture = fixtures.API_CONTRACT_EXCLUSION_WORK_TYPE
+    update_field = 'excluded_work_type_id'
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_contracts_exclusion_sets()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_contracts_excluded_work_types_call(
+            return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.contract_exclusion_set.id,
+                         object_data['contractExclusionSetID'])
+        self.assertEqual(instance.excluded_work_type.id, object_data[
+            'excludedWorkTypeID'])
 
 
 class TestCompanyAlertsSynchronizer(SynchronizerTestMixin, TestCase):

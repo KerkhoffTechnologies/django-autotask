@@ -59,6 +59,21 @@ def service_api_get_contracts_call(return_value):
     return create_mock_call(method_name, return_value)
 
 
+def service_api_get_contracts_exclusions_sets_call(return_value):
+    method_name = 'djautotask.api.ContractExclusionSetsAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_contracts_excluded_roles_call(return_value):
+    method_name = 'djautotask.api.ContractsExcludedRolesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
+def service_api_get_contracts_excluded_work_types_call(return_value):
+    method_name = 'djautotask.api.ContractsExcludedWorkTypesAPIClient.get'
+    return create_mock_call(method_name, return_value)
+
+
 def service_api_get_billing_codes_call(return_value):
     method_name = 'djautotask.api.BillingCodesAPIClient.get'
     return create_mock_call(method_name, return_value)

@@ -1272,6 +1272,7 @@ API_CONTRACT_ITEMS = [
         'serviceLevelAgreementID': 1,
         'purchaseOrderNumber': "",
         'internalCurrencySetupFee': 995.0000,
+        'contractExclusionSetID': 1,
     }
 ]
 API_CONTRACT = {
@@ -1444,5 +1445,40 @@ API_COMPANY_ALERT_ITEM = {
 API_COMPANY_ALERT_ITEMS = [API_COMPANY_ALERT_ITEM]
 API_COMPANY_ALERTS = {
     "items": API_COMPANY_ALERT_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
+
+API_CONTRACT_EXCLUSION_SET_ITEM = {
+    "id": 1,
+    "description": "Sample Set",
+    "isActive": True,
+    "name": "Set1",
+}
+API_CONTRACT_EXCLUSION_SET_ITEMS = [API_CONTRACT_EXCLUSION_SET_ITEM]
+API_CONTRACT_EXCLUSION_SET = {
+    "items": API_CONTRACT_EXCLUSION_SET_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
+
+API_CONTRACT_EXCLUSION_ROLE_ITEM = {
+    "id": 1,
+    "contractExclusionSetID": 1,
+    "excludedRoleID": 29683399
+}
+API_CONTRACT_EXCLUSION_ROLE_ITEMS = [API_CONTRACT_EXCLUSION_ROLE_ITEM]
+API_CONTRACT_EXCLUSION_ROLE = {
+    "items": API_CONTRACT_EXCLUSION_ROLE_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
+
+
+API_CONTRACT_EXCLUSION_WORK_TYPE_ITEM = {
+    "id": 1,
+    "contractExclusionSetID": 1,
+    "excludedWorkTypeID": 2968341
+}
+API_CONTRACT_EXCLUSION_WORK_TYPE_ITEMS = [API_CONTRACT_EXCLUSION_WORK_TYPE_ITEM]
+API_CONTRACT_EXCLUSION_WORK_TYPE = {
+    "items": API_CONTRACT_EXCLUSION_WORK_TYPE_ITEMS,
     "pageDetails": API_PAGE_DETAILS
 }

@@ -1812,7 +1812,8 @@ class ContractSynchronizer(Synchronizer):
         instance.name = object_data.get('contractName')
         instance.number = object_data.get('contractNumber')
         instance.status = str(object_data.get('status'))
-        instance.contract_exclusion_set_id = object_data.get('contractExclusionSetID')
+        instance.contract_exclusion_set_id = \
+            object_data.get('contractExclusionSetID')
 
         self.set_relations(instance, object_data)
 
@@ -2078,7 +2079,7 @@ class ContractExcludedRoleSynchronizer(BatchQueryMixin, Synchronizer):
     model_class = models.ContractExcludeRoleTracker
     condition_field_name = 'contractExclusionSetID'
     last_updated_field = None
-    
+
     related_meta = {
         'contractExclusionSetID':
             (models.ContractExclusionSet, 'contract_exclusion_set'),
