@@ -1174,29 +1174,30 @@ class TestContractExclusionSetSynchronizer(SynchronizerTestMixin, TestCase):
         self._sync(self.fixture)
 
     def _call_api(self, return_data):
-        return mocks.service_api_get_contracts_exclusions_sets_call(
+        return mocks.service_api_get_contract_exclusion_sets_call(
             return_data)
 
     def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
         self.assertEqual(instance.description, object_data['description'])
-        self.assertEqual(instance.isActive, object_data['isActive'])
+        self.assertEqual(instance.is_active, object_data['isActive'])
         self.assertEqual(instance.name, object_data['name'])
 
 
 class TestContractExclusionRoleSynchronizer(SynchronizerTestMixin, TestCase):
     synchronizer_class = sync.ContractExcludedRoleSynchronizer
-    model_class = models.ContractExcludeRoleTracker
+    model_class = models.ContractExcludedRoleTracker
     fixture = fixtures.API_CONTRACT_EXCLUSION_ROLE
     update_field = 'excluded_role_id'
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_contracts_exclusion_sets()
+        fixture_utils.init_roles()
+        fixture_utils.init_contract_exclusion_sets()
         self._sync(self.fixture)
 
     def _call_api(self, return_data):
-        return mocks.service_api_get_contracts_excluded_roles_call(
+        return mocks.service_api_get_contract_excluded_roles_call(
             return_data)
 
     def _assert_fields(self, instance, object_data):
@@ -1216,19 +1217,20 @@ class TestContractExclusionWorkTypeSynchronizer(SynchronizerTestMixin,
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_contracts_exclusion_sets()
+        fixture_utils.init_billing_codes()
+        fixture_utils.init_contract_exclusion_sets()
         self._sync(self.fixture)
 
     def _call_api(self, return_data):
-        return mocks.service_api_get_contracts_excluded_work_types_call(
+        return mocks.service_api_get_contract_excluded_work_types_call(
             return_data)
 
     def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
         self.assertEqual(instance.contract_exclusion_set.id,
                          object_data['contractExclusionSetID'])
-        self.assertEqual(instance.excluded_work_type.id, object_data[
-            'excludedWorkTypeID'])
+        self.assertEqual(instance.excluded_work_type.id,
+            object_data['excludedWorkTypeID'])
 
 
 class TestCompanyAlertsSynchronizer(SynchronizerTestMixin, TestCase):

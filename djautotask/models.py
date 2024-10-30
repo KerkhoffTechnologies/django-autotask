@@ -986,10 +986,7 @@ class ContractExclusionSetExcludedWorkType(models.Model):
                                            on_delete=models.CASCADE)
 
     def __str__(self):
-        return (
-            f"{self.contract_exclusion_set.name} - "
-            f"{self.excluded_work_type.name}"
-        )
+        return str(self.id) or ''
 
 
 class ContractExclusionSetExcludedRole(models.Model):
@@ -998,10 +995,7 @@ class ContractExclusionSetExcludedRole(models.Model):
     excluded_role = models.ForeignKey('Role', on_delete=models.CASCADE)
 
     def __str__(self):
-        return (
-            f"{self.contract_exclusion_set.name} - "
-            f"{self.excluded_work_type.name}"
-        )
+        return str(self.id) or ''
 
 
 class ServiceCall(TimeStampedModel):
@@ -1523,7 +1517,7 @@ class ContractExcludedWorkTypeTracker(ContractExclusionSetExcludedWorkType):
         db_table = 'djautotask_contractexclusionsetworktype'
 
 
-class ContractExcludeRoleTracker(ContractExclusionSetExcludedRole):
+class ContractExcludedRoleTracker(ContractExclusionSetExcludedRole):
     tracker = FieldTracker()
 
     class Meta:

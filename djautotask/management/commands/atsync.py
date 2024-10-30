@@ -140,7 +140,7 @@ class Command(BaseCommand):
                 _('Contract Exclusion Set')
             ),
             (
-                'contract_excluded_worktype',
+                'contract_excluded_work_type',
                 sync.ContractExcludedWorkTypeSynchronizer,
                 _('Contract Excluded Work Type')
             ),

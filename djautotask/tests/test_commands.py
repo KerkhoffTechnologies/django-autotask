@@ -613,38 +613,43 @@ class TestSyncContractCommand(AbstractBaseSyncTest, TestCase):
 
 class TestSyncContractExclusionSetCommand(AbstractBaseSyncTest, TestCase):
     args = (
-        mocks.service_api_get_contracts_exclusions_sets_call,
+        mocks.service_api_get_contract_exclusion_sets_call,
         fixtures.API_CONTRACT_EXCLUSION_SET,
         'contract_exclusion_set',
     )
 
     def setUp(self):
         super().setUp()
+        fixture_utils.init_contract_exclusion_sets()
 
 
 class TestSyncContractExclusionRoleCommand(AbstractBaseSyncTest, TestCase):
     args = (
-        mocks.service_api_get_contracts_excluded_roles_call,
+        mocks.service_api_get_contract_excluded_roles_call,
         fixtures.API_CONTRACT_EXCLUSION_ROLE,
-        'contract_exclusion_role',
+        'contract_excluded_role',
     )
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_contracts_exclusion_sets()
+        fixture_utils.init_roles()
+        fixture_utils.init_contract_exclusion_sets()
+        fixture_utils.init_contract_exclusion_roles()
 
 
 class TestSyncContractExclusionWorkTypeCommand(AbstractBaseSyncTest,
                                                TestCase):
     args = (
-        mocks.service_api_get_contracts_excluded_work_types_call,
+        mocks.service_api_get_contract_excluded_work_types_call,
         fixtures.API_CONTRACT_EXCLUSION_WORK_TYPE,
-        'contract_exclusion_work_type',
+        'contract_excluded_work_type',
     )
 
     def setUp(self):
         super().setUp()
-        fixture_utils.init_contracts_exclusion_sets()
+        fixture_utils.init_billing_codes()
+        fixture_utils.init_contract_exclusion_sets()
+        fixture_utils.init_contract_exclusion_work_types()
 
 
 class TestSyncServiceCallCommand(AbstractBaseSyncTest, TestCase):
@@ -908,9 +913,9 @@ class TestSyncAllCommand(TestCase):
             'contact': models.Contact,
             'company_alert': models.CompanyAlert,
             'contract_exclusion_set': models.ContractExclusionSet,
-            'contract_exclusion_role':
+            'contract_excluded_role':
             models.ContractExclusionSetExcludedRole,
-            'contract_exclusion_work_type':
+            'contract_excluded_work_type':
             models.ContractExclusionSetExcludedWorkType,
         }
         run_sync_command()
@@ -935,9 +940,8 @@ class TestSyncAllCommand(TestCase):
                     'task_predecessor',
                     'task',
                     'time_entry',
-                    'contract_exclusion_set',
-                    'contract_exclusion_role',
-                    'contract_exclusion_work_type',
+                    'contract_excluded_role',
+                    'contract_excluded_work_type',
             ):
                 # Assert that there were objects to get deleted, then change
                 # to zero to verify the output formats correctly.
@@ -1018,14 +1022,14 @@ class TestSyncAllCommand(TestCase):
             fixtures.API_TASK_PREDECESSOR)
         mocks.service_api_get_company_alerts_call(
             fixtures.API_COMPANY_ALERTS)
-        mocks.service_api_get_contracts_exclusions_sets_call(
+        mocks.service_api_get_contract_exclusion_sets_call(
             fixtures.API_CONTRACT_EXCLUSION_SET
         )
-        mocks.service_api_get_contracts_excluded_roles_call(
+        mocks.service_api_get_contract_excluded_roles_call(
             fixtures.API_CONTRACT_EXCLUSION_ROLE
         )
-        mocks.service_api_get_contracts_excluded_work_types_call(
-            fixtures.API_CONTRACT_EXCLUSION_ROLE
+        mocks.service_api_get_contract_excluded_work_types_call(
+            fixtures.API_CONTRACT_EXCLUSION_WORK_TYPE
         )
 
     def _call_empty_service_api(self):
@@ -1081,10 +1085,10 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_project_note_types_call(
             fixtures.API_EMPTY_FIELDS)
         mocks.service_api_get_task_picklist_call(fixtures.API_EMPTY_FIELDS)
-        mocks.service_api_get_company_alerts_call(fixtures.API_COMPANY_ALERTS)
-        mocks.service_api_get_contracts_exclusions_sets_call(
-            fixtures.API_CONTRACT_EXCLUSION_SET)
-        mocks.service_api_get_contracts_excluded_roles_call(
-            fixtures.API_CONTRACT_EXCLUSION_ROLE)
-        mocks.service_api_get_contracts_excluded_work_types_call(
-            fixtures.API_CONTRACT_EXCLUSION_WORK_TYPE)
+        mocks.service_api_get_company_alerts_call(fixtures.API_EMPTY)
+        mocks.service_api_get_contract_exclusion_sets_call(
+            fixtures.API_EMPTY)
+        mocks.service_api_get_contract_excluded_roles_call(
+            fixtures.API_EMPTY)
+        mocks.service_api_get_contract_excluded_work_types_call(
+            fixtures.API_EMPTY)

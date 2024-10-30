@@ -339,26 +339,26 @@ def init_contracts():
     return synchronizer.sync()
 
 
-def init_contracts_exclusion_sets():
+def init_contract_exclusion_sets():
     models.ContractExclusionSet.objects.all().delete()
-    mocks.service_api_get_contracts_exclusions_sets_call(
+    mocks.service_api_get_contract_exclusion_sets_call(
         fixtures.API_CONTRACT_EXCLUSION_SET)
     synchronizer = sync.ContractExclusionSetSynchronizer()
     return synchronizer.sync()
 
 
-def init_contracts_exclusion_roles():
+def init_contract_exclusion_roles():
     models.ContractExclusionSetExcludedRole.objects.all() \
         .delete()
-    mocks.service_api_get_contracts_excluded_roles_call(
+    mocks.service_api_get_contract_excluded_roles_call(
         fixtures.API_CONTRACT_EXCLUSION_ROLE)
     synchronizer = sync.ContractExcludedRoleSynchronizer()
     return synchronizer.sync()
 
 
-def init_contracts_exlusion_work_types():
+def init_contract_exclusion_work_types():
     models.ContractExclusionSetExcludedWorkType.objects.all().delete()
-    mocks.service_api_get_contracts_excluded_work_types_call(
+    mocks.service_api_get_contract_excluded_work_types_call(
         fixtures.API_CONTRACT_EXCLUSION_WORK_TYPE)
     synchronizer = sync.ContractExcludedWorkTypeSynchronizer()
     return synchronizer.sync()

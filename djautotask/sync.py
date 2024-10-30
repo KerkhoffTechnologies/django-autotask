@@ -2033,7 +2033,7 @@ class CompanyAlertSynchronizer(BatchQueryMixin, Synchronizer):
 
 
 class ContractExclusionSetSynchronizer(Synchronizer):
-    client_class = api.ContractExclusionSetsAPIClient
+    client_class = api.ContractExclusionSetAPIClient
     model_class = models.ContractExclusionSetTracker
     last_updated_field = None
 
@@ -2047,7 +2047,7 @@ class ContractExclusionSetSynchronizer(Synchronizer):
 
 
 class ContractExcludedWorkTypeSynchronizer(BatchQueryMixin, Synchronizer):
-    client_class = api.ContractsExcludedWorkTypesAPIClient
+    client_class = api.ContractsExcludedWorkTypeAPIClient
     model_class = models.ContractExcludedWorkTypeTracker
     condition_field_name = 'contractExclusionSetID'
     last_updated_field = None
@@ -2075,8 +2075,8 @@ class ContractExcludedWorkTypeSynchronizer(BatchQueryMixin, Synchronizer):
 
 
 class ContractExcludedRoleSynchronizer(BatchQueryMixin, Synchronizer):
-    client_class = api.ContractsExcludedRolesAPIClient
-    model_class = models.ContractExcludeRoleTracker
+    client_class = api.ContractsExcludedRoleAPIClient
+    model_class = models.ContractExcludedRoleTracker
     condition_field_name = 'contractExclusionSetID'
     last_updated_field = None
 
