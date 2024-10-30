@@ -362,6 +362,7 @@ class Resource(TimeStampedModel):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     active = models.BooleanField(default=False)
+    title = models.CharField(blank=True, null=True, max_length=250)
     license_type = models.ForeignKey(
         'LicenseType', null=True, on_delete=models.SET_NULL
     )

@@ -1867,6 +1867,7 @@ class ResourceSynchronizer(Synchronizer):
         instance.first_name = object_data.get('firstName')
         instance.last_name = object_data.get('lastName')
         instance.active = object_data.get('isActive')
+        instance.title = object_data.get('title')
 
         self.set_relations(instance, object_data)
 
