@@ -1230,7 +1230,7 @@ class TestContractExclusionWorkTypeSynchronizer(SynchronizerTestMixin,
         self.assertEqual(instance.contract_exclusion_set.id,
                          object_data['contractExclusionSetID'])
         self.assertEqual(instance.excluded_work_type.id,
-            object_data['excludedWorkTypeID'])
+                         object_data['excludedWorkTypeID'])
 
 
 class TestCompanyAlertsSynchronizer(SynchronizerTestMixin, TestCase):

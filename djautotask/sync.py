@@ -2005,33 +2005,6 @@ class CompanyAlertSynchronizer(BatchQueryMixin, Synchronizer):
         return active_ids
 
 
-class CompanyAlertSynchronizer(BatchQueryMixin, Synchronizer):
-    client_class = api.CompanyAlertAPIClient
-    model_class = models.CompanyAlertTracker
-    condition_field_name = 'companyID'
-    last_updated_field = None
-
-    related_meta = {
-        'companyID': (models.Account, 'account'),
-    }
-
-    def _assign_field_data(self, instance, object_data):
-        instance.id = object_data['id']
-        instance.alert_text = object_data.get('alertText')
-        instance.alert_type = object_data.get('alertTypeID')
-
-        self.set_relations(instance, object_data)
-
-        return instance
-
-    @property
-    def active_ids(self):
-        active_ids = models.Account.objects.all().\
-            values_list('id', flat=True).order_by(self.lookup_key)
-
-        return active_ids
-
-
 class ContractExclusionSetSynchronizer(Synchronizer):
     client_class = api.ContractExclusionSetAPIClient
     model_class = models.ContractExclusionSetTracker
