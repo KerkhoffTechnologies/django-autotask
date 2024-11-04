@@ -305,7 +305,8 @@ class ResourceServiceDeskRoleAdmin(admin.ModelAdmin):
 
 @admin.register(models.Contract)
 class ContractAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'number', 'account', 'status_name')
+    list_display = ('id', 'name', 'number', 'account', 'status_name',
+                    'contract_exclusion_set_id')
     search_fields = ('id', 'name', 'number')
     list_filter = ('status',)
 
@@ -402,3 +403,18 @@ class ProjectNoteTypeAdmin(admin.ModelAdmin):
 @admin.register(models.CompanyAlert)
 class CompanyAlertsAdmin(admin.ModelAdmin):
     list_display = ('id', 'alert_text', 'alert_type', 'account')
+
+
+@admin.register(models.ContractExclusionSet)
+class ContractExclusionSetAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'is_active')
+
+
+@admin.register(models.ContractExclusionSetExcludedWorkType)
+class ContractExcludedWorkTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contract_exclusion_set', 'excluded_work_type')
+
+
+@admin.register(models.ContractExclusionSetExcludedRole)
+class ContractExcludedRoleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'contract_exclusion_set', 'excluded_role')

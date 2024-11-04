@@ -949,9 +949,11 @@ class Contract(models.Model):
     number = models.CharField(blank=True, null=True, max_length=50)
     status = models.CharField(
         max_length=20, blank=True, null=True, choices=STATUS_CHOICES)
-
     account = models.ForeignKey(
         'Account', blank=True, null=True, on_delete=models.SET_NULL
+    )
+    contract_exclusion_set_id = models.IntegerField(
+        blank=True, null=True
     )
 
     class Meta:
@@ -959,6 +961,42 @@ class Contract(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ContractExclusionSet(models.Model):
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    name = models.CharField(max_length=255)
+    excluded_work_types = models.ManyToManyField(
+        'BillingCode', through='ContractExclusionSetExcludedWorkType',
+        related_name='excluded_work_type_sets'
+    )
+    excluded_roles = models.ManyToManyField(
+        'Role', through='ContractExclusionSetExcludedRole',
+        related_name='excluded_role_sets'
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class ContractExclusionSetExcludedWorkType(models.Model):
+    contract_exclusion_set = models.ForeignKey('ContractExclusionSet',
+                                               on_delete=models.CASCADE)
+    excluded_work_type = models.ForeignKey('BillingCode',
+                                           on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.id) or ''
+
+
+class ContractExclusionSetExcludedRole(models.Model):
+    contract_exclusion_set = models.ForeignKey('ContractExclusionSet',
+                                               on_delete=models.CASCADE)
+    excluded_role = models.ForeignKey('Role', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.id) or ''
 
 
 class ServiceCall(TimeStampedModel):
@@ -1462,6 +1500,30 @@ class ContractTracker(Contract):
     class Meta:
         proxy = True
         db_table = 'djautotask_contract'
+
+
+class ContractExclusionSetTracker(ContractExclusionSet):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contractexclusionset'
+
+
+class ContractExcludedWorkTypeTracker(ContractExclusionSetExcludedWorkType):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contractexclusionsetworktype'
+
+
+class ContractExcludedRoleTracker(ContractExclusionSetExcludedRole):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_contractexclusionsetrole'
 
 
 class ServiceCallTracker(ServiceCall):
