@@ -444,7 +444,7 @@ class NonInternalTicketNoteManager(models.Manager):
 
 
 class TicketNote(TimeStampedModel, Note):
-    title = models.CharField(max_length=250)
+    title = models.CharField(max_length=250, blank=True, null=True)
     description = models.CharField(max_length=3200)
     create_date_time = models.DateTimeField(blank=True, null=True)
     last_activity_date = models.DateTimeField(blank=True, null=True)
