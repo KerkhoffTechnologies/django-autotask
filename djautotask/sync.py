@@ -1860,7 +1860,13 @@ class ResourceSynchronizer(Synchronizer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client.add_condition(A(op='eq', field='isActive', value=True))
+        self.client.add_condition(
+            A(
+                A(op='eq', field='isActive', value=True),
+                A(op='eq', field='isActive', value=False),
+                op='or'
+            )
+        )
 
     def _assign_field_data(self, instance, object_data):
         instance.id = object_data['id']
