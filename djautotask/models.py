@@ -74,7 +74,8 @@ class Ticket(TimeStampedModel):
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
     account = models.ForeignKey(
-        'Account', blank=True, null=True, on_delete=models.SET_NULL
+        'Account', blank=True, null=True, on_delete=models.SET_NULL,
+        related_name='account_tickets'
     )
     account_physical_location = models.ForeignKey(
         'AccountPhysicalLocation', blank=True, null=True,
@@ -611,6 +612,7 @@ class Project(TimeStampedModel):
     )
     last_activity_date_time = models.DateTimeField(null=True)
     status_detail = models.CharField(max_length=2000, blank=True, null=True)
+    create_date_time = models.DateTimeField(null=True)
 
     project_lead_resource = models.ForeignKey(
         'Resource', null=True, on_delete=models.SET_NULL
@@ -619,7 +621,8 @@ class Project(TimeStampedModel):
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
     account = models.ForeignKey(
-        'Account', null=True, on_delete=models.SET_NULL
+        'Account', null=True, on_delete=models.SET_NULL,
+        related_name='account_projects'
     )
     status = models.ForeignKey(
         'ProjectStatus', null=True, on_delete=models.SET_NULL
@@ -708,7 +711,7 @@ class Task(TimeStampedModel):
         related_name='secondary_resource_tasks'
     )
     project = models.ForeignKey(
-        'Project', on_delete=models.CASCADE
+        'Project', on_delete=models.CASCADE, related_name='project_tasks'
     )
     priority = models.ForeignKey(
         'Priority', null=True, blank=True, on_delete=models.SET_NULL
