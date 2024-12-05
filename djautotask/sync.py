@@ -1452,11 +1452,13 @@ class ProjectSynchronizer(CreateRecordMixin, UpdateRecordMixin,
         instance.start_date = object_data.get('startDateTime')
         instance.last_activity_date_time = \
             object_data.get('lastActivityDateTime')
+        instance.create_date_time = object_data.get('createDateTime')
 
         self._set_datetime_attribute(instance, 'completed_date')
         self._set_datetime_attribute(instance, 'end_date')
         self._set_datetime_attribute(instance, 'start_date')
         self._set_datetime_attribute(instance, 'last_activity_date_time')
+        self._set_datetime_attribute(instance, 'create_date_time')
 
         if instance.completed_date:
             instance.completed_date = instance.completed_date.date()
