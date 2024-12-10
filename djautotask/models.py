@@ -74,8 +74,7 @@ class Ticket(TimeStampedModel):
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
     account = models.ForeignKey(
-        'Account', blank=True, null=True, on_delete=models.SET_NULL,
-        related_name='account_tickets'
+        'Account', blank=True, null=True, on_delete=models.SET_NULL
     )
     account_physical_location = models.ForeignKey(
         'AccountPhysicalLocation', blank=True, null=True,
@@ -621,8 +620,7 @@ class Project(TimeStampedModel):
         'Contact', blank=True, null=True, on_delete=models.SET_NULL
     )
     account = models.ForeignKey(
-        'Account', null=True, on_delete=models.SET_NULL,
-        related_name='account_projects'
+        'Account', null=True, on_delete=models.SET_NULL
     )
     status = models.ForeignKey(
         'ProjectStatus', null=True, on_delete=models.SET_NULL
@@ -711,7 +709,7 @@ class Task(TimeStampedModel):
         related_name='secondary_resource_tasks'
     )
     project = models.ForeignKey(
-        'Project', on_delete=models.CASCADE, related_name='project_tasks'
+        'Project', on_delete=models.CASCADE
     )
     priority = models.ForeignKey(
         'Priority', null=True, blank=True, on_delete=models.SET_NULL
