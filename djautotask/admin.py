@@ -153,7 +153,7 @@ class ServiceCallStatusAdmin(admin.ModelAdmin):
 @admin.register(models.Resource)
 class ResourceAdmin(admin.ModelAdmin):
     list_display = (
-        'user_name', 'full_name', 'email', 'active', 'license_type'
+        'user_name', 'full_name', 'email', 'title', 'active', 'license_type'
     )
     list_filter = ('active', 'license_type')
     search_fields = ('user_name', 'first_name', 'last_name', 'email')
