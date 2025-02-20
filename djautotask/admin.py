@@ -13,14 +13,14 @@ class TicketAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'ticket_number', 'status')
     list_filter = ('status',)
     search_fields = ('id', 'title', 'ticket_number', 'status__label')
-
+    autocomplete_fields = ['issue_type', 'sub_issue_type']
     inlines = [
         TicketSecondaryResourceInline
     ]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.select_related('status')
+        return qs.select_related('status', 'issue_type', 'sub_issue_type')
 
 
 @admin.register(models.SyncJob)
@@ -104,11 +104,13 @@ class SourceAdmin(admin.ModelAdmin):
 @admin.register(models.IssueType)
 class IssueTypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'label')
+    search_fields = ['label']
 
 
 @admin.register(models.SubIssueType)
 class SubIssueType(admin.ModelAdmin):
     list_display = ('id', 'label')
+    search_fields = ['label']
 
 
 @admin.register(models.TicketType)
@@ -155,8 +157,8 @@ class ResourceAdmin(admin.ModelAdmin):
     list_display = (
         'user_name', 'full_name', 'email', 'title', 'active', 'license_type'
     )
-    list_filter = ('active', 'license_type')
-    search_fields = ('user_name', 'first_name', 'last_name', 'email')
+    list_filter = ('active', 'license_type', 'title', )
+    search_fields = ('user_name', 'first_name', 'last_name', 'email', 'title', )
 
     def full_name(self, obj):
         return str(obj)
