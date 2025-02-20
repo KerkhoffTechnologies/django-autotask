@@ -157,8 +157,10 @@ class ResourceAdmin(admin.ModelAdmin):
     list_display = (
         'user_name', 'full_name', 'email', 'title', 'active', 'license_type'
     )
-    list_filter = ('active', 'license_type', 'title', )
-    search_fields = ('user_name', 'first_name', 'last_name', 'email', 'title', )
+    list_filter = ('active', 'license_type', 'title')
+    search_fields = (
+        'user_name', 'first_name', 'last_name', 'email', 'title',
+    )
 
     def full_name(self, obj):
         return str(obj)
