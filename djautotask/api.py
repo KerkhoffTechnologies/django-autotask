@@ -797,6 +797,15 @@ class TicketCategoriesAPIClient(AutotaskAPIClient):
 class CompanyAlertAPIClient(AutotaskAPIClient):
     API = 'CompanyAlerts'
 
+    def get(self, next_url=None, *args, **kwargs):
+        if not next_url:
+            search_filter = {"filter": [{"op": "exist", "field": "companyID"}]}
+            next_url = (
+                f"{self.api_base_url}/{self.API}/query?search="
+                f"{json.dumps(search_filter)}"
+            )
+        return self.fetch_resource(next_url, *args, **kwargs)
+
 
 class ProjectNotesAPIClient(AutotaskAPIClient):
     API = 'ProjectNotes'
