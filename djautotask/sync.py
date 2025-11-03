@@ -863,6 +863,7 @@ class TicketSynchronizer(CreateRecordMixin,
         'account_physical_location': 'companyLocationID',
         'contact': 'contactID',
         'contract': 'contractID',
+        'resolution': 'resolution',
     }
 
     def __init__(self, full=False, *args, **kwargs):
@@ -934,6 +935,7 @@ class TicketSynchronizer(CreateRecordMixin,
         instance.due_date_time = json_data.get('dueDateTime')
         instance.completed_date = json_data.get('completedDate')
         instance.last_activity_date = json_data.get('lastActivityDate')
+        instance.resolution = json_data.get('resolution')
 
         self._set_datetime_attribute(instance, 'first_response_date_time')
         self._set_datetime_attribute(instance,
