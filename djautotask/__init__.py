@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-VERSION = (1, 7, 4, 'final')
+from importlib.metadata import version
 
-# pragma: no cover
-if VERSION[-1] != "final":
-    __version__ = '.'.join(map(str, VERSION))
-else:
-    # pragma: no cover
-    __version__ = '.'.join(map(str, VERSION[:-1]))
+__version__ = version("django-autotask")
+
+default_app_config = 'djautotask.apps.DjangoAutotaskConfig'

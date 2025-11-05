@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
-import djautotask
+
+VERSION = (1, 13, 6)
+
+project_version = '.'.join(map(str, VERSION))
 
 LONG_DESCRIPTION = open('README.md', encoding="utf-8").read()
 
 setup(
     name='django-autotask',
-    version=djautotask.__version__,
+    version=project_version,
     description='Django app for working with Autotask. '
                 'Defines models (tickets, members, companies, etc.) '
                 'and callbacks.',
