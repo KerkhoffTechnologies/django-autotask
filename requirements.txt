@@ -7,3 +7,4 @@ django-extensions
 retrying
 wheel
 pytz
+build==1.2.2.post1
