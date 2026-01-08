@@ -974,6 +974,18 @@ class TicketSynchronizer(CreateRecordMixin,
         return instance
 
     def fetch_sync_by_id(self, instance_id):
+        if self.queue_sync_filter:
+            api_instance = self.get_single(instance_id)
+            json_data = api_instance.get('item', api_instance)
+            queue_id = json_data.get('queueID')
+
+            if queue_id is not None and queue_id not in self.queue_sync_filter:
+                # Ticket is in a non-permitted queue, ignore this callback
+                raise InvalidObjectException(
+                    'Ticket {} is in queue {} which is not in the permitted '
+                    'queues list.'.format(instance_id, queue_id)
+                )
+
         instance = super().fetch_sync_by_id(instance_id)
         if not instance.status or \
                 instance.status.id != models.Status.COMPLETE_ID:
