@@ -1527,7 +1527,12 @@ class TicketCategorySynchronizer(Synchronizer):
         return instance
 
 
-class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
+class TaskPredecessorSynchronizer(
+    ChildCreateRecordMixin,
+    DeleteRecordMixin,
+    BatchQueryMixin,
+    Synchronizer
+):
     client_class = api.TaskPredecessorsAPIClient
     model_class = models.TaskPredecessorTracker
     condition_field_name = 'predecessorTaskID'
@@ -1536,6 +1541,12 @@ class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
     related_meta = {
         'predecessorTaskID': (models.Task, 'predecessor_task'),
         'successorTaskID': (models.Task, 'successor_task'),
+    }
+
+    API_FIELD_NAMES = {
+        'predecessor_task': 'predecessorTaskID',
+        'successor_task': 'successorTaskID',
+        'lag_days': 'lagDays',
     }
 
     @property
@@ -1554,6 +1565,17 @@ class TaskPredecessorSynchronizer(BatchQueryMixin, Synchronizer):
         self.set_relations(instance, json_data)
 
         return instance
+
+    def update(self, instance, parent, **kwargs):
+        updated_record_fields = self._translate_fields_to_api_format(kwargs)
+        updated_id = self.client.update(
+            instance, parent, updated_record_fields
+        )
+
+        # get_single retrieves the updated entity info, to get the latest data
+        updated_instance = self.get_single(updated_id['itemId'])
+
+        return self.update_or_create_instance(updated_instance['item'])
 
 
 class ServiceCallSynchronizer(

@@ -420,6 +420,10 @@ class AutotaskAPIClient(object):
             body.update(
                 {key: value}
             )
+        elif isinstance(value, int):
+            body.update(
+                {key: value}
+            )
         else:
             body.update(
                 {key: str(value) if value else ''}
@@ -811,8 +815,10 @@ class ProjectNotesAPIClient(AutotaskAPIClient):
     API = 'ProjectNotes'
 
 
-class TaskPredecessorsAPIClient(AutotaskAPIClient):
+class TaskPredecessorsAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'TaskPredecessors'
+    PARENT_API = 'Tasks'
+    CHILD_API = 'Predecessors'
 
     # use POST method because of IN-clause query string
     def get(self, next_url, *args, **kwargs):
