@@ -12,6 +12,7 @@ class DjautotaskSettings:
             'keep_completed_hours': 8,
             'batch_query_size': 400,
             'queue_sync_filter': [],
+            'mass_delete_protection': False,
         }
 
         if hasattr(settings, 'DJAUTOTASK_CONF_CALLABLE'):
