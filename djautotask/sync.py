@@ -250,6 +250,9 @@ class Synchronizer:
             impersonation_resource=kwargs.get('impersonation_resource'),
         )
         self.full = full
+        request_settings = DjautotaskSettings().get_settings()
+        self.mass_delete_protection = request_settings.get(
+            'mass_delete_protection', True)
 
     def set_relations(self, instance, json_data):
         for json_field, value in self.related_meta.items():
@@ -441,6 +444,20 @@ class Synchronizer:
         not seen as we iterated through all records from REST API.
         """
         stale_ids = initial_ids - synced_ids
+
+        if stale_ids and self.full and self.mass_delete_protection:
+            total_count = len(initial_ids)
+            delete_count = len(stale_ids)
+            if total_count > 0 and delete_count / total_count > 0.9:
+                logger.exception(
+                    'Mass delete protection: Aborting deletion of '
+                    '%s out of %s %s records during full sync '
+                    '(exceeds 90%% threshold).',
+                    delete_count, total_count,
+                    self.model_class.__bases__[0].__name__
+                )
+                return 0
+
         deleted_count = 0
         if stale_ids:
             delete_qset = self.get_delete_qset(stale_ids)
