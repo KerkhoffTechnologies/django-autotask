@@ -1,5 +1,6 @@
 import pytz
 
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.db.models import Q
 from django_extensions.db.models import TimeStampedModel
@@ -109,6 +110,7 @@ class Ticket(TimeStampedModel):
         'Contract', null=True, blank=True, on_delete=models.SET_NULL
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
+    udf_data = models.JSONField(default=dict, blank=True)
 
     AUTOTASK_FIELDS = {
         'title': 'title',
@@ -133,6 +135,9 @@ class Ticket(TimeStampedModel):
 
     class Meta:
         verbose_name = 'Ticket'
+        indexes = [
+            GinIndex(fields=['udf_data'], name='at_ticket_udf_data_gin'),
+        ]
 
     def __str__(self):
         return '{}-{}'.format(self.id, self.title)
@@ -636,6 +641,7 @@ class Project(TimeStampedModel):
         'Department', null=True, blank=True, on_delete=models.SET_NULL
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
+    udf_data = models.JSONField(default=dict, blank=True)
 
     AUTOTASK_FIELDS = {
         'name': 'projectName',
@@ -654,6 +660,9 @@ class Project(TimeStampedModel):
 
     class Meta:
         ordering = ('name',)
+        indexes = [
+            GinIndex(fields=['udf_data'], name='at_project_udf_data_gin'),
+        ]
 
     def __str__(self):
         return self.name
@@ -738,6 +747,7 @@ class Task(TimeStampedModel):
         'TaskType', null=True, blank=True, on_delete=models.SET_NULL
     )
     udf = models.JSONField(blank=True, null=True, default=dict)
+    udf_data = models.JSONField(default=dict, blank=True)
 
     AUTOTASK_FIELDS = {
         'title': 'title',
@@ -755,6 +765,11 @@ class Task(TimeStampedModel):
         'assigned_resource_role': 'assignedResourceRoleID',
         'category': 'taskCategoryID',
     }
+
+    class Meta:
+        indexes = [
+            GinIndex(fields=['udf_data'], name='at_task_udf_data_gin'),
+        ]
 
     def __str__(self):
         return self.title
@@ -1192,6 +1207,28 @@ class ProjectUDF(BaseUDF):
     pass
 
 
+class UDFDefinition(TimeStampedModel):
+    RECORD_TYPES = [
+        ('ticket', 'Ticket'),
+        ('task', 'Task'),
+        ('project', 'Project'),
+    ]
+
+    record_type = models.CharField(max_length=50, choices=RECORD_TYPES)
+    name = models.CharField(max_length=255)
+    display = models.CharField(max_length=255)
+    udf_type = models.CharField(max_length=50)
+    data_type = models.CharField(max_length=50)
+    is_list = models.BooleanField(default=False)
+    extra = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        unique_together = ('record_type', 'name')
+
+    def __str__(self):
+        return f"{self.display} ({self.record_type})"
+
+
 class TicketTracker(Ticket):
     tracker = FieldTracker()
 
@@ -1598,6 +1635,14 @@ class ProjectUDFTracker(ProjectUDF):
     class Meta:
         proxy = True
         db_table = 'djautotask_projectudf'
+
+
+class UDFDefinitionTracker(UDFDefinition):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_udfdefinition'
 
 
 class TaskTypeTracker(TaskType):
