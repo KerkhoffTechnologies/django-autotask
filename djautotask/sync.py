@@ -702,6 +702,21 @@ class DeleteRecordMixin:
             instance.delete()
 
 
+class ChildUpdateRecordMixin:
+
+    def update(self, instance, parent, **kwargs):
+        """
+        Make a request to Autotask to update a child entity.
+        """
+        updated_record_fields = self._translate_fields_to_api_format(kwargs)
+        updated_id = self.client.update(instance, parent, updated_record_fields)
+
+        # get_single retrieves the updated entity info, to get the latest data
+        updated_instance = self.get_single(updated_id['itemId'])
+
+        return self.update_or_create_instance(updated_instance['item'])
+
+
 class ChildCreateRecordMixin:
 
     def create(self, parent, **kwargs):
@@ -1196,6 +1211,7 @@ class NoteSynchronizer(BatchQueryMixin, Synchronizer):
 
 
 class TicketNoteSynchronizer(ChildCreateRecordMixin,
+                             ChildUpdateRecordMixin,
                              NoteSynchronizer,
                              ChildSynchronizer):
     client_class = api.TicketNotesAPIClient
@@ -1241,7 +1257,8 @@ class TicketNoteSynchronizer(ChildCreateRecordMixin,
         return super().create(parent, **kwargs)
 
 
-class TaskNoteSynchronizer(CreateRecordMixin, NoteSynchronizer):
+class TaskNoteSynchronizer(CreateRecordMixin, UpdateRecordMixin,
+                           NoteSynchronizer):
     client_class = api.TaskNotesAPIClient
     model_class = models.TaskNoteTracker
     condition_field_name = 'taskID'
@@ -1270,6 +1287,7 @@ class TaskNoteSynchronizer(CreateRecordMixin, NoteSynchronizer):
 
 
 class TimeEntrySynchronizer(CreateRecordMixin,
+                            UpdateRecordMixin,
                             MultiConditionBatchQueryMixin,
                             Synchronizer,
                             ChildSynchronizer):
