@@ -709,7 +709,11 @@ class ChildUpdateRecordMixin:
         Make a request to Autotask to update a child entity.
         """
         updated_record_fields = self._translate_fields_to_api_format(kwargs)
-        updated_id = self.client.update(instance, parent, updated_record_fields)
+        updated_id = self.client.update(
+            instance,
+            parent,
+            updated_record_fields
+        )
 
         # get_single retrieves the updated entity info, to get the latest data
         updated_instance = self.get_single(updated_id['itemId'])
