@@ -82,7 +82,6 @@ def parse_udf(udfs):
             'name': name,
             'value': value,
             'display_value': display_value,
-            'is_list': is_picklist,
             'extra': {},
         }
     return result

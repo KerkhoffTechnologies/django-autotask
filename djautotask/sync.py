@@ -654,7 +654,6 @@ class UDFSynchronizer(Synchronizer):
                 continue
 
             udf_type = field.get('type', '')
-            is_picklist = field.get('isPickList', False)
             models.UDFDefinition.objects.update_or_create(
                 record_type=self.record_type,
                 name=snake_name,
@@ -662,7 +661,6 @@ class UDFSynchronizer(Synchronizer):
                     'display': name,
                     'udf_type': udf_type,
                     'data_type': AT_DATA_TYPE_MAP.get(udf_type, 'string'),
-                    'is_list': is_picklist,
                     'extra': {},
                 },
             )
