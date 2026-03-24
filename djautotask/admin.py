@@ -422,3 +422,10 @@ class ContractExcludedWorkTypeAdmin(admin.ModelAdmin):
 @admin.register(models.ContractExclusionSetExcludedRole)
 class ContractExcludedRoleAdmin(admin.ModelAdmin):
     list_display = ('id', 'contract_exclusion_set', 'excluded_role')
+
+
+@admin.register(models.UDFDefinition)
+class UDFDefinitionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'display', 'record_type', 'udf_type', 'data_type')
+    search_fields = ['name', 'display']
+    list_filter = ('record_type', 'data_type')

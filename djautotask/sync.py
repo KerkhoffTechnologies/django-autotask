@@ -11,7 +11,8 @@ from django.utils import timezone
 from djautotask import api
 from djautotask import models
 from .api import ApiCondition as A, AutotaskRecordNotFoundError
-from .utils import DjautotaskSettings
+from .utils import DjautotaskSettings, caption_to_snake_case, \
+    parse_udf, AT_DATA_TYPE_MAP
 
 CREATED = 1
 UPDATED = 2
@@ -595,6 +596,7 @@ class UDFSynchronizer(Synchronizer):
     lookup_key = 'name'
     model_class = None
     last_updated_field = None
+    record_type = None  # Override in subclasses
 
     def get_record_id(self, record):
         try:
@@ -615,6 +617,7 @@ class UDFSynchronizer(Synchronizer):
         total_page = api_return.get("fields")
         if total_page:
             self.persist_page(total_page, results)
+            self._sync_udf_definitions(total_page)
 
         return results
 
@@ -639,20 +642,46 @@ class UDFSynchronizer(Synchronizer):
 
         return instance
 
+    def _sync_udf_definitions(self, fields):
+        """
+        Sync UDF definitions to the new UDFDefinition model.
+        This is done in addition to the old UDFs for backwards compatibility
+        """
+        for field in fields:
+            name = field.get('name', '')
+            snake_name = caption_to_snake_case(name)
+            if not snake_name:
+                continue
+
+            udf_type = field.get('type', '')
+            models.UDFDefinition.objects.update_or_create(
+                record_type=self.record_type,
+                name=snake_name,
+                defaults={
+                    'display': name,
+                    'udf_type': udf_type,
+                    'data_type': AT_DATA_TYPE_MAP.get(udf_type, 'string'),
+                    'extra': {},
+                },
+            )
+
 
 class TicketUDFSynchronizer(UDFSynchronizer):
     client_class = api.TicketsUDFAPIClient
     model_class = models.TicketUDFTracker
+    record_type = 'ticket'
 
 
 class TaskUDFSynchronizer(UDFSynchronizer):
     client_class = api.TasksUDFAPIClient
     model_class = models.TaskUDFTracker
+    record_type = 'task'
 
 
 class ProjectUDFSynchronizer(UDFSynchronizer):
     client_class = api.ProjectsUDFAPIClient
     model_class = models.ProjectUDFTracker
+    record_type = 'project'
 
 
 class CreateRecordMixin:
@@ -994,6 +1023,8 @@ class TicketSynchronizer(CreateRecordMixin,
         if len(udfs):
             self._assign_udf_data(instance, udfs)
 
+        instance.udf_data = parse_udf(udfs)
+
         # It's important to set the SLA paused field to zero if it's not
         # present in the JSON data because we need to track when a ticket
         # moves from a paused SLA state to one where the SLA timer is running.
@@ -1148,6 +1179,8 @@ class TaskSynchronizer(ChildCreateRecordMixin, SyncRecordUDFMixin,
 
         if len(udfs):
             self._assign_udf_data(instance, udfs)
+
+        instance.udf_data = parse_udf(udfs)
 
         if instance.estimated_hours:
             instance.estimated_hours = \
@@ -1528,6 +1561,8 @@ class ProjectSynchronizer(CreateRecordMixin, UpdateRecordMixin,
 
         if len(udfs):
             self._assign_udf_data(instance, udfs)
+
+        instance.udf_data = parse_udf(udfs)
 
         if instance.estimated_time:
             instance.estimated_time = \
