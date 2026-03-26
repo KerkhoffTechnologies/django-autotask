@@ -1631,7 +1631,7 @@ class TaskPredecessorSynchronizer(
 
 
 class ServiceCallSynchronizer(
-        CreateRecordMixin, BatchQueryMixin, Synchronizer):
+        CreateRecordMixin, UpdateRecordMixin, BatchQueryMixin, Synchronizer):
 
     client_class = api.ServiceCallsAPIClient
     model_class = models.ServiceCallTracker
