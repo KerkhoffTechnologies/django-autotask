@@ -1653,7 +1653,11 @@ class TaskPredecessorSynchronizer(
 
 
 class ServiceCallSynchronizer(
-        CreateRecordMixin, UpdateRecordMixin, BatchQueryMixin, Synchronizer):
+        CreateRecordMixin,
+        UpdateRecordMixin,
+        DeleteRecordMixin,
+        BatchQueryMixin,
+        Synchronizer):
 
     client_class = api.ServiceCallsAPIClient
     model_class = models.ServiceCallTracker
@@ -1714,6 +1718,10 @@ class ServiceCallSynchronizer(
         self.set_relations(instance, object_data)
 
         return instance
+
+    def delete_entry(self, service_call_id: int):
+        instance = self.model_class.objects.get(pk=service_call_id)
+        self.delete(instance)
 
 
 class ServiceCallTicketSynchronizer(
