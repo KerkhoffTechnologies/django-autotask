@@ -717,6 +717,26 @@ class TicketsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(next_url, *args, **kwargs)
 
 
+class ConfigurationItemsAPIClient(AutotaskAPIClient):
+    API = 'ConfigurationItems'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
+class ConfigurationItemCategoriesAPIClient(AutotaskAPIClient):
+    API = 'ConfigurationItemCategories'
+
+
+class TicketAdditionalConfigurationItemsAPIClient(AutotaskAPIClient):
+    API = 'TicketAdditionalConfigurationItems'
+
+    # use POST method because of IN-clause query string
+    def get(self, next_url, *args, **kwargs):
+        return self.fetch_resource(next_url, method='post', *args, **kwargs)
+
+
 class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
 

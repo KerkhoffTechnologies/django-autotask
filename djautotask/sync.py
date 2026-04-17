@@ -2342,6 +2342,165 @@ class ProjectNotesSynchronizer(Synchronizer):
             )
 
 
+class ConfigurationSynchronizer:
+    client_class = api.ConfigurationItemsAPIClient
+
+    TICKET_CLIENT_MAP = {
+        'ticket': api.TicketsAPIClient,
+        'additional': api.TicketAdditionalConfigurationItemsAPIClient,
+        'contacts': api.ContactsAPIClient,
+        'categories': api.ConfigurationItemCategoriesAPIClient,
+    }
+
+    def __init__(self):
+        self.client = self.client_class()
+        self._category_labels = None
+
+    def _get_client(self, key):
+        return self.TICKET_CLIENT_MAP[key]()
+
+    def fetch_ticket_configurations(self, ticket_id):
+        primary_id = self._get_primary_configuration_id(ticket_id)
+        additional_ids = self._get_additional_configuration_ids(ticket_id)
+
+        configuration_ids = self._build_configuration_ids(
+            primary_id, additional_ids,
+        )
+
+        if not configuration_ids:
+            return []
+
+        configurations = self._get_configuration_items(configuration_ids)
+        contacts_by_id = self._get_contacts_by_id(configurations)
+        category_labels = self._get_category_labels(configurations)
+
+        for configuration in configurations:
+            configuration['contact_name'] = contacts_by_id.get(
+                configuration.get('contactID'), '',
+            )
+            configuration['category_label'] = category_labels.get(
+                str(configuration.get('configurationItemCategoryID')),
+                '',
+            )
+
+        return configurations
+
+    def _get_primary_configuration_id(self, ticket_id):
+        ticket_client = self._get_client('ticket')
+        ticket = ticket_client.get_single(ticket_id).get('item', {})
+        return ticket.get('configurationItemID')
+
+    def _get_additional_configuration_ids(self, ticket_id):
+        client = self._get_client('additional')
+        client.add_condition(
+            A(op='eq', field='ticketID', value=ticket_id)
+        )
+        additional_items = self._fetch_all_records(client)
+
+        return [
+            item.get('configurationItemID')
+            for item in additional_items
+            if item.get('configurationItemID')
+        ]
+
+    def _get_configuration_items(self, configuration_ids):
+        self.client.add_condition(
+            A(op='in', field='id', value=configuration_ids)
+        )
+        configurations = self._fetch_all_records(self.client)
+
+        by_id = {
+            config.get('id'): config
+            for config in configurations
+            if config.get('id')
+        }
+        return [
+            by_id[cid] for cid in configuration_ids if cid in by_id
+        ]
+
+    def _get_contacts_by_id(self, configurations):
+        contact_ids = sorted({
+            config.get('contactID')
+            for config in configurations
+            if config.get('contactID')
+        })
+
+        if not contact_ids:
+            return {}
+
+        client = self._get_client('contacts')
+        client.add_condition(A(op='in', field='id', value=contact_ids))
+        contacts = self._fetch_all_records(client)
+
+        return {
+            contact.get('id'): self._build_contact_name(contact)
+            for contact in contacts
+            if contact.get('id')
+        }
+
+    def _fetch_all_records(self, client):
+        results = []
+        next_url = None
+
+        while True:
+            response = client.get(next_url)
+            results.extend(response.get('items', []))
+            next_url = response.get(
+                'pageDetails', {}
+            ).get('nextPageUrl')
+
+            if not next_url:
+                break
+
+        return results
+
+    def _get_category_labels(self, configurations):
+        if self._category_labels is None:
+            self._category_labels = self._fetch_category_labels(configurations)
+        return self._category_labels
+
+    def _fetch_category_labels(self, configurations):
+        category_ids = sorted({
+            config.get('configurationItemCategoryID')
+            for config in configurations
+            if config.get('configurationItemCategoryID')
+        })
+
+        if not category_ids:
+            return {}
+
+        labels = {}
+        categories_client = self._get_client('categories')
+        for category_id in category_ids:
+            response = categories_client.get_single(category_id)
+            category = response.get('item', {})
+            if not category:
+                continue
+
+            labels[str(category_id)] = category.get('name', '')
+
+        return labels
+
+    @staticmethod
+    def _build_contact_name(contact):
+        first_name = contact.get('firstName') or ''
+        last_name = contact.get('lastName') or ''
+        full_name = f'{first_name} {last_name}'.strip()
+        return full_name
+
+    @staticmethod
+    def _build_configuration_ids(primary_id, additional_ids):
+        unique_ids = []
+        if primary_id:
+            unique_ids.append(primary_id)
+
+        for configuration_id in additional_ids:
+            if configuration_id not in unique_ids:
+                unique_ids.append(configuration_id)
+
+        return unique_ids
+
+
 ###################################################################
 # Dummy Synchronizers                                             #
 ###################################################################
