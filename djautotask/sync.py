@@ -2348,6 +2348,9 @@ class ConfigurationSynchronizer:
     TICKET_CLIENT_MAP = {
         'ticket': api.TicketsAPIClient,
         'additional': api.TicketAdditionalConfigurationItemsAPIClient,
+        'additional_child': (
+            api.TicketAdditionalConfigurationItemsChildAPIClient
+        ),
         'contacts': api.ContactsAPIClient,
         'categories': api.ConfigurationItemCategoriesAPIClient,
     }
@@ -2384,6 +2387,75 @@ class ConfigurationSynchronizer:
             )
 
         return configurations
+
+    def fetch_ticket_configuration_ids(self, ticket_id):
+        primary_id = self._get_primary_configuration_id(ticket_id)
+        additional_ids = self._get_additional_configuration_ids(ticket_id)
+        return self._build_configuration_ids(primary_id, additional_ids)
+
+    def fetch_available_configurations(self, account_id, contact_id=None,
+                                       search=None):
+        self.client.clear_conditions()
+        self.client.add_condition(
+            A(op='eq', field='companyID', value=account_id)
+        )
+        if contact_id:
+            self.client.add_condition(
+                A(op='eq', field='contactID', value=contact_id)
+            )
+
+        if search:
+            self.client.add_condition(
+                A(
+                    A(op='contains', field='referenceTitle', value=search),
+                    A(op='contains', field='serialNumber', value=search),
+                    op='or',
+                )
+            )
+
+        configurations = self._fetch_all_records(self.client)
+        contacts_by_id = self._get_contacts_by_id(configurations)
+        category_labels = self._get_category_labels(configurations)
+        for configuration in configurations:
+            configuration['contact_name'] = contacts_by_id.get(
+                configuration.get('contactID'), '',
+            )
+            configuration['category_label'] = category_labels.get(
+                str(configuration.get('configurationItemCategoryID')),
+                '',
+            )
+        return configurations
+
+    def attach_ticket_configuration(self, ticket_id, configuration_id):
+        ticket_client = self._get_client('ticket')
+        ticket = ticket_client.get_single(ticket_id).get('item', {})
+        primary_id = ticket.get('configurationItemID')
+        if primary_id == configuration_id:
+            return
+
+        if not primary_id:
+            ticket_record = type('TicketRecord', (), {'id': ticket_id})()
+            ticket_client.update(
+                ticket_record,
+                {'configurationItemID': configuration_id}
+            )
+            return
+
+        additional_ids = self._get_additional_configuration_ids(ticket_id)
+        if configuration_id in additional_ids:
+            return
+
+        additional_child_client = self._get_client('additional_child')
+        additional_child_record = type('AdditionalConfigurationRecord', (), {
+            'id': None
+        })()
+        ticket_record = type('TicketRecord', (), {'id': ticket_id})()
+        additional_child_client.create(
+            additional_child_record,
+            parent=ticket_record,
+            ticketID=ticket_id,
+            configurationItemID=configuration_id,
+        )
 
     def _get_primary_configuration_id(self, ticket_id):
         ticket_client = self._get_client('ticket')

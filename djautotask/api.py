@@ -737,6 +737,13 @@ class TicketAdditionalConfigurationItemsAPIClient(AutotaskAPIClient):
         return self.fetch_resource(next_url, method='post', *args, **kwargs)
 
 
+class TicketAdditionalConfigurationItemsChildAPIClient(
+        ChildAPIMixin, AutotaskAPIClient):
+    API = 'TicketAdditionalConfigurationItems'
+    PARENT_API = 'Tickets'
+    CHILD_API = 'AdditionalConfigurationItems'
+
+
 class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
 
