@@ -2465,6 +2465,34 @@ class ConfigurationSynchronizer:
             configurationItemID=configuration_id,
         )
 
+    def detach_ticket_configuration(self, ticket_id, configuration_id):
+        ticket_client = self._get_client('ticket')
+        ticket = ticket_client.get_single(ticket_id).get('item', {})
+        primary_id = ticket.get('configurationItemID')
+        if primary_id == configuration_id:
+            ticket_record = type('TicketRecord', (), {'id': ticket_id})()
+            ticket_client.update(
+                ticket_record,
+                {'configurationItemID': None}
+            )
+            return
+
+        additional_item = self._get_additional_configuration_item(
+            ticket_id, configuration_id
+        )
+        if not additional_item:
+            return
+
+        additional_child_client = self._get_client('additional_child')
+        additional_child_record = type('AdditionalConfigurationRecord', (), {
+            'id': additional_item.get('id')
+        })()
+        ticket_record = type('TicketRecord', (), {'id': ticket_id})()
+        additional_child_client.delete(
+            additional_child_record,
+            parent=ticket_record,
+        )
+
     def _get_primary_configuration_id(self, ticket_id):
         ticket_client = self._get_client('ticket')
         ticket = ticket_client.get_single(ticket_id).get('item', {})
@@ -2482,6 +2510,22 @@ class ConfigurationSynchronizer:
             for item in additional_items
             if item.get('configurationItemID')
         ]
+
+    def _get_additional_configuration_item(self, ticket_id, configuration_id):
+        client = self._get_client('additional')
+        client.add_condition(
+            A(op='eq', field='ticketID', value=ticket_id)
+        )
+        additional_items = self._fetch_all_records(client)
+
+        for item in additional_items:
+            if (
+                item.get('configurationItemID') == configuration_id
+                and item.get('id')
+            ):
+                return item
+
+        return None
 
     def _get_configuration_items(self, configuration_ids):
         self.client.add_condition(
