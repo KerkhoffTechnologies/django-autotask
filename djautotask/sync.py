@@ -2434,6 +2434,10 @@ class ConfigurationSynchronizer:
             return
 
         if not primary_id:
+            # Create a simple object that only has an 'id' field.
+            # `type()` to quickly make a temporary class
+            # instead of writing a full class.
+            # Useful here because we only need an object to pass around.
             ticket_record = type('TicketRecord', (), {'id': ticket_id})()
             ticket_client.update(
                 ticket_record,
@@ -2446,6 +2450,10 @@ class ConfigurationSynchronizer:
             return
 
         additional_child_client = self._get_client('additional_child')
+        # Create a simple object that only has an 'id' field.
+        # `type()` to quickly make a temporary class
+        # instead of writing a full class.
+        # Useful here because we only need an object to pass around.
         additional_child_record = type('AdditionalConfigurationRecord', (), {
             'id': None
         })()
