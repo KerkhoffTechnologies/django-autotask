@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-VERSION = (1, 14, 0)
+VERSION = (1, 15, 0)
 
 project_version = '.'.join(map(str, VERSION))
 
