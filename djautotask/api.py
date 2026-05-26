@@ -892,8 +892,10 @@ class AccountsAPIClient(AutotaskAPIClient):
     API = 'Companies'
 
 
-class PhasesAPIClient(AutotaskAPIClient):
+class PhasesAPIClient(ChildAPIMixin, AutotaskAPIClient):
     API = 'Phases'
+    PARENT_API = 'Projects'
+    CHILD_API = 'Phases'
 
 
 class UDFAPIClient(AutotaskAPIClient):

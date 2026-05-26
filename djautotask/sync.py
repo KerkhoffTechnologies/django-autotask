@@ -2042,6 +2042,16 @@ class PhaseSynchronizer(Synchronizer):
         'parentPhaseID': (models.Phase, 'parent_phase'),
     }
 
+    API_FIELD_NAMES = {
+        'title': 'title',
+        'description': 'description',
+        'start_date': 'startDate',
+        'due_date': 'dueDate',
+        'estimated_hours': 'estimatedHours',
+        'parent_phase': 'parentPhaseID',
+        'project': 'projectID',
+    }
+
     def _assign_field_data(self, instance, object_data):
 
         instance.id = object_data['id']
@@ -2063,6 +2073,14 @@ class PhaseSynchronizer(Synchronizer):
         self.set_relations(instance, object_data)
 
         return instance
+
+    def update(self, instance, **kwargs):
+        updated_record_fields = self._translate_fields_to_api_format(kwargs)
+        updated_id = self.client.update(
+            instance, instance.project, updated_record_fields,
+        )
+        updated_instance = self.get_single(updated_id['itemId'])
+        return self.update_or_create_instance(updated_instance['item'])
 
 
 class PicklistSynchronizer(Synchronizer):
