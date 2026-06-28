@@ -302,6 +302,13 @@ def init_billing_codes():
     return synchronizer.sync()
 
 
+def init_billing_items():
+    models.BillingItem.objects.all().delete()
+    mocks.service_api_get_billing_items_call(fixtures.API_BILLING_ITEM)
+    synchronizer = sync.BillingItemSynchronizer()
+    return synchronizer.sync()
+
+
 def init_roles():
     models.Role.objects.all().delete()
     mocks.service_api_get_roles_call(fixtures.API_ROLE)
