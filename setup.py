@@ -3,7 +3,11 @@
 
 from setuptools import setup, find_packages
 
+<<<<<<< 4692-sync-billing-items-resource-cost
 VERSION = (1, 15, 2)
+=======
+VERSION = (1, 15, 1)
+>>>>>>> master
 
 project_version = '.'.join(map(str, VERSION))
 
