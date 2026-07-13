@@ -1915,6 +1915,45 @@ class BillingCodeSynchronizer(Synchronizer):
         return instance
 
 
+class BillingItemSynchronizer(Synchronizer):
+    client_class = api.BillingItemsAPIClient
+    model_class = models.BillingItemTracker
+    last_updated_field = None
+
+    related_meta = {
+        'projectID': (models.Project, 'project'),
+        'ticketID': (models.Ticket, 'ticket'),
+        'taskID': (models.Task, 'task'),
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Project Health only needs project revenue, and BillingItems is an
+        # otherwise very high-volume entity -- scope the sync to project-linked
+        # items only.
+        self.client.add_condition(A(op='exist', field='projectID'))
+
+    def _assign_field_data(self, instance, object_data):
+        instance.id = object_data['id']
+        instance.item_name = object_data.get('itemName')
+        instance.description = object_data.get('description')
+        instance.quantity = object_data.get('quantity')
+        instance.rate = object_data.get('rate')
+        instance.total_amount = object_data.get('totalAmount')
+        instance.our_cost = object_data.get('ourCost')
+        instance.non_billable = bool(object_data.get('nonBillable'))
+        instance.billing_item_type = object_data.get('billingItemType')
+        instance.item_date = object_data.get('itemDate')
+        instance.posted_date = object_data.get('postedDate')
+
+        self._set_datetime_attribute(instance, 'item_date')
+        self._set_datetime_attribute(instance, 'posted_date')
+
+        self.set_relations(instance, object_data)
+
+        return instance
+
+
 class ContractSynchronizer(Synchronizer):
     client_class = api.ContractsAPIClient
     model_class = models.ContractTracker
@@ -1997,6 +2036,7 @@ class ResourceSynchronizer(Synchronizer):
         instance.last_name = object_data.get('lastName')
         instance.active = object_data.get('isActive')
         instance.title = object_data.get('title')
+        instance.internal_cost = object_data.get('internalCost')
 
         self.set_relations(instance, object_data)
 

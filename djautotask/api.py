@@ -748,6 +748,10 @@ class BillingCodesAPIClient(AutotaskAPIClient):
     API = 'BillingCodes'
 
 
+class BillingItemsAPIClient(AutotaskAPIClient):
+    API = 'BillingItems'
+
+
 class ContractsAPIClient(AutotaskAPIClient):
     API = 'Contracts'
 

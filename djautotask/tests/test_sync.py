@@ -595,6 +595,7 @@ class TestResourceSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(instance.last_name, object_data['lastName'])
         self.assertEqual(instance.email, object_data['email'])
         self.assertEqual(instance.active, object_data['isActive'])
+        self.assertEqual(instance.internal_cost, object_data['internalCost'])
 
 
 class TestAccountSynchronizer(SynchronizerTestMixin, TestCase):
@@ -1038,6 +1039,38 @@ class TestBillingCodeSynchronizer(SynchronizerTestMixin, TestCase):
         self.assertEqual(instance.description, object_data.get('description'))
         self.assertEqual(instance.active, object_data.get('isActive'))
         self.assertEqual(instance.use_type.id, object_data.get('useType'))
+
+
+class TestBillingItemSynchronizer(SynchronizerTestMixin, TestCase):
+    synchronizer_class = sync.BillingItemSynchronizer
+    model_class = models.BillingItemTracker
+    fixture = fixtures.API_BILLING_ITEM
+    update_field = 'item_name'
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_projects()
+        self._sync(self.fixture)
+
+    def _call_api(self, return_data):
+        return mocks.service_api_get_billing_items_call(return_data)
+
+    def _assert_fields(self, instance, object_data):
+        self.assertEqual(instance.id, object_data['id'])
+        self.assertEqual(instance.item_name, object_data.get('itemName'))
+        self.assertEqual(instance.description, object_data.get('description'))
+        self.assertEqual(instance.quantity, object_data.get('quantity'))
+        self.assertEqual(instance.rate, object_data.get('rate'))
+        self.assertEqual(instance.total_amount, object_data.get('totalAmount'))
+        self.assertEqual(instance.our_cost, object_data.get('ourCost'))
+        self.assertEqual(instance.non_billable, object_data.get('nonBillable'))
+        self.assertEqual(
+            instance.billing_item_type, object_data.get('billingItemType'))
+        self.assertEqual(instance.item_date,
+                         self._parse_datetime(object_data.get('itemDate')))
+        self.assertEqual(instance.posted_date,
+                         self._parse_datetime(object_data.get('postedDate')))
+        self.assertEqual(instance.project_id, object_data.get('projectID'))
 
 
 class TestRoleSynchronizer(SynchronizerTestMixin, TestCase):

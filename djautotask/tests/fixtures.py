@@ -1193,6 +1193,29 @@ API_BILLING_CODE = {
     "pageDetails": API_PAGE_DETAILS
 }
 
+API_BILLING_ITEM_ITEMS = [
+    {
+        'id': 146,
+        'itemName': 'Add Key People to the VIP Marketing Groups',
+        'description': 'lots of work',
+        'quantity': 15.0,
+        'rate': 250.0,
+        'totalAmount': 3750.0,
+        'ourCost': None,
+        'nonBillable': False,
+        'billingItemType': 1,
+        'itemDate': '2026-06-23T00:00:00.000Z',
+        'postedDate': '2026-06-24T00:00:00.000Z',
+        'projectID': 4,
+        'ticketID': None,
+        'taskID': None,
+    }
+]
+API_BILLING_ITEM = {
+    "items": API_BILLING_ITEM_ITEMS,
+    "pageDetails": API_PAGE_DETAILS
+}
+
 API_ROLE_ITEM = {
     'id': 8,
     'name': "IT:Technician I",
