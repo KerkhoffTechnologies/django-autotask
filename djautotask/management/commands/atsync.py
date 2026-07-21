@@ -80,6 +80,7 @@ class Command(BaseCommand):
              _('Task Category')),
             ('task_type', sync.TaskTypeSynchronizer, _('Task Type')),
             ('task', sync.TaskSynchronizer, _('Task')),
+            ('billing_item', sync.BillingItemSynchronizer, _('Billing Item')),
             ('task_note', sync.TaskNoteSynchronizer, _('Task Note')),
             ('task_type_link', sync.TaskTypeLinkSynchronizer,
              _('Task Type Link')),

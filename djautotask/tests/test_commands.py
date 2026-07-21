@@ -544,6 +544,20 @@ class TestSyncBillingCodeCommand(AbstractBaseSyncTest, TestCase):
         fixture_utils.init_billing_codes()
 
 
+class TestSyncBillingItemCommand(AbstractBaseSyncTest, TestCase):
+    args = (
+        mocks.service_api_get_billing_items_call,
+        fixtures.API_BILLING_ITEM,
+        'billing_item',
+    )
+
+    def setUp(self):
+        super().setUp()
+        # BillingItems sync is scoped to project-linked items, so the
+        # referenced project must exist before the billing item can sync.
+        fixture_utils.init_projects()
+
+
 class TestSyncRoleCommand(AbstractBaseSyncTest, TestCase):
     args = (
         mocks.service_api_get_roles_call,
@@ -814,6 +828,7 @@ class TestSyncAllCommand(TestCase):
             TestSyncTaskNoteCommand,
             TestSyncTimeEntryCommand,
             TestSyncBillingCodeCommand,
+            TestSyncBillingItemCommand,
             TestSyncResourceRoleDepartmentCommand,
             TestSyncResourceServiceDeskRoleCommand,
             TestSyncContractCommand,
@@ -900,6 +915,7 @@ class TestSyncAllCommand(TestCase):
             'use_type': models.UseType,
             'billing_code_type': models.BillingCodeType,
             'billing_code': models.BillingCode,
+            'billing_item': models.BillingItem,
             'resource_role_department': models.ResourceRoleDepartment,
             'resource_service_desk_role': models.ResourceServiceDeskRole,
             'contract': models.Contract,
@@ -940,6 +956,7 @@ class TestSyncAllCommand(TestCase):
                     'task_predecessor',
                     'task',
                     'time_entry',
+                    'billing_item',
                     'contract_excluded_role',
                     'contract_excluded_work_type',
             ):
@@ -992,6 +1009,7 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_contracts_call(fixtures.API_CONTRACT)
         mocks.service_api_get_billing_codes_call(
             fixtures.API_BILLING_CODE)
+        mocks.service_api_get_billing_items_call(fixtures.API_BILLING_ITEM)
         mocks.service_api_get_account_physical_locations_call(
             fixtures.API_ACCOUNT_PHYSICAL_LOCATION)
         mocks.service_api_get_ticket_categories_call(
@@ -1039,6 +1057,7 @@ class TestSyncAllCommand(TestCase):
         mocks.service_api_get_contacts_call(fixtures.API_EMPTY)
         mocks.service_api_get_contracts_call(fixtures.API_EMPTY)
         mocks.service_api_get_billing_codes_call(fixtures.API_EMPTY)
+        mocks.service_api_get_billing_items_call(fixtures.API_EMPTY)
         mocks.service_api_get_account_physical_locations_call(
             fixtures.API_EMPTY)
         mocks.service_api_get_tickets_call(fixtures.API_EMPTY)

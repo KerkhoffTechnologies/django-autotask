@@ -369,6 +369,10 @@ class Resource(TimeStampedModel):
     last_name = models.CharField(max_length=50)
     active = models.BooleanField(default=False)
     title = models.CharField(blank=True, null=True, max_length=250)
+    # Resource's internal hourly cost rate (Autotask `internalCost`), used to
+    # cost labor (hours x internal_cost) for project margin.
+    internal_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=9)
     license_type = models.ForeignKey(
         'LicenseType', null=True, on_delete=models.SET_NULL
     )
@@ -897,6 +901,39 @@ class BillingCode(TimeStampedModel):
 
     def __str__(self):
         return self.name if self.name else self.pk
+
+
+class BillingItem(TimeStampedModel):
+    # A posted billing line (approved & posted labor/charge). Project Health
+    # uses these for project revenue (sum of total_amount per project). The
+    # sync is scoped to project-linked items only -- BillingItems is otherwise
+    # a very high-volume entity. `our_cost` (Autotask `ourCost`) is synced for
+    # completeness but is typically empty; labor cost is computed app-side from
+    # resource internal cost instead.
+    project = models.ForeignKey(
+        'Project', blank=True, null=True, on_delete=models.CASCADE,
+        related_name='billing_items')
+    ticket = models.ForeignKey(
+        'Ticket', blank=True, null=True, on_delete=models.SET_NULL)
+    task = models.ForeignKey(
+        'Task', blank=True, null=True, on_delete=models.SET_NULL)
+    item_name = models.CharField(blank=True, null=True, max_length=255)
+    description = models.TextField(blank=True, null=True)
+    quantity = models.DecimalField(
+        blank=True, null=True, decimal_places=4, max_digits=12)
+    rate = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=12)
+    total_amount = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=12)
+    our_cost = models.DecimalField(
+        blank=True, null=True, decimal_places=2, max_digits=12)
+    non_billable = models.BooleanField(default=False)
+    billing_item_type = models.IntegerField(blank=True, null=True)
+    item_date = models.DateTimeField(blank=True, null=True)
+    posted_date = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return self.item_name or str(self.pk)
 
 
 class Role(models.Model):
@@ -1498,6 +1535,14 @@ class BillingCodeTracker(BillingCode):
     class Meta:
         proxy = True
         db_table = 'djautotask_billingcode'
+
+
+class BillingItemTracker(BillingItem):
+    tracker = FieldTracker()
+
+    class Meta:
+        proxy = True
+        db_table = 'djautotask_billingitem'
 
 
 class RoleTracker(Role):
