@@ -1,9 +1,10 @@
+import datetime
+
 import responses
 import requests
 
 from django.core.cache import cache
 from django.test import TestCase
-from django.utils import timezone
 
 from . import mocks as mk
 
@@ -30,8 +31,8 @@ class TestApiConditionList(TestCase):
         self.assertEqual(filters, None)
 
     def test_build_query_string_multiple_post(self):
-        test_datetime = timezone.datetime(2019, 6, 22, 2, 0, 0,
-                                          tzinfo=timezone.utc)
+        test_datetime = datetime.datetime(2019, 6, 22, 2, 0, 0,
+                                          tzinfo=datetime.timezone.utc)
 
         c = A(
             A(op='eq', field='isActive', value='true'),

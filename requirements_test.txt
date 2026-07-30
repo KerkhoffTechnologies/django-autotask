@@ -1,7 +1,7 @@
-coverage==4.3
+coverage
 flake8>=2.1.0
-mock==4.0.3
 responses
-model-mommy
-django-coverage
-names
+# django.contrib.postgres must be in INSTALLED_APPS for the GinIndex system
+# check (postgres.E005, added in Django 6.0), and importing that app needs a
+# psycopg driver even though the tests themselves run on sqlite.
+psycopg[binary]
