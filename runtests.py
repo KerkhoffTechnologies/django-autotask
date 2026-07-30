@@ -4,7 +4,6 @@ import sys
 
 from django.conf import settings
 from django.core.management import call_command
-from django.test.utils import get_runner
 import django
 import tempfile
 
@@ -21,6 +20,9 @@ settings.configure(
         'django.contrib.contenttypes',
         'django.contrib.auth',
         'django.contrib.sessions',
+        # Required as of Django 6.0 by the postgres.E005 system check,
+        # because our models declare GinIndex indexes.
+        'django.contrib.postgres',
     ),
     SECRET_KEY='correct horse battery staple',
     AUTOTASK_SERVER_URL='https://localhost',
@@ -86,15 +88,6 @@ def flake8_main():
 
     print("Failed: flake8 failed." if command else "Success. flake8 passed.")
     return command
-
-
-def suite():
-    """
-    Set up and return a test suite. This is used in `python setup.py test`.
-    """
-    _setup()
-    runner_cls = get_runner(settings)
-    return runner_cls().build_suite(test_labels=None)
 
 
 if __name__ == '__main__':

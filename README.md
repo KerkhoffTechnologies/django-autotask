@@ -5,8 +5,9 @@ resources, accounts, etc.).
 
 ## Requirements
 
--  Python 3.5
--  Django 2.0
+-  Python 3.12, 3.13 or 3.14
+-  Django 4.2, 5.2 or 6.0
+-  PostgreSQL (the models declare `GinIndex` indexes)
 
 Other versions may work; we haven't tried.
 
@@ -16,7 +17,7 @@ From source:
 
     git clone git@github.com:KerkhoffTechnologies/django-autotask.git
     cd django-autotask
-    python setup.py install
+    pip install .
 
 ## Usage
 
@@ -26,9 +27,14 @@ From source:
     INSTALLED_APPS = [
         ...
         'djautotask',
+        'django.contrib.postgres',
         ...
     ]
     ```
+
+    `django.contrib.postgres` is required: our models declare `GinIndex`
+    indexes, and as of Django 6.0 the `postgres.E005` system check fails
+    if the app is not installed.
 
 
 ## Testing
@@ -40,7 +46,6 @@ pip install --upgrade -r requirements_test.txt
 Try one of:
 
     ./runtests.py
-    python setup.py test
     make test
 
 ## Contributing

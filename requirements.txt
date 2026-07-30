@@ -1,10 +1,9 @@
 requests
-django
+django>=4.2
 python-dateutil
 django-model-utils
 django-braces
 django-extensions
 retrying
 wheel
-pytz
 build==1.2.2.post1

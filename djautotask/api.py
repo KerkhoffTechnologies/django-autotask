@@ -4,7 +4,6 @@ import json
 import logging
 from json import JSONDecodeError
 
-import pytz
 import requests
 from django.apps import apps
 from django.conf import settings
@@ -402,7 +401,7 @@ class AutotaskAPIClient(object):
         if isinstance(value, datetime.datetime):
             body.update({
                 key: value.astimezone(
-                    pytz.timezone('UTC')).strftime(
+                    datetime.timezone.utc).strftime(
                     "%Y-%m-%dT%H:%M:%SZ")
             })
 
