@@ -39,7 +39,11 @@ jobs:
         run: |
           python3 -m build
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450
+        # v1.14.2. Must stay recent enough to bundle a twine that
+        # understands the Metadata-Version modern setuptools emits (2.4+),
+        # otherwise the upload fails with a misleading
+        # "Metadata is missing required fields: Name, Version".
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
