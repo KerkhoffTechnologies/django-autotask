@@ -1481,3 +1481,97 @@ class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):
                          object_data['predecessorTaskID'])
         self.assertEqual(instance.successor_task.id,
                          object_data['successorTaskID'])
+
+
+class TestProjectChildRetention(TestCase):
+    """
+    A project's completed children are kept for as long as the project runs.
+    """
+
+    def setUp(self):
+        super().setUp()
+        fixture_utils.init_project_statuses()
+        fixture_utils.init_statuses()
+        fixture_utils.init_accounts()
+        fixture_utils.init_projects()
+
+    def _condition_fields(self, client):
+        """Every field named anywhere in the client's conditions."""
+        fields = []
+
+        def walk(condition):
+            formatted = condition.format_condition()
+            if 'items' in formatted:
+                for item in condition._items:
+                    walk(item)
+            else:
+                fields.append(formatted['field'])
+
+        for condition in client.get_conditions():
+            walk(condition)
+
+        return fields
+
+    def test_open_project_ids_excludes_closed_projects(self):
+        project = models.Project.objects.first()
+        self.assertIn(project.id, list(sync.open_project_ids()))
+
+        project.status = models.ProjectStatus.objects.get(
+            id=models.ProjectStatus.COMPLETE_ID)
+        project.save()
+
+        self.assertNotIn(project.id, list(sync.open_project_ids()))
+
+    def test_task_sync_does_not_filter_on_completed_date(self):
+        # The task query is already scoped to open projects, so filtering on
+        # completion date would drop a running project's finished tasks.
+        synchronizer = sync.TaskSynchronizer(full=True)
+
+        self.assertNotIn(
+            'completedDateTime', self._condition_fields(synchronizer.client))
+
+    def test_task_sync_is_scoped_to_open_projects(self):
+        synchronizer = sync.TaskSynchronizer(full=True)
+
+        self.assertIn('projectId', self._condition_fields(synchronizer.client))
+
+    def test_ticket_full_sync_fetches_open_projects_completed_tickets(self):
+        synchronizer = sync.TicketSynchronizer(full=True)
+        passes = []
+
+        def record_conditions(results):
+            passes.append(self._condition_fields(synchronizer.client))
+            return results
+
+        synchronizer.fetch_records = record_conditions
+        synchronizer.get(SyncResults())
+
+        # First pass is the ordinary ticket sync, second is the retention pass.
+        self.assertEqual(len(passes), 2)
+        retention_pass = passes[1]
+        self.assertIn('projectID', retention_pass)
+        self.assertIn('status', retention_pass)
+        # No date floor: the point is to recover tickets pruned long ago.
+        self.assertNotIn('completedDate', retention_pass)
+
+    def test_ticket_partial_sync_skips_the_retention_pass(self):
+        synchronizer = sync.TicketSynchronizer(full=False)
+        passes = []
+
+        def record_conditions(results):
+            passes.append(self._condition_fields(synchronizer.client))
+            return results
+
+        synchronizer.fetch_records = record_conditions
+        synchronizer.get(SyncResults())
+
+        self.assertEqual(len(passes), 1)
+
+    def test_ticket_retention_pass_restores_original_conditions(self):
+        synchronizer = sync.TicketSynchronizer(full=True)
+        before = self._condition_fields(synchronizer.client)
+
+        synchronizer.fetch_records = lambda results: results
+        synchronizer.get(SyncResults())
+
+        self.assertEqual(self._condition_fields(synchronizer.client), before)
