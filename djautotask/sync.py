@@ -255,6 +255,13 @@ class Synchronizer:
         self.mass_delete_protection = request_settings.get(
             'mass_delete_protection', True)
 
+        # Memo of which related primary keys exist, keyed by model class, for
+        # the life of this synchronizer. A page of records refers to the same
+        # handful of queues, statuses and resources over and over, so the first
+        # record pays for the lookup and the rest are free. Its size is bounded
+        # by the number of distinct PKs actually referenced, not by table size.
+        self._related_pk_cache = {}
+
     def set_relations(self, instance, json_data):
         for json_field, value in self.related_meta.items():
             model_class, field_name = value
@@ -284,6 +291,18 @@ class Synchronizer:
                 format(model_field, instance)
             )
 
+    def _related_pk_exists(self, model_class, uid):
+        """
+        Say whether a related record exists, remembering the answer.
+
+        Uses an existence query rather than fetching the row: we only need to
+        know the target is there, and `exists()` builds no model instance.
+        """
+        cache = self._related_pk_cache.setdefault(model_class, {})
+        if uid not in cache:
+            cache[uid] = model_class.objects.filter(pk=uid).exists()
+        return cache[uid]
+
     def _assign_relation(self, instance, json_data,
                          json_field, model_class, model_field):
         """
@@ -292,13 +311,21 @@ class Synchronizer:
         """
         uid = json_data.get(json_field)
 
-        try:
-            if uid is not None and uid != '':
-                related_instance = model_class.objects.get(pk=uid)
-                setattr(instance, model_field, related_instance)
-            else:
-                self._assign_null_relation(instance, model_field)
-        except model_class.DoesNotExist:
+        if uid is None or uid == '':
+            self._assign_null_relation(instance, model_field)
+            return
+
+        field = instance._meta.get_field(model_field)
+
+        # Coerce to the primary key's own type. Fetching the row used to do
+        # this implicitly, so a picklist that reports its parent value as a
+        # string still ended up assigning the int the database returned.
+        # Assigning the raw value would leave the FieldTracker comparing '1'
+        # against 1, reporting a change on every sync and rewriting the row
+        # forever.
+        uid = field.target_field.get_prep_value(uid)
+
+        if not self._related_pk_exists(model_class, uid):
             logger.warning(
                 'Failed to find {} {} for {} {}.'.format(
                     json_field,
@@ -308,6 +335,17 @@ class Synchronizer:
                 )
             )
             self._assign_null_relation(instance, model_field)
+            return
+
+        # Assign the relation by ID. Fetching the row to assign it costs a
+        # query, a model instantiation and a FieldTracker setup per foreign key
+        # per record, and nothing downstream reads anything but the primary key
+        # we already have here. Drop whatever Django may have cached for the
+        # field so that a later attribute access doesn't hand back the record
+        # this one replaced.
+        setattr(instance, field.attname, uid)
+        if field.is_cached(instance):
+            field.delete_cached_value(instance)
 
     def _instance_ids(self, filter_params=None):
         # self.lookup_key is used only for json_data. In DB, id is fixed for
