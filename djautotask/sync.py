@@ -916,6 +916,19 @@ class ResourceRoleDepartmentSynchronizer(Synchronizer):
         return instance
 
 
+def open_project_ids(order_by='id'):
+    """
+    IDs of the projects that are still open.
+
+    A project's children are kept for as long as the project itself is open,
+    so both the task and the ticket sync scope their retention to this set.
+    """
+    return models.Project.objects.exclude(
+        Q(status__is_active=False) |
+        Q(status__id=models.ProjectStatus.COMPLETE_ID)
+    ).values_list('id', flat=True).order_by(order_by)
+
+
 class CompletedDateMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -988,6 +1001,63 @@ class TicketSynchronizer(CreateRecordMixin,
 
         if condition_list:
             self.client.add_condition(A(*condition_list, op="or"))
+
+    def get(self, results):
+        results = super().get(results)
+
+        if self.full:
+            results = self._fetch_open_project_tickets(results)
+
+        return results
+
+    def _fetch_open_project_tickets(self, results):
+        """
+        Second pass: fetch the completed tickets of every open project.
+
+        Autotask lets a project carry tickets as well as tasks, but the main
+        pass drops any ticket completed longer ago than keep_completed_hours,
+        so a project's completed tickets disappear from its child counts
+        while the project is still running. Fetching every completed ticket
+        ever is unbounded, so scope to the open projects already stored
+        locally.
+
+        Deliberately no date floor: the point is to recover tickets that were
+        pruned long ago, not just the recent ones. Their IDs join
+        results.synced_ids, so the prune that follows a full sync leaves them
+        alone. Once the project itself closes it drops out of this set and
+        its tickets become prunable again.
+        """
+        project_ids = list(open_project_ids())
+        if not project_ids:
+            return results
+
+        batch_size = DjautotaskSettings().get_settings().get(
+            'batch_query_size')
+        saved_conditions = self.client.get_conditions()
+
+        try:
+            while project_ids:
+                batch = project_ids[:batch_size]
+                del project_ids[:batch_size]
+
+                # Rebuild from scratch rather than editing the live condition
+                # list, so the completed-date condition is gone for this pass.
+                # The queue filter is re-applied so we don't sync tickets from
+                # queues the tenant excluded.
+                self.client.clear_conditions()
+                self._add_conditions()
+                self.client.add_condition(
+                    A(op='in', field='projectID', value=batch)
+                )
+                self.client.add_condition(
+                    A(op='eq', field='status',
+                      value=models.Status.COMPLETE_ID)
+                )
+                results = self.fetch_records(results)
+        finally:
+            self.client.conditions = saved_conditions
+
+        return results
 
     related_meta = {
         'companyID': (models.Account, 'account'),
@@ -1133,11 +1203,14 @@ class TicketSynchronizer(CreateRecordMixin,
 
 
 class TaskSynchronizer(ChildCreateRecordMixin, SyncRecordUDFMixin,
-                       CompletedDateMixin, BatchQueryMixin, Synchronizer):
+                       BatchQueryMixin, Synchronizer):
+    # No CompletedDateMixin: the query is already scoped to open projects
+    # through active_ids, and a project's completed tasks have to stay for as
+    # long as the project runs or its child counts go wrong. Tasks of closed
+    # projects still fall out of active_ids and get pruned as before.
     client_class = api.TasksAPIClient
     model_class = models.TaskTracker
     udf_class = models.TaskUDF
-    completed_date_field = 'completedDateTime'
     condition_field_name = 'projectId'
     last_updated_field = 'lastActivityDateTime'
 
@@ -1174,12 +1247,7 @@ class TaskSynchronizer(ChildCreateRecordMixin, SyncRecordUDFMixin,
 
     @property
     def active_ids(self):
-        active_projects = models.Project.objects.exclude(
-            Q(status__is_active=False) |
-            Q(status__id=models.ProjectStatus.COMPLETE_ID)
-        ).values_list('id', flat=True).order_by(self.lookup_key)
-
-        return active_projects
+        return open_project_ids(order_by=self.lookup_key)
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
