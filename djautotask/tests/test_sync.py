@@ -1474,6 +1474,17 @@ class TestTaskPredecessorSynchronizer(SynchronizerTestMixin, TestCase):
     def _call_api(self, return_data):
         return mocks.service_api_get_task_predecessors_call(return_data)
 
+    def test_fetches_links_out_of_completed_tasks(self):
+        predecessor = models.Task.objects.get(
+            id=fixtures.API_TASK_PREDECESSOR_ITEMS[0]['predecessorTaskID'])
+        predecessor.status = models.Status.objects.create(
+            id=models.Status.COMPLETE_ID, label='Complete')
+        predecessor.save()
+
+        synchronizer = self.synchronizer_class()
+
+        self.assertIn(predecessor.id, synchronizer.condition_pool)
+
     def _assert_fields(self, instance, object_data):
         self.assertEqual(instance.id, object_data['id'])
         self.assertEqual(instance.lag_days, object_data['lagDays'])
