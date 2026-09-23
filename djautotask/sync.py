@@ -1731,12 +1731,11 @@ class TaskPredecessorSynchronizer(
 
     @property
     def active_ids(self):
-        active_tasks = models.Task.objects.exclude(
-            Q(status__is_active=False) |
-            Q(status__id=models.Status.COMPLETE_ID)
-        ).values_list('id', flat=True).order_by(self.lookup_key)
-
-        return active_tasks
+        # Every task we keep, completed ones included: TaskSynchronizer already
+        # decides which tasks stay, and a link out of a completed task still
+        # sets when its successor can start.
+        return models.Task.objects.values_list(
+            'id', flat=True).order_by(self.lookup_key)
 
     def _assign_field_data(self, instance, json_data):
         instance.id = json_data['id']
